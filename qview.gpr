@@ -1,0 +1,56 @@
+with "xmlada";
+
+project Qview is
+
+   type Xmlada_Kind_Type is
+      ("static", "relocatable");
+   Library_Type : Xmlada_Kind_Type := external ("LIBRARY_TYPE");
+
+   case Library_Type is
+
+      when "static" =>
+         for Main use ("viewer.adb");
+         for Object_Dir use "obj";
+         for Source_Dirs use ("src", "../tools/adacgi-1.6", "../tools/pipes");
+         for Languages use ("Ada");
+
+      when "relocatable" =>
+         for Main use ("hello.adb");
+         for Object_Dir use "./obj";
+         for Source_Dirs use ("./src", "../tools/adacgi-1.6");
+   end case;
+
+   package Ide is
+      for Vcs_Kind use "Git";
+   end Ide;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-j4", "-k", "-g", "-s");
+   end Builder;
+
+   package Compiler is
+
+      case Library_Type is
+
+         when "static" =>
+            for Default_Switches ("ada") use ("-gnaty3bBcxtSOnaihelk", "-gnato", "-fstack-check", "-g", "-gnat05", "-gnatf");
+
+         when "relocatable" =>
+            for Default_Switches ("ada") use ("-gnato", "-fstack-check", "-g", "-gnat05", "-ftest-coverage", "-fprofile-arcs", "-gnatf");
+      end case;
+   end Compiler;
+
+   package Linker is
+
+      case Library_Type is
+
+         when "static" =>
+            for Default_Switches ("ada") use ("-g", "-lc");
+
+         when "relocatable" =>
+            for Default_Switches ("ada") use ("-g", "-fprofile-generate");
+      end case;
+   end Linker;
+
+end Qview;
+
