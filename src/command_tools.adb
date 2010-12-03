@@ -1,3 +1,5 @@
+with Ada.Characters.Handling;
+
 package body Command_Tools is
 
    --------------
@@ -7,11 +9,14 @@ package body Command_Tools is
    --------------
 
    function Sanitise (Input : in String) return String is
+      Output : String := Input;
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (True, "Sanitise unimplemented");
-      raise Program_Error with "Unimplemented function Sanitise";
-      return Sanitise (Input);
+      for I in Input'Range loop
+         if not Ada.Characters.Handling.Is_Letter (Output (I)) then
+            Output (I) := '_';
+         end if;
+      end loop;
+      return Input;
    end Sanitise;
 
 end Command_Tools;
