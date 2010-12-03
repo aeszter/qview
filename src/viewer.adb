@@ -100,11 +100,6 @@ package body Viewer is
       Reader.Free;
    end View_Cluster_Queues;
 
-   procedure View_Global_Jobs is
-   begin
-      CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-      View_Jobs_In_Queue ("-u \*-r");
-   end View_Global_Jobs;
 
    procedure View_Jobs (Selector : String) is
       Reader      : DOM.Readers.Tree_Reader;
@@ -197,13 +192,21 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("<link style=status.css />");
       Ada.Text_IO.Put_Line ("</head><body>");
       CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
+      HTML.Put_Navigation_Begin;
+      HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
+      HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
+      HTML.Put_Navigation_End;
 
       View_Cluster_Queues;
 
       if CGI.Input_Received then
-         View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
-      else
-         View_Global_Jobs;
+         if not Param_Is ("queue", "") then
+            View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
+         elsif Param_Is ("all_jobs", "y") then
+            View_Global_Jobs;
+         elsif Param_Is ("waiting_jobs", "y") then
+            View_Waiting_Jobs;
+         end if;
       end if;
       CGI.Put_HTML_Tail;
    end View;
@@ -211,7 +214,25 @@ package body Viewer is
    procedure View_Jobs_In_Queue (Queue : String) is
    begin
       CGI.Put_HTML_Heading (Title => """" & Queue & """ Jobs", Level => 2);
-      View_Jobs ("-u \* -q " & Queue);
+      View_Jobs ("-u \* -s r -q " & Queue);
    end View_Jobs_In_Queue;
+
+   procedure View_Global_Jobs is
+   begin
+      CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
+      View_Jobs ("-u \*");
+   end View_Global_Jobs;
+
+   procedure View_Waiting_Jobs is
+   begin
+      CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
+      View_Jobs ("-u \* -s p");
+   end View_Waiting_Jobs;
+
+   function Param_Is (Param : String; Expected : String) return Boolean is
+   begin
+      return Standard."=" (CGI.Value (Param), Expected);
+   end Param_Is;
+
 
 end Viewer;
