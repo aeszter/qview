@@ -110,14 +110,15 @@ package body Viewer is
       N           : Node;
       C           : Node;
 
-      J_Number          : Unbounded_String;
-      J_Name            : Unbounded_String;
-      J_Owner           : Unbounded_String;
-      J_Priority        : Unbounded_String;
-      J_State           : Unbounded_String;
-      J_Slots           : Unbounded_String;
-      J_PE              : Unbounded_String;
-      J_Submission_Time : Unbounded_String;
+      J_Number          : Unbounded_String; -- Job ID
+      J_Full_Name       : Unbounded_String; -- Job name
+      J_Name            : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
+      J_Owner           : Unbounded_String; -- User whom this job belongs to
+      J_Priority        : Unbounded_String; -- Numerical priority
+      J_State           : Unbounded_String; -- r(unning), qw(aiting) etc.
+      J_Slots           : Unbounded_String; -- how many slots/CPUs to use
+      J_PE              : Unbounded_String; -- Parallel environment
+      J_Submission_Time : Unbounded_String; -- when submitted
       --  Job List Entries
    begin
       SGE_Command.Set_Public_Id ("qstat");
@@ -154,7 +155,13 @@ package body Viewer is
             elsif Name (C) = "JAT_prio" then
                J_Priority := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_name" then
-               J_Name := To_Unbounded_String (Value (First_Child (C)));
+               J_Full_Name := To_Unbounded_String (Value (First_Child (C)));
+               if Length (J_Full_Name) > Max_J_Name_Length then
+                  J_Name := Head (Source => J_Full_Name,
+                                  Count  => Max_J_Name_Length);
+               else
+                  J_Name := J_Full_Name;
+               end if;
             elsif Name (C) = "JB_owner" then
                J_Owner := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "state" then

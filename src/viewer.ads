@@ -7,4 +7,5 @@ package Viewer is
 private
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure View_Jobs (Selector : String);
+   Max_J_Name_Length : constant Natural := 20;
 end Viewer;
