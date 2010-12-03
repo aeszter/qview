@@ -27,7 +27,7 @@ package body HTML is
    end Put_UCell;
 
    --------------
-   -- Put_Cell --
+   -- Put_UCell_With_Link --
    --  Purpose: Write a table cell with given contents, linking to .
    --  Input: Data: Contents of the cell;
    --  Input: Link_Param: CGI Parameter to use in link, sc.
@@ -40,5 +40,21 @@ package body HTML is
       Put_Cell (Data => "<a href=""" & CGI.My_URL & "?"
                 & Link_Param & "=" & S & """>" & S & "</a>");
    end Put_UCell_With_Link;
+
+   procedure Put_Navigation_Begin is
+   begin
+      Ada.Text_IO.Put_Line ("<div id=""navigation""><ul>");
+   end Put_Navigation_Begin;
+
+   procedure Put_Navigation_End is
+   begin
+      Ada.Text_IO.Put_Line ("</ul></div id=""navigation"">");
+   end Put_Navigation_End;
+
+   procedure Put_Navigation_Link (Data : String; Link_Param : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.My_URL
+                            & "?" & Link_Param & """>" & Data & "</a>");
+   end Put_Navigation_Link;
 
 end HTML;
