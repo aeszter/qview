@@ -10,7 +10,11 @@ package body Pipe_Streams is
       p.position := 0;
    exception
       when Pipe_Commands.End_Of_File =>
-         p.eof := True;
+         if p.inbound_eof then
+            raise;
+            --  caller has ignored or not tested eof, so we raise an exception
+         end if;
+         p.inbound_eof := True;
    end Buffer_Line;
 
    ---------------
@@ -24,7 +28,6 @@ package body Pipe_Streams is
    begin
       if From.position >= Length (From.line_buffer) then
          Buffer_Line (From);
-         From.position := 0;
          C := Unicode.To_Unicode (Ada.Characters.Latin_1.LF);
       else
          From.position := From.position + 1;
@@ -38,7 +41,10 @@ package body Pipe_Streams is
 
    overriding function Eof (From : Pipe_Stream) return Boolean is
    begin
-      return From.eof;
+      return From.inbound_eof;
+      --  assume that the last line ends with a line feed
+      --  otherwise, we would have to return true until the last character
+      --  of From.line_buffer has been delivered
    end Eof;
 
 

@@ -22,6 +22,6 @@ private
       line_buffer : Unbounded_String := Null_Unbounded_String;
       position    : Integer := 0;
       --  points after the character last read
-      eof         : Boolean := False;
+      inbound_eof         : Boolean := False;
    end record;
 end Pipe_Streams;
