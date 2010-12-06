@@ -57,4 +57,32 @@ package body HTML is
                             & "?" & Link_Param & """>" & Data & "</a>");
    end Put_Navigation_Link;
 
+   procedure Put_Paragraph (Label : String; Contents : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<p>" & Label & ": " & Contents & "</p>");
+   end Put_Paragraph;
+
+   procedure Put_Paragraph (Label : String; Contents : Unbounded_string) is
+   begin
+      Put_Paragraph (Label, To_String (Contents));
+   end Put_Paragraph;
+
+   procedure Put_True_False (Truth : String) is
+   begin
+      Ada.Text_IO.Put ("<img src=""");
+      if Truth = "true" then
+         Ada.Text_IO.Put ("true.png"" alt=""true""");
+      elsif Truth = "false" then
+         Ada.Text_IO.Put ("false.png"" alt=""false""");
+      else
+         Ada.Text_IO.Put ("undefined.png"" alt=""undefined""");
+      end if;
+      Ada.Text_IO.Put_Line (" />");
+   end Put_True_False;
+
+   procedure Put_True_False (Truth : Unbounded_String) is
+   begin
+      Put_True_False (To_String (Truth));
+   end Put_True_False;
+
 end HTML;
