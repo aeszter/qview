@@ -305,8 +305,15 @@ package body Viewer is
       for Index in 1 .. Length (List) loop
 
          Ada.Text_IO.Put ("<div class=""job_info"">");
-         N        := Item (List, Index - 1); -- djob_info
-         Children := Child_Nodes (First_Child (N)); -- element -> job attributes
+         Children := Child_Nodes (Item (List, Index - 1)); -- djob_info
+         N := Item (Children, 1); -- element; this is probably faster than
+                                  -- looping through the list
+                                  -- in case we err, raise an exception
+         if Name (N) /= "element" then
+            raise Assumption_Error;
+         end if;
+         Children := Child_Nodes (N);
+
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
@@ -374,6 +381,10 @@ package body Viewer is
       end loop;
 
       Reader.Free;
+   exception
+      when Sax.Readers.XML_Fatal_Error =>
+         Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
+         Reader.Free;
    end View_Job;
 
    function Param_Is (Param : String; Expected : String) return Boolean is
