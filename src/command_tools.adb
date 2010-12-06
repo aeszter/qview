@@ -11,12 +11,13 @@ package body Command_Tools is
    function Sanitise (Input : in String) return String is
       Output : String := Input;
    begin
-      for I in Input'Range loop
-         if not Ada.Characters.Handling.Is_Letter (Output (I)) then
+      for I in Output'Range loop
+         if not Ada.Characters.Handling.Is_Letter (Output (I))
+           and then not Ada.Characters.Handling.Is_Decimal_Digit (Output (I)) then
             Output (I) := '_';
          end if;
       end loop;
-      return Input;
+      return Output;
    end Sanitise;
 
 end Command_Tools;
