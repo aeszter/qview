@@ -71,11 +71,11 @@ package body HTML is
    begin
       Ada.Text_IO.Put ("<img src=""");
       if Truth = "true" then
-         Ada.Text_IO.Put ("true.png"" alt=""true""");
+         Ada.Text_IO.Put ("/icons/tick.png"" alt=""true""");
       elsif Truth = "false" then
-         Ada.Text_IO.Put ("false.png"" alt=""false""");
+         Ada.Text_IO.Put ("/icons/cross.png"" alt=""false""");
       else
-         Ada.Text_IO.Put ("undefined.png"" alt=""undefined""");
+         Ada.Text_IO.Put ("/icons/error.png"" alt=""undefined""");
       end if;
       Ada.Text_IO.Put_Line (" />");
    end Put_True_False;
