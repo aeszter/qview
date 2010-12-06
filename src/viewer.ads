@@ -4,6 +4,8 @@ package Viewer is
    procedure View_Jobs_In_Queue (Queue : String);
    procedure View_Global_Jobs;
    procedure View_Waiting_Jobs;
+   procedure View_Jobs_Of_User (User : String);
+   procedure View_Job (Job_ID : String);
 private
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure View_Jobs (Selector : String);

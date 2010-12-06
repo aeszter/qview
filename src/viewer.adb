@@ -2,13 +2,14 @@ with Ada.Text_IO, CGI, System, Pipe_Commands, Pipe_Streams;
 use  Pipe_Streams;
 with Ada.Strings.Unbounded;
 use Ada.Strings.Unbounded;
-with Sax.Readers;
+with Sax.Readers, Sax.Exceptions;
 with DOM.Readers, DOM.Core;
 use  DOM.Core;
 with DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
 use  DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
 with HTML;
 with Command_Tools; use Command_Tools;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Viewer is
    procedure View_Cluster_Queues is
@@ -175,8 +176,8 @@ package body Viewer is
                J_PE := To_Unbounded_String (Value (First_Child (C)));
             end if;
          end loop;
-         HTML.Put_UCell (Data => J_Number);
-         HTML.Put_UCell (Data => J_Owner);
+         HTML.Put_UCell_With_Link (Data => J_Number, Link_Param => "job_id");
+         HTML.Put_UCell_With_Link (Data => J_Owner, Link_Param => "user");
          HTML.Put_UCell (Data => J_Name);
          HTML.Put_UCell (Data => J_Priority);
          HTML.Put_UCell (Data => J_Submission_Time);
@@ -209,6 +210,10 @@ package body Viewer is
       if CGI.Input_Received then
          if not Param_Is ("queue", "") then
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
+         elsif not Param_Is ("user", "") then
+            View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
+         elsif not Param_Is ("job_id", "") then
+            View_Job (Sanitise (CGI.Value ("job_id")));
          elsif Param_Is ("all_jobs", "y") then
             View_Global_Jobs;
          elsif Param_Is ("waiting_jobs", "y") then
@@ -216,6 +221,12 @@ package body Viewer is
          end if;
       end if;
       CGI.Put_HTML_Tail;
+   exception
+      when E : others =>
+         Ada.Text_IO.Put_Line ("<p><strong>Warning: Unhandled Exception occurred.</strong>");
+         Ada.Text_IO.Put_Line ("<it>" & Exception_Message (E) & "</it></p>");
+         CGI.Put_HTML_Tail;
+
    end View;
 
    procedure View_Jobs_In_Queue (Queue : String) is
@@ -235,6 +246,135 @@ package body Viewer is
       CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
       View_Jobs ("-u \* -s p");
    end View_Waiting_Jobs;
+
+   procedure View_Jobs_Of_User (User : String) is
+   begin
+      CGI.Put_HTML_Heading (Title => "Jobs of " & User,
+                            Level => 2);
+      View_Jobs ("-u " & User);
+   end View_Jobs_Of_User;
+
+   procedure View_Job (Job_ID : String) is
+      Reader      : DOM.Readers.Tree_Reader;
+      SGE_Out     : DOM.Core.Document;
+      SGE_Command : Pipe_Stream;
+      List        : Node_List;
+      Children    : Node_List;
+      N           : Node;
+      C           : Node;
+
+      J_Number          : Unbounded_String; -- Job ID
+      J_Name            : Unbounded_String; -- Job name
+      J_Owner           : Unbounded_String; -- User whom this job belongs to
+      J_Group           : Unbounded_string;
+      J_Priority        : Unbounded_String; -- Numerical priority
+      J_State           : Unbounded_String; -- r(unning), qw(aiting) etc.
+      J_Slots           : Unbounded_String; -- how many slots/CPUs to use
+      J_PE              : Unbounded_String; -- Parallel environment
+      J_Submission_Time : Unbounded_String; -- when submitted
+      J_Exec_File       : Unbounded_String;
+      J_script_File     : Unbounded_String;
+      J_Merge_Std_Err   : Unbounded_String;
+      J_Array           : Unbounded_String;
+      J_Queue           : Unbounded_String;
+      J_Directory       : Unbounded_String;
+      J_Reserve         : Unbounded_String;
+
+   begin
+      CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
+                            Level => 2);
+      SGE_Command.Set_Public_Id ("qstat");
+      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
+         sgeroot & "/bin/lx26-amd64/qstat -j " & Job_ID & " -xml" & ASCII.NUL,
+         Pipe_Commands.read_file);
+      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
+      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
+      Reader.Parse (SGE_Command);
+      SGE_Out := Reader.Get_Tree;
+      SGE_Command.Close;
+
+   --  Fetch Jobs
+      List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
+      if Length (List) = 0 then
+         Ada.Text_IO.Put_Line ("<i>unknown job</i>");
+         return;
+      end if;
+
+   --  Table Header
+
+      for Index in 1 .. Length (List) loop
+
+         Ada.Text_IO.Put ("<div class=""job_info"">");
+         N        := Item (List, Index - 1); -- djob_info
+         Children := Child_Nodes (First_Child (N)); -- element -> job attributes
+         for Ch_Index in 0 .. Length (Children) - 1 loop
+            C := Item (Children, Ch_Index);
+            if Name (C) = "JB_job_number" then
+               J_Number := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_ar" then
+               J_Array := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_exec_file" then
+               J_Exec_File := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_owner" then
+               J_Owner := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_group" then
+               J_Group := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_merge_stderr" then
+               J_Merge_Std_Err := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_job_name" then
+               J_Name := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_hard_resource_list" then
+               null; -- do something
+            elsif Name (C) = "JB_hard_queue_list" then
+               J_Queue := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_script_file" then
+               J_Script_File := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_cwd" then
+               J_Directory := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_reserve" then
+               J_Reserve := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_pe" then
+               J_PE := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_pe_range" then
+               null; -- do something
+            end if;
+         end loop;
+         Ada.Text_IO.Put_Line ("<div class=""job_name"">");
+         HTML.Put_Paragraph ("Name", J_Name);
+--         Ada.Text_IO.Put_Line("<p>Name: " & J_Name & "</p>");
+         Ada.Text_IO.Put_Line ("</div>");
+
+         Ada.Text_IO.Put_Line ("<div class=""job_meta"">");
+         HTML.Put_Paragraph ("ID", J_Number);
+         HTML.Put_Paragraph ("Owner", J_Owner);
+         HTML.Put_Paragraph ("Group", J_Group);
+         Ada.Text_IO.Put ("<p>Array: ");
+         HTML.Put_True_False (J_Array);
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>Reserve: ");
+         HTML.Put_True_False (J_Reserve);
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put_Line ("</div>");
+
+         Ada.Text_IO.Put_Line ("<div class=""job_files"">");
+         HTML.Put_Paragraph ("Directory", J_Directory);
+         HTML.Put_Paragraph ("Script", J_Script_File);
+         HTML.Put_Paragraph ("Executable", J_Exec_File);
+         Ada.Text_IO.Put ("<p>Merge StdErr: ");
+         HTML.Put_True_False (J_Merge_Std_Err);
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put_Line ("</div>");
+
+         Ada.Text_IO.Put_Line ("<div class=""job_queue"">");
+         HTML.Put_Paragraph ("Queue", J_Queue);
+         HTML.Put_Paragraph ("PE", J_PE);
+         Ada.Text_IO.Put_Line ("</div>");
+
+         Ada.Text_IO.Put ("</div>");
+      end loop;
+
+      Reader.Free;
+   end View_Job;
 
    function Param_Is (Param : String; Expected : String) return Boolean is
    begin
