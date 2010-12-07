@@ -67,6 +67,11 @@ package body HTML is
       Put_Paragraph (Label, To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_string) is
+   begin
+      Put_Paragraph (To_String (Label), To_String (Contents));
+   end Put_Paragraph;
+
    procedure Put_True_False (Truth : String) is
    begin
       Ada.Text_IO.Put ("<img src=""");

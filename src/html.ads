@@ -14,6 +14,7 @@ package HTML is
 
    procedure Put_Paragraph (Label : String; Contents : String);
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
+   procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Put_True_False (Truth : String);
    procedure Put_True_False (Truth : Unbounded_String);
 

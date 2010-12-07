@@ -10,8 +10,10 @@ use  DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
 with HTML;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
+with Resources; use Resources; use Resources.Resource_Lists;
 
 package body Viewer is
+
    procedure View_Cluster_Queues is
       Reader      : DOM.Readers.Tree_Reader;
       SGE_Out     : DOM.Core.Document;
@@ -262,6 +264,8 @@ package body Viewer is
       Children    : Node_List;
       N           : Node;
       C           : Node;
+      Resource_List : Resources.Resource_Lists.List;
+
 
       J_Number          : Unbounded_String; -- Job ID
       J_Name            : Unbounded_String; -- Job name
@@ -280,40 +284,48 @@ package body Viewer is
       J_Directory       : Unbounded_String;
       J_Reserve         : Unbounded_String;
 
-   begin
-      CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
-                            Level => 2);
-      SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
-         sgeroot & "/bin/lx26-amd64/qstat -j " & Job_ID & " -xml" & ASCII.NUL,
-         Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Out := Reader.Get_Tree;
-      SGE_Command.Close;
+      procedure Extract_Resource_List is
+         Resource_Nodes : Node_List := Child_Nodes (C);
+         Resource_Tags      : Node_List;
 
-   --  Fetch Jobs
-      List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
-      if Length (List) = 0 then
-         Ada.Text_IO.Put_Line ("<i>unknown job</i>");
-         return;
-      end if;
+         N, R          : Node;
+         Res_Value     : Unbounded_String;
+         Res_Name      : Unbounded_String;
 
-   --  Table Header
+      begin
+         for I in 1 .. Length (Resource_Nodes) loop
+            N := Item (Resource_Nodes, I - 1);
+            if Name (N) = "qstat_l_requests" then
+               Resource_Tags := Child_Nodes (N);
+               for J in 1 .. Length (Resource_Tags) loop
+                  R := Item (Resource_Tags, J - 1);
+                  if Name (R) = "CE_name" then
+                     Res_Name := To_Unbounded_String (Value (First_Child (R)));
+                  elsif Name (R) = "CE_stringval" then
+                     Res_Value := To_Unbounded_String (Value (First_Child (R)));
+                     --  maybe check for relop here?
+                  end if;
+               end loop;
+               Resource_List.Append (New_Resource (Name  => Res_Name,
+                                                  Value => Res_Value));
+            end if;
+         end loop;
+      end Extract_Resource_List;
 
-      for Index in 1 .. Length (List) loop
+      procedure Extract_PE_Range is
+         Children : Node_List := Child_Nodes (C);
+         N : Node;
+      begin
+         for I in 1 .. Length (Children) loop
+            N := Item (Children, I - 1);
 
-         Ada.Text_IO.Put ("<div class=""job_info"">");
-         Children := Child_Nodes (Item (List, Index - 1)); -- djob_info
-         N := Item (Children, 1); -- element; this is probably faster than
-                                  -- looping through the list
-                                  -- in case we err, raise an exception
-         if Name (N) /= "element" then
-            raise Assumption_Error;
-         end if;
-         Children := Child_Nodes (N);
+            Ada.Text_IO.Put_Line ("N  => " & Name (N) & " V => " & Value (N));
+         end loop;
+      end Extract_PE_Range;
 
+      procedure Parse_One_Job is
+      begin
+         Resource_List.Clear;
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
@@ -331,7 +343,7 @@ package body Viewer is
             elsif Name (C) = "JB_job_name" then
                J_Name := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_hard_resource_list" then
-               null; -- do something
+               Extract_Resource_List;
             elsif Name (C) = "JB_hard_queue_list" then
                J_Queue := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_script_file" then
@@ -343,12 +355,16 @@ package body Viewer is
             elsif Name (C) = "JB_pe" then
                J_PE := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_pe_range" then
-               null; -- do something
+               Extract_PE_Range;
             end if;
          end loop;
+      end Parse_One_Job;
+
+      procedure Output_One_Job is
+         Res : Resource_Lists.Cursor;
+      begin
          Ada.Text_IO.Put_Line ("<div class=""job_name"">");
          HTML.Put_Paragraph ("Name", J_Name);
---         Ada.Text_IO.Put_Line("<p>Name: " & J_Name & "</p>");
          Ada.Text_IO.Put_Line ("</div>");
 
          Ada.Text_IO.Put_Line ("<div class=""job_meta"">");
@@ -377,7 +393,56 @@ package body Viewer is
          HTML.Put_Paragraph ("PE", J_PE);
          Ada.Text_IO.Put_Line ("</div>");
 
+         Ada.Text_IO.Put_Line ("<div class=""job_resources"">");
+         Res := Resource_List.First;
+         loop
+            exit when Res = No_Element;
+            HTML.Put_Paragraph (Label => Resource_Lists.Element (Res).Name,
+                                Contents => Resource_Lists.Element (Res).Value);
+            Res := Next (Res);
+         end loop;
+
+         Ada.Text_IO.Put_Line ("</div>");
+
          Ada.Text_IO.Put ("</div>");
+      end Output_One_Job;
+
+
+   begin
+      CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
+                            Level => 2);
+      SGE_Command.Set_Public_Id ("qstat");
+      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
+         sgeroot & "/bin/lx26-amd64/qstat -j " & Job_ID & " -xml" & ASCII.NUL,
+         Pipe_Commands.read_file);
+      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
+      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
+      Reader.Parse (SGE_Command);
+      SGE_Out := Reader.Get_Tree;
+      SGE_Command.Close;
+
+   --  Fetch Jobs
+      List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
+      if Length (List) = 0 then
+         Ada.Text_IO.Put_Line ("<i>unknown job</i>");
+         return;
+      end if;
+
+      for Index in 1 .. Length (List) loop
+
+         Ada.Text_IO.Put ("<div class=""job_info"">");
+         Children := Child_Nodes (Item (List, Index - 1)); -- djob_info
+         N := Item (Children, 1);
+         --  element; this is probably faster than
+         --  looping through the list;
+         --  in case we err, raise an exception
+         if Name (N) /= "element" then
+            raise Assumption_Error;
+         end if;
+         Children := Child_Nodes (N); -- data fields of the job
+
+         Parse_One_Job;
+         Output_One_Job;
       end loop;
 
       Reader.Free;
