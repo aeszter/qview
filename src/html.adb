@@ -90,4 +90,11 @@ package body HTML is
       Put_True_False (To_String (Truth));
    end Put_True_False;
 
+   procedure Put_Stylesheet (URL : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<link rel=""stylesheet"" href=""" & URL
+                            & """ type=""text/css"" media=""screen"" />");
+   end Put_Stylesheet;
+
+
 end HTML;

@@ -18,4 +18,6 @@ package HTML is
    procedure Put_True_False (Truth : String);
    procedure Put_True_False (Truth : Unbounded_String);
 
+   procedure Put_Stylesheet (URL : String);
+
 end HTML;

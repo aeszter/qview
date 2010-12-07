@@ -48,6 +48,7 @@ package body Viewer is
       SGE_Out := Reader.Get_Tree;
       SGE_Command.Close;
 
+      Ada.Text_IO.Put_Line ("<div class=""cqueues"">");
       CGI.Put_HTML_Heading (Title => "Cluster Queues", Level => 2);
       --  Fetch Cluster Queues
       List := Get_Elements_By_Tag_Name (SGE_Out, "cluster_queue_summary");
@@ -100,6 +101,8 @@ package body Viewer is
       end loop;
       --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
+            Ada.Text_IO.Put_Line ("</div>"); -- cqueues
+
       Reader.Free;
    end View_Cluster_Queues;
 
@@ -199,14 +202,18 @@ package body Viewer is
    begin
       CGI.Put_CGI_Header;
       Ada.Text_IO.Put_Line ("<html><head><title>Owl Status</title>");
-      Ada.Text_IO.Put_Line ("<link style=status.css />");
+      HTML.Put_Stylesheet ("/status.css");
       Ada.Text_IO.Put_Line ("</head><body>");
+      Ada.Text_IO.Put_Line ("<div id=""page"">");
+      Ada.Text_IO.Put_Line ("<div id=""header"">");
       CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
       HTML.Put_Navigation_Begin;
       HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
       HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
       HTML.Put_Navigation_End;
+      Ada.Text_IO.Put_Line ("</div>"); -- header
 
+      Ada.Text_IO.Put_Line ("<div id=""content"">");
       View_Cluster_Queues;
 
       if CGI.Input_Received then
@@ -222,6 +229,10 @@ package body Viewer is
             View_Waiting_Jobs;
          end if;
       end if;
+      Ada.Text_IO.Put_Line ("</div>"); -- content
+      Ada.Text_IO.Put_Line ("<div id=""clearer""></div>"); -- css quirk
+      Ada.Text_IO.Put_Line ("</div>"); -- page
+
       CGI.Put_HTML_Tail;
    exception
       when E : others =>
