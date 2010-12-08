@@ -90,12 +90,12 @@ package body Viewer is
          end loop;
          HTML.Put_UCell_With_Link (Q_Name, "queue");
          HTML.Put_UCell (Q_Load);
-         HTML.Put_UCell (Q_Total);
-         HTML.Put_UCell (Q_Used);
-         HTML.Put_UCell (Q_Reserved);
-         HTML.Put_UCell (Q_Available);
-         HTML.Put_UCell (Q_Disabled);
-         HTML.Put_UCell (Q_Offline);
+         HTML.Put_UCell (Q_Total, "td class=""right""");
+         HTML.Put_UCell (Q_Used, "td class=""right""");
+         HTML.Put_UCell (Q_Reserved, "td class=""right""");
+         HTML.Put_UCell (Q_Available, "td class=""right""");
+         HTML.Put_UCell (Q_Disabled, "td class=""right""");
+         HTML.Put_UCell (Q_Offline, "td class=""right""");
 
          Ada.Text_IO.Put ("</tr>");
       end loop;
@@ -139,7 +139,8 @@ package body Viewer is
 
    --  Fetch Jobs
       List := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
-   --  Table Header
+      --  Table Header
+      Ada.Text_IO.Put_Line ("<div class=""job_list"">");
       Ada.Text_IO.Put ("<table><tr>");
       HTML.Put_Cell (Data => "Number", Tag => "th");
       HTML.Put_Cell (Data => "Owner", Tag => "th");
@@ -186,13 +187,14 @@ package body Viewer is
          HTML.Put_UCell (Data => J_Name);
          HTML.Put_UCell (Data => J_Priority);
          HTML.Put_UCell (Data => J_Submission_Time);
-         HTML.Put_UCell (Data => J_Slots);
+         HTML.Put_UCell (Data => J_Slots, Tag => "td class=""right""");
          HTML.Put_UCell (Data => J_State);
          Ada.Text_IO.Put ("</tr>");
       end loop;
 
    --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
+      Ada.Text_IO.Put_Line ("</div>");
       Reader.Free;
    end View_Jobs;
 
@@ -230,7 +232,7 @@ package body Viewer is
          end if;
       end if;
       Ada.Text_IO.Put_Line ("</div>"); -- content
-      Ada.Text_IO.Put_Line ("<div id=""clearer""></div>"); -- css quirk
+      HTML.Put_Clearer;
       Ada.Text_IO.Put_Line ("</div>"); -- page
 
       CGI.Put_HTML_Tail;
@@ -415,7 +417,6 @@ package body Viewer is
 
          Ada.Text_IO.Put_Line ("</div>");
 
-         Ada.Text_IO.Put ("</div>");
       end Output_One_Job;
 
 
@@ -454,6 +455,9 @@ package body Viewer is
 
          Parse_One_Job;
          Output_One_Job;
+         HTML.Put_Clearer;
+         Ada.Text_IO.Put ("</div> <!-- job_info -->");
+         HTML.Put_Clearer;
       end loop;
 
       Reader.Free;
