@@ -21,9 +21,9 @@ package body HTML is
    --  Input: Data: Contents of the cell;
    --------------
 
-   procedure Put_UCell (Data : Unbounded_String) is
+   procedure Put_UCell (Data : Unbounded_String; Tag : String := "td") is
    begin
-      Put_Cell (To_String (Data));
+      Put_Cell (Data => To_String (Data), Tag => Tag);
    end Put_UCell;
 
    --------------
@@ -34,11 +34,14 @@ package body HTML is
    --        <a href="the_url?Link_Param=Data">Data</a>
    --------------
 
-   procedure Put_UCell_With_Link (Data : Unbounded_String; Link_Param : String) is
+   procedure Put_UCell_With_Link (Data       : Unbounded_String;
+                                  Link_Param : String;
+                                  Tag        : String := "td") is
       S : String := To_String (Data);
    begin
       Put_Cell (Data => "<a href=""" & CGI.My_URL & "?"
-                & Link_Param & "=" & S & """>" & S & "</a>");
+                & Link_Param & "=" & S & """>" & S & "</a>",
+               Tag => Tag);
    end Put_UCell_With_Link;
 
    procedure Put_Navigation_Begin is
@@ -95,6 +98,11 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<link rel=""stylesheet"" href=""" & URL
                             & """ type=""text/css"" media=""screen"" />");
    end Put_Stylesheet;
+
+   procedure Put_Clearer is
+   begin
+            Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
+   end Put_Clearer;
 
 
 end HTML;

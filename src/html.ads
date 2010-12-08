@@ -2,9 +2,11 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 package HTML is
    procedure Put_Cell (Data : String; Tag : String := "td");
    --  write out a single table cell, optionally changing the tag (to th)
-   procedure Put_UCell (Data : Unbounded_String);
+   procedure Put_UCell (Data : Unbounded_String; Tag : String := "td");
    --  write out a single table cell
-   procedure Put_UCell_With_Link (Data : Unbounded_String; Link_Param : String);
+   procedure Put_UCell_With_Link (Data       : Unbounded_String;
+                                  Link_Param : String;
+                                  Tag        : String := "td");
    --  write out a single table cell, linking the contents
 
    procedure Put_Navigation_Begin;
@@ -19,5 +21,6 @@ package HTML is
    procedure Put_True_False (Truth : Unbounded_String);
 
    procedure Put_Stylesheet (URL : String);
+   procedure Put_Clearer;
 
 end HTML;
