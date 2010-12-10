@@ -1,3 +1,6 @@
+with Ada.Strings.Unbounded;
+use Ada.Strings.Unbounded;
+
 package Viewer is
    sgeroot : constant String := "/cm/shared/apps/sge/current";
    procedure View;
@@ -6,9 +9,11 @@ package Viewer is
    procedure View_Waiting_Jobs;
    procedure View_Jobs_Of_User (User : String);
    procedure View_Job (Job_ID : String);
+   procedure Set_Params (Params : String);
 private
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure View_Jobs (Selector : String);
    Max_J_Name_Length : constant Natural := 20;
    Assumption_Error  : exception;
+   My_Params : Unbounded_String;
 end Viewer;

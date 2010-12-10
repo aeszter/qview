@@ -88,14 +88,14 @@ package body Viewer is
                Q_Offline := To_Unbounded_String (Value (First_Child (C)));
             end if;
          end loop;
-         HTML.Put_UCell_With_Link (Q_Name, "queue");
-         HTML.Put_UCell (Q_Load);
-         HTML.Put_UCell (Q_Total, "td class=""right""");
-         HTML.Put_UCell (Q_Used, "td class=""right""");
-         HTML.Put_UCell (Q_Reserved, "td class=""right""");
-         HTML.Put_UCell (Q_Available, "td class=""right""");
-         HTML.Put_UCell (Q_Disabled, "td class=""right""");
-         HTML.Put_UCell (Q_Offline, "td class=""right""");
+         HTML.Put_Cell (Q_Name, "queue");
+         HTML.Put_Cell (Q_Load);
+         HTML.Put_Cell (Q_Total, "td class=""right""");
+         HTML.Put_Cell (Q_Used, "td class=""right""");
+         HTML.Put_Cell (Q_Reserved, "td class=""right""");
+         HTML.Put_Cell (Q_Available, "td class=""right""");
+         HTML.Put_Cell (Q_Disabled, "td class=""right""");
+         HTML.Put_Cell (Q_Offline, "td class=""right""");
 
          Ada.Text_IO.Put ("</tr>");
       end loop;
@@ -126,6 +126,21 @@ package body Viewer is
       J_PE              : Unbounded_String; -- Parallel environment
       J_Submission_Time : Unbounded_String; -- when submitted
       --  Job List Entries
+
+      procedure Put_Table_Header is
+      begin
+         Ada.Text_IO.Put_Line ("<div class=""job_list"">");
+         Ada.Text_IO.Put ("<table><tr>");
+         HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Name", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "State", Params => My_Params);
+         Ada.Text_IO.Put ("</tr>");
+      end Put_Table_Header;
+
    begin
       SGE_Command.Set_Public_Id ("qstat");
       SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
@@ -139,17 +154,7 @@ package body Viewer is
 
    --  Fetch Jobs
       List := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
-      --  Table Header
-      Ada.Text_IO.Put_Line ("<div class=""job_list"">");
-      Ada.Text_IO.Put ("<table><tr>");
-      HTML.Put_Cell (Data => "Number", Tag => "th");
-      HTML.Put_Cell (Data => "Owner", Tag => "th");
-      HTML.Put_Cell (Data => "Name", Tag => "th");
-      HTML.Put_Cell (Data => "Priority", Tag => "th");
-      HTML.Put_Cell (Data => "Submitted", Tag => "th");
-      HTML.Put_Cell (Data => "Slots", Tag => "th");
-      HTML.Put_Cell (Data => "State", Tag => "th");
-      Ada.Text_IO.Put ("</tr>");
+      Put_Table_Header;
 
       for Index in 1 .. Length (List) loop
          Ada.Text_IO.Put ("<tr>");
@@ -182,13 +187,13 @@ package body Viewer is
                J_PE := To_Unbounded_String (Value (First_Child (C)));
             end if;
          end loop;
-         HTML.Put_UCell_With_Link (Data => J_Number, Link_Param => "job_id");
-         HTML.Put_UCell_With_Link (Data => J_Owner, Link_Param => "user");
-         HTML.Put_UCell (Data => J_Name);
-         HTML.Put_UCell (Data => J_Priority);
-         HTML.Put_UCell (Data => J_Submission_Time);
-         HTML.Put_UCell (Data => J_Slots, Tag => "td class=""right""");
-         HTML.Put_UCell (Data => J_State);
+         HTML.Put_Cell (Data => J_Number, Link_Param => "job_id");
+         HTML.Put_Cell (Data => J_Owner, Link_Param => "user");
+         HTML.Put_Cell (Data => J_Name);
+         HTML.Put_Cell (Data => J_Priority);
+         HTML.Put_Cell (Data => J_Submission_Time);
+         HTML.Put_Cell (Data => J_Slots, Tag => "td class=""right""");
+         HTML.Put_Cell (Data => J_State);
          Ada.Text_IO.Put ("</tr>");
       end loop;
 
@@ -220,14 +225,19 @@ package body Viewer is
 
       if CGI.Input_Received then
          if not Param_Is ("queue", "") then
+            Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
          elsif not Param_Is ("user", "") then
+            Set_Params ("user=" & Sanitise (CGI.Value ("user")));
             View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
          elsif not Param_Is ("job_id", "") then
+            Set_Params ("job_id=" & Sanitise (CGI.Value ("job_id")));
             View_Job (Sanitise (CGI.Value ("job_id")));
          elsif Param_Is ("all_jobs", "y") then
+            Set_Params ("all_jobs=y");
             View_Global_Jobs;
          elsif Param_Is ("waiting_jobs", "y") then
+            Set_Params ("waiting_jobs=y");
             View_Waiting_Jobs;
          end if;
       end if;
@@ -471,6 +481,11 @@ package body Viewer is
    begin
       return Standard."=" (CGI.Value (Param), Expected);
    end Param_Is;
+
+   procedure Set_Params (Params : String) is
+   begin
+      My_Params := To_Unbounded_String (Params);
+   end Set_Params;
 
 
 end Viewer;
