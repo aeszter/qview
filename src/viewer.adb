@@ -11,6 +11,7 @@ with HTML;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
+with Jobs; use Jobs; use Jobs.Job_Lists;
 
 package body Viewer is
 
@@ -115,17 +116,8 @@ package body Viewer is
       Children    : Node_List;
       N           : Node;
       C           : Node;
+      Job_List    : Jobs.Job_Lists.List;
 
-      J_Number          : Unbounded_String; -- Job ID
-      J_Full_Name       : Unbounded_String; -- Job name
-      J_Name            : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
-      J_Owner           : Unbounded_String; -- User whom this job belongs to
-      J_Priority        : Unbounded_String; -- Numerical priority
-      J_State           : Unbounded_String; -- r(unning), qw(aiting) etc.
-      J_Slots           : Unbounded_String; -- how many slots/CPUs to use
-      J_PE              : Unbounded_String; -- Parallel environment
-      J_Submission_Time : Unbounded_String; -- when submitted
-      --  Job List Entries
 
       procedure Put_Table_Header is
       begin
@@ -141,6 +133,12 @@ package body Viewer is
          Ada.Text_IO.Put ("</tr>");
       end Put_Table_Header;
 
+      procedure Put_Job_List_Entry (Job : Jobs.Job) is
+      begin
+         --  print a table row
+         null;
+      end Put_Job_List_Entry;
+
    begin
       SGE_Command.Set_Public_Id ("qstat");
       SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
@@ -152,50 +150,13 @@ package body Viewer is
       SGE_Out := Reader.Get_Tree;
       SGE_Command.Close;
 
-   --  Fetch Jobs
-      List := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
       Put_Table_Header;
 
-      for Index in 1 .. Length (List) loop
-         Ada.Text_IO.Put ("<tr>");
-         N        := Item (List, Index - 1);
-         Children := Child_Nodes (N);
-         for Ch_Index in 0 .. Length (Children) - 1 loop
-            C := Item (Children, Ch_Index);
-            if Name (C) = "JB_job_number" then
-               J_Number := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "JAT_prio" then
-               J_Priority := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "JB_name" then
-               J_Full_Name := To_Unbounded_String (Value (First_Child (C)));
-               if Length (J_Full_Name) > Max_J_Name_Length then
-                  J_Name := Head (Source => J_Full_Name,
-                                  Count  => Max_J_Name_Length);
-               else
-                  J_Name := J_Full_Name;
-               end if;
-            elsif Name (C) = "JB_owner" then
-               J_Owner := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "state" then
-               J_State := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "JB_submission_time" then
-               J_Submission_Time :=
-               To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "slots" then
-               J_Slots := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "requested_pe" then
-               J_PE := To_Unbounded_String (Value (First_Child (C)));
-            end if;
-         end loop;
-         HTML.Put_Cell (Data => J_Number, Link_Param => "job_id");
-         HTML.Put_Cell (Data => J_Owner, Link_Param => "user");
-         HTML.Put_Cell (Data => J_Name);
-         HTML.Put_Cell (Data => J_Priority);
-         HTML.Put_Cell (Data => J_Submission_Time);
-         HTML.Put_Cell (Data => J_Slots, Tag => "td class=""right""");
-         HTML.Put_Cell (Data => J_State);
-         Ada.Text_IO.Put ("</tr>");
-      end loop;
+      Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+      if not Param_Is ("sort", "") then
+         Jobs.Sort_By (CGI.Value ("sort"));
+      end if;
+      Job_List.Iterate (Put_Job_List_Entry);
 
    --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
@@ -419,7 +380,7 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("<div class=""job_resources"">");
          Res := Resource_List.First;
          loop
-            exit when Res = No_Element;
+            exit when Res = Resources.Resource_Lists.No_Element;
             HTML.Put_Paragraph (Label => Resource_Lists.Element (Res).Name,
                                 Contents => Resource_Lists.Element (Res).Value);
             Res := Next (Res);
