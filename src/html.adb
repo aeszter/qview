@@ -8,41 +8,50 @@ package body HTML is
    --  Purpose: Write a table cell with given contents.
    --  Input: Data: Contents of the cell;
    --  Input: Tag: (optional) tag to use instead of <td> (e.g. <th>)
-   --------------
-
-   procedure Put_Cell (Data : String; Tag : String := "td") is
-   begin
-      Put_Line ("<" & Tag & ">" & Data & "</" & Tag & ">");
-   end Put_Cell;
-
-   --------------
-   -- Put_UCell --
-   --  Purpose: Write a table cell with given contents.
-   --  Input: Data: Contents of the cell;
-   --------------
-
-   procedure Put_UCell (Data : Unbounded_String; Tag : String := "td") is
-   begin
-      Put_Cell (Data => To_String (Data), Tag => Tag);
-   end Put_UCell;
-
-   --------------
-   -- Put_UCell_With_Link --
-   --  Purpose: Write a table cell with given contents, linking to .
-   --  Input: Data: Contents of the cell;
-   --  Input: Link_Param: CGI Parameter to use in link, sc.
+   --  Input: Link_Param: (optional) CGI Parameter to use in link, sc.
    --        <a href="the_url?Link_Param=Data">Data</a>
    --------------
 
-   procedure Put_UCell_With_Link (Data       : Unbounded_String;
-                                  Link_Param : String;
-                                  Tag        : String := "td") is
-      S : String := To_String (Data);
+   procedure Put_Cell (Data       : String;
+                       Link_Param : String := "";
+                       Tag        : String := "td") is
    begin
-      Put_Cell (Data => "<a href=""" & CGI.My_URL & "?"
-                & Link_Param & "=" & S & """>" & S & "</a>",
-               Tag => Tag);
-   end Put_UCell_With_Link;
+      if Link_Param = "" then
+         Put_Line ("<" & Tag & ">" & Data & "</" & Tag & ">");
+      else
+         Put_Line ("<" & Tag & "><a href=""" & CGI.My_URL & "?"
+                   & Link_Param & "=" & Data & """>"
+                   & Data & "</a></" & Tag & ">");
+      end if;
+   end Put_Cell;
+
+   procedure Put_Cell (Data       : Unbounded_String;
+                       Link_Param : String := "";
+                       Tag        : String := "td") is
+   begin
+      Put_Cell (Data       => To_String (Data),
+                Link_Param => Link_Param,
+                Tag        => Tag);
+   end Put_Cell;
+
+   procedure Put_Header_Cell (Data     : String;
+                              Params   : Unbounded_String;
+                              Sortable : Boolean := True) is
+   begin
+      if not Sortable then
+         Put_Cell (Data => Data,
+                   Tag  => "th");
+      elsif Params = "" then
+         Put_Cell (Data       => Data,
+                   Link_Param => "sort",
+                   Tag        => "th");
+      else -- Sortable and Params
+         Put_Cell (Data       => Data,
+                   Link_Param => To_String (Params & "&sort"),
+                   Tag        => "th");
+      end if;
+   end Put_Header_Cell;
+
 
    procedure Put_Navigation_Begin is
    begin
@@ -101,7 +110,7 @@ package body HTML is
 
    procedure Put_Clearer is
    begin
-            Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
+      Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
    end Put_Clearer;
 
 

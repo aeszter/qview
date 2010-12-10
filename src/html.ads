@@ -1,13 +1,17 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 package HTML is
-   procedure Put_Cell (Data : String; Tag : String := "td");
+   procedure Put_Cell (Data       : String;
+                       Link_Param : String := "";
+                       Tag  : String := "td");
    --  write out a single table cell, optionally changing the tag (to th)
-   procedure Put_UCell (Data : Unbounded_String; Tag : String := "td");
-   --  write out a single table cell
-   procedure Put_UCell_With_Link (Data       : Unbounded_String;
-                                  Link_Param : String;
-                                  Tag        : String := "td");
-   --  write out a single table cell, linking the contents
+   --  optionally, link the contents as "Link_Param=Data"
+   procedure Put_Cell (Data       : Unbounded_String;
+                       Link_Param : String := "";
+                       Tag        : String := "td");
+   procedure Put_Header_Cell (Data     : String;
+                              Params   : Unbounded_String;
+                              Sortable : Boolean := True);
+
 
    procedure Put_Navigation_Begin;
    procedure Put_Navigation_End;
