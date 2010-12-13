@@ -114,8 +114,6 @@ package body Viewer is
       SGE_Command : Pipe_Stream;
       List        : Node_List;
       Children    : Node_List;
-      N           : Node;
-      C           : Node;
       Job_List    : Jobs.Job_Lists.List;
 
 
@@ -133,11 +131,12 @@ package body Viewer is
          Ada.Text_IO.Put ("</tr>");
       end Put_Table_Header;
 
-      procedure Put_Job_List_Entry (Job : Jobs.Job) is
+      procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
       begin
          --  print a table row
          null;
       end Put_Job_List_Entry;
+
 
    begin
       SGE_Command.Set_Public_Id ("qstat");
@@ -156,7 +155,7 @@ package body Viewer is
       if not Param_Is ("sort", "") then
          Jobs.Sort_By (CGI.Value ("sort"));
       end if;
-      Job_List.Iterate (Put_Job_List_Entry);
+      Job_List.Iterate (Put_Job_List_Entry'Access);
 
    --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
