@@ -1,3 +1,7 @@
+with DOM.Core.Nodes; use DOM.Core.Nodes;
+with DOM.Core.Attrs; use DOM.Core.Attrs;
+with Ada.Text_IO;
+
 package body Jobs is
 
    -------------
@@ -9,12 +13,18 @@ package body Jobs is
                      Slots, PE, Submission_Time : Unbounded_String)
       return Job
    is
+      J : Job;
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (True, "New_Job unimplemented");
-      raise Program_Error with "Unimplemented function New_Job";
-      return New_Job (Number, Full_Name, Name, Owner, Priority, State, Slots,
-         PE, Submission_Time);
+      J.Number := Number;
+      J.Full_Name := Full_Name;
+      J.Name := Name;
+      J.Owner := Owner;
+      J.Priority := Priority;
+      J.State := State;
+      J.Slots := Slots;
+      J.PE := PE;
+      J.Submission_Time := Submission_Time;
+      return J;
    end New_Job;
 
    -----------------
@@ -22,47 +32,58 @@ package body Jobs is
    -----------------
 
    procedure Append_List (List : Node_List) is
+      Children : Node_List;
+      C        : Node;
+      --  Job fields
+      Short_Name : Unbounded_String;
+      Full_Name  : Unbounded_String;
+      Number     : Unbounded_String;
+      PE, Slots  : Unbounded_String;
+      Priority   : Unbounded_String;
+      Owner      : Unbounded_String;
+      State      : Unbounded_String;
+      Submission_Time : Unbounded_String;
+
    begin
-       for Index in 1 .. Length (List) loop
+      for Index in 1 .. Length (List) loop
 --         Ada.Text_IO.Put ("<tr>");
-         N        := Item (List, Index - 1);
-         Children := Child_Nodes (N);
+         Children := Child_Nodes (Item (List, Index - 1));
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
-               J_Number := To_Unbounded_String (Value (First_Child (C)));
+               Number := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JAT_prio" then
-               J_Priority := To_Unbounded_String (Value (First_Child (C)));
+               Priority := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_name" then
-               J_Full_Name := To_Unbounded_String (Value (First_Child (C)));
-               if Length (J_Full_Name) > Max_J_Name_Length then
-                  J_Name := Head (Source => J_Full_Name,
-                                  Count  => Max_J_Name_Length);
+               Full_Name := To_Unbounded_String (Value (First_Child (C)));
+               if Length (Full_Name) > Max_Name_Length then
+                  Short_Name := Head (Source => Full_Name,
+                                Count  => Max_Name_Length);
                else
-                  J_Name := J_Full_Name;
+                  Short_Name := Full_Name;
                end if;
             elsif Name (C) = "JB_owner" then
-               J_Owner := To_Unbounded_String (Value (First_Child (C)));
+               Owner := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "state" then
-               J_State := To_Unbounded_String (Value (First_Child (C)));
+               State := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_submission_time" then
-               J_Submission_Time :=
+               Submission_Time :=
                To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "slots" then
-               J_Slots := To_Unbounded_String (Value (First_Child (C)));
+               Slots := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "requested_pe" then
-               J_PE := To_Unbounded_String (Value (First_Child (C)));
+               PE := To_Unbounded_String (Value (First_Child (C)));
             end if;
          end loop;
-         Job_List.Append (New_Job (Number          => J_Number,
-                                   Full_Name       => J_Full_Name,
-                                   Name            => J_Name,
-                                   Owner           => J_Owner,
-                                   Priority        => J_Priority,
-                                   State           => J_State,
-                                   Slots           => J_Slots,
-                                   PE              => J_PE,
-                                   Submission_Time => J_Submission_Time));
+         Job_List.Append (New_Job (Number          => Number,
+                                   Full_Name       => Full_Name,
+                                   Name            => Short_Name,
+                                   Owner           => Owner,
+                                   Priority        => Priority,
+                                   State           => State,
+                                   Slots           => Slots,
+                                   PE              => PE,
+                                   Submission_Time => Submission_Time));
 --         HTML.Put_Cell (Data => J_Number, Link_Param => "job_id");
 --         HTML.Put_Cell (Data => J_Owner, Link_Param => "user");
 --         HTML.Put_Cell (Data => J_Name);
@@ -72,6 +93,58 @@ package body Jobs is
 --         HTML.Put_Cell (Data => J_State);
 --         Ada.Text_IO.Put ("</tr>");
       end loop;
-  end Append_List;
+   end Append_List;
+
+
+   ------------------
+   -- Sort_By      --
+   --  Purpose:  Sort the job list by any column/field
+   --  Parameter Field: Title of the column to sort by
+   ------------------
+
+
+   procedure Sort_By (Field : String) is
+   begin
+      if Field = "Number" then
+         Sorting_By_Number.Sort (Job_List);
+      else
+         Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & "unimplemented");
+      end if;
+   end Sort_By;
+
+   ------------------------
+   -- Precedes_By_Name   --
+   --  Purpose: Check whether one job should precede another when sorted by name
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   ------------------------
+
+   function Precedes_By_Name (Left, Right : Job) return Boolean is
+   begin
+   end;
+
+   ------------------------
+   -- Same               --
+   --  Purpose: Check whether two jobs are identical
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left and Right are identical
+   --  Description: This implements the "=" operator for package Doubly_Linked_Lists;
+   --    we compare job numbers (since they are unique)
+   ------------------------
+
+
+   function Same (Left, Right : Job) return Boolean is
+   begin
+      if Left.Number = "" then
+         return false;
+      elsif Left.Number = Right.Number then
+         return true;
+      else
+         return false;
+      end if;
+   end Same;
 
 end Jobs;

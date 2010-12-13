@@ -22,7 +22,16 @@ package Jobs is
 
    procedure Append_List (List : Node_List);
    procedure Sort_By (Field : String);
+   function Precedes_By_Name (Left, Right : Job) return Boolean;
+   function Same (Left, Right : Job) return Boolean;
 
    package Job_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job);
+     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
+
+   package Sorting_By_Name is
+     new Job_Lists.Generic_Sorting
+       ("<" => Precedes_By_Name);
+
+   Max_Name_Length : constant Positive := 20;
+   Job_List : Job_Lists.List;
 end Jobs;
