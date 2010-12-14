@@ -23,6 +23,12 @@ package Jobs is
    procedure Append_List (List : Node_List);
    procedure Sort_By (Field : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;
+   function Precedes_By_Number (Left, Right : Job) return Boolean;
+   function Precedes_By_Owner (Left, Right : Job) return Boolean;
+   function Precedes_By_Priority (Left, Right : Job) return Boolean;
+   function Precedes_By_Submission_Time (Left, Right : Job) return Boolean;
+   function Precedes_By_Slots (Left, Right : Job) return Boolean;
+   function Precedes_By_State (Left, Right : Job) return Boolean;
    function Same (Left, Right : Job) return Boolean;
 
    package Job_Lists is
@@ -31,6 +37,20 @@ package Jobs is
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
        ("<" => Precedes_By_Name);
+
+   package Sorting_By_Number is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Number);
+   package Sorting_By_Owner is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Owner);
+   package Sorting_By_Priority is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Priority);
+   package Sorting_By_Submission_Time is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Submission_time);
+   package Sorting_By_Slots is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Slots);
+   package Sorting_By_State is
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_State);
+
 
    Max_Name_Length : constant Positive := 20;
    Job_List : Job_Lists.List;

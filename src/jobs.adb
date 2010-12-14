@@ -46,7 +46,6 @@ package body Jobs is
 
    begin
       for Index in 1 .. Length (List) loop
---         Ada.Text_IO.Put ("<tr>");
          Children := Child_Nodes (Item (List, Index - 1));
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
@@ -84,14 +83,6 @@ package body Jobs is
                                    Slots           => Slots,
                                    PE              => PE,
                                    Submission_Time => Submission_Time));
---         HTML.Put_Cell (Data => J_Number, Link_Param => "job_id");
---         HTML.Put_Cell (Data => J_Owner, Link_Param => "user");
---         HTML.Put_Cell (Data => J_Name);
---         HTML.Put_Cell (Data => J_Priority);
---         HTML.Put_Cell (Data => J_Submission_Time);
---         HTML.Put_Cell (Data => J_Slots, Tag => "td class=""right""");
---         HTML.Put_Cell (Data => J_State);
---         Ada.Text_IO.Put ("</tr>");
       end loop;
    end Append_List;
 
@@ -107,8 +98,20 @@ package body Jobs is
    begin
       if Field = "Number" then
          Sorting_By_Number.Sort (Job_List);
+      elsif Field = "Name" then
+         Sorting_By_Name.Sort (Job_List);
+      elsif Field = "Owner" then
+         Sorting_By_Owner.Sort (Job_List);
+      elsif Field = "Priority" then
+         Sorting_By_Priority.Sort (Job_List);
+      elsif Field = "Submitted" then
+         Sorting_By_Submission_Time.Sort (Job_List);
+      elsif Field = "Slots" then
+         Sorting_By_Slots.Sort (Job_List);
+      elsif Field = "State" then
+         Sorting_By_State.Sort (Job_List);
       else
-         Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & "unimplemented");
+         Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & " unimplemented");
       end if;
    end Sort_By;
 
@@ -123,7 +126,93 @@ package body Jobs is
 
    function Precedes_By_Name (Left, Right : Job) return Boolean is
    begin
-   end;
+      return Left.Full_Name < Right.Full_Name;
+   end Precedes_By_Name;
+
+   --------------------------
+   -- Precedes_By_Number   --
+   --  Purpose: Check whether one job should precede another when sorted by number
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Number (Left, Right : Job) return Boolean is
+   begin
+      return Left.Number < Right.Number;
+   end Precedes_By_Number;
+
+   --------------------------
+   -- Precedes_By_Owner   --
+   --  Purpose: Check whether one job should precede another when sorted by owner
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Owner (Left, Right : Job) return Boolean is
+   begin
+      return Left.Owner < Right.Owner;
+   end Precedes_By_Owner;
+
+   --------------------------
+   -- Precedes_By_Priority   --
+   --  Purpose: Check whether one job should precede another when sorted by priority
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Priority (Left, Right : Job) return Boolean is
+   begin
+      return Left.Priority < Right.Priority;
+   end Precedes_By_Priority;
+
+   --------------------------
+   -- Precedes_By_Submission_time   --
+   --  Purpose: Check whether one job should precede another when sorted by submission time
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Submission_Time (Left, Right : Job) return Boolean is
+   begin
+      return Left.Submission_Time < Right.Submission_Time;
+   end Precedes_By_Submission_Time;
+
+   --------------------------
+   -- Precedes_By_Slots   --
+   --  Purpose: Check whether one job should precede another when sorted by
+   --           number of slots
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Slots (Left, Right : Job) return Boolean is
+   begin
+      return Integer'Value (TO_String (Left.Slots)) < Integer'Value (To_String (Right.Slots));
+   end Precedes_By_Slots;
+
+   --------------------------
+   -- Precedes_By_State   --
+   --  Purpose: Check whether one job should precede another when sorted by state
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_State (Left, Right : Job) return Boolean is
+   begin
+      return Left.State < Right.State;
+   end Precedes_By_State;
 
    ------------------------
    -- Same               --
@@ -139,11 +228,11 @@ package body Jobs is
    function Same (Left, Right : Job) return Boolean is
    begin
       if Left.Number = "" then
-         return false;
+         return False;
       elsif Left.Number = Right.Number then
-         return true;
+         return True;
       else
-         return false;
+         return False;
       end if;
    end Same;
 
