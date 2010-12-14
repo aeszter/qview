@@ -14,7 +14,8 @@ package body HTML is
 
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
-                       Tag        : String := "td") is
+                       Tag        : String := "td";
+                       class      : String := "") is
    begin
       if Link_Param = "" then
          Put_Line ("<" & Tag & ">" & Data & "</" & Tag & ">");
@@ -27,7 +28,8 @@ package body HTML is
 
    procedure Put_Cell (Data       : Unbounded_String;
                        Link_Param : String := "";
-                       Tag        : String := "td") is
+                       Tag        : String := "td";
+                       Class      : String := "") is
    begin
       Put_Cell (Data       => To_String (Data),
                 Link_Param => Link_Param,
