@@ -114,7 +114,6 @@ package body Viewer is
       SGE_Command : Pipe_Stream;
       List        : Node_List;
       Children    : Node_List;
-      Job_List    : Jobs.Job_Lists.List;
 
 
       procedure Put_Table_Header is
@@ -132,9 +131,17 @@ package body Viewer is
       end Put_Table_Header;
 
       procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
+         J : Jobs.Job := Jobs.Job_Lists.Element (Job);
       begin
-         --  print a table row
-         null;
+         Ada.Text_IO.Put ("<tr>");
+         HTML.Put_Cell (Data => J.Number, Link_Param => "job_id");
+         HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
+         HTML.Put_Cell (Data => J.Name);
+         HTML.Put_Cell (Data => J.Priority);
+         HTML.Put_Cell (Data => J.Submission_Time);
+         HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
+         HTML.Put_Cell (Data => J.State);
+         Ada.Text_IO.Put ("</tr>");
       end Put_Job_List_Entry;
 
 
