@@ -29,4 +29,6 @@ package HTML is
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
 
+   function Param_Is (Param : String; Expected : String) return Boolean;
+
 end HTML;

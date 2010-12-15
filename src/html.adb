@@ -15,14 +15,24 @@ package body HTML is
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
                        Tag        : String := "td";
-                       class      : String := "") is
+                       Class      : String := "") is
+      Open_Tag : Unbounded_String;
+      --  This is not ideal: we are using an unbounded string without any real need,
+      --  just in order to avoid four separate cases of default parameters
+      Close_Tag : String := "</" & Tag & ">";
    begin
-      if Link_Param = "" then
-         Put_Line ("<" & Tag & ">" & Data & "</" & Tag & ">");
+      if Class /= "" then
+         Open_Tag := To_Unbounded_String ("<" & Tag & " class=""" & Class & """>");
       else
-         Put_Line ("<" & Tag & "><a href=""" & CGI.My_URL & "?"
+         Open_Tag := To_Unbounded_String ("<" & Tag & ">");
+      end if;
+
+      if Link_Param = "" then
+         Put_Line (To_String (Open_Tag) & Data & Close_Tag);
+      else
+         Put_Line (To_String (Open_Tag) & "<a href=""" & CGI.My_URL & "?"
                    & Link_Param & "=" & Data & """>"
-                   & Data & "</a></" & Tag & ">");
+                   & Data & "</a>" & Close_Tag);
       end if;
    end Put_Cell;
 
@@ -33,7 +43,8 @@ package body HTML is
    begin
       Put_Cell (Data       => To_String (Data),
                 Link_Param => Link_Param,
-                Tag        => Tag);
+                Tag        => Tag,
+                Class      => Class);
    end Put_Cell;
 
    procedure Put_Header_Cell (Data     : String;
@@ -46,11 +57,22 @@ package body HTML is
       elsif Params = "" then
          Put_Cell (Data       => Data,
                    Link_Param => "sort",
-                   Tag        => "th");
-      else -- Sortable and Params
+                   Tag        => "th",
+                   Class      => "sorter"
+                  );
+      elsif Param_Is ("sort", Data) then -- Sorted by this queue, Params exist
+
          Put_Cell (Data       => Data,
                    Link_Param => To_String (Params & "&sort"),
-                   Tag        => "th");
+                   Tag        => "th",
+                   Class      => "sorter_active"
+                  );
+      else
+         Put_Cell (Data       => Data,
+                   Link_Param => To_String (Params & "&sort"),
+                   Tag        => "th",
+                   Class      => "sorter"
+                  );
       end if;
    end Put_Header_Cell;
 
@@ -115,5 +137,9 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
    end Put_Clearer;
 
+   function Param_Is (Param : String; Expected : String) return Boolean is
+   begin
+      return Standard."=" (CGI.Value (Param), Expected);
+   end Param_Is;
 
 end HTML;

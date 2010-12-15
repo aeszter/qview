@@ -89,14 +89,14 @@ package body Viewer is
                Q_Offline := To_Unbounded_String (Value (First_Child (C)));
             end if;
          end loop;
-         HTML.Put_Cell (Q_Name, "queue");
-         HTML.Put_Cell (Q_Load);
-         HTML.Put_Cell (Q_Total, "td class=""right""");
-         HTML.Put_Cell (Q_Used, "td class=""right""");
-         HTML.Put_Cell (Q_Reserved, "td class=""right""");
-         HTML.Put_Cell (Q_Available, "td class=""right""");
-         HTML.Put_Cell (Q_Disabled, "td class=""right""");
-         HTML.Put_Cell (Q_Offline, "td class=""right""");
+         HTML.Put_Cell (Data => Q_Name, Link_Param => "queue");
+         HTML.Put_Cell (Data => Q_Load);
+         HTML.Put_Cell (Data => Q_Total, Class => "right");
+         HTML.Put_Cell (Data => Q_Used, Class => "right");
+         HTML.Put_Cell (Data => Q_Reserved, Class => "right");
+         HTML.Put_Cell (Data => Q_Available, Class => "right");
+         HTML.Put_Cell (Data => Q_Disabled, Class => "right");
+         HTML.Put_Cell (Data => Q_Offline, Class => "right");
 
          Ada.Text_IO.Put ("</tr>");
       end loop;
@@ -161,7 +161,7 @@ package body Viewer is
       Put_Table_Header;
 
       Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
-      if not Param_Is ("sort", "") then
+      if not HTML.Param_Is ("sort", "") then
          Jobs.Sort_By (CGI.Value ("sort"));
       end if;
       Job_List.Iterate (Put_Job_List_Entry'Access);
@@ -193,19 +193,19 @@ package body Viewer is
       View_Cluster_Queues;
 
       if CGI.Input_Received then
-         if not Param_Is ("queue", "") then
+         if not HTML.Param_Is ("queue", "") then
             Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
-         elsif not Param_Is ("user", "") then
+         elsif not HTML.Param_Is ("user", "") then
             Set_Params ("user=" & Sanitise (CGI.Value ("user")));
             View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
-         elsif not Param_Is ("job_id", "") then
+         elsif not HTML.Param_Is ("job_id", "") then
             Set_Params ("job_id=" & Sanitise (CGI.Value ("job_id")));
             View_Job (Sanitise (CGI.Value ("job_id")));
-         elsif Param_Is ("all_jobs", "y") then
+         elsif HTML.Param_Is ("all_jobs", "y") then
             Set_Params ("all_jobs=y");
             View_Global_Jobs;
-         elsif Param_Is ("waiting_jobs", "y") then
+         elsif HTML.Param_Is ("waiting_jobs", "y") then
             Set_Params ("waiting_jobs=y");
             View_Waiting_Jobs;
          end if;
@@ -446,10 +446,6 @@ package body Viewer is
          Reader.Free;
    end View_Job;
 
-   function Param_Is (Param : String; Expected : String) return Boolean is
-   begin
-      return Standard."=" (CGI.Value (Param), Expected);
-   end Param_Is;
 
    procedure Set_Params (Params : String) is
    begin

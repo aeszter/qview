@@ -11,7 +11,6 @@ package Viewer is
    procedure View_Job (Job_ID : String);
    procedure Set_Params (Params : String);
 private
-   function Param_Is (Param : String; Expected : String) return Boolean;
    procedure View_Jobs (Selector : String);
    Max_J_Name_Length : constant Natural := 20;
    Assumption_Error  : exception;
