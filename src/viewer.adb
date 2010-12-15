@@ -132,6 +132,8 @@ package body Viewer is
 
       procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
          J : Jobs.Job := Jobs.Job_Lists.Element (Job);
+         State : String := "<img src=""/icons/" & State_As_String (J)
+           & ".png"" alt=""" & State_As_String (J) & """ />";
       begin
          Ada.Text_IO.Put ("<tr>");
          HTML.Put_Cell (Data => J.Number, Link_Param => "job_id");
@@ -140,7 +142,7 @@ package body Viewer is
          HTML.Put_Cell (Data => J.Priority);
          HTML.Put_Cell (Data => J.Submission_Time);
          HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
-         HTML.Put_Cell (Data => J.State);
+         HTML.Put_Cell (Data => State);
          Ada.Text_IO.Put ("</tr>");
       end Put_Job_List_Entry;
 

@@ -20,12 +20,50 @@ package body Jobs is
       J.Name := Name;
       J.Owner := Owner;
       J.Priority := Priority;
-      J.State := State;
+      if State = "dt" then
+         J.State := dt;
+      elsif State = "dr" then
+         J.State := dr;
+      elsif State = "Eqw" then
+         J.State := Eqw;
+      elsif State = "t" then
+         J.State := t;
+      elsif State = "r" then
+         J.State := r;
+      elsif State = "Rr" then
+         J.State := Rr;
+      elsif State = "qw" then
+         J.State := qw;
+      elsif State = "hqw" then
+         J.State := hqw;
+      else
+         J.State := unknown;
+         Ada.Text_IO.Put_Line ("<em>Error: found unknown job state "
+                               & To_String (State) & "</em>");
+      end if;
       J.Slots := Slots;
       J.PE := PE;
       J.Submission_Time := Submission_Time;
       return J;
    end New_Job;
+
+
+   function State_As_String (J : Job) return String is
+   begin
+      case J.State is
+         when dt => return "dt";
+         when dr => return "dr";
+         when Eqw => return "Eqw";
+         when t => return "t";
+         when r => return "r";
+         when Rr => return "Rr";
+         when qw => return "qw";
+         when hqw => return "hqw";
+         when unknown => return "unknown";
+      end case;
+
+   end State_As_String;
+
 
    -----------------
    -- Append_List --

@@ -4,17 +4,20 @@ with DOM.Core; use DOM.Core;
 
 package Jobs is
 
+   type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, qw, hqw);
    type Job is record
       Number          : Unbounded_String; -- Job ID
       Full_Name       : Unbounded_String; -- Job name
       Name            : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
       Owner           : Unbounded_String; -- User whom this job belongs to
       Priority        : Unbounded_String; -- Numerical priority
-      State           : Unbounded_String; -- r(unning), qw(aiting) etc.
+      State           : Job_State;
       Slots           : Unbounded_String; -- how many slots/CPUs to use
       PE              : Unbounded_String; -- Parallel environment
       Submission_Time : Unbounded_String; -- when submitted
    end record;
+
+   function State_As_String (J : Job) return String;
 
    function New_Job (Number, Full_Name, Name, Owner, Priority, State,
                      Slots, PE, Submission_Time : Unbounded_String)
