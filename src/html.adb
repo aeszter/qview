@@ -1,5 +1,8 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with CGI;
+with Ada.Calendar;
+with GNAT.Calendar;
+with GNAT.Calendar.Time_IO; use GNAT.Calendar.Time_IO;
 
 package body HTML is
 
@@ -46,6 +49,38 @@ package body HTML is
                 Tag        => Tag,
                 Class      => Class);
    end Put_Cell;
+
+   procedure Put_Img_Cell (Image : String) is
+      Data : String := "<img src=""/icons/" & Image
+           & ".png"" alt=""" & Image & """ title="""
+           & Image & """ />";
+   begin
+      Put_Cell (Data => Data);
+   end Put_Img_Cell;
+
+   procedure Put_Time_Cell (Time : Calendar.Time) is
+      Year, This_Year   : Ada.Calendar.Year_Number;
+      Month, This_Month : Ada.Calendar.Month_Number;
+      Day, This_Day     : Ada.Calendar.Day_Number;
+      Secs              : Ada.Calendar.Day_Duration;
+   begin
+      Ada.Calendar.Split (Date    => Time,
+                          Year    => Year,
+                          Month   => Month,
+                          Day     => Day,
+                          Seconds => Secs);
+      Ada.Calendar.Split (Date    => Ada.Calendar.Clock,
+                          Year    => This_Year,
+                          Month   => This_Month,
+                          Day     => This_Day,
+                          Seconds => Secs);
+      if Day = This_Day and then Month = This_Month and then Year = This_Year then
+         Put_Cell (Data => "today, " & Image (Time, "%H:%M:%S"));
+      else
+         Put_Cell (Data => Image (Time, ISO_Date & " %H:%M:%S"));
+      end if;
+   end Put_Time_Cell;
+
 
    procedure Put_Header_Cell (Data     : String;
                               Params   : Unbounded_String;
@@ -98,12 +133,12 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<p>" & Label & ": " & Contents & "</p>");
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : String; Contents : Unbounded_string) is
+   procedure Put_Paragraph (Label : String; Contents : Unbounded_String) is
    begin
       Put_Paragraph (Label, To_String (Contents));
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_string) is
+   procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String) is
    begin
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
@@ -112,11 +147,11 @@ package body HTML is
    begin
       Ada.Text_IO.Put ("<img src=""");
       if Truth = "true" then
-         Ada.Text_IO.Put ("/icons/tick.png"" alt=""true""");
+         Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
       elsif Truth = "false" then
-         Ada.Text_IO.Put ("/icons/cross.png"" alt=""false""");
+         Ada.Text_IO.Put ("/icons/cross.png"" alt=""false"" title=""false""");
       else
-         Ada.Text_IO.Put ("/icons/error.png"" alt=""undefined""");
+         Ada.Text_IO.Put ("/icons/error.png"" alt=""undefined"" title=""undefined""");
       end if;
       Ada.Text_IO.Put_Line (" />");
    end Put_True_False;

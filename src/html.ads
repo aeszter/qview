@@ -1,15 +1,19 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Calendar;
+
 package HTML is
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
                        Tag        : String := "td";
-                       class      : String := "");
+                       Class      : String := "");
    --  write out a single table cell, optionally changing the tag (to th)
    --  optionally, link the contents as "Link_Param=Data"
    procedure Put_Cell (Data       : Unbounded_String;
                        Link_Param : String := "";
                        Tag        : String := "td";
                        Class      : String := "");
+   procedure Put_Img_Cell (Image : String);
+   procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Header_Cell (Data     : String;
                               Params   : Unbounded_String;
                               Sortable : Boolean := True);
