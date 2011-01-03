@@ -10,6 +10,7 @@ package Resources is
 
    function New_Resource (Name : Unbounded_String; Value : Unbounded_String)
                           return Resource;
+   procedure Put (R : Resource);
 
 
 

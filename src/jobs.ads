@@ -1,10 +1,13 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with DOM.Core; use DOM.Core;
+with GNAT.Calendar; use GNAT.Calendar;
+with Ada.Calendar; use Ada.Calendar;
 
 package Jobs is
 
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, qw, hqw);
+
    type Job is record
       Number          : Unbounded_String; -- Job ID
       Full_Name       : Unbounded_String; -- Job name
@@ -14,13 +17,13 @@ package Jobs is
       State           : Job_State;
       Slots           : Unbounded_String; -- how many slots/CPUs to use
       PE              : Unbounded_String; -- Parallel environment
-      Submission_Time : Unbounded_String; -- when submitted
+      Submission_Time : Time;    -- when submitted
    end record;
 
    function State_As_String (J : Job) return String;
 
    function New_Job (Number, Full_Name, Name, Owner, Priority, State,
-                     Slots, PE, Submission_Time : Unbounded_String)
+                     Slots, PE : Unbounded_String; Submission_Time : Time)
                      return Job;
 
    procedure Append_List (List : Node_List);
@@ -48,7 +51,7 @@ package Jobs is
    package Sorting_By_Priority is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Priority);
    package Sorting_By_Submission_Time is
-     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Submission_time);
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Submission_Time);
    package Sorting_By_Slots is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Slots);
    package Sorting_By_State is

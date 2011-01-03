@@ -1,6 +1,8 @@
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
+with Ada.Calendar; use Ada.Calendar;
+with GNAT.Calendar.Time_IO; use GNAT.Calendar.Time_IO;
 
 package body Jobs is
 
@@ -8,10 +10,9 @@ package body Jobs is
    -- New_Job --
    -------------
 
-   function New_Job
-     (Number, Full_Name, Name, Owner, Priority, State,
-                     Slots, PE, Submission_Time : Unbounded_String)
-      return Job
+   function New_Job (Number, Full_Name, Name, Owner, Priority, State,
+                     Slots, PE : Unbounded_String; Submission_Time : Time)
+                     return Job
    is
       J : Job;
    begin
@@ -80,7 +81,8 @@ package body Jobs is
       Priority   : Unbounded_String;
       Owner      : Unbounded_String;
       State      : Unbounded_String;
-      Submission_Time : Unbounded_String;
+      Submission_Time : Time;
+      Time_Buffer : String (1 .. 19);
 
    begin
       for Index in 1 .. Length (List) loop
@@ -103,9 +105,14 @@ package body Jobs is
                Owner := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "state" then
                State := To_Unbounded_String (Value (First_Child (C)));
-            elsif Name (C) = "JB_submission_time" then
-               Submission_Time :=
-               To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_submission_time" or else
+            Name (C) = "JAT_start_time" then
+               Time_Buffer := Value (First_Child (C));
+               if Time_Buffer (11) /= 'T' then
+                  raise Time_Error;
+               end if;
+               Time_Buffer (11) := ' ';
+               Submission_Time := Time_IO.Value (Time_Buffer);
             elsif Name (C) = "slots" then
                Slots := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "requested_pe" then
@@ -235,7 +242,7 @@ package body Jobs is
 
    function Precedes_By_Slots (Left, Right : Job) return Boolean is
    begin
-      return Integer'Value (TO_String (Left.Slots)) < Integer'Value (To_String (Right.Slots));
+      return Integer'Value (To_String (Left.Slots)) < Integer'Value (To_String (Right.Slots));
    end Precedes_By_Slots;
 
    --------------------------
