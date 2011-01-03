@@ -1,4 +1,4 @@
-with unicode;
+with Unicode;
 with Ada.Characters;
 with Ada.Characters.Latin_1;
 
@@ -6,7 +6,7 @@ package body Pipe_Streams is
 
    procedure Buffer_Line (p : in out Pipe_Stream) is
    begin
-      p.line_buffer := Pipe_Commands.Read_Next (p.file_stream);
+      p.line_buffer := Pipe_Commands.read_next (p.file_stream);
       p.position := 0;
    exception
       when Pipe_Commands.End_Of_File =>
@@ -55,11 +55,11 @@ package body Pipe_Streams is
    procedure execute
      (p       : in out Pipe_Stream;
       Command : in String;
-      IO_type : in Pipe_Commands.IO_Mode)
+      IO_type : in Pipe_Commands.IO_MODE)
    is
    begin
       p.file_stream := Pipe_Commands.execute (Command => Command,
-                                              IO_type => IO_Type);
+                                              IO_type => IO_type);
       Buffer_Line (p);
    end execute;
 
