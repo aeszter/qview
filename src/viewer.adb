@@ -61,8 +61,10 @@ package body Viewer is
       HTML.Put_Cell ("Used", Tag => "th");
       HTML.Put_Cell ("Reserved", Tag => "th");
       HTML.Put_Cell ("Available", Tag => "th");
-      HTML.Put_Cell ("Disabled", Tag => "th");
-      HTML.Put_Cell ("Offline", Tag => "th");
+      HTML.Put_Cell ("<acronym title=""aoACDS: overloaded or in maintenance window"">Suspended</acronym>",
+                     Tag => "th");
+      HTML.Put_Cell ("<acronym title=""cdsuE: config problem, offline, disabled by admin, or node error"">Offline</acronym>",
+                     Tag => "th");
       Ada.Text_IO.Put ("</tr>");
 
       for Index in 1 .. Length (List) loop
@@ -132,17 +134,15 @@ package body Viewer is
 
       procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
          J : Jobs.Job := Jobs.Job_Lists.Element (Job);
-         State : String := "<img src=""/icons/" & State_As_String (J)
-           & ".png"" alt=""" & State_As_String (J) & """ />";
       begin
          Ada.Text_IO.Put ("<tr>");
          HTML.Put_Cell (Data => J.Number, Link_Param => "job_id");
          HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
          HTML.Put_Cell (Data => J.Name);
          HTML.Put_Cell (Data => J.Priority);
-         HTML.Put_Cell (Data => J.Submission_Time);
+         HTML.Put_Time_Cell (J.Submission_Time);
          HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
-         HTML.Put_Cell (Data => State);
+         HTML.Put_Img_Cell (State_As_String (J));
          Ada.Text_IO.Put ("</tr>");
       end Put_Job_List_Entry;
 
@@ -262,14 +262,14 @@ package body Viewer is
       J_Number          : Unbounded_String; -- Job ID
       J_Name            : Unbounded_String; -- Job name
       J_Owner           : Unbounded_String; -- User whom this job belongs to
-      J_Group           : Unbounded_string;
+      J_Group           : Unbounded_String;
       J_Priority        : Unbounded_String; -- Numerical priority
       J_State           : Unbounded_String; -- r(unning), qw(aiting) etc.
       J_Slots           : Unbounded_String; -- how many slots/CPUs to use
       J_PE              : Unbounded_String; -- Parallel environment
       J_Submission_Time : Unbounded_String; -- when submitted
       J_Exec_File       : Unbounded_String;
-      J_script_File     : Unbounded_String;
+      J_Script_File     : Unbounded_String;
       J_Merge_Std_Err   : Unbounded_String;
       J_Array           : Unbounded_String;
       J_Queue           : Unbounded_String;
@@ -389,8 +389,7 @@ package body Viewer is
          Res := Resource_List.First;
          loop
             exit when Res = Resources.Resource_Lists.No_Element;
-            HTML.Put_Paragraph (Label => Resource_Lists.Element (Res).Name,
-                                Contents => Resource_Lists.Element (Res).Value);
+            Resources.Put (Resources.Resource_Lists.Element (Res));
             Res := Next (Res);
          end loop;
 
