@@ -11,6 +11,7 @@ with HTML;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
+with Slots; use Slots; use Slots.Slot_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 
 package body Viewer is
@@ -257,6 +258,7 @@ package body Viewer is
       N           : Node;
       C           : Node;
       Resource_List : Resources.Resource_Lists.List;
+      Slot_List   : Slots.Slot_Lists.List;
 
 
       J_Number          : Unbounded_String; -- Job ID
@@ -306,12 +308,29 @@ package body Viewer is
 
       procedure Extract_PE_Range is
          Children : Node_List := Child_Nodes (C);
-         N : Node;
+         Ranges : Node_List;
+         N, R     : Node;
+         Slots_Min, Slots_Step, Slots_Max : Natural;
       begin
          for I in 1 .. Length (Children) loop
             N := Item (Children, I - 1);
+            if Name (N) = "ranges" then
+               Ranges := Child_Nodes (N);
+               for J in 1 .. Length (Ranges) loop
+                  R := Item (Ranges, J - 1);
+                  if Name (R) = "RN_min" then
+                     Slots_Min := Integer'Value (Value (First_Child (R)));
+                  elsif Name (R) = "RN_max" then
+                     Slots_Max := Integer'Value (Value (First_Child (R)));
+                  elsif Name (R) = "RN_step" then
+                     Slots_Step := Integer'Value (Value (First_Child (R)));
+                  end if;
+               end loop;
+               Slot_List.Append (New_Range (Min  => Slots_Min,
+                                            Max  => Slots_Max,
+                                            Step => Slots_Step));
+            end if;
 
-            Ada.Text_IO.Put_Line ("N  => " & Name (N) & " V => " & Value (N));
          end loop;
       end Extract_PE_Range;
 
@@ -383,6 +402,12 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("<div class=""job_queue"">");
          HTML.Put_Paragraph ("Queue", J_Queue);
          HTML.Put_Paragraph ("PE", J_PE);
+         Slots := Slot_List.First;
+         loop
+            exit when Slots = Slots.Slot_Lists.No_Element;
+            Slots.Put (Slots.Slot_Lists.Element (Slots));
+            Slots := Next (Slots);
+         end loop;
          Ada.Text_IO.Put_Line ("</div>");
 
          Ada.Text_IO.Put_Line ("<div class=""job_resources"">");
