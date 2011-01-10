@@ -30,7 +30,7 @@ package body Resources is
    -----------------------
 
    procedure Put (R : Resource) is
-      Label : String := To_String (R.Name);
+      Label : Unbounded_String := R.Name;
       Value : Unbounded_String := R.Value;
       Days  : Natural;
       Secs  : Natural;
@@ -45,7 +45,7 @@ package body Resources is
          else
             Value := To_Unbounded_String (Image (Dur));
          end if;
-
+         Label := To_Unbounded_String ("<acronym title=""hard runtime limit"">h_rt</acronym>");
       end if;
       HTML.Put_Paragraph (Label, Value);
    end Put;
