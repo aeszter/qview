@@ -373,6 +373,7 @@ package body Viewer is
 
       procedure Output_One_Job is
          Res : Resource_Lists.Cursor;
+         Slot_Range : Slot_Lists.Cursor;
       begin
          Ada.Text_IO.Put_Line ("<div class=""job_name"">");
          HTML.Put_Paragraph ("Name", J_Name);
@@ -402,11 +403,11 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("<div class=""job_queue"">");
          HTML.Put_Paragraph ("Queue", J_Queue);
          HTML.Put_Paragraph ("PE", J_PE);
-         Slots := Slot_List.First;
+         Slot_Range := Slot_List.First;
          loop
-            exit when Slots = Slots.Slot_Lists.No_Element;
-            Slots.Put (Slots.Slot_Lists.Element (Slots));
-            Slots := Next (Slots);
+            exit when Slot_Range = Slots.Slot_Lists.No_Element;
+            Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
+            Slot_Range := Next (Slot_Range);
          end loop;
          Ada.Text_IO.Put_Line ("</div>");
 
