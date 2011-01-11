@@ -13,6 +13,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
 with Slots; use Slots; use Slots.Slot_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
+with Queues; use Queues; use Queues.Queue_Lists;
 
 package body Viewer is
 
@@ -187,11 +188,15 @@ package body Viewer is
       HTML.Put_Navigation_Begin;
       HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
       HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
+      HTML.Put_Navigation_Link (Data       => "Detailed Queues",
+                                Link_Param => "detailed_queues=y");
       HTML.Put_Navigation_End;
       Ada.Text_IO.Put_Line ("</div>"); -- header
 
       Ada.Text_IO.Put_Line ("<div id=""content"">");
-      View_Cluster_Queues;
+      if not HTML.Param_Is ("detailed_queues", "y") then
+         View_Cluster_Queues;
+      end if;
 
       if CGI.Input_Received then
          if not HTML.Param_Is ("queue", "") then
@@ -209,6 +214,9 @@ package body Viewer is
          elsif HTML.Param_Is ("waiting_jobs", "y") then
             Set_Params ("waiting_jobs=y");
             View_Waiting_Jobs;
+         elsif HTML.Param_Is ("detailed_queues", "y") then
+            Set_Params ("detailed_queues=y");
+            View_Detailed_Queues;
          end if;
       end if;
       Ada.Text_IO.Put_Line ("</div>"); -- content
@@ -471,6 +479,100 @@ package body Viewer is
          Reader.Free;
    end View_Job;
 
+   procedure View_Detailed_Queues is
+
+      Queue_List : Queues.Queue_Lists.List;
+
+      procedure Parse_One_Queue (Nodes : Node_List) is
+         N : Node;
+         A : Attr;
+         Used, Reserved, Total : Natural := 0;
+         Mem, Cores, Runtime   : Unbounded_String;
+         Network               : Resources.Network := none;
+         type small is digits 4 range 0.0 .. 1.0;
+      begin
+         for Index in 1 .. Length (Nodes) loop
+            N := Item (Nodes, Index - 1);
+            if Name (N) = "slots_used" then
+               Used := Integer'Value (Value (First_Child (N)));
+            elsif Name (N) = "slots_resv" then
+               Reserved := Integer'Value (Value (First_Child (N)));
+            elsif Name (N) = "slots_total" then
+               Total := Integer'Value (Value (First_Child (N)));
+            elsif Name (N) = "resource" then
+               A := Get_Named_Item (Attributes (N), "name");
+               if Value (A) = "mem_total" then
+                  Mem := To_Unbounded_String (Value (First_Child (N)));
+               elsif Value (A) = "m_core" then
+                  Cores := To_Unbounded_String (Value (First_Child (N)));
+#pragma warn may be empty
+#note: we may get an additional Node "state" here (e.g. "au")
+
+               elsif Value (A) = "infiniband" and then
+                  small'Value (Value (First_Child (N))) = 1.0 then
+                  Network := ib;
+               elsif Value (A) = "ethernet" and then
+                  small'Value (Value (First_Child (N))) = 1.0 then
+                  Network := eth;
+               elsif Value (A) = "h_rt" then
+                  Runtime := To_Unbounded_String (Value (First_Child (N)));
+               else
+                  HTML.Put_Paragraph (Label    => "Unidentified Resource",
+                                      Contents => Value (A));
+               end if;
+
+            end if;
+         end loop;
+
+         Queue_List.Append (New_Queue (Used => Used,
+                                       Reserved => Reserved,
+                                       Total    => Total,
+                                       Memory   => To_String (Mem),
+                                       Cores    => To_String (Cores),
+                                       Network  => Network,
+                                       Runtime  => Runtime));
+      exception
+            when E : others =>
+            HTML.Put_Paragraph (Label    => "Failed to parse queue",
+                                Contents => Exception_Message (E));
+      end Parse_One_Queue;
+
+      Reader      : DOM.Readers.Tree_Reader;
+      SGE_Out     : DOM.Core.Document;
+      SGE_Command : Pipe_Stream;
+      List        : Node_List;
+
+   begin
+      Ada.Text_IO.Put ("<div class=""partitions"">");
+      CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
+                            Level => 2);
+      SGE_Command.Set_Public_Id ("qstat");
+      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
+           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,m_core -xml"
+           & ASCII.NUL,
+           Pipe_Commands.read_file);
+      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
+      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
+      Reader.Parse (SGE_Command);
+      SGE_Out := Reader.Get_Tree;
+      SGE_Command.Close;
+
+      --  Fetch Queues
+      List := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
+      if Length (List) = 0 then
+         Ada.Text_IO.Put_Line ("<i>No queues found</i>");
+         return;
+      end if;
+
+      for Index in 1 .. Length (List) loop
+         Parse_One_Queue (Child_Nodes (Item (List, Index - 1)));
+
+      end loop;
+
+      --  Detect different partitions, calculate and output slots
+
+      Ada.Text_IO.Put ("</div> <!-- partitions -->");
+   end View_Detailed_Queues;
 
    procedure Set_Params (Params : String) is
    begin

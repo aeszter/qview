@@ -10,6 +10,7 @@ package Viewer is
    procedure View_Jobs_Of_User (User : String);
    procedure View_Job (Job_ID : String);
    procedure Set_Params (Params : String);
+   procedure View_Detailed_Queues;
 private
    procedure View_Jobs (Selector : String);
    Max_J_Name_Length : constant Natural := 20;
