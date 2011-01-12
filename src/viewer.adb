@@ -14,6 +14,7 @@ with Resources; use Resources; use Resources.Resource_Lists;
 with Slots; use Slots; use Slots.Slot_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
+with Partitions; use Partitions; use Partitions.Partition_Lists;
 
 package body Viewer is
 
@@ -487,6 +488,7 @@ package body Viewer is
          N : Node;
          A : Attr;
          Used, Reserved, Total : Natural := 0;
+         State                 : Unbounded_String;
          Mem, Cores, Runtime   : Unbounded_String;
          Network               : Resources.Network := none;
          type small is digits 4 range 0.0 .. 1.0;
@@ -499,15 +501,14 @@ package body Viewer is
                Reserved := Integer'Value (Value (First_Child (N)));
             elsif Name (N) = "slots_total" then
                Total := Integer'Value (Value (First_Child (N)));
+            elsif Name (N) = "state" then
+               State := To_Unbounded_String (Value (First_Child (N)));
             elsif Name (N) = "resource" then
                A := Get_Named_Item (Attributes (N), "name");
                if Value (A) = "mem_total" then
                   Mem := To_Unbounded_String (Value (First_Child (N)));
                elsif Value (A) = "m_core" then
                   Cores := To_Unbounded_String (Value (First_Child (N)));
-#pragma warn may be empty
-#note: we may get an additional Node "state" here (e.g. "au")
-
                elsif Value (A) = "infiniband" and then
                   small'Value (Value (First_Child (N))) = 1.0 then
                   Network := ib;
@@ -530,46 +531,74 @@ package body Viewer is
                                        Memory   => To_String (Mem),
                                        Cores    => To_String (Cores),
                                        Network  => Network,
-                                       Runtime  => Runtime));
+                                       Runtime  => Runtime,
+                                       State    => To_String (State)
+                                      ));
       exception
             when E : others =>
             HTML.Put_Paragraph (Label    => "Failed to parse queue",
                                 Contents => Exception_Message (E));
       end Parse_One_Queue;
 
-      Reader      : DOM.Readers.Tree_Reader;
-      SGE_Out     : DOM.Core.Document;
-      SGE_Command : Pipe_Stream;
-      List        : Node_List;
+      function Setup_Parser return DOM.Core.Document is
+         Reader      : DOM.Readers.Tree_Reader;
+         SGE_Command : Pipe_Stream;
+      begin
+         SGE_Command.Set_Public_Id ("qstat");
+         SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
+           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,m_core -xml"
+           & ASCII.NUL,
+           Pipe_Commands.read_file);
+         Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
+         Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
+         Reader.Parse (SGE_Command);
+         SGE_Command.Close;
+         return Reader.Get_Tree;
+      end Setup_Parser;
 
+      procedure Put_Partition (Partition : Partitions.Partition_Lists.Cursor) is
+         P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
+      begin
+         Ada.Text_IO.Put ("<tr>");
+         HTML.Put_Cell (Data => P.Network'Img);
+         HTML.Put_Cell (Data => P.Cores'Img);
+         HTML.Put_Cell (Data => P.Memory'Img & "G");
+         HTML.Put_Cell (Data => P.Runtime);
+         HTML.Put_Cell (Data => P.Total'Img);
+         HTML.Put_Cell (Data => P.Used'Img);
+         HTML.Put_Cell (Data => P.Reserved'Img);
+         HTML.Put_Cell (Data => P.Available'Img);
+         HTML.Put_Cell (Data => P.Suspended'Img);
+         HTML.Put_Cell (Data => P.Offline'Img);
+         Ada.Text_IO.Put ("</tr>");
+      end Put_Partition;
+
+
+      SGE_Out        : DOM.Core.Document;
+      Nodes          : Node_List;
+      Partition_List : Partitions.Partition_Lists.List;
    begin
       Ada.Text_IO.Put ("<div class=""partitions"">");
       CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
                             Level => 2);
-      SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
-           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,m_core -xml"
-           & ASCII.NUL,
-           Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Out := Reader.Get_Tree;
-      SGE_Command.Close;
+      SGE_Out := Setup_Parser;
 
       --  Fetch Queues
-      List := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
-      if Length (List) = 0 then
+      Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
+      if Length (Nodes) = 0 then
          Ada.Text_IO.Put_Line ("<i>No queues found</i>");
          return;
       end if;
 
-      for Index in 1 .. Length (List) loop
-         Parse_One_Queue (Child_Nodes (Item (List, Index - 1)));
-
+      for Index in 1 .. Length (Nodes) loop
+         Parse_One_Queue (Child_Nodes (Item (Nodes, Index - 1)));
       end loop;
 
-      --  Detect different partitions, calculate and output slots
+      --  Detect different partitions
+      Partitions.Build_List (Queue_List, Partition_List);
+
+      --  Output
+      Partition_List.Iterate (Put_Partition'Access);
 
       Ada.Text_IO.Put ("</div> <!-- partitions -->");
    end View_Detailed_Queues;

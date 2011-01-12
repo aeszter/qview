@@ -1,4 +1,7 @@
 with Ada.Text_IO;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Resources; use Resources;
+
 package body Queues is
 
    ---------------
@@ -16,6 +19,7 @@ package body Queues is
 
    function New_Queue
      (Used, Reserved, Total : Natural;
+      State                 : String;
       Memory, Cores         : String;
       Network               : Resources.Network;
       Runtime               : Unbounded_String)
@@ -26,21 +30,59 @@ package body Queues is
       Q.Used     := Used;
       Q.Reserved := Reserved;
       Q.Total    := Total;
-      if Memory (Memory'Last) = 'G' then
-         Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
-      elsif Memory (Memory'Last) = 'M' then
-         Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
-      else
-         Ada.Text_IO.Put_Line ("<i>unknown memory encountered: "
+      if Index (Source  => State,
+                Pattern => "u") /= 0 then
+         Q.Offline := True;
+      elsif Index (Source => State, Pattern => "d") /= 0 then
+         Q.Suspended := True;
+      end if;
+
+      if Memory /= "" then
+         if Memory (Memory'Last) = 'G' then
+            Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
+         elsif Memory (Memory'Last) = 'M' then
+            Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
+         else
+            Ada.Text_IO.Put_Line ("<i>unknown memory encountered: "
                                & Memory & "</i>");
+            Q.Memory := 0.0;
+         end if;
+      else
          Q.Memory := 0.0;
       end if;
 
       Q.Network  := Network;
       Q.Runtime  := Runtime;
-      Q.Cores    := Integer'Value (Cores);
+      if Cores = "" then
+         Q.Cores := Q.Total;
+      else
+         Q.Cores    := Integer'Value (Cores);
+      end if;
 
       return Q;
    end New_Queue;
+
+   function Precedes_By_Resources (Left, Right : Queue) return Boolean is
+   begin
+      if Left.Network < Right.Network then
+         return True;
+      elsif Left.Network > Right.Network then
+         return False;
+      elsif Left.Memory < Right.Memory then
+         return True;
+      elsif Left.Memory > Right.Memory then
+         return False;
+      elsif Left.Cores < Right.Cores then
+         return True;
+      elsif Left.Cores > Right.Cores then
+         return False;
+      elsif Left.Runtime < Right.Runtime then
+         return True;
+      elsif Left.Runtime > Right.Runtime then
+         return False;
+      else
+         return False;
+      end if;
+   end Precedes_By_Resources;
 
 end Queues;
