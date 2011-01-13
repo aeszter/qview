@@ -187,6 +187,7 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("<div id=""header"">");
       CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
       HTML.Put_Navigation_Begin;
+      HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "");
       HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
       HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
       HTML.Put_Navigation_Link (Data       => "Detailed Queues",
@@ -480,6 +481,10 @@ package body Viewer is
          Reader.Free;
    end View_Job;
 
+   --------------------------
+   -- View_Detailed_Queues --
+   --------------------------
+
    procedure View_Detailed_Queues is
 
       Queue_List : Queues.Queue_Lists.List;
@@ -507,7 +512,7 @@ package body Viewer is
                A := Get_Named_Item (Attributes (N), "name");
                if Value (A) = "mem_total" then
                   Mem := To_Unbounded_String (Value (First_Child (N)));
-               elsif Value (A) = "m_core" then
+               elsif Value (A) = "num_proc" then
                   Cores := To_Unbounded_String (Value (First_Child (N)));
                elsif Value (A) = "infiniband" and then
                   small'Value (Value (First_Child (N))) = 1.0 then
@@ -521,7 +526,6 @@ package body Viewer is
                   HTML.Put_Paragraph (Label    => "Unidentified Resource",
                                       Contents => Value (A));
                end if;
-
             end if;
          end loop;
 
@@ -546,7 +550,7 @@ package body Viewer is
       begin
          SGE_Command.Set_Public_Id ("qstat");
          SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
-           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,m_core -xml"
+           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,num_proc -xml"
            & ASCII.NUL,
            Pipe_Commands.read_file);
          Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
@@ -559,17 +563,23 @@ package body Viewer is
       procedure Put_Partition (Partition : Partitions.Partition_Lists.Cursor) is
          P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
       begin
-         Ada.Text_IO.Put ("<tr>");
+         if P.Available > 0 then
+            Ada.Text_IO.Put ("<tr class=""available"">");
+         elsif P.Offline = P.Total then
+            Ada.Text_IO.Put ("<tr class=""offline"">");
+         else
+            Ada.Text_IO.Put ("<tr>");
+         end if;
          HTML.Put_Cell (Data => P.Network'Img);
-         HTML.Put_Cell (Data => P.Cores'Img);
-         HTML.Put_Cell (Data => P.Memory'Img & "G");
-         HTML.Put_Cell (Data => P.Runtime);
-         HTML.Put_Cell (Data => P.Total'Img);
-         HTML.Put_Cell (Data => P.Used'Img);
-         HTML.Put_Cell (Data => P.Reserved'Img);
-         HTML.Put_Cell (Data => P.Available'Img);
-         HTML.Put_Cell (Data => P.Suspended'Img);
-         HTML.Put_Cell (Data => P.Offline'Img);
+         HTML.Put_Cell (Data => P.Cores'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Memory'Img & "G", Class => "right");
+         HTML.Put_Cell (Data => P.Runtime, Class => "right");
+         HTML.Put_Cell (Data => P.Total'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Used'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Reserved'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Available'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Suspended'Img, Class => "right");
+         HTML.Put_Cell (Data => P.Offline'Img, Class => "right");
          Ada.Text_IO.Put ("</tr>");
       end Put_Partition;
 
@@ -598,8 +608,20 @@ package body Viewer is
       Partitions.Build_List (Queue_List, Partition_List);
 
       --  Output
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+      HTML.Put_Cell (Data       => "Cores", Tag => "th");
+      HTML.Put_Cell (Data => "RAM", Tag => "th");
+      HTML.Put_Cell (Data => "Runtime", Tag => "th");
+      HTML.Put_Cell (Data => "Slots", Tag => "th");
+      HTML.Put_Cell (Data => "Used", Tag => "th");
+      HTML.Put_Cell (Data => "Reserved", Tag => "th");
+      HTML.Put_Cell (Data => "Available", Tag => "th");
+      HTML.Put_Cell (Data => "<acronym title=""aoACDS: overloaded or in maintenance window"">Suspended</acronym>", Tag => "th");
+      HTML.Put_Cell ("<acronym title=""cdsuE: config problem, offline, disabled by admin, or node error"">Offline</acronym>", Tag => "th");
+      Ada.Text_IO.Put_Line ("</tr>");
       Partition_List.Iterate (Put_Partition'Access);
-
+      Ada.Text_IO.Put_Line ("</table>");
       Ada.Text_IO.Put ("</div> <!-- partitions -->");
    end View_Detailed_Queues;
 

@@ -30,7 +30,10 @@ package body Queues is
       Q.Used     := Used;
       Q.Reserved := Reserved;
       Q.Total    := Total;
-      if Index (Source  => State,
+      Q.Offline  := False;
+      Q.Suspended := False;
+      if State /= "" and then
+        Index (Source  => State,
                 Pattern => "u") /= 0 then
          Q.Offline := True;
       elsif Index (Source => State, Pattern => "d") /= 0 then
@@ -56,11 +59,15 @@ package body Queues is
       if Cores = "" then
          Q.Cores := Q.Total;
       else
-         Q.Cores    := Integer'Value (Cores);
+         Q.Cores := Integer'Value (Cores);
       end if;
 
       return Q;
    end New_Queue;
+
+   ---------------------------
+   -- Precedes_By_Resources --
+   ---------------------------
 
    function Precedes_By_Resources (Left, Right : Queue) return Boolean is
    begin

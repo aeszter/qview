@@ -20,4 +20,5 @@ package Partitions is
 
    procedure Build_List (Q_List : in out Queues.Queue_Lists.List;
                          Part_List : out Partition_Lists.List);
+   function New_Partition (Q : Queue) return Partition;
 end Partitions;

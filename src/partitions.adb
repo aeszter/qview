@@ -25,11 +25,9 @@ package body Partitions is
       Q := Element (Cursor);
 
       --  Create Partition according to first Queue
-      P.Network := Q.Network;
-      P.Memory  := Q.Memory;
-      P.Cores   := Q.Cores;
-      P.Runtime := Q.Runtime;
+      P := New_Partition (Q);
       while Cursor /= No_Element loop
+         Q := Element (Cursor);
          --  New Partition?
          if not (P.Network = Q.Network and then
            P.Memory = Q.Memory and then
@@ -37,17 +35,7 @@ package body Partitions is
                        P.Runtime = Q.Runtime) then
             --  Yes. Store previous one.
             Part_List.Append (P);
-            --  Initialize next partition
-            P.Network := Q.Network;
-            P.Memory  := Q.Memory;
-            P.Cores   := Q.Cores;
-            P.Runtime := Q.Runtime;
-            P.Total := 0;
-            P.Offline := 0;
-            P.Suspended := 0;
-            P.Used := 0;
-            P.Reserved := 0;
-            P.Available := 0;
+            P := New_Partition (Q);
          end if;
 
          --  Update totals
@@ -63,10 +51,25 @@ package body Partitions is
          end if;
          --  Advance
          Cursor := Next (Cursor);
-         Q := Element (Cursor);
       end loop;
       --  That's it. Store final partition.
       Part_List.Append (P);
    end Build_List;
+
+   function New_Partition (Q : Queue) return Partition is
+      P : Partition;
+   begin
+      P.Network   := Q.Network;
+      P.Memory    := Q.Memory;
+      P.Cores     := Q.Cores;
+      P.Runtime   := Q.Runtime;
+      P.Total     := 0;
+      P.Offline   := 0;
+      P.Suspended := 0;
+      P.Used      := 0;
+      P.Reserved  := 0;
+      P.Available := 0;
+      return P;
+   end New_Partition;
 
 end Partitions;
