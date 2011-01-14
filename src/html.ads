@@ -1,5 +1,6 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
+with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 
 package HTML is
    procedure Put_Cell (Data       : String;
@@ -32,7 +33,19 @@ package HTML is
 
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
+   procedure Error (Message : String);
 
    function Param_Is (Param : String; Expected : String) return Boolean;
+   procedure Begin_Div (Class : String := ""; ID : String := "");
+   procedure End_Div (Class : String := ""; ID : String := "");
+   procedure Finalize_Divs (Silent : Boolean := False);
+private
+   type Div is record
+      Class : Unbounded_String;
+      ID    : Unbounded_String;
+   end record;
 
+   package Div_Lists is new Doubly_Linked_Lists (Element_Type => Div);
+
+   Div_List : Div_Lists.List;
 end HTML;

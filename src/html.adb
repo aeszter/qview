@@ -114,12 +114,14 @@ package body HTML is
 
    procedure Put_Navigation_Begin is
    begin
-      Ada.Text_IO.Put_Line ("<div id=""navigation""><ul>");
+      Begin_Div (ID => "navigation");
+      Ada.Text_IO.Put ("<ul>");
    end Put_Navigation_Begin;
 
    procedure Put_Navigation_End is
    begin
-      Ada.Text_IO.Put_Line ("</ul></div id=""navigation"">");
+      Ada.Text_IO.Put ("</ul>");
+      End_Div (ID => "navigation");
    end Put_Navigation_End;
 
    procedure Put_Navigation_Link (Data : String; Link_Param : String) is
@@ -161,6 +163,12 @@ package body HTML is
       Put_True_False (To_String (Truth));
    end Put_True_False;
 
+   procedure Error (Message : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
+                            & CGI.HTML_Encode (Message) & "</p>");
+   end Error;
+
    procedure Put_Stylesheet (URL : String) is
    begin
       Ada.Text_IO.Put_Line ("<link rel=""stylesheet"" href=""" & URL
@@ -176,5 +184,55 @@ package body HTML is
    begin
       return Standard."=" (CGI.Value (Param), Expected);
    end Param_Is;
+
+   procedure Begin_Div (Class : String := ""; ID : String := "") is
+      Tag : Div;
+   begin
+      Ada.Text_IO.Put ("<div");
+      if ID /= "" then
+         Ada.Text_IO.Put (" id=""" & ID & """");
+      end if;
+      if Class /= "" then
+         Ada.Text_IO.Put (" class=""" & Class & """");
+      end if;
+      Ada.Text_IO.Put_Line (">");
+      Tag.ID := To_Unbounded_String (ID);
+      Tag.Class := To_Unbounded_String (Class);
+      Div_List.Append (Tag);
+   end Begin_Div;
+
+   procedure End_Div (Class : String := ""; ID : String := "") is
+      Tag : Div := Div_List.Last_Element;
+   begin
+      if Class /= "" and then Class /= Tag.Class then
+         HTML.Error ("Found <div class=""" & To_String (Tag.Class)
+                     & """> while trying to close class=""" & Class & """");
+      end if;
+      if ID /= "" and then ID /= Tag.ID then
+         HTML.Error ("Found <div id=""" & To_String (Tag.ID)
+                     & """> while trying to close id=""" & ID & """");
+      end if;
+      if not Div_List.Is_Empty then
+         Ada.Text_IO.Put_Line ("</div>");
+         Div_List.Delete_Last;
+      else
+         HTML.Error ("Trying to close non-existant <div id="""
+                     & ID & """ class=""" & Class & """>");
+      end if;
+   end End_Div;
+
+   procedure Finalize_Divs (Silent : Boolean := False) is
+      Tag : Div;
+   begin
+      if not Silent and then not Div_List.Is_Empty then
+         Error ("Found unclosed <div>s");
+      end if;
+      while not Div_List.Is_Empty loop
+         Tag := Div_List.Last_Element;
+         Ada.Text_IO.Put_Line ("</div><!-- id=""" & To_String (Tag.ID)
+                               & """ class=""" & To_String (Tag.Class) & """ -->");
+         Div_List.Delete_Last;
+      end loop;
+   end Finalize_Divs;
 
 end HTML;

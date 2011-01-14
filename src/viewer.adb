@@ -53,7 +53,7 @@ package body Viewer is
       SGE_Out := Reader.Get_Tree;
       SGE_Command.Close;
 
-      Ada.Text_IO.Put_Line ("<div class=""cqueues"">");
+      HTML.Begin_Div (Class => "cqueues");
       CGI.Put_HTML_Heading (Title => "Cluster Queues", Level => 2);
       --  Fetch Cluster Queues
       List := Get_Elements_By_Tag_Name (SGE_Out, "cluster_queue_summary");
@@ -108,7 +108,7 @@ package body Viewer is
       end loop;
       --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
-            Ada.Text_IO.Put_Line ("</div>"); -- cqueues
+            HTML.End_Div (Class => "cqueues");
 
       Reader.Free;
    end View_Cluster_Queues;
@@ -124,7 +124,7 @@ package body Viewer is
 
       procedure Put_Table_Header is
       begin
-         Ada.Text_IO.Put_Line ("<div class=""job_list"">");
+         HTML.End_Div (Class => "job_list");
          Ada.Text_IO.Put ("<table><tr>");
          HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
@@ -172,7 +172,7 @@ package body Viewer is
 
    --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put_Line ("</div>");
+      HTML.End_Div (Class => "job_list");
       Reader.Free;
    end View_Jobs;
 
@@ -189,8 +189,8 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("<html><head><title>Owl Status</title>");
       HTML.Put_Stylesheet ("/status.css");
       Ada.Text_IO.Put_Line ("</head><body>");
-      Ada.Text_IO.Put_Line ("<div id=""page"">");
-      Ada.Text_IO.Put_Line ("<div id=""header"">");
+      HTML.Begin_Div (ID => "page");
+      HTML.Begin_Div (ID => "header");
       CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
       HTML.Put_Navigation_Begin;
       HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "");
@@ -199,9 +199,8 @@ package body Viewer is
       HTML.Put_Navigation_Link (Data       => "Detailed Queues",
                                 Link_Param => "detailed_queues=y");
       HTML.Put_Navigation_End;
-      Ada.Text_IO.Put_Line ("</div>"); -- header
-
-      Ada.Text_IO.Put_Line ("<div id=""content"">");
+      HTML.End_Div (ID => "header");
+      HTML.Begin_Div (ID => "content");
       if not HTML.Param_Is ("detailed_queues", "y") then
          View_Cluster_Queues;
       end if;
@@ -227,17 +226,18 @@ package body Viewer is
             View_Detailed_Queues;
          end if;
       end if;
-      Ada.Text_IO.Put_Line ("</div>"); -- content
+      HTML.End_Div (ID => "content");
       HTML.Put_Clearer;
-      Ada.Text_IO.Put_Line ("</div>"); -- page
+      HTML.End_Div (ID => "page");
 
+      HTML.Finalize_Divs (Silent => True);
       CGI.Put_HTML_Tail;
    exception
       when E : others =>
-         Ada.Text_IO.Put_Line ("<p><strong>Warning: Unhandled Exception occurred.</strong>");
-         Ada.Text_IO.Put_Line ("<it>" & Exception_Message (E) & "</it></p>");
+         HTML.Error ("Unhandled Exception occurred.");
+         HTML.Error (Exception_Message (E));
+         HTML.Finalize_Divs (Silent => True);
          CGI.Put_HTML_Tail;
-
    end View;
 
    procedure View_Jobs_In_Queue (Queue : String) is
@@ -413,11 +413,11 @@ package body Viewer is
          Slot_Range : Slot_Lists.Cursor;
          Q          : String_Lists.Cursor;
       begin
-         Ada.Text_IO.Put_Line ("<div class=""job_name"">");
+         HTML.Begin_Div (Class => "job_name");
          HTML.Put_Paragraph ("Name", J_Name);
-         Ada.Text_IO.Put_Line ("</div>");
+         HTML.End_Div;
 
-         Ada.Text_IO.Put_Line ("<div class=""job_meta"">");
+         HTML.Begin_Div (Class => "job_meta");
          HTML.Put_Paragraph ("ID", J_Number);
          HTML.Put_Paragraph ("Owner", J_Owner);
          HTML.Put_Paragraph ("Group", J_Group);
@@ -427,18 +427,18 @@ package body Viewer is
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put_True_False (J_Reserve);
          Ada.Text_IO.Put_Line ("</p>");
-         Ada.Text_IO.Put_Line ("</div>");
+         HTML.End_Div (Class => "job_meta");
 
-         Ada.Text_IO.Put_Line ("<div class=""job_files"">");
+         HTML.Begin_Div (Class => "job_files");
          HTML.Put_Paragraph ("Directory", J_Directory);
          HTML.Put_Paragraph ("Script", J_Script_File);
          HTML.Put_Paragraph ("Executable", J_Exec_File);
          Ada.Text_IO.Put ("<p>Merge StdErr: ");
          HTML.Put_True_False (J_Merge_Std_Err);
          Ada.Text_IO.Put_Line ("</p>");
-         Ada.Text_IO.Put_Line ("</div>");
+         HTML.End_Div (Class => "job_files");
 
-         Ada.Text_IO.Put_Line ("<div class=""job_queue"">");
+         HTML.Begin_Div (Class => "job_queue");
          Q := Queue_List.First;
          loop
             exit when Q = String_Lists.No_Element;
@@ -454,17 +454,16 @@ package body Viewer is
             Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
             Slot_Range := Next (Slot_Range);
          end loop;
-         Ada.Text_IO.Put_Line ("</div>");
+         HTML.End_Div (Class => "job_queue");
 
-         Ada.Text_IO.Put_Line ("<div class=""job_resources"">");
+         HTML.Begin_Div (Class => "job_resources");
          Res := Resource_List.First;
          loop
             exit when Res = Resources.Resource_Lists.No_Element;
             Resources.Put (Resources.Resource_Lists.Element (Res));
             Res := Next (Res);
          end loop;
-
-         Ada.Text_IO.Put_Line ("</div>");
+         HTML.End_Div (Class => "job_resources");
 
       end Output_One_Job;
 
@@ -491,7 +490,7 @@ package body Viewer is
 
       for Index in 1 .. Length (List) loop
 
-         Ada.Text_IO.Put ("<div class=""job_info"">");
+         HTML.Begin_Div (Class => "job_info");
          Children := Child_Nodes (Item (List, Index - 1)); -- djob_info
          N := Item (Children, 1);
          --  element; this is probably faster than
@@ -505,7 +504,7 @@ package body Viewer is
          Parse_One_Job;
          Output_One_Job;
          HTML.Put_Clearer;
-         Ada.Text_IO.Put ("</div> <!-- job_info -->");
+         HTML.End_Div (Class => "job_info");
          HTML.Put_Clearer;
       end loop;
 
@@ -623,7 +622,7 @@ package body Viewer is
       Nodes          : Node_List;
       Partition_List : Partitions.Partition_Lists.List;
    begin
-      Ada.Text_IO.Put ("<div class=""partitions"">");
+         HTML.Begin_Div (Class => "partitions");
       CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
                             Level => 2);
       SGE_Out := Setup_Parser;
@@ -657,7 +656,7 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("</tr>");
       Partition_List.Iterate (Put_Partition'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put ("</div> <!-- partitions -->");
+         HTML.End_Div (Class => "partitions");
    end View_Detailed_Queues;
 
    procedure Set_Params (Params : String) is
