@@ -15,6 +15,7 @@ with Slots; use Slots; use Slots.Slot_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
+with Viewer; use Viewer.String_Lists;
 
 package body Viewer is
 
@@ -176,6 +177,11 @@ package body Viewer is
    end View_Jobs;
 
 
+   ----------
+   -- View --
+   --  Purpose: Main routine, display the entire page
+   ----------
+
    procedure View is
 
    begin
@@ -260,15 +266,16 @@ package body Viewer is
    end View_Jobs_Of_User;
 
    procedure View_Job (Job_ID : String) is
-      Reader      : DOM.Readers.Tree_Reader;
-      SGE_Out     : DOM.Core.Document;
-      SGE_Command : Pipe_Stream;
-      List        : Node_List;
-      Children    : Node_List;
-      N           : Node;
-      C           : Node;
+      Reader        : DOM.Readers.Tree_Reader;
+      SGE_Out       : DOM.Core.Document;
+      SGE_Command   : Pipe_Stream;
+      List          : Node_List;
+      Children      : Node_List;
+      N             : Node;
+      C             : Node;
       Resource_List : Resources.Resource_Lists.List;
-      Slot_List   : Slots.Slot_Lists.List;
+      Slot_List     : Slots.Slot_Lists.List;
+      Queue_List    : String_Lists.List;
 
 
       J_Number          : Unbounded_String; -- Job ID
@@ -284,7 +291,6 @@ package body Viewer is
       J_Script_File     : Unbounded_String;
       J_Merge_Std_Err   : Unbounded_String;
       J_Array           : Unbounded_String;
-      J_Queue           : Unbounded_String;
       J_Directory       : Unbounded_String;
       J_Reserve         : Unbounded_String;
 
@@ -315,6 +321,26 @@ package body Viewer is
             end if;
          end loop;
       end Extract_Resource_List;
+
+      procedure Extract_Queue_List is
+         Destin_Nodes : Node_List := Child_Nodes (C);
+         QR_Nodes     : Node_List;
+         N, Q         : Node;
+
+      begin
+         for I in 1 .. Length (Destin_Nodes) loop
+            N := Item (Destin_Nodes, I - 1);
+            if Name (N) = "destin_ident_list" then
+               QR_Nodes := Child_Nodes (N);
+               for J in 1 .. Length (QR_Nodes) loop
+                  Q := Item (QR_Nodes, J - 1);
+                  if Name (Q) = "QR_name" then
+                     Queue_List.Append (To_Unbounded_String (Value (First_Child (Q))));
+                  end if;
+               end loop;
+            end if;
+         end loop;
+      end Extract_Queue_List;
 
       procedure Extract_PE_Range is
          Children : Node_List := Child_Nodes (C);
@@ -347,6 +373,7 @@ package body Viewer is
       procedure Parse_One_Job is
       begin
          Resource_List.Clear;
+         Queue_List.Clear;
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
@@ -366,7 +393,7 @@ package body Viewer is
             elsif Name (C) = "JB_hard_resource_list" then
                Extract_Resource_List;
             elsif Name (C) = "JB_hard_queue_list" then
-               J_Queue := To_Unbounded_String (Value (First_Child (C)));
+               Extract_Queue_List;
             elsif Name (C) = "JB_script_file" then
                J_Script_File := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_cwd" then
@@ -382,8 +409,9 @@ package body Viewer is
       end Parse_One_Job;
 
       procedure Output_One_Job is
-         Res : Resource_Lists.Cursor;
+         Res        : Resource_Lists.Cursor;
          Slot_Range : Slot_Lists.Cursor;
+         Q          : String_Lists.Cursor;
       begin
          Ada.Text_IO.Put_Line ("<div class=""job_name"">");
          HTML.Put_Paragraph ("Name", J_Name);
@@ -411,7 +439,14 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("</div>");
 
          Ada.Text_IO.Put_Line ("<div class=""job_queue"">");
-         HTML.Put_Paragraph ("Queue", J_Queue);
+         Q := Queue_List.First;
+         loop
+            exit when Q = String_Lists.No_Element;
+            HTML.Put_Paragraph (Label    => "Queue",
+                                Contents => String_Lists.Element (Q));
+            Q := Next (Q);
+         end loop;
+
          HTML.Put_Paragraph ("PE", J_PE);
          Slot_Range := Slot_List.First;
          loop
