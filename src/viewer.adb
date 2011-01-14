@@ -124,7 +124,7 @@ package body Viewer is
 
       procedure Put_Table_Header is
       begin
-         HTML.End_Div (Class => "job_list");
+         HTML.Begin_Div (Class => "job_list");
          Ada.Text_IO.Put ("<table><tr>");
          HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
