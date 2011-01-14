@@ -10,15 +10,23 @@ package body Jobs is
    -- New_Job --
    -------------
 
-   function New_Job (Number, Full_Name, Name, Owner, Priority, State,
+   function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time)
                      return Job
    is
       J : Job;
    begin
       J.Number := Number;
-      J.Full_Name := Full_Name;
-      J.Name := Name;
+      J.Full_Name := Name;
+      if Length (J.Full_Name) > Max_Name_Length then
+         J.Name := Head (Source => J.Full_Name,
+                                        Count  => Max_Name_Length);
+         J.Name_Truncated := True;
+      else
+         J.Name := J.Full_Name;
+         J.Name_Truncated := False;
+      end if;
+
       J.Owner := Owner;
       J.Priority := Priority;
       if State = "dt" then
@@ -49,6 +57,10 @@ package body Jobs is
    end New_Job;
 
 
+   ---------------------
+   -- State_As_String --
+   ---------------------
+
    function State_As_String (J : Job) return String is
    begin
       case J.State is
@@ -65,6 +77,20 @@ package body Jobs is
 
    end State_As_String;
 
+   ------------------
+   -- Name_As_HTML --
+   ------------------
+
+   function Name_As_HTML (J : Job) return String is
+   begin
+      if J.Name_Truncated then
+         return To_String ("<acronym title=""" & J.Full_Name & """>"
+                           & J.Name & "</acronym>");
+      else
+         return To_String (J.Name);
+      end if;
+
+   end Name_As_HTML;
 
    -----------------
    -- Append_List --
@@ -74,8 +100,7 @@ package body Jobs is
       Children : Node_List;
       C        : Node;
       --  Job fields
-      Short_Name : Unbounded_String;
-      Full_Name  : Unbounded_String;
+      Job_Name   : Unbounded_String;
       Number     : Unbounded_String;
       PE, Slots  : Unbounded_String;
       Priority   : Unbounded_String;
@@ -94,13 +119,7 @@ package body Jobs is
             elsif Name (C) = "JAT_prio" then
                Priority := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_name" then
-               Full_Name := To_Unbounded_String (Value (First_Child (C)));
-               if Length (Full_Name) > Max_Name_Length then
-                  Short_Name := Head (Source => Full_Name,
-                                Count  => Max_Name_Length);
-               else
-                  Short_Name := Full_Name;
-               end if;
+               Job_Name := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_owner" then
                Owner := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "state" then
@@ -120,8 +139,7 @@ package body Jobs is
             end if;
          end loop;
          Job_List.Append (New_Job (Number          => Number,
-                                   Full_Name       => Full_Name,
-                                   Name            => Short_Name,
+                                   Name            => Job_Name,
                                    Owner           => Owner,
                                    Priority        => Priority,
                                    State           => State,

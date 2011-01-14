@@ -12,6 +12,7 @@ package Jobs is
       Number          : Unbounded_String; -- Job ID
       Full_Name       : Unbounded_String; -- Job name
       Name            : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
+      Name_Truncated  : Boolean;          -- Whether Full_Name and Name differ
       Owner           : Unbounded_String; -- User whom this job belongs to
       Priority        : Unbounded_String; -- Numerical priority
       State           : Job_State;
@@ -21,8 +22,9 @@ package Jobs is
    end record;
 
    function State_As_String (J : Job) return String;
+   function Name_As_HTML (J : Job) return String;
 
-   function New_Job (Number, Full_Name, Name, Owner, Priority, State,
+   function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time)
                      return Job;
 

@@ -142,7 +142,12 @@ package body Viewer is
          Ada.Text_IO.Put ("<tr>");
          HTML.Put_Cell (Data => J.Number, Link_Param => "job_id");
          HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
-         HTML.Put_Cell (Data => J.Name);
+         if J.Name_Truncated then
+            HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
+                           & J.Name & "</acronym>");
+         else
+            HTML.Put_Cell (Data => J.Name);
+         end if;
          HTML.Put_Cell (Data => J.Priority);
          HTML.Put_Time_Cell (J.Submission_Time);
          HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");

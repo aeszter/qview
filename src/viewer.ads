@@ -15,7 +15,6 @@ package Viewer is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Unbounded_String);
 private
    procedure View_Jobs (Selector : String);
-   Max_J_Name_Length : constant Natural := 20;
    Assumption_Error  : exception;
    My_Params : Unbounded_String;
 end Viewer;
