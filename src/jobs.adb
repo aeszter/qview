@@ -2,7 +2,7 @@ with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
 with Ada.Calendar; use Ada.Calendar;
-with GNAT.Calendar.Time_IO; use GNAT.Calendar.Time_IO;
+with GNAT.Calendar.Time_IO;
 
 package body Jobs is
 
@@ -11,7 +11,11 @@ package body Jobs is
    -------------
 
    function New_Job (Number, Name, Owner, Priority, State,
-                     Slots, PE : Unbounded_String; Submission_Time : Time)
+                     Slots, PE : Unbounded_String; Submission_Time : Time;
+                     CPU, Mem, IO : Unbounded_String := Null_Unbounded_String;
+                     Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
+                     Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
+                     Posix_Priority                                      : Integer := 0)
                      return Job
    is
       J : Job;
@@ -20,7 +24,7 @@ package body Jobs is
       J.Full_Name := Name;
       if Length (J.Full_Name) > Max_Name_Length then
          J.Name := Head (Source => J.Full_Name,
-                                        Count  => Max_Name_Length);
+                         Count  => Max_Name_Length);
          J.Name_Truncated := True;
       else
          J.Name := J.Full_Name;
@@ -50,9 +54,25 @@ package body Jobs is
          Ada.Text_IO.Put_Line ("<em>Error: found unknown job state "
                                & To_String (State) & "</em>");
       end if;
-      J.Slots := Slots;
-      J.PE := PE;
-      J.Submission_Time := Submission_Time;
+      J.Slots              := Slots;
+      J.PE                 := PE;
+      J.Submission_Time    := Submission_Time;
+      --  qstat -ext
+      J.CPU                := CPU;
+      J.Mem                := Mem;
+      J.IO                 := IO;
+      J.Override_Tickets   := Override_Tickets;
+      J.Share_Tickets      := Share_Tickets;
+      J.Functional_Tickets := Functional_Tickets;
+
+      --  qstat -urg
+      J.Urgency            := Urgency;
+      J.Resource_Contrib   := Resource_Contrib;
+      J.Waiting_Contrib    := Waiting_Contrib;
+
+      --  qstat -pri
+      J.Posix_Priority     := Posix_Priority;
+
       return J;
    end New_Job;
 
@@ -97,17 +117,20 @@ package body Jobs is
    -----------------
 
    procedure Append_List (List : Node_List) is
-      Children : Node_List;
-      C        : Node;
+      Children        : Node_List;
+      C               : Node;
       --  Job fields
-      Job_Name   : Unbounded_String;
-      Number     : Unbounded_String;
-      PE, Slots  : Unbounded_String;
-      Priority   : Unbounded_String;
-      Owner      : Unbounded_String;
-      State      : Unbounded_String;
+      Job_Name        : Unbounded_String;
+      Number          : Unbounded_String;
+      PE, Slots       : Unbounded_String;
+      Priority        : Unbounded_String;
+      Owner           : Unbounded_String;
+      State           : Unbounded_String;
       Submission_Time : Time;
-      Time_Buffer : String (1 .. 19);
+      Time_Buffer     : String (1 .. 19);
+      F_Tickets       : Natural;
+      S_Tickets       : Natural;
+      O_Tickets       : Natural;
 
    begin
       for Index in 1 .. Length (List) loop
@@ -131,11 +154,19 @@ package body Jobs is
                   raise Time_Error;
                end if;
                Time_Buffer (11) := ' ';
-               Submission_Time := Time_IO.Value (Time_Buffer);
+               Submission_Time := GNAT.Calendar.Time_IO.Value (Time_Buffer);
             elsif Name (C) = "slots" then
                Slots := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "requested_pe" then
                PE := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "ftickets" then
+               F_Tickets := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "stickets" then
+               S_Tickets := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "otickets" then
+               O_Tickets := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) /= "#text" then
+               Ada.Text_IO.Put_Line (Name (C));
             end if;
          end loop;
          Job_List.Append (New_Job (Number          => Number,
@@ -145,7 +176,10 @@ package body Jobs is
                                    State           => State,
                                    Slots           => Slots,
                                    PE              => PE,
-                                   Submission_Time => Submission_Time));
+                                   Submission_Time => Submission_Time,
+                                   Share_Tickets   => S_Tickets,
+                                   Functional_Tickets => F_Tickets,
+                                  Override_Tickets => O_Tickets));
       end loop;
    end Append_List;
 

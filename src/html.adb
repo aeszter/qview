@@ -18,17 +18,21 @@ package body HTML is
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
                        Tag        : String := "td";
-                       Class      : String := "") is
+                       Class      : String := "";
+                       Colspan    : Positive := 1) is
       Open_Tag : Unbounded_String;
       --  This is not ideal: we are using an unbounded string without any real need,
-      --  just in order to avoid four separate cases of default parameters
+      --  just in order to avoid eight separate cases of default parameters
       Close_Tag : String := "</" & Tag & ">";
    begin
+      Open_Tag := To_Unbounded_String ("<" & Tag);
       if Class /= "" then
-         Open_Tag := To_Unbounded_String ("<" & Tag & " class=""" & Class & """>");
-      else
-         Open_Tag := To_Unbounded_String ("<" & Tag & ">");
+         Open_Tag := Open_Tag & " class=""" & Class & """";
       end if;
+      if Colspan /= 1 then
+         Open_Tag := Open_Tag & " colspan=""" & Colspan'Img & """";
+      end if;
+      Open_Tag := Open_Tag & ">";
 
       if Link_Param = "" then
          Put_Line (To_String (Open_Tag) & Data & Close_Tag);

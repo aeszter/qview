@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Resources;
-with Ada.Text_IO;
 
 package Queues is
    type Gigs is delta 0.1 digits 5;

@@ -6,7 +6,8 @@ package HTML is
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
                        Tag        : String := "td";
-                       Class      : String := "");
+                       Class      : String := "";
+                       Colspan    : Positive := 1);
    --  write out a single table cell, optionally changing the tag (to th)
    --  optionally, link the contents as "Link_Param=Data"
    procedure Put_Cell (Data       : Unbounded_String;

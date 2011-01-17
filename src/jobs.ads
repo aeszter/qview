@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with DOM.Core; use DOM.Core;
-with GNAT.Calendar; use GNAT.Calendar;
 with Ada.Calendar; use Ada.Calendar;
 
 package Jobs is
@@ -9,23 +8,44 @@ package Jobs is
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, qw, hqw);
 
    type Job is record
-      Number          : Unbounded_String; -- Job ID
-      Full_Name       : Unbounded_String; -- Job name
-      Name            : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
-      Name_Truncated  : Boolean;          -- Whether Full_Name and Name differ
-      Owner           : Unbounded_String; -- User whom this job belongs to
-      Priority        : Unbounded_String; -- Numerical priority
-      State           : Job_State;
-      Slots           : Unbounded_String; -- how many slots/CPUs to use
-      PE              : Unbounded_String; -- Parallel environment
-      Submission_Time : Time;    -- when submitted
+      --  basic attributes
+      Number             : Unbounded_String; -- Job ID
+      Full_Name          : Unbounded_String; -- Job name
+      Name               : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
+      Name_Truncated     : Boolean;          -- Whether Full_Name and Name differ
+      Owner              : Unbounded_String; -- User whom this job belongs to
+      Priority           : Unbounded_String; -- Numerical priority
+      State              : Job_State;
+      Slots              : Unbounded_String; -- how many slots/CPUs to use
+      PE                 : Unbounded_String; -- Parallel environment
+      Submission_Time    : Time;    -- when submitted
+
+      --  qstat -ext
+      CPU                : Unbounded_String;
+      Mem                : Unbounded_String;
+      IO                 : Unbounded_String;
+      Override_Tickets   : Natural;
+      Share_Tickets      : Natural;
+      Functional_Tickets : Natural;
+
+      --  qstat -urg
+      Urgency            : Natural;
+      Resource_Contrib   : Natural;
+      Waiting_Contrib    : Natural;
+
+      --  qstat -pri
+      Posix_Priority     : Natural;
    end record;
 
    function State_As_String (J : Job) return String;
    function Name_As_HTML (J : Job) return String;
 
    function New_Job (Number, Name, Owner, Priority, State,
-                     Slots, PE : Unbounded_String; Submission_Time : Time)
+                     Slots, PE : Unbounded_String; Submission_Time : Time;
+                     CPU, Mem, IO : Unbounded_String := Null_Unbounded_String;
+                     Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
+                     Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
+                     Posix_Priority                                      : Integer := 0)
                      return Job;
 
    procedure Append_List (List : Node_List);

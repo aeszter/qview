@@ -1,8 +1,8 @@
-with Ada.Text_IO, CGI, System, Pipe_Commands, Pipe_Streams;
+with Ada.Text_IO, CGI, Pipe_Commands, Pipe_Streams;
 use  Pipe_Streams;
 with Ada.Strings.Unbounded;
 use Ada.Strings.Unbounded;
-with Sax.Readers, Sax.Exceptions;
+with Sax.Readers;
 with DOM.Readers, DOM.Core;
 use  DOM.Core;
 with DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
@@ -100,21 +100,42 @@ package body Viewer is
 
    procedure View_Jobs (Selector : String) is
       SGE_Out     : DOM.Core.Document;
-      List        : Node_List;
-      Children    : Node_List;
 
 
       procedure Put_Table_Header is
       begin
          HTML.Begin_Div (Class => "job_list");
          Ada.Text_IO.Put ("<table><tr>");
+         HTML.Put_Cell (Data       => "",
+                        Tag        => "th",
+                        Colspan => 6,
+                        Class => "delimited");
+         HTML.Put_Cell (Data => "Resource Usage",
+                        Tag => "th",
+                        Colspan => 3,
+                        Class => "delimited");
+         HTML.Put_Cell (Data => "Priority",
+                        Tag => "th",
+                        Colspan => 8,
+                        Class => "delimited");
+         Ada.Text_IO.Put ("</tr><tr>");
          HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Name", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
          HTML.Put_Header_Cell (Data => "State", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Memory", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "IO", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Override", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Share", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Functional", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Urgency", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Resource", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Waiting", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Custom", Params => My_Params);
          Ada.Text_IO.Put ("</tr>");
       end Put_Table_Header;
 
@@ -130,16 +151,27 @@ package body Viewer is
          else
             HTML.Put_Cell (Data => J.Name);
          end if;
-         HTML.Put_Cell (Data => J.Priority);
          HTML.Put_Time_Cell (J.Submission_Time);
          HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
          HTML.Put_Img_Cell (State_As_String (J));
+         HTML.Put_Cell (Data => J.CPU);
+         HTML.Put_Cell (Data => J.Mem);
+         HTML.Put_Cell (Data => J.IO);
+
+         HTML.Put_Cell (Data => J.Priority);
+         HTML.Put_Cell (Data => J.Override_Tickets'Img);
+         HTML.Put_Cell (Data => J.Share_Tickets'Img);
+         HTML.Put_Cell (Data => J.Functional_Tickets'Img);
+         HTML.Put_Cell (Data => J.Urgency'Img);
+         HTML.Put_Cell (Data => J.Resource_Contrib'Img);
+         HTML.Put_Cell (Data => J.Waiting_Contrib'Img);
+         HTML.Put_Cell (Data => J.Posix_Priority'Img);
          Ada.Text_IO.Put ("</tr>");
       end Put_Job_List_Entry;
 
 
    begin
-      SGE_Out := Setup_Parser (Selector => Selector);
+      SGE_Out := Setup_Parser (Selector => "-urg -pri -ext " & Selector);
 
       Put_Table_Header;
 
@@ -258,11 +290,7 @@ package body Viewer is
       J_Name            : Unbounded_String; -- Job name
       J_Owner           : Unbounded_String; -- User whom this job belongs to
       J_Group           : Unbounded_String;
-      J_Priority        : Unbounded_String; -- Numerical priority
-      J_State           : Unbounded_String; -- r(unning), qw(aiting) etc.
-      J_Slots           : Unbounded_String; -- how many slots/CPUs to use
       J_PE              : Unbounded_String; -- Parallel environment
-      J_Submission_Time : Unbounded_String; -- when submitted
       J_Exec_File       : Unbounded_String;
       J_Script_File     : Unbounded_String;
       J_Merge_Std_Err   : Unbounded_String;
