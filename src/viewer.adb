@@ -20,9 +20,7 @@ with Viewer; use Viewer.String_Lists;
 package body Viewer is
 
    procedure View_Cluster_Queues is
-      Reader      : DOM.Readers.Tree_Reader;
       SGE_Out     : DOM.Core.Document;
-      SGE_Command : Pipe_Stream;
       List        : Node_List;
       Children    : Node_List;
       N           : Node;
@@ -38,20 +36,7 @@ package body Viewer is
       Q_Offline   : Unbounded_String;
    --  Cluster Queue Statistics
    begin
-      SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute
-        ("SGE_ROOT=" &
-         sgeroot &
-         " " &
-         sgeroot &
-         "/bin/lx26-amd64/qstat -g c -xml" &
-         ASCII.NUL,
-         Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Out := Reader.Get_Tree;
-      SGE_Command.Close;
+      SGE_Out := Setup_Parser (Selector => "-g c");
 
       HTML.Begin_Div (Class => "cqueues");
       CGI.Put_HTML_Heading (Title => "Cluster Queues", Level => 2);
@@ -110,14 +95,11 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "cqueues");
 
-      Reader.Free;
    end View_Cluster_Queues;
 
 
    procedure View_Jobs (Selector : String) is
-      Reader      : DOM.Readers.Tree_Reader;
       SGE_Out     : DOM.Core.Document;
-      SGE_Command : Pipe_Stream;
       List        : Node_List;
       Children    : Node_List;
 
@@ -157,15 +139,7 @@ package body Viewer is
 
 
    begin
-      SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
-         sgeroot & "/bin/lx26-amd64/qstat " & Selector & " -xml" & ASCII.NUL,
-         Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Out := Reader.Get_Tree;
-      SGE_Command.Close;
+      SGE_Out := Setup_Parser (Selector => Selector);
 
       Put_Table_Header;
 
@@ -178,7 +152,6 @@ package body Viewer is
    --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
-      Reader.Free;
    end View_Jobs;
 
 
@@ -271,9 +244,7 @@ package body Viewer is
    end View_Jobs_Of_User;
 
    procedure View_Job (Job_ID : String) is
-      Reader        : DOM.Readers.Tree_Reader;
       SGE_Out       : DOM.Core.Document;
-      SGE_Command   : Pipe_Stream;
       List          : Node_List;
       Children      : Node_List;
       N             : Node;
@@ -476,15 +447,7 @@ package body Viewer is
    begin
       CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                             Level => 2);
-      SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
-         sgeroot & "/bin/lx26-amd64/qstat -j " & Job_ID & " -xml" & ASCII.NUL,
-         Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Out := Reader.Get_Tree;
-      SGE_Command.Close;
+      SGE_Out := Setup_Parser (Selector => "-j " & Job_ID);
 
    --  Fetch Jobs
       List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
@@ -513,11 +476,9 @@ package body Viewer is
          HTML.Put_Clearer;
       end loop;
 
-      Reader.Free;
    exception
       when Sax.Readers.XML_Fatal_Error =>
          Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
-         Reader.Free;
    end View_Job;
 
    --------------------------
@@ -583,21 +544,6 @@ package body Viewer is
                                 Contents => Exception_Message (E));
       end Parse_One_Queue;
 
-      function Setup_Parser return DOM.Core.Document is
-         Reader      : DOM.Readers.Tree_Reader;
-         SGE_Command : Pipe_Stream;
-      begin
-         SGE_Command.Set_Public_Id ("qstat");
-         SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
-           & "/bin/lx26-amd64/qstat -F h_rt,eth,ib,mem_total,num_proc -xml"
-           & ASCII.NUL,
-           Pipe_Commands.read_file);
-         Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-         Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-         Reader.Parse (SGE_Command);
-         SGE_Command.Close;
-         return Reader.Get_Tree;
-      end Setup_Parser;
 
       procedure Put_Partition (Partition : Partitions.Partition_Lists.Cursor) is
          P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
@@ -630,7 +576,7 @@ package body Viewer is
          HTML.Begin_Div (Class => "partitions");
       CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
                             Level => 2);
-      SGE_Out := Setup_Parser;
+      SGE_Out := Setup_Parser (Selector => "-F h_rt,eth,ib,mem_total,num_proc");
 
       --  Fetch Queues
       Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
@@ -668,6 +614,22 @@ package body Viewer is
    begin
       My_Params := To_Unbounded_String (Params);
    end Set_Params;
+
+   function Setup_Parser (Selector : String) return DOM.Core.Document is
+      Reader      : DOM.Readers.Tree_Reader;
+      SGE_Command : Pipe_Stream;
+   begin
+      SGE_Command.Set_Public_Id ("qstat");
+      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
+        & "/bin/lx26-amd64/qstat " & Selector & " -xml"
+        & ASCII.NUL,
+        Pipe_Commands.read_file);
+      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
+      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
+      Reader.Parse (SGE_Command);
+      SGE_Command.Close;
+      return Reader.Get_Tree;
+   end Setup_Parser;
 
 
 end Viewer;
