@@ -114,7 +114,9 @@ package body Viewer is
                         Tag => "th",
                         Colspan => 3,
                         Class => "delimited");
-         HTML.Put_Cell (Data => "Priority",
+         HTML.Put_Cell (Data => "Priority<a href=""http://wiki.mpibpc.gwdg.de"
+                        & "/grubmueller/index.php/Job_priority"">"
+                        & "<img src=""/icons/help.png"" /></a>",
                         Tag => "th",
                         Colspan => 8,
                         Class => "delimited");
@@ -126,12 +128,22 @@ package body Viewer is
          HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
          HTML.Put_Header_Cell (Data => "State", Params => My_Params);
          HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "Memory", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "IO", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "Memory",
+                               Acronym => "Gigabyte-hours",
+                               Params => My_Params);
+         HTML.Put_Header_Cell (Data => "IO",
+                               Acronym => "Gigabytes",
+                               Params => My_Params);
          HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "Override", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "Share", Params => My_Params);
-         HTML.Put_Header_Cell (Data => "Functional", Params => My_Params);
+         HTML.Put_Header_Cell (Data => "O",
+                               Acronym => "Override",
+                               Params => My_Params);
+         HTML.Put_Header_Cell (Data => "S",
+                               Acronym => "Share",
+                               Params => My_Params);
+         HTML.Put_Header_Cell (Data => "F",
+                               Acronym => "Functional",
+                               Params => My_Params);
          HTML.Put_Header_Cell (Data => "Urgency", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Resource", Params => My_Params);
          HTML.Put_Header_Cell (Data => "Waiting", Params => My_Params);
@@ -154,18 +166,38 @@ package body Viewer is
          HTML.Put_Time_Cell (J.Submission_Time);
          HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
          HTML.Put_Img_Cell (State_As_String (J));
-         HTML.Put_Cell (Data => J.CPU);
-         HTML.Put_Cell (Data => J.Mem);
-         HTML.Put_Cell (Data => J.IO);
+         if J.CPU > 0.1 then
+            HTML.Put_Duration_Cell (Integer (J.CPU));
+         else
+            HTML.Put_Cell ("");
+         end if;
+         if J.Mem > 3_600.0 then
+            HTML.Put_Cell (Data => Integer'Image (Integer (J.Mem / 3_600.0)),
+                           Class => "right");
+         elsif J.Mem > 1.0 then
+            HTML.Put_Cell (Data => CGI.HTML_Encode ("<1"),
+                          Class => "right");
+         else
+            HTML.Put_Cell ("");
+         end if;
+         if J.IO > 1.0 then
+            HTML.Put_Cell (Data => Integer'Image (Integer (J.IO)),
+                          Class => "right");
+         elsif J.IO > 0.01 then
+            HTML.Put_Cell (Data => "<1",
+                           Class => "right");
+         else
+            HTML.Put_Cell ("");
+         end if;
 
          HTML.Put_Cell (Data => J.Priority);
-         HTML.Put_Cell (Data => J.Override_Tickets'Img);
-         HTML.Put_Cell (Data => J.Share_Tickets'Img);
-         HTML.Put_Cell (Data => J.Functional_Tickets'Img);
-         HTML.Put_Cell (Data => J.Urgency'Img);
-         HTML.Put_Cell (Data => J.Resource_Contrib'Img);
-         HTML.Put_Cell (Data => J.Waiting_Contrib'Img);
-         HTML.Put_Cell (Data => J.Posix_Priority'Img);
+         HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Urgency'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Resource_Contrib'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
+         HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
          Ada.Text_IO.Put ("</tr>");
       end Put_Job_List_Entry;
 

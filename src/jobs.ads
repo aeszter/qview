@@ -21,9 +21,7 @@ package Jobs is
       Submission_Time    : Time;    -- when submitted
 
       --  qstat -ext
-      CPU                : Unbounded_String;
-      Mem                : Unbounded_String;
-      IO                 : Unbounded_String;
+      CPU, Mem, IO       : Float;
       Override_Tickets   : Natural;
       Share_Tickets      : Natural;
       Functional_Tickets : Natural;
@@ -42,7 +40,7 @@ package Jobs is
 
    function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time;
-                     CPU, Mem, IO : Unbounded_String := Null_Unbounded_String;
+                     CPU, Mem, IO : Float := 0.0;
                      Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
                      Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
                      Posix_Priority                                      : Integer := 0)

@@ -12,7 +12,7 @@ package body Jobs is
 
    function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time;
-                     CPU, Mem, IO : Unbounded_String := Null_Unbounded_String;
+                     CPU, Mem, IO : Float := 0.0;
                      Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
                      Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
                      Posix_Priority                                      : Integer := 0)
@@ -131,6 +131,13 @@ package body Jobs is
       F_Tickets       : Natural;
       S_Tickets       : Natural;
       O_Tickets       : Natural;
+      CPU_Usage       : Float;
+      Mem_Usage       : Float;
+      IO_Usage        : Float;
+      Wait_Contrib    : Natural;
+      Resource_Contrib : Natural;
+      Urgency          : Natural;
+      User_Priority : Natural;
 
    begin
       for Index in 1 .. Length (List) loop
@@ -165,21 +172,40 @@ package body Jobs is
                S_Tickets := Integer'Value (Value (First_Child (C)));
             elsif Name (C) = "otickets" then
                O_Tickets := Integer'Value (Value (First_Child (C)));
-            elsif Name (C) /= "#text" then
-               Ada.Text_IO.Put_Line (Name (C));
+            elsif Name (C) = "cpu_usage" then
+               CPU_Usage := Float'Value (Value (First_Child (C)));
+            elsif Name (C) = "mem_usage" then
+               Mem_Usage := Float'Value (Value (First_Child (C)));
+            elsif Name (C) = "io_usage" then
+               IO_Usage := Float'Value (Value (First_Child (C)));
+            elsif Name (C) = "JB_wtcontr" then
+               Wait_Contrib := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "JB_rrcontr" then
+               Resource_Contrib := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "JB_urg" then
+               Urgency := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "JB_priority" then
+               User_Priority := Integer'Value (Value (First_Child (C)));
             end if;
          end loop;
-         Job_List.Append (New_Job (Number          => Number,
-                                   Name            => Job_Name,
-                                   Owner           => Owner,
-                                   Priority        => Priority,
-                                   State           => State,
-                                   Slots           => Slots,
-                                   PE              => PE,
-                                   Submission_Time => Submission_Time,
-                                   Share_Tickets   => S_Tickets,
+         Job_List.Append (New_Job (Number             => Number,
+                                   Name               => Job_Name,
+                                   Owner              => Owner,
+                                   Priority           => Priority,
+                                   State              => State,
+                                   Slots              => Slots,
+                                   PE                 => PE,
+                                   Submission_Time    => Submission_Time,
+                                   Share_Tickets      => S_Tickets,
                                    Functional_Tickets => F_Tickets,
-                                  Override_Tickets => O_Tickets));
+                                   Override_Tickets   => O_Tickets,
+                                   CPU                => CPU_Usage,
+                                   Mem                => Mem_Usage,
+                                   IO                 => IO_Usage,
+                                   Waiting_Contrib    => Wait_Contrib,
+                                   Resource_Contrib   => Resource_Contrib,
+                                   Posix_Priority     => User_Priority,
+                                   Urgency            => Urgency));
       end loop;
    end Append_List;
 

@@ -1,8 +1,9 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with CGI;
-with Ada.Calendar;
+with Ada.Calendar; with Ada.Calendar.Formatting;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO; use GNAT.Calendar.Time_IO;
+with Ada.Real_Time;
 
 package body HTML is
 
@@ -17,15 +18,23 @@ package body HTML is
 
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
+                       Acronym    : String := "";
                        Tag        : String := "td";
                        Class      : String := "";
                        Colspan    : Positive := 1) is
       Open_Tag : Unbounded_String;
+      Title : Unbounded_String;
       --  This is not ideal: we are using an unbounded string without any real need,
       --  just in order to avoid eight separate cases of default parameters
       Close_Tag : String := "</" & Tag & ">";
    begin
       Open_Tag := To_Unbounded_String ("<" & Tag);
+      if Acronym = "" then
+         Title := To_Unbounded_String (Data);
+      else
+         Title := To_Unbounded_String ("<acronym title=""" & Acronym & """>"
+                                       & Data & "</acronym>");
+      end if;
       if Class /= "" then
          Open_Tag := Open_Tag & " class=""" & Class & """";
       end if;
@@ -35,11 +44,11 @@ package body HTML is
       Open_Tag := Open_Tag & ">";
 
       if Link_Param = "" then
-         Put_Line (To_String (Open_Tag) & Data & Close_Tag);
+         Put_Line (To_String (Open_Tag & Title) & Close_Tag);
       else
          Put_Line (To_String (Open_Tag) & "<a href=""" & CGI.My_URL & "?"
                    & Link_Param & "=" & Data & """>"
-                   & Data & "</a>" & Close_Tag);
+                   & To_String (Title) & "</a>" & Close_Tag);
       end if;
    end Put_Cell;
 
@@ -85,16 +94,37 @@ package body HTML is
       end if;
    end Put_Time_Cell;
 
+   -----------------------
+   -- Put_Duration_Cell --
+   -----------------------
+
+   procedure Put_Duration_Cell (Secs : Natural) is
+      Days : Natural;
+      Dur : Duration;
+   begin
+         Days := Secs / 86400;
+         Dur := Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Secs - Days*86_400));
+      if Days > 0 then
+         Put_Cell (Data => Days'Img & "d " & Ada.Calendar.Formatting.Image (Dur),
+                  Class => "right");
+      else
+         Put_Cell (Data => Ada.Calendar.Formatting.Image (Dur),
+                  Class => "right");
+      end if;
+   end Put_Duration_Cell;
 
    procedure Put_Header_Cell (Data     : String;
+                              Acronym : String := "";
                               Params   : Unbounded_String;
                               Sortable : Boolean := True) is
    begin
       if not Sortable then
          Put_Cell (Data => Data,
+                   Acronym => Acronym,
                    Tag  => "th");
       elsif Params = "" then
          Put_Cell (Data       => Data,
+                   Acronym => Acronym,
                    Link_Param => "sort",
                    Tag        => "th",
                    Class      => "sorter"
@@ -102,12 +132,14 @@ package body HTML is
       elsif Param_Is ("sort", Data) then -- Sorted by this queue, Params exist
 
          Put_Cell (Data       => Data,
+                   Acronym => Acronym,
                    Link_Param => To_String (Params & "&sort"),
                    Tag        => "th",
                    Class      => "sorter_active"
                   );
       else
          Put_Cell (Data       => Data,
+                   Acronym => Acronym,
                    Link_Param => To_String (Params & "&sort"),
                    Tag        => "th",
                    Class      => "sorter"

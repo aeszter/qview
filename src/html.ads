@@ -5,6 +5,7 @@ with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 package HTML is
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
+                       Acronym    : String := "";
                        Tag        : String := "td";
                        Class      : String := "";
                        Colspan    : Positive := 1);
@@ -16,7 +17,9 @@ package HTML is
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String);
    procedure Put_Time_Cell (Time : Calendar.Time);
+   procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Header_Cell (Data     : String;
+                              Acronym : String := "";
                               Params   : Unbounded_String;
                               Sortable : Boolean := True);
 
