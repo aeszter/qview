@@ -269,6 +269,15 @@ package body Viewer is
          end if;
       end if;
       HTML.End_Div (ID => "content");
+      HTML.Begin_Div (ID => "footer");
+      Ada.Text_IO.Put ("<ul>");
+      Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
+                            & "aeszter@gwdg.de</a></li>");
+      Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
+                            & "<img src=""/usage/webalizer.png"" "
+                            & "alt=""Stats by Webalizer""></a></li>");
+      Ada.Text_IO.Put ("</ul>");
+      HTML.End_Div (ID =>  "footer");
       HTML.Put_Clearer;
       HTML.End_Div (ID => "page");
 
@@ -406,6 +415,28 @@ package body Viewer is
          end loop;
       end Extract_PE_Range;
 
+      procedure Extract_Errors is
+         Children : Node_List := Child_Nodes (First_Child (C));
+         Messages : Node_List;
+         N, M     : Node;
+
+      begin
+         for I in 1 .. Length (Children) loop
+            N := Item (Children, I - 1);
+            if Name (N) = "JAT_message_list" then
+               Messages := Child_Nodes (First_Child (N));
+               for K in 1 .. Length (Messages) loop
+                  M := Item (Messages, K - 1);
+                  if Name (M) = "QIM_message" then
+                     HTML.Put_Paragraph (Label    => "QIM_message",
+                                         Contents => Value (First_Child (M)));
+                  end if;
+               end loop;
+            end if;
+
+         end loop;
+      end Extract_Errors;
+
       procedure Parse_One_Job is
       begin
          Resource_List.Clear;
@@ -432,6 +463,8 @@ package body Viewer is
                Extract_Queue_List;
             elsif Name (C) = "JB_script_file" then
                J_Script_File := To_Unbounded_String (Value (First_Child (C)));
+            elsif Name (C) = "JB_ja_tasks" then
+               Extract_Errors;
             elsif Name (C) = "JB_cwd" then
                J_Directory := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_reserve" then
