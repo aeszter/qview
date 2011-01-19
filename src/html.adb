@@ -163,7 +163,7 @@ package body HTML is
    procedure Put_Navigation_Link (Data : String; Link_Param : String) is
    begin
       Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.My_URL
-                            & "?" & Link_Param & """>" & Data & "</a>");
+                            & "?" & Link_Param & """>" & Data & "</a></li>");
    end Put_Navigation_Link;
 
    procedure Put_Paragraph (Label : String; Contents : String) is
