@@ -6,6 +6,7 @@ with Ada.Calendar; use Ada.Calendar;
 package Jobs is
 
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, qw, hqw);
+   type Fixed is delta 0.0001 digits 5;
 
    type Job is record
       --  basic attributes
@@ -27,7 +28,7 @@ package Jobs is
       Functional_Tickets : Natural;
 
       --  qstat -urg
-      Urgency            : Natural;
+      Urgency            : Fixed;
       Resource_Contrib   : Natural;
       Waiting_Contrib    : Natural;
 
@@ -42,7 +43,8 @@ package Jobs is
                      Slots, PE : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO : Float := 0.0;
                      Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
-                     Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
+                     Urgency                                             : Float;
+                     Resource_Contrib, Waiting_Contrib                   : Natural := 0;
                      Posix_Priority                                      : Integer := 0)
                      return Job;
 

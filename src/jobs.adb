@@ -14,7 +14,8 @@ package body Jobs is
                      Slots, PE : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO : Float := 0.0;
                      Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
-                     Urgency, Resource_Contrib, Waiting_Contrib          : Natural := 0;
+                     Urgency                                             : Float;
+                     Resource_Contrib, Waiting_Contrib                   : Natural := 0;
                      Posix_Priority                                      : Integer := 0)
                      return Job
    is
@@ -66,7 +67,7 @@ package body Jobs is
       J.Functional_Tickets := Functional_Tickets;
 
       --  qstat -urg
-      J.Urgency            := Urgency;
+      J.Urgency            := Fixed (Urgency);
       J.Resource_Contrib   := Resource_Contrib;
       J.Waiting_Contrib    := Waiting_Contrib;
 
@@ -136,7 +137,7 @@ package body Jobs is
       IO_Usage        : Float;
       Wait_Contrib    : Natural;
       Resource_Contrib : Natural;
-      Urgency          : Natural;
+      Urgency          : Float;
       User_Priority : Natural;
 
    begin
@@ -182,8 +183,8 @@ package body Jobs is
                Wait_Contrib := Integer'Value (Value (First_Child (C)));
             elsif Name (C) = "JB_rrcontr" then
                Resource_Contrib := Integer'Value (Value (First_Child (C)));
-            elsif Name (C) = "JB_urg" then
-               Urgency := Integer'Value (Value (First_Child (C)));
+            elsif Name (C) = "JB_nurg" then
+               Urgency := Float'Value (Value (First_Child (C)));
             elsif Name (C) = "JB_priority" then
                User_Priority := Integer'Value (Value (First_Child (C)));
             end if;
