@@ -325,6 +325,7 @@ package body Viewer is
       Resource_List : Resources.Resource_Lists.List;
       Slot_List     : Slots.Slot_Lists.List;
       Queue_List    : String_Lists.List;
+      Message_List  : String_Lists.List;
 
 
       J_Number          : Unbounded_String; -- Job ID
@@ -416,20 +417,31 @@ package body Viewer is
       end Extract_PE_Range;
 
       procedure Extract_Errors is
-         Children : Node_List := Child_Nodes (First_Child (C));
+         Children : Node_List;
          Messages : Node_List;
          N, M     : Node;
+         JA_Tasks : Node;
+         Sublist  : Node;
 
       begin
+         JA_Tasks := Item (Child_Nodes (C), 1);
+         if Name (JA_Tasks) /= "ja_tasks" then
+            raise Assumption_Error;
+         end if;
+
+         Children := Child_Nodes (JA_Tasks);
          for I in 1 .. Length (Children) loop
             N := Item (Children, I - 1);
             if Name (N) = "JAT_message_list" then
-               Messages := Child_Nodes (First_Child (N));
+               Sublist := Item (Child_Nodes (N), 1);
+               if Name (Sublist) /= "ulong_sublist" then
+                  raise Assumption_Error;
+               end if;
+               Messages := Child_Nodes (Sublist);
                for K in 1 .. Length (Messages) loop
                   M := Item (Messages, K - 1);
                   if Name (M) = "QIM_message" then
-                     HTML.Put_Paragraph (Label    => "QIM_message",
-                                         Contents => Value (First_Child (M)));
+                     Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
                   end if;
                end loop;
             end if;
@@ -441,6 +453,7 @@ package body Viewer is
       begin
          Resource_List.Clear;
          Queue_List.Clear;
+         Message_List.Clear;
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
