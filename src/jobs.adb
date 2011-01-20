@@ -218,7 +218,7 @@ package body Jobs is
    ------------------
 
 
-   procedure Sort_By (Field : String) is
+   procedure Sort_By (Field : String; Direction : String) is
    begin
       if Field = "Number" then
          Sorting_By_Number.Sort (Job_List);
@@ -236,6 +236,9 @@ package body Jobs is
          Sorting_By_State.Sort (Job_List);
       else
          Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & " unimplemented");
+      end if;
+      if Direction = "dec" then
+         Job_List.Reverse_Elements;
       end if;
    end Sort_By;
 

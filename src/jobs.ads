@@ -49,7 +49,7 @@ package Jobs is
                      return Job;
 
    procedure Append_List (List : Node_List);
-   procedure Sort_By (Field : String);
+   procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;
    function Precedes_By_Number (Left, Right : Job) return Boolean;
    function Precedes_By_Owner (Left, Right : Job) return Boolean;

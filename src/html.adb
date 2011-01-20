@@ -117,6 +117,7 @@ package body HTML is
                               Acronym : String := "";
                               Params   : Unbounded_String;
                               Sortable : Boolean := True) is
+      Dir : String := "dec";
    begin
       if not Sortable then
          Put_Cell (Data => Data,
@@ -130,10 +131,16 @@ package body HTML is
                    Class      => "sorter"
                   );
       elsif Param_Is ("sort", Data) then -- Sorted by this queue, Params exist
-
+         if Standard."="(CGI.Cookie_Value (Data & "sort"), "dec") then
+            Dir := "inc";
+         end if;
+            --  no value means: sorted incrementally,
+            --  so we switch to decremental sorting now.
+            --  Of course, the same goes for Value = "inc"
          Put_Cell (Data       => Data,
                    Acronym => Acronym,
-                   Link_Param => To_String (Params & "&sort"),
+                   Link_Param => To_String (Params & "&dir="
+                     & Dir & "&sort"),
                    Tag        => "th",
                    Class      => "sorter_active"
                   );
