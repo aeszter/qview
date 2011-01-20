@@ -493,10 +493,18 @@ package body Viewer is
       procedure Output_One_Job is
          Res        : Resource_Lists.Cursor;
          Slot_Range : Slot_Lists.Cursor;
-         Q          : String_Lists.Cursor;
+         Q, Msg     : String_Lists.Cursor;
       begin
          HTML.Begin_Div (Class => "job_name");
          HTML.Put_Paragraph ("Name", J_Name);
+         Msg := Message_List.First;
+         loop
+            exit when Msg = String_Lists.No_Element;
+            Ada.Text_IO.Put_Line ("<p class=""message"">"
+                                  & To_String (String_Lists.Element (Msg))
+                                  & "</p>");
+            Msg := Next (Msg);
+         end loop;
          HTML.End_Div;
 
          HTML.Begin_Div (Class => "job_meta");
