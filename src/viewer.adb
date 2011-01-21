@@ -49,7 +49,7 @@ package body Viewer is
          HTML.End_Div (ID => "header");
       end Put_Headers;
 
-      Sort_Direction : String := "inc";
+      Sort_Direction : Unbounded_String := To_Unbounded_String ("inc");
 
       procedure View_Cluster_Queues is
          SGE_Out     : DOM.Core.Document;
@@ -370,7 +370,11 @@ package body Viewer is
 
          Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
          if not HTML.Param_Is ("sort", "") then
-            Jobs.Sort_By (Field => CGI.Value ("sort"), Direction => Sort_Direction);
+            if Length (Sort_Direction) /= 3 then
+               --  something wrong -- maybe an attack?
+               Sort_Direction := To_Unbounded_String ("inc");
+            end if;
+            Jobs.Sort_By (Field => CGI.Value ("sort"), Direction => To_String (Sort_Direction));
          end if;
          Job_List.Iterate (Put_Job_List_Entry'Access);
 
@@ -508,33 +512,35 @@ package body Viewer is
          procedure Extract_Errors is
             Children : Node_List;
             Messages : Node_List;
+            Task_Nodes : Node_List := Child_Nodes (C);
             N, M     : Node;
             JA_Tasks : Node;
             Sublist  : Node;
 
          begin
-            JA_Tasks := Item (Child_Nodes (C), 1);
-            if Name (JA_Tasks) /= "ja_tasks" then
-               raise Assumption_Error;
-            end if;
 
-            Children := Child_Nodes (JA_Tasks);
-            for I in 1 .. Length (Children) loop
-               N := Item (Children, I - 1);
-               if Name (N) = "JAT_message_list" then
-                  Sublist := Item (Child_Nodes (N), 1);
-                  if Name (Sublist) /= "ulong_sublist" then
-                     raise Assumption_Error;
-                  end if;
-                  Messages := Child_Nodes (Sublist);
-                  for K in 1 .. Length (Messages) loop
-                     M := Item (Messages, K - 1);
-                     if Name (M) = "QIM_message" then
-                        Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
+            for H in 1 .. Length (Task_Nodes) loop
+               JA_Tasks := Item (Task_Nodes, H - 1);
+               if Name (JA_Tasks) = "ja_tasks" then
+                  Children := Child_Nodes (JA_Tasks);
+                  for I in 1 .. Length (Children) loop
+                     N := Item (Children, I - 1);
+                     if Name (N) = "JAT_message_list" then
+                        Sublist := Item (Child_Nodes (N), 1);
+                        if Name (Sublist) /= "ulong_sublist" then
+                           raise Assumption_Error;
+                        end if;
+                        Messages := Child_Nodes (Sublist);
+                        for K in 1 .. Length (Messages) loop
+                           M := Item (Messages, K - 1);
+                           if Name (M) = "QIM_message" then
+                              Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
+                           end if;
+                        end loop;
                      end if;
+
                   end loop;
                end if;
-
             end loop;
          end Extract_Errors;
 
@@ -689,12 +695,11 @@ package body Viewer is
       begin
          if not HTML.Param_Is ("sort", "") then
             if HTML.Param_Is ("dir", "") then
-               pragma warning exception if the cookie is empty
                Sort_Direction := CGI.Cookie_Value (String'(CGI.Value ("sort")) & "sort");
             else
                Sort_Direction := CGI.Value ("dir");
                CGI.Set_Cookie (Key   => CGI.Value ("sort") & "sort",
-                            Value => Sort_Direction);
+                            Value => To_String (Sort_Direction));
             end if;
          end if;
          Put_Headers;
