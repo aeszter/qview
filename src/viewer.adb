@@ -171,9 +171,6 @@ package body Viewer is
                      Network := eth;
                   elsif Value (A) = "h_rt" then
                      Runtime := To_Unbounded_String (Value (First_Child (N)));
-                  else
-                     HTML.Put_Paragraph (Label    => "Unidentified Resource",
-                                         Contents => Value (A));
                   end if;
                end if;
             end loop;
