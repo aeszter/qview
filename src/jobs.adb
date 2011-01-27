@@ -46,6 +46,8 @@ package body Jobs is
          J.State := r;
       elsif State = "Rr" then
          J.State := Rr;
+      elsif State = "Rq" then
+         J.State := Rq;
       elsif State = "qw" then
          J.State := qw;
       elsif State = "hqw" then
@@ -91,6 +93,7 @@ package body Jobs is
          when t => return "t";
          when r => return "r";
          when Rr => return "Rr";
+         when Rq => return "Rq";
          when qw => return "qw";
          when hqw => return "hqw";
          when unknown => return "unknown";

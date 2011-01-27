@@ -5,7 +5,7 @@ with Ada.Calendar; use Ada.Calendar;
 
 package Jobs is
 
-   type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, qw, hqw);
+   type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw);
    type Fixed is delta 0.0001 digits 5;
 
    type Job is record
