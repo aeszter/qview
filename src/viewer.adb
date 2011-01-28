@@ -16,6 +16,7 @@ with Jobs; use Jobs; use Jobs.Job_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Viewer; use Viewer.String_Lists;
+with Diagnostics;
 
 package body Viewer is
 
@@ -687,6 +688,13 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
+      procedure Put_Diagnostics is
+      begin
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put ("Time:");
+         Diagnostics.Put_Time;
+         Ada.Text_IO.Put ("</li>");
+      end Put_Diagnostics;
 
    begin
       begin
@@ -741,6 +749,11 @@ package body Viewer is
       Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
                             & "<img src=""/usage/webalizer.png"" "
                             & "alt=""Stats by Webalizer""></a></li>");
+      Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
+                            & "component=qview&form_name=enter_bug"
+                            & "&product=Private%20projects"">"
+                            &"Report Problem/Suggest Enhancement</a></li>");
+      Put_Diagnostics;
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID =>  "footer");
       HTML.Put_Clearer;
