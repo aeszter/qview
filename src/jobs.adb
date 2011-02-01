@@ -13,11 +13,15 @@ package body Jobs is
    function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO : Float := 0.0;
-                     Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
-                     Urgency                                             : Float;
-                     Resource_Contrib, Waiting_Contrib                   : Natural := 0;
-                     Posix_Priority                                      : Integer := 0)
-                     return Job
+                     Override_Tickets, Share_Tickets   : Natural := 0;
+                     Functional_Tickets                : Natural := 0;
+                     Urgency                           : Float   := 0.0;
+                     Resource_Contrib, Waiting_Contrib : Natural := 0;
+                     Posix_Priority                    : Integer := 0;
+                     Hard_Requests, Soft_Requests      : Resources.Resource_Lists.List
+                                                       := Resources.Resource_Lists.Empty_List;
+                     Queue                             : Unbounded_String := Null_Unbounded_String
+                    ) return Job
    is
       J : Job;
    begin
@@ -76,6 +80,13 @@ package body Jobs is
       --  qstat -pri
       J.Posix_Priority     := Posix_Priority;
 
+      --  resources used for Bunching jobs
+      J.Hard               := Hard_Requests;
+      Resources.Sort (J.Hard);
+      J.Soft               := Soft_Requests;
+      Resources.Sort (J.Soft);
+      J.Queue              := Queue;
+
       return J;
    end New_Job;
 
@@ -100,6 +111,20 @@ package body Jobs is
       end case;
 
    end State_As_String;
+
+   -------------
+   -- On_Hold --
+   -------------
+
+   function On_Hold (J : Job) return Boolean is
+   begin
+      case J.State is
+         when hqw => return True;
+         when unknown => raise Constraint_Error;
+         when others => return False;
+      end case;
+   end On_Hold;
+
 
    ------------------
    -- Name_As_HTML --
@@ -159,7 +184,7 @@ package body Jobs is
             elsif Name (C) = "state" then
                State := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_submission_time" or else
-            Name (C) = "JAT_start_time" then
+               Name (C) = "JAT_start_time" then
                Time_Buffer := Value (First_Child (C));
                if Time_Buffer (11) /= 'T' then
                   raise Time_Error;
@@ -266,6 +291,32 @@ package body Jobs is
          Job_List.Reverse_Elements;
       end if;
    end Sort_By;
+
+   ------------------------
+   -- Precedes_By_Resources   --
+   --  Purpose: Check whether one job should precede another when sorted by various resources
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting.
+   --  This does a multi-column sort by slots, runtime, PE and so on.
+   --  If neither a < b nor a > b, then a and b belong to the same Bunch.
+   ------------------------
+
+   function Precedes_By_Resources (Left, Right : Job) return Boolean is
+   begin
+      if Left.Slots < Right.Slots then
+         return True;
+      elsif Left.Slots > Right.Slots then
+         return False;
+      elsif Left.PE < Right.PE then
+         return True;
+      elsif Left.PE > Right.PE then
+            return False;
+      else
+         return False;
+      end if;
+   end Precedes_By_Resources;
 
    ------------------------
    -- Precedes_By_Name   --

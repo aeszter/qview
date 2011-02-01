@@ -2,6 +2,7 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with DOM.Core; use DOM.Core;
 with Ada.Calendar; use Ada.Calendar;
+with Resources;
 
 package Jobs is
 
@@ -34,19 +35,29 @@ package Jobs is
 
       --  qstat -pri
       Posix_Priority     : Natural;
+
+      --  resources used for Bunching jobs
+      Queue              : Unbounded_String;
+      Hard, Soft         : Resources.Resource_Lists.List;
+
    end record;
 
    function State_As_String (J : Job) return String;
    function Name_As_HTML (J : Job) return String;
+   function On_Hold (J : Job) return Boolean;
 
    function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO : Float := 0.0;
-                     Override_Tickets, Share_Tickets, Functional_Tickets : Natural := 0;
-                     Urgency                                             : Float;
-                     Resource_Contrib, Waiting_Contrib                   : Natural := 0;
-                     Posix_Priority                                      : Integer := 0)
-                     return Job;
+                     Override_Tickets, Share_Tickets   : Natural := 0;
+                     Functional_Tickets                : Natural := 0;
+                     Urgency                           : Float   := 0.0;
+                     Resource_Contrib, Waiting_Contrib : Natural := 0;
+                     Posix_Priority                    : Integer := 0;
+                     Hard_Requests, Soft_Requests      : Resources.Resource_Lists.List
+                                                       := Resources.Resource_Lists.Empty_List;
+                     Queue                             : Unbounded_String := Null_Unbounded_String
+                    ) return Job;
 
    procedure Append_List (List : Node_List);
    procedure Sort_By (Field : String; Direction : String);
@@ -67,6 +78,9 @@ package Jobs is
    function Precedes_By_Waiting_Contrib (Left, Right : Job) return Boolean;
    function Precedes_By_Resource_Contrib (Left, Right : Job) return Boolean;
    function Precedes_By_Posix_Priority (Left, Right : Job) return Boolean;
+
+   function Precedes_By_Resources (Left, Right : Job) return Boolean;
+
    function Same (Left, Right : Job) return Boolean;
 
    package Job_Lists is
@@ -107,7 +121,10 @@ package Jobs is
    package Sorting_By_Waiting_Contrib is
       new Job_Lists.Generic_Sorting ("<" => Precedes_By_Waiting_Contrib);
    package Sorting_By_Posix_Priority is
-      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Posix_Priority);
+     new Job_Lists.Generic_Sorting ("<" => Precedes_By_Posix_Priority);
+
+   package Sorting_By_Resources is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Resources);
 
 
    Max_Name_Length : constant Positive := 20;

@@ -3,6 +3,7 @@ with Ada.Calendar; use Ada.Calendar;
 use Ada.Calendar;
 with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Real_Time;
+with Resources; use Resources.Resource_Lists;
 
 package body Resources is
 
@@ -21,6 +22,21 @@ package body Resources is
       R.Name := Name;
       R.Value := Value;
       return R;
+   end New_Resource;
+
+   ------------------
+   -- New_Resource --
+   --  Purpose: Create a new resource with given name and value
+   --  Parameter Name: name of the new resource
+   --  Parameter Value: value of the new resource
+   --  Returns: the newly created resource
+   ------------------
+
+   function New_Resource (Name : String; Value : String)
+                          return Resource is
+   begin
+      return New_Resource (Name  => To_Unbounded_String (Name),
+                           Value => To_Unbounded_String (Value));
    end New_Resource;
 
    -----------------------
@@ -49,6 +65,33 @@ package body Resources is
       end if;
       HTML.Put_Paragraph (Label, Value);
    end Put;
+
+   ----------
+   -- Sort --
+   ----------
+
+   procedure Sort (L : in out Resource_Lists.List) is
+   begin
+      Sorting.Sort (L);
+   end Sort;
+
+   -----------
+   -- Equal --
+   -----------
+
+   function Equal (Left, Right : Resource_Lists.List) return Boolean is
+   begin
+      return Left = Right;
+   end Equal;
+
+   --------------
+   -- Precedes --
+   --------------
+
+   function Precedes (Left, Right : Resource) return Boolean is
+   begin
+      return Left.Name < Right.Name;
+   end Precedes;
 
 
 end Resources;

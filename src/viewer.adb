@@ -13,10 +13,13 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
 with Slots; use Slots; use Slots.Slot_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
+with Bunches; use Bunches; use Bunches.Bunch_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Viewer; use Viewer.String_Lists;
 with Diagnostics;
+with Ada.Calendar; use Ada.Calendar;
+with GNAT.Calendar.Time_IO;
 
 package body Viewer is
 
@@ -45,7 +48,11 @@ package body Viewer is
          HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
          HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
          HTML.Put_Navigation_Link (Data       => "Detailed Queues",
-                                Link_Param => "detailed_queues=y");
+                                   Link_Param => "categories=supply");
+         HTML.Put_Navigation_Link (Data       => "Job Overview",
+                                   Link_Param => "categories=demand");
+         HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
+                                   Link_Param => "categories=both");
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
       end Put_Headers;
@@ -129,6 +136,148 @@ package body Viewer is
          HTML.End_Div (Class => "cqueues");
 
       end View_Cluster_Queues;
+
+      -----------------------
+      -- View_Job_Overview --
+      -----------------------
+
+      procedure View_Job_Overview is
+
+         Job_List : Jobs.Job_Lists.List;
+
+         procedure Parse_One_Job (Nodes : Node_List) is
+            N                    : Node;
+            A                    : Attr;
+            Number               : Unbounded_String;
+            Job_Name, Owner      : Unbounded_String;
+            State                : Unbounded_String;
+            Job_Slots, Job_Queue : Unbounded_String;
+            PE                   : Unbounded_String;
+            Priority             : Unbounded_String;
+            Time_Buffer          : String (1 .. 19);
+            Submission_Time      : Time;
+            Hard, Soft           : Resources.Resource_Lists.List;
+
+         begin
+            for Index in 1 .. Length (Nodes) loop
+               N := Item (Nodes, Index - 1);
+               if Name (N) = "JB_job_number" then
+                  Number := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "JAT_prio" then
+                  Priority := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "JB_name" then
+                  Job_Name := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "JB_owner" then
+                  Owner := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "state" then
+                     State := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "queue_name" then
+                  null; -- ignore
+               elsif Name (N) = "hard_req_queue" then
+                     Job_Queue := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "slots" then
+                  Job_Slots := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "full_job_name" then
+                  null; -- ignore
+               elsif Name (N) = "requested_pe" then
+                  PE := To_Unbounded_String (Value (First_Child (N)));
+
+               elsif Name (N) = "JB_submission_time" or else
+                     Name (N) = "JAT_start_time" then
+                  Time_Buffer := Value (First_Child (N));
+                  if Time_Buffer (11) /= 'T' then
+                     raise Time_Error;
+                  end if;
+                  Time_Buffer (11) := ' ';
+                  Submission_Time := GNAT.Calendar.Time_IO.Value (Time_Buffer);
+               elsif Name (N) = "hard_request" then
+                  A := Get_Named_Item (Attributes (N), "name");
+                  Hard.Append (New_Resource (Name  => Value (A),
+                                             Value => Value (First_Child (N))));
+               elsif Name (N) = "soft_request" then
+                  A := Get_Named_Item (Attributes (N), "name");
+                  Soft.Append (New_Resource (Name  => Value (A),
+                                             Value => Value (First_Child (N))));
+               elsif Name (N) = "predecessor_jobs" or else
+                 Name (N) = "predecessor_jobs_req" then
+                  null; -- ignore
+               elsif Name (N) /= "#text" then
+                  Ada.Text_IO.Put_Line ("Unknown Field: " & Name (N));
+               end if;
+            end loop;
+
+            Job_List.Append (New_Job (Number   => Number,
+                                      Name            => Job_Name,
+                                      Owner           => Owner,
+                                      Priority        => Priority,
+                                      Submission_Time => Submission_Time,
+                                      State           => State,
+                                      Slots           => Job_Slots,
+                                      PE              => PE,
+                                      Queue           => Job_Queue,
+                                      Hard_Requests   => Hard,
+                                      Soft_Requests   => Soft
+                                         ));
+         exception
+            when E : others =>
+               HTML.Error ("Failed to parse job: " & Exception_Message (E));
+         end Parse_One_Job;
+
+
+         procedure Put_Bunch (Bunch : Bunches.Bunch_Lists.Cursor) is
+            B : Bunches.Bunch := Bunches.Bunch_Lists.Element (Bunch);
+         begin
+            Ada.Text_IO.Put ("<tr>");
+            HTML.Put_Cell (Data => "placeholder");
+            Ada.Text_IO.Put ("</tr>");
+         end Put_Bunch;
+
+
+         SGE_Out     : DOM.Core.Document;
+         Nodes       : Node_List;
+         Bunch_List : Bunches.Bunch_Lists.List;
+      begin
+         HTML.Begin_Div (Class => "bunches");
+         if HTML.Param_Is ("categories", "demand") then
+            CGI.Put_HTML_Heading (Title => "Job Overview",
+                               Level => 2);
+         else
+            CGI.Put_HTML_Heading (Title => "Demand",
+                               Level => 2);
+         end if;
+         SGE_Out := Setup_Parser (Selector => "-u \* -r -s p");
+
+         --  Fetch Queues
+         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
+         if Length (Nodes) = 0 then
+            Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
+            return;
+         end if;
+
+         for Index in 1 .. Length (Nodes) loop
+            Parse_One_Job (Child_Nodes (Item (Nodes, Index - 1)));
+         end loop;
+
+         --  Detect different bunches
+         Bunches.Build_List (Job_List, Bunch_List);
+
+         --  Output
+         Ada.Text_IO.Put_Line ("<table><tr>");
+         HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+         HTML.Put_Cell (Data       => "Cores", Tag => "th");
+         HTML.Put_Cell (Data => "RAM", Tag => "th");
+         HTML.Put_Cell (Data => "Runtime", Tag => "th");
+         HTML.Put_Cell (Data => "Slots", Tag => "th");
+         HTML.Put_Cell (Data => "Used", Tag => "th");
+         HTML.Put_Cell (Data => "Reserved", Tag => "th");
+         HTML.Put_Cell (Data => "Available", Tag => "th");
+         HTML.Put_Cell (Data => "<acronym title=""aoACDS: overloaded or in maintenance window"">Suspended</acronym>", Tag => "th");
+         HTML.Put_Cell ("<acronym title=""cdsuE: config problem, offline, disabled by admin, or node error"">Offline</acronym>", Tag => "th");
+         Ada.Text_IO.Put_Line ("</tr>");
+         Bunch_List.Iterate (Put_Bunch'Access);
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "bunches");
+      end View_Job_Overview;
 
 
       --------------------------
@@ -221,8 +370,14 @@ package body Viewer is
          Partition_List : Partitions.Partition_Lists.List;
       begin
          HTML.Begin_Div (Class => "partitions");
-         CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
+         if HTML.Param_Is ("categories", "supply") then
+            CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
                                Level => 2);
+         else
+            CGI.Put_HTML_Heading (Title => "Supply",
+                               Level => 2);
+         end if;
+
          SGE_Out := Setup_Parser (Selector => "-F h_rt,eth,ib,mem_total,num_proc");
 
          --  Fetch Queues
@@ -716,7 +871,7 @@ package body Viewer is
 
       end;
       HTML.Begin_Div (ID => "content");
-      if not HTML.Param_Is ("detailed_queues", "y") then
+      if HTML.Param_Is ("categories", "") then
          View_Cluster_Queues;
       end if;
 
@@ -736,9 +891,16 @@ package body Viewer is
          elsif HTML.Param_Is ("waiting_jobs", "y") then
             Set_Params ("waiting_jobs=y");
             View_Waiting_Jobs;
-         elsif HTML.Param_Is ("detailed_queues", "y") then
-            Set_Params ("detailed_queues=y");
-            View_Detailed_Queues;
+         elsif not HTML.Param_Is ("categories", "") then
+            Set_Params ("categories=" & CGI.Value ("categories"));
+            if HTML.Param_Is ("categories", "supply") then
+               View_Detailed_Queues;
+            elsif HTML.Param_Is ("categories", "demand") then
+               View_Job_Overview;
+            elsif HTML.Param_Is ("categories", "both") then
+               View_Detailed_Queues;
+               View_Job_Overview;
+            end if;
          end if;
       end if;
       HTML.End_Div (ID => "content");
