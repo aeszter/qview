@@ -57,6 +57,16 @@ package Jobs is
    function Precedes_By_Submission_Time (Left, Right : Job) return Boolean;
    function Precedes_By_Slots (Left, Right : Job) return Boolean;
    function Precedes_By_State (Left, Right : Job) return Boolean;
+   function Precedes_By_CPU_Used (Left, Right : Job) return Boolean;
+   function Precedes_By_Memory_Used (Left, Right : Job) return Boolean;
+   function Precedes_By_IO_Used (Left, Right : Job) return Boolean;
+   function Precedes_By_Override (Left, Right : Job) return Boolean;
+   function Precedes_By_Share (Left, Right : Job) return Boolean;
+   function Precedes_By_Functional (Left, Right : Job) return Boolean;
+   function Precedes_By_Urgency (Left, Right : Job) return Boolean;
+   function Precedes_By_Waiting_Contrib (Left, Right : Job) return Boolean;
+   function Precedes_By_Resource_Contrib (Left, Right : Job) return Boolean;
+   function Precedes_By_Posix_Priority (Left, Right : Job) return Boolean;
    function Same (Left, Right : Job) return Boolean;
 
    package Job_Lists is
@@ -78,6 +88,26 @@ package Jobs is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Slots);
    package Sorting_By_State is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_State);
+   package Sorting_By_CPU_Used is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_CPU_Used);
+   package Sorting_By_Memory_Used is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Memory_Used);
+   package Sorting_By_IO_Used is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_IO_Used);
+   package Sorting_By_Override is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Override);
+   package Sorting_By_Share is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Share);
+   package Sorting_By_Functional is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Functional);
+   package Sorting_By_Urgency is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Urgency);
+   package Sorting_By_Resource_Contrib is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Resource_Contrib);
+   package Sorting_By_Waiting_Contrib is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Waiting_Contrib);
+   package Sorting_By_Posix_Priority is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Posix_Priority);
 
 
    Max_Name_Length : constant Positive := 20;

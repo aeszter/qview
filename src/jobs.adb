@@ -237,6 +237,28 @@ package body Jobs is
          Sorting_By_Slots.Sort (Job_List);
       elsif Field = "State" then
          Sorting_By_State.Sort (Job_List);
+      elsif Field = "CPU" then
+         Sorting_By_CPU_Used.Sort (Job_List);
+      elsif Field = "Memory" then
+         Sorting_By_Memory_Used.Sort (Job_List);
+      elsif Field = "IO" then
+         Sorting_By_IO_Used.Sort (Job_List);
+      elsif Field = "Priority" then
+         Sorting_By_Priority.Sort (Job_List);
+      elsif Field = "O" then
+         Sorting_By_Override.Sort (Job_List);
+      elsif Field = "S" then
+         Sorting_By_Share.Sort (Job_List);
+      elsif Field = "F" then
+         Sorting_By_Functional.Sort (Job_List);
+      elsif Field = "Urgency" then
+         Sorting_By_Urgency.Sort (Job_List);
+      elsif Field = "Resource" then
+         Sorting_By_Resource_Contrib.Sort (Job_List);
+      elsif Field = "Waiting" then
+         Sorting_By_Waiting_Contrib.Sort (Job_List);
+      elsif Field = "Custom" then
+         Sorting_By_Posix_Priority.Sort (Job_List);
       else
          Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & " unimplemented");
       end if;
@@ -343,6 +365,147 @@ package body Jobs is
    begin
       return Left.State < Right.State;
    end Precedes_By_State;
+
+   --------------------------
+   -- Precedes_By_CPU_Used   --
+   --  Purpose: Check whether one job should precede another when sorted by CPU time
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_CPU_Used (Left, Right : Job) return Boolean is
+   begin
+      return Left.CPU < Right.CPU;
+   end Precedes_By_CPU_Used;
+
+   --------------------------
+   -- Precedes_By_Memory_Used   --
+   --  Purpose: Check whether one job should precede another when sorted by memory usage
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Memory_Used (Left, Right : Job) return Boolean is
+   begin
+      return Left.Mem < Right.Mem;
+   end Precedes_By_Memory_Used;
+
+   --------------------------
+   -- Precedes_By_IO_Used   --
+   --  Purpose: Check whether one job should precede another when sorted by IO usage
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_IO_Used (Left, Right : Job) return Boolean is
+   begin
+      return Left.IO < Right.IO;
+   end Precedes_By_IO_Used;
+
+   --------------------------
+   -- Precedes_By_Override   --
+   --  Purpose: Check whether one job should precede another when sorted by override tickets
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Override (Left, Right : Job) return Boolean is
+   begin
+      return Left.Override_Tickets < Right.Override_Tickets;
+   end Precedes_By_Override;
+
+   --------------------------
+   -- Precedes_By_Share   --
+   --  Purpose: Check whether one job should precede another when sorted by share tickets
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Share (Left, Right : Job) return Boolean is
+   begin
+      return Left.Share_Tickets < Right.Share_Tickets;
+   end Precedes_By_Share;
+
+   --------------------------
+   -- Precedes_By_Functional   --
+   --  Purpose: Check whether one job should precede another when sorted by functional tickets
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Functional (Left, Right : Job) return Boolean is
+   begin
+      return Left.Functional_Tickets < Right.Functional_Tickets;
+   end Precedes_By_Functional;
+
+   --------------------------
+   -- Precedes_By_Urgency   --
+   --  Purpose: Check whether one job should precede another when sorted by urgency tickets
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Urgency (Left, Right : Job) return Boolean is
+   begin
+      return Left.Urgency < Right.Urgency;
+   end Precedes_By_Urgency;
+
+   --------------------------
+   -- Precedes_By_Waiting_Contrib   --
+   --  Purpose: Check whether one job should precede another when sorted by waiting time contribution to priority
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Waiting_Contrib (Left, Right : Job) return Boolean is
+   begin
+      return Left.Waiting_Contrib < Right.Waiting_Contrib;
+   end Precedes_By_Waiting_Contrib;
+
+   --------------------------
+   -- Precedes_By_Resource_Contrib   --
+   --  Purpose: Check whether one job should precede another when sorted by resource contribution to priority
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Resource_Contrib (Left, Right : Job) return Boolean is
+   begin
+      return Left.Resource_Contrib < Right.Resource_Contrib;
+   end Precedes_By_Resource_Contrib;
+
+   --------------------------
+   -- Precedes_By_Ppsix_Priority   --
+   --  Purpose: Check whether one job should precede another when sorted by POSIX priority
+   --  Parameter Left: First Job
+   --  Parameter Right: Second Job
+   --  Returns: Whether Left precedes Right
+   --  Description: This implements the "<" operator for package Generic_Sorting
+   --------------------------
+
+   function Precedes_By_Posix_Priority (Left, Right : Job) return Boolean is
+   begin
+      return Left.Posix_Priority < Right.Posix_Priority;
+   end Precedes_By_Posix_Priority;
+
 
    ------------------------
    -- Same               --
