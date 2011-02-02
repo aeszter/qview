@@ -45,6 +45,7 @@ package Jobs is
    function State_As_String (J : Job) return String;
    function Name_As_HTML (J : Job) return String;
    function On_Hold (J : Job) return Boolean;
+   function Has_Error (J : Job) return Boolean;
 
    function New_Job (Number, Name, Owner, Priority, State,
                      Slots, PE : Unbounded_String; Submission_Time : Time;

@@ -180,7 +180,8 @@ package body Viewer is
                elsif Name (N) = "full_job_name" then
                   null; -- ignore
                elsif Name (N) = "requested_pe" then
-                  PE := To_Unbounded_String (Value (First_Child (N)));
+                  A := Get_Named_Item (Attributes (N), "name");
+                  PE := To_Unbounded_String (Value (A));
 
                elsif Name (N) = "JB_submission_time" or else
                      Name (N) = "JAT_start_time" then
@@ -206,6 +207,9 @@ package body Viewer is
                end if;
             end loop;
 
+            if Job_Queue = "" then
+               Job_Queue := To_Unbounded_String ("*");
+            end if;
             Job_List.Append (New_Job (Number   => Number,
                                       Name            => Job_Name,
                                       Owner           => Owner,
@@ -227,8 +231,22 @@ package body Viewer is
          procedure Put_Bunch (Bunch : Bunches.Bunch_Lists.Cursor) is
             B : Bunches.Bunch := Bunches.Bunch_Lists.Element (Bunch);
          begin
-            Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data => "placeholder");
+            if B.Slots_Error > 0 then
+               Ada.Text_IO.Put ("<tr class=""job-error"">");
+            elsif B.Slots_Waiting = 0 then
+               Ada.Text_IO.Put ("<tr class=""job-held"">");
+            else
+               Ada.Text_IO.Put ("<tr>");
+            end if;
+            HTML.Put_Cell (Data => B.PE);
+            HTML.Put_Cell (Data => B.Slots, Class => "right");
+            HTML.Put_Cell (Data => B.Queue);
+            HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
+            HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));
+            HTML.Put_Cell (Data => B.Total_Slots'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Slots_Waiting'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Slots_On_Hold'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Slots_Error'Img, Class => "right");
             Ada.Text_IO.Put ("</tr>");
          end Put_Bunch;
 
@@ -263,16 +281,16 @@ package body Viewer is
 
          --  Output
          Ada.Text_IO.Put_Line ("<table><tr>");
-         HTML.Put_Cell (Data => "Interconnect", Tag => "th");
-         HTML.Put_Cell (Data       => "Cores", Tag => "th");
-         HTML.Put_Cell (Data => "RAM", Tag => "th");
-         HTML.Put_Cell (Data => "Runtime", Tag => "th");
+         HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
+                        Tag => "th");
          HTML.Put_Cell (Data => "Slots", Tag => "th");
-         HTML.Put_Cell (Data => "Used", Tag => "th");
-         HTML.Put_Cell (Data => "Reserved", Tag => "th");
-         HTML.Put_Cell (Data => "Available", Tag => "th");
-         HTML.Put_Cell (Data => "<acronym title=""aoACDS: overloaded or in maintenance window"">Suspended</acronym>", Tag => "th");
-         HTML.Put_Cell ("<acronym title=""cdsuE: config problem, offline, disabled by admin, or node error"">Offline</acronym>", Tag => "th");
+         HTML.Put_Cell (Data => "Queue", Tag => "th");
+         HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
+         HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
+         HTML.Put_Cell (Data => "Total", Tag => "th");
+         HTML.Put_Cell (Data => "Waiting", Tag => "th");
+         HTML.Put_Cell (Data => "Held", Tag => "th");
+         HTML.Put_Cell (Data => "Error", Tag => "th");
          Ada.Text_IO.Put_Line ("</tr>");
          Bunch_List.Iterate (Put_Bunch'Access);
          Ada.Text_IO.Put_Line ("</table>");

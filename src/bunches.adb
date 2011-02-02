@@ -25,10 +25,11 @@ package body Bunches is
       while Cursor /= No_Element loop
          J := Element (Cursor);
          --  New Bunch?
-         if not (B.Slots = J.Slots and then
-           Resources.Equal (B.Hard, J.Hard) and then
-           Resources.Equal (B.Soft, J.Soft) and then
-           B.Queue = J.Queue) then
+         if not (B.PE = J.PE and then
+                   B.Slots = J.Slots and then
+                   Resources.Equal (B.Hard, J.Hard) and then
+                   Resources.Equal (B.Soft, J.Soft) and then
+                   B.Queue = J.Queue) then
             --  Yes. Store previous one.
             Bunch_List.Append (B);
             B := New_Bunch (J);
@@ -39,6 +40,8 @@ package body Bunches is
          B.Total_Slots := B.Total_Slots + Slots;
          if On_Hold (J) then
             B.Slots_On_Hold := B.Slots_On_Hold + Slots;
+         elsif Has_Error (J) then
+            B.Slots_Error := B.Slots_Error + Slots;
          else
             B.Slots_Waiting := B.Slots_Waiting + Slots;
          end if;
@@ -59,9 +62,12 @@ package body Bunches is
       B.PE := J.PE;
       B.Slots := J.Slots;
       B.Queue := J.Queue;
-      B.State := J.State;
       B.Hard := J.Hard;
       B.Soft := J.Soft;
+      B.Total_Slots := 0;
+      B.Slots_On_Hold := 0;
+      B.Slots_Waiting := 0;
+      B.Slots_Error := 0;
       return B;
    end New_Bunch;
 

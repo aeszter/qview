@@ -3,6 +3,7 @@ with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
 with Ada.Calendar; use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
+with Resources;
 
 package body Jobs is
 
@@ -125,6 +126,18 @@ package body Jobs is
       end case;
    end On_Hold;
 
+   ---------------
+   -- Has_Error --
+   ---------------
+
+   function Has_Error (J : Job) return Boolean is
+   begin
+      case J.State is
+         when Eqw => return True;
+         when unknown => raise Constraint_Error;
+         when others => return False;
+      end case;
+   end Has_Error;
 
    ------------------
    -- Name_As_HTML --
@@ -305,14 +318,26 @@ package body Jobs is
 
    function Precedes_By_Resources (Left, Right : Job) return Boolean is
    begin
-      if Left.Slots < Right.Slots then
+      if Left.Queue < Right.Queue then
          return True;
-      elsif Left.Slots > Right.Slots then
+      elsif Left.Queue > Right.Queue then
          return False;
       elsif Left.PE < Right.PE then
          return True;
       elsif Left.PE > Right.PE then
-            return False;
+         return False;
+      elsif Left.Slots < Right.Slots then
+         return True;
+      elsif Left.Slots > Right.Slots then
+         return False;
+      elsif Resources.Precedes (Left.Hard, Right.Hard) then
+         return True;
+      elsif Resources.Precedes (Right.Hard, Left.Hard) then
+         return False;
+      elsif Resources.Precedes (Left.Soft, Right.Soft) then
+         return True;
+      elsif Resources.Precedes (Right.Soft, Left.Soft) then
+         return False;
       else
          return False;
       end if;

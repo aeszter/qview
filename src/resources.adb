@@ -4,6 +4,7 @@ use Ada.Calendar;
 with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Real_Time;
 with Resources; use Resources.Resource_Lists;
+with Ada.Containers; use Ada.Containers;
 
 package body Resources is
 
@@ -66,6 +67,24 @@ package body Resources is
       HTML.Put_Paragraph (Label, Value);
    end Put;
 
+   function To_Unbounded_String (L : Resource_Lists.List) return Unbounded_String is
+      S : Unbounded_String := Null_Unbounded_String;
+      Cursor : Resource_Lists.Cursor;
+   begin
+      if L.Is_Empty then
+         return Null_Unbounded_String;
+      end if;
+      Cursor := L.First;
+      loop
+         S := S & Element (Cursor).Name & ": " & Element (Cursor).Value;
+         exit when Cursor = L.Last;
+         Cursor := Next (Cursor);
+         S := S & "; ";
+      end loop;
+      return S;
+   end To_Unbounded_String;
+
+
    ----------
    -- Sort --
    ----------
@@ -93,5 +112,18 @@ package body Resources is
       return Left.Name < Right.Name;
    end Precedes;
 
+   --------------
+   -- Precedes --
+   --------------
+
+   function Precedes (Left, Right : Resource_Lists.List) return Boolean is
+   begin
+      if Left.Length < Right.Length then
+         return True;
+      elsif Left.Length > Right.Length then
+         return False;
+      end if;
+      return To_Unbounded_String (Left) < To_Unbounded_String (Right);
+   end Precedes;
 
 end Resources;

@@ -6,10 +6,10 @@ with Resources;
 package Bunches is
 
    type Bunch is record
-      PE, Slots, Queue                          : Unbounded_String;
-      State                                     : Job_State;
-      Hard, Soft                                : Resources.Resource_Lists.List;
-      Total_Slots, Slots_On_Hold, Slots_Waiting : Natural;
+      PE, Slots, Queue           : Unbounded_String;
+      Hard, Soft                 : Resources.Resource_Lists.List;
+      Total_Slots, Slots_On_Hold : Natural;
+      Slots_Error, Slots_Waiting : Natural;
 
    end record;
 

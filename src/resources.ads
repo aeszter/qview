@@ -24,6 +24,9 @@ package Resources is
    procedure Sort (L : in out Resource_Lists.List);
    function Equal (Left, Right : Resource_Lists.List) return Boolean;
    function Precedes (Left, Right : Resource) return Boolean;
+   function Precedes (Left, Right : Resource_Lists.List) return Boolean;
+
+   function To_Unbounded_String (L : Resource_Lists.List) return Unbounded_String;
 
    package Sorting is
       new Resource_Lists.Generic_Sorting ("<" => Precedes);
