@@ -63,5 +63,32 @@ package body Pipe_Streams is
       Buffer_Line (p);
    end execute;
 
+   ----------
+   -- wait --
+   --  From Florist
+   ----------
+
+   type int is range -2**31 .. (2**31)-1;
+   for int'Size use 32;
+
+   type pid_t is range -2**31 .. (2**31)-1;
+   for pid_t'Size use 32;
+
+   function wait (stat_loc : access int) return pid_t;
+   pragma Import (C, wait, "wait");
+
+
+   -----------------------
+   -- Wait_For_Children --
+   -----------------------
+
+   procedure Wait_For_Children is
+      pid : pid_t;
+      pragma Unreferenced (pid);
+      stat : aliased int;
+   begin
+      pid := wait (stat'Access);
+   end Wait_For_Children;
+
 
 end Pipe_Streams;

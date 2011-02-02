@@ -950,10 +950,18 @@ package body Viewer is
    end View;
 
 
+   ----------------
+   -- Set_Params --
+   ----------------
+
    procedure Set_Params (Params : String) is
    begin
       My_Params := To_Unbounded_String (Params);
    end Set_Params;
+
+   ------------------
+   -- Setup_Parser --
+   ------------------
 
    function Setup_Parser (Selector : String) return DOM.Core.Document is
       Reader      : DOM.Readers.Tree_Reader;
@@ -968,6 +976,7 @@ package body Viewer is
       Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
       Reader.Parse (SGE_Command);
       SGE_Command.Close;
+      Pipe_Streams.Wait_For_Children;
       return Reader.Get_Tree;
    end Setup_Parser;
 

@@ -16,6 +16,7 @@ package Pipe_Streams is
    procedure execute (p : in out Pipe_Stream;
                       Command : in String;
                       IO_type : in Pipe_Commands.IO_MODE);
+   procedure Wait_For_Children;
 private
    type Pipe_Stream is new Input_Source with record
       file_stream : Pipe_Commands.stream;
