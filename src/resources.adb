@@ -112,18 +112,47 @@ package body Resources is
       return Left.Name < Right.Name;
    end Precedes;
 
+   ---------
+   -- "<" --
+   ---------
+
+   function "<" (Left, Right : Resource) return Boolean is
+   begin
+      if Precedes (Left, Right) then
+         return True;
+      elsif Precedes (Right, Left) then
+         return False;
+      end if;
+      return Left.Value < Right.Value;
+   end "<";
+
    --------------
    -- Precedes --
    --------------
 
    function Precedes (Left, Right : Resource_Lists.List) return Boolean is
+      L_Cursor, R_Cursor : Resource_Lists.Cursor;
    begin
       if Left.Length < Right.Length then
          return True;
       elsif Left.Length > Right.Length then
          return False;
+      elsif Left.Is_Empty then
+         return False;
       end if;
-      return To_Unbounded_String (Left) < To_Unbounded_String (Right);
+      L_Cursor := Left.First;
+      R_Cursor := Right.First;
+      loop
+         if Element (L_Cursor) < Element (R_Cursor) then
+            return True;
+         elsif Element (R_Cursor) < Element (L_Cursor) then
+            return False;
+         end if;
+         exit when L_Cursor = Left.Last or R_Cursor = Right.Last;
+         L_Cursor := Next (L_Cursor);
+         R_Cursor := Next (R_Cursor);
+      end loop;
+      return False;
    end Precedes;
 
 end Resources;
