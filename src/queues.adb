@@ -22,6 +22,7 @@ package body Queues is
       State                 : String;
       Memory, Cores         : String;
       Network               : Resources.Network;
+      Model                 : Resources.CPU_Model;
       Runtime               : Unbounded_String)
       return Queue
    is
@@ -55,6 +56,7 @@ package body Queues is
       end if;
 
       Q.Network  := Network;
+      Q.Model    := Model;
       Q.Runtime  := Runtime;
       if Cores = "" then
          Q.Cores := Q.Total;
@@ -74,6 +76,10 @@ package body Queues is
       if Left.Network < Right.Network then
          return True;
       elsif Left.Network > Right.Network then
+         return False;
+      elsif Left.Model < Right.Model then
+         return True;
+      elsif Left.Model > Right.Model then
          return False;
       elsif Left.Memory < Right.Memory then
          return True;

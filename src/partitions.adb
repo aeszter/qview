@@ -30,9 +30,10 @@ package body Partitions is
          Q := Element (Cursor);
          --  New Partition?
          if not (P.Network = Q.Network and then
-           P.Memory = Q.Memory and then
-           P.Cores = Q.Cores and then
-                       P.Runtime = Q.Runtime) then
+                   P.Model = Q.Model and then
+                  P.Memory = Q.Memory and then
+                   P.Cores = Q.Cores and then
+                 P.Runtime = Q.Runtime) then
             --  Yes. Store previous one.
             Part_List.Append (P);
             P := New_Partition (Q);
@@ -56,6 +57,10 @@ package body Partitions is
       Part_List.Append (P);
    end Build_List;
 
+   -------------------
+   -- New_Partition --
+   -------------------
+
    function New_Partition (Q : Queue) return Partition is
       P : Partition;
    begin
@@ -63,6 +68,7 @@ package body Partitions is
       P.Memory    := Q.Memory;
       P.Cores     := Q.Cores;
       P.Runtime   := Q.Runtime;
+      P.Model     := Q.Model;
       P.Total     := 0;
       P.Offline   := 0;
       P.Suspended := 0;
@@ -71,5 +77,14 @@ package body Partitions is
       P.Available := 0;
       return P;
    end New_Partition;
+
+   ---------------------
+   -- Model_As_String --
+   ---------------------
+
+   function Model_As_String (P : Partition) return String is
+   begin
+      return To_String (P.Model);
+   end Model_As_String;
 
 end Partitions;

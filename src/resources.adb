@@ -148,11 +148,39 @@ package body Resources is
          elsif Element (R_Cursor) < Element (L_Cursor) then
             return False;
          end if;
-         exit when L_Cursor = Left.Last or R_Cursor = Right.Last;
+         exit when L_Cursor = Left.Last or else R_Cursor = Right.Last;
          L_Cursor := Next (L_Cursor);
          R_Cursor := Next (R_Cursor);
       end loop;
       return False;
    end Precedes;
+
+   --------------
+   -- To_Model --
+   --------------
+
+   function To_Model (S : Unbounded_String) return CPU_Model is
+   begin
+      if S = "" then
+         return none;
+      elsif S = "italy" then
+         return italy;
+      elsif S = "woodcrest" then
+         return woodcrest;
+      elsif S = "clovertown" then
+         return clovertown;
+      elsif S = "harpertown" then
+         return harpertown;
+      elsif S = "magny-cours" then
+         return magnycours;
+      else
+         raise Constraint_Error;
+      end if;
+   end To_Model;
+
+   function To_String (Model : CPU_Model) return String is
+   begin
+      return Model'Img;
+   end To_String;
 
 end Resources;

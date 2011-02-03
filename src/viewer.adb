@@ -313,6 +313,7 @@ package body Viewer is
             State                 : Unbounded_String;
             Mem, Cores, Runtime   : Unbounded_String;
             Network               : Resources.Network := none;
+            Model                 : Unbounded_String := Null_Unbounded_String;
             type small is digits 4 range 0.0 .. 1.0;
          begin
             for Index in 1 .. Length (Nodes) loop
@@ -339,6 +340,8 @@ package body Viewer is
                      Network := eth;
                   elsif Value (A) = "h_rt" then
                      Runtime := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "cpu_model" then
+                     Model := To_Unbounded_String (Value (First_Child (N)));
                   end if;
                end if;
             end loop;
@@ -349,6 +352,7 @@ package body Viewer is
                                           Memory   => To_String (Mem),
                                           Cores    => To_String (Cores),
                                           Network  => Network,
+                                          Model    => To_Model (Model),
                                           Runtime  => Runtime,
                                           State    => To_String (State)
                                          ));
@@ -370,6 +374,7 @@ package body Viewer is
                Ada.Text_IO.Put ("<tr>");
             end if;
             HTML.Put_Cell (Data => P.Network'Img);
+            HTML.Put_Cell (Data => Model_As_String (P));
             HTML.Put_Cell (Data => P.Cores'Img, Class => "right");
             HTML.Put_Cell (Data => P.Memory'Img & "G", Class => "right");
             HTML.Put_Cell (Data => P.Runtime, Class => "right");
@@ -396,7 +401,7 @@ package body Viewer is
                                Level => 2);
          end if;
 
-         SGE_Out := Setup_Parser (Selector => "-F h_rt,eth,ib,mem_total,num_proc");
+         SGE_Out := Setup_Parser (Selector => "-F h_rt,eth,ib,mem_total,num_proc,cm");
 
          --  Fetch Queues
          Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
@@ -415,7 +420,10 @@ package body Viewer is
          --  Output
          Ada.Text_IO.Put_Line ("<table><tr>");
          HTML.Put_Cell (Data => "Interconnect", Tag => "th");
-         HTML.Put_Cell (Data       => "Cores", Tag => "th");
+         HTML.Put_Cell (Data => "CPU<a href=""http://wiki.mpibpc.gwdg.de"
+                           & "/grubmueller/index.php/CPU Families"">"
+                           & "<img src=""/icons/help.png"" /></a>", Tag => "th");
+         HTML.Put_Cell (Data => "Cores", Tag => "th");
          HTML.Put_Cell (Data => "RAM", Tag => "th");
          HTML.Put_Cell (Data => "Runtime", Tag => "th");
          HTML.Put_Cell (Data => "Slots", Tag => "th");

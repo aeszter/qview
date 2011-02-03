@@ -9,15 +9,17 @@ package Queues is
       Used, Reserved, Total : Natural;
       Suspended, Offline    : Boolean;
       Network               : Resources.Network;
+      Model                 : Resources.CPU_Model;
       Memory                : Gigs;
       Cores                 : Positive;
       Runtime               : Unbounded_String;
    end record;
 
    function New_Queue (Used, Reserved, Total : Natural;
-                       State                 : String;
-                       Memory, Cores         : String;
+      State                 : String;
+      Memory, Cores         : String;
       Network               : Resources.Network;
+      Model                 : Resources.CPU_Model;
       Runtime               : Unbounded_String)
                        return Queue;
 

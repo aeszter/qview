@@ -10,6 +10,7 @@ package Partitions is
       Available             : Natural;
       Suspended, Offline    : Natural;
       Network               : Resources.Network;
+      Model                 : Resources.CPU_Model;
       Memory                : Gigs;
       Cores                 : Positive;
       Runtime               : Unbounded_String;
@@ -21,4 +22,6 @@ package Partitions is
    procedure Build_List (Q_List : in out Queues.Queue_Lists.List;
                          Part_List : out Partition_Lists.List);
    function New_Partition (Q : Queue) return Partition;
+
+   function Model_As_String (P : Partition) return String;
 end Partitions;

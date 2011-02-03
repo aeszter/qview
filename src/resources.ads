@@ -9,6 +9,10 @@ package Resources is
    end record;
 
    type Network is (none, eth, ib);
+   type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours);
+
+   function To_Model (S : Unbounded_String) return CPU_Model;
+   function To_String (Model : CPU_Model) return String;
 
    function New_Resource (Name : Unbounded_String; Value : Unbounded_String)
      return Resource;
