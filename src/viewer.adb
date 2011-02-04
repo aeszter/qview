@@ -899,6 +899,8 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
+      N : Positive;
+
    begin
       begin
          if not HTML.Param_Is ("sort", "") then
@@ -950,7 +952,12 @@ package body Viewer is
                View_Job_Overview;
             end if;
          elsif not HTML.Param_Is ("profile", "") then
-            for I in 1 .. Integer'Value (CGI.Value ("profile")) loop
+            N := Integer'Value (CGI.Value ("profile"));
+            if N > 10 then
+               N := 1;
+            end if;
+
+            for I in 1 .. N  loop
                View_Global_Jobs;
                View_Detailed_Queues;
                View_Job_Overview;
