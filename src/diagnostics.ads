@@ -59,7 +59,7 @@ private
    Ticks_Per_Second : constant Tick_Count :=
      Tick_Count (sysconf (SC_CLK_TCK));
 
-   type Seconds is delta 0.1 digits 4;
+   type Seconds is delta 0.1 digits 5;
    function To_Seconds (T : Tick_Count) return Seconds;
    function Get_Process_Times return Process_Times;
    function User_CPU_Time_Of (Times : Process_Times) return Tick_Count;
