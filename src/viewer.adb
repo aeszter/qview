@@ -57,6 +57,36 @@ package body Viewer is
          HTML.End_Div (ID => "header");
       end Put_Headers;
 
+      procedure Put_Diagnostics is
+      begin
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put ("Time:");
+         Diagnostics.Put_Time;
+         Ada.Text_IO.Put ("</li>");
+      end Put_Diagnostics;
+
+
+      procedure Put_Footer is
+      begin
+         HTML.Begin_Div (ID => "footer");
+         Ada.Text_IO.Put ("<ul>");
+         Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
+                               & "aeszter@gwdg.de</a></li>");
+         Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
+                               & "<img src=""/usage/webalizer.png"" "
+                               & "alt=""Stats by Webalizer""></a></li>");
+         Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
+                               & "component=qview&form_name=enter_bug"
+                               & "&product=Private%20projects"">"
+                               &"Report Problem/Suggest Enhancement</a></li>");
+         Put_Diagnostics;
+         HTML.Put_Navigation_Link (Data       => "Profiling Mode",
+                                   Link_Param => "profile=10");
+         Ada.Text_IO.Put ("</ul>");
+         HTML.End_Div (ID =>  "footer");
+         HTML.Put_Clearer;
+         HTML.End_Div (ID => "page");
+      end Put_Footer;
       Sort_Direction : Unbounded_String := To_Unbounded_String ("inc");
 
       procedure View_Cluster_Queues is
@@ -869,14 +899,6 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
-      procedure Put_Diagnostics is
-      begin
-         Ada.Text_IO.Put ("<li>");
-         Ada.Text_IO.Put ("Time:");
-         Diagnostics.Put_Time;
-         Ada.Text_IO.Put ("</li>");
-      end Put_Diagnostics;
-
    begin
       begin
          if not HTML.Param_Is ("sort", "") then
@@ -927,26 +949,16 @@ package body Viewer is
                View_Detailed_Queues;
                View_Job_Overview;
             end if;
+         elsif not HTML.Param_Is ("profile", "") then
+            for I in 1 .. Integer'Value (CGI.Value ("profile")) loop
+               View_Global_Jobs;
+               View_Detailed_Queues;
+               View_Job_Overview;
+            end loop;
          end if;
       end if;
       HTML.End_Div (ID => "content");
-      HTML.Begin_Div (ID => "footer");
-      Ada.Text_IO.Put ("<ul>");
-      Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
-                            & "aeszter@gwdg.de</a></li>");
-      Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
-                            & "<img src=""/usage/webalizer.png"" "
-                            & "alt=""Stats by Webalizer""></a></li>");
-      Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
-                            & "component=qview&form_name=enter_bug"
-                            & "&product=Private%20projects"">"
-                            &"Report Problem/Suggest Enhancement</a></li>");
-      Put_Diagnostics;
-      Ada.Text_IO.Put ("</ul>");
-      HTML.End_Div (ID =>  "footer");
-      HTML.Put_Clearer;
-      HTML.End_Div (ID => "page");
-
+      Put_Footer;
       HTML.Finalize_Divs (Silent => True);
       CGI.Put_HTML_Tail;
    exception
