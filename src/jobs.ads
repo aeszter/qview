@@ -11,12 +11,12 @@ package Jobs is
 
    type Job is record
       --  basic attributes
-      Number             : Unbounded_String; -- Job ID
+      Number             : Integer; -- Job ID
       Full_Name          : Unbounded_String; -- Job name
       Name               : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
       Name_Truncated     : Boolean;          -- Whether Full_Name and Name differ
       Owner              : Unbounded_String; -- User whom this job belongs to
-      Priority           : Unbounded_String; -- Numerical priority
+      Priority           : Natural; -- Numerical priority
       State              : Job_State;
       Slots              : Unbounded_String; -- how many slots/CPUs to use
       PE                 : Unbounded_String; -- Parallel environment
@@ -43,20 +43,24 @@ package Jobs is
    end record;
 
    function State_As_String (J : Job) return String;
+   function To_State (State : String) return Job_State;
    function Name_As_HTML (J : Job) return String;
    function On_Hold (J : Job) return Boolean;
    function Has_Error (J : Job) return Boolean;
 
-   function New_Job (Number, Name, Owner, Priority, State,
-                     Slots, PE : Unbounded_String; Submission_Time : Time;
-                     CPU, Mem, IO : Float := 0.0;
+   function New_Job (Number                            : Natural;
+                     Name, Owner                       : Unbounded_String;
+                     Priority                          : Natural;
+                     State                             : Job_State;
+                     Slots, PE                         : Unbounded_String; Submission_Time : Time;
+                     CPU, Mem, IO                      : Float := 0.0;
                      Override_Tickets, Share_Tickets   : Natural := 0;
                      Functional_Tickets                : Natural := 0;
                      Urgency                           : Float   := 0.0;
                      Resource_Contrib, Waiting_Contrib : Natural := 0;
                      Posix_Priority                    : Integer := 0;
                      Hard_Requests, Soft_Requests      : Resources.Resource_Lists.List
-                                                       := Resources.Resource_Lists.Empty_List;
+                     := Resources.Resource_Lists.Empty_List;
                      Queue                             : Unbounded_String := Null_Unbounded_String
                     ) return Job;
 

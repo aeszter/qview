@@ -178,12 +178,12 @@ package body Viewer is
          procedure Parse_One_Job (Nodes : Node_List) is
             N                    : Node;
             A                    : Attr;
-            Number               : Unbounded_String;
+            Number               : Natural;
             Job_Name, Owner      : Unbounded_String;
-            State                : Unbounded_String;
+            State                : Job_State;
             Job_Slots, Job_Queue : Unbounded_String;
             PE                   : Unbounded_String;
-            Priority             : Unbounded_String;
+            Priority             : Natural;
             Time_Buffer          : String (1 .. 19);
             Submission_Time      : Time;
             Hard, Soft           : Resources.Resource_Lists.List;
@@ -192,15 +192,15 @@ package body Viewer is
             for Index in 1 .. Length (Nodes) loop
                N := Item (Nodes, Index - 1);
                if Name (N) = "JB_job_number" then
-                  Number := To_Unbounded_String (Value (First_Child (N)));
+                  Number := Integer'Value (Value (First_Child (N)));
                elsif Name (N) = "JAT_prio" then
-                  Priority := To_Unbounded_String (Value (First_Child (N)));
+                  Priority := Integer'Value (Value (First_Child (N)));
                elsif Name (N) = "JB_name" then
                   Job_Name := To_Unbounded_String (Value (First_Child (N)));
                elsif Name (N) = "JB_owner" then
                   Owner := To_Unbounded_String (Value (First_Child (N)));
                elsif Name (N) = "state" then
-                     State := To_Unbounded_String (Value (First_Child (N)));
+                     State := To_State (Value (First_Child (N)));
                elsif Name (N) = "queue_name" then
                   null; -- ignore
                elsif Name (N) = "hard_req_queue" then
@@ -525,7 +525,7 @@ package body Viewer is
             J : Jobs.Job := Jobs.Job_Lists.Element (Job);
          begin
             Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data => J.Number, Link_Param => "job_id");
+            HTML.Put_Cell (Data => J.Number'Img, Link_Param => "job_id");
             HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
             if J.Name_Truncated then
                HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
@@ -560,7 +560,7 @@ package body Viewer is
                HTML.Put_Cell ("");
             end if;
 
-            HTML.Put_Cell (Data => J.Priority);
+            HTML.Put_Cell (Data => J.Priority'Img);
             HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
             HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
             HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
@@ -569,6 +569,9 @@ package body Viewer is
             HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
             HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
             Ada.Text_IO.Put ("</tr>");
+         exception
+            when E : others => HTML.Error (Message => "Error in Job: "
+                                           & Exception_Message (E));
          end Put_Job_List_Entry;
 
 
@@ -583,7 +586,8 @@ package body Viewer is
                --  something wrong -- maybe an attack?
                Sort_Direction := To_Unbounded_String ("inc");
             end if;
-            Jobs.Sort_By (Field => CGI.Value ("sort"), Direction => To_String (Sort_Direction));
+            Jobs.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => To_String (Sort_Direction));
          end if;
          Job_List.Iterate (Put_Job_List_Entry'Access);
 

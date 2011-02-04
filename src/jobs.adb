@@ -4,6 +4,8 @@ with Ada.Text_IO;
 with Ada.Calendar; use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
 with Resources;
+with HTML;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Jobs is
 
@@ -11,16 +13,19 @@ package body Jobs is
    -- New_Job --
    -------------
 
-   function New_Job (Number, Name, Owner, Priority, State,
-                     Slots, PE : Unbounded_String; Submission_Time : Time;
-                     CPU, Mem, IO : Float := 0.0;
+   function New_Job (Number                            : Natural;
+                     Name, Owner                       : Unbounded_String;
+                     Priority                          : Natural;
+                     State                             : Job_State;
+                     Slots, PE                         : Unbounded_String; Submission_Time : Time;
+                     CPU, Mem, IO                      : Float := 0.0;
                      Override_Tickets, Share_Tickets   : Natural := 0;
                      Functional_Tickets                : Natural := 0;
                      Urgency                           : Float   := 0.0;
                      Resource_Contrib, Waiting_Contrib : Natural := 0;
                      Posix_Priority                    : Integer := 0;
                      Hard_Requests, Soft_Requests      : Resources.Resource_Lists.List
-                                                       := Resources.Resource_Lists.Empty_List;
+                     := Resources.Resource_Lists.Empty_List;
                      Queue                             : Unbounded_String := Null_Unbounded_String
                     ) return Job
    is
@@ -39,29 +44,7 @@ package body Jobs is
 
       J.Owner := Owner;
       J.Priority := Priority;
-      if State = "dt" then
-         J.State := dt;
-      elsif State = "dr" then
-         J.State := dr;
-      elsif State = "Eqw" then
-         J.State := Eqw;
-      elsif State = "t" then
-         J.State := t;
-      elsif State = "r" then
-         J.State := r;
-      elsif State = "Rr" then
-         J.State := Rr;
-      elsif State = "Rq" then
-         J.State := Rq;
-      elsif State = "qw" then
-         J.State := qw;
-      elsif State = "hqw" then
-         J.State := hqw;
-      else
-         J.State := unknown;
-         Ada.Text_IO.Put_Line ("<em>Error: found unknown job state "
-                               & To_String (State) & "</em>");
-      end if;
+      J.State := State;
       J.Slots              := Slots;
       J.PE                 := PE;
       J.Submission_Time    := Submission_Time;
@@ -113,6 +96,31 @@ package body Jobs is
 
    end State_As_String;
 
+   function To_State (State : String) return Job_State is
+   begin
+      if State = "dt" then
+         return dt;
+      elsif State = "dr" then
+         return dr;
+      elsif State = "Eqw" then
+         return Eqw;
+      elsif State = "t" then
+         return t;
+      elsif State = "r" then
+         return r;
+      elsif State = "Rr" then
+         return Rr;
+      elsif State = "Rq" then
+         return Rq;
+      elsif State = "qw" then
+         return qw;
+      elsif State = "hqw" then
+         return hqw;
+      else
+         return unknown;
+      end if;
+   end To_State;
+
    -------------
    -- On_Hold --
    -------------
@@ -163,11 +171,11 @@ package body Jobs is
       C               : Node;
       --  Job fields
       Job_Name        : Unbounded_String;
-      Number          : Unbounded_String;
+      Number          : Integer;
       PE, Slots       : Unbounded_String;
-      Priority        : Unbounded_String;
+      Priority        : Integer;
       Owner           : Unbounded_String;
-      State           : Unbounded_String;
+      State           : Jobs.Job_State;
       Submission_Time : Time;
       Time_Buffer     : String (1 .. 19);
       F_Tickets       : Natural;
@@ -187,15 +195,15 @@ package body Jobs is
          for Ch_Index in 0 .. Length (Children) - 1 loop
             C := Item (Children, Ch_Index);
             if Name (C) = "JB_job_number" then
-               Number := To_Unbounded_String (Value (First_Child (C)));
+               Number := Integer'Value (Value (First_Child (C)));
             elsif Name (C) = "JAT_prio" then
-               Priority := To_Unbounded_String (Value (First_Child (C)));
+               Priority := Integer'Value (Value (First_Child (C)));
             elsif Name (C) = "JB_name" then
                Job_Name := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_owner" then
                Owner := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "state" then
-               State := To_Unbounded_String (Value (First_Child (C)));
+               State := To_State (Value (First_Child (C)));
             elsif Name (C) = "JB_submission_time" or else
                Name (C) = "JAT_start_time" then
                Time_Buffer := Value (First_Child (C));
@@ -249,6 +257,9 @@ package body Jobs is
                                    Posix_Priority     => User_Priority,
                                    Urgency            => Urgency));
       end loop;
+   exception
+      when E : others
+         => HTML.Error ("Unable to read job info: " & Exception_Message (E));
    end Append_List;
 
 
@@ -596,7 +607,7 @@ package body Jobs is
 
    function Same (Left, Right : Job) return Boolean is
    begin
-      if Left.Number = "" then
+      if Left.Number = 0 then
          return False;
       elsif Left.Number = Right.Number then
          return True;
