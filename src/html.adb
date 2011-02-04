@@ -22,34 +22,42 @@ package body HTML is
                        Tag        : String := "td";
                        Class      : String := "";
                        Colspan    : Positive := 1) is
-      Open_Tag : Unbounded_String;
-      Title : Unbounded_String;
-      --  This is not ideal: we are using an unbounded string without any real need,
-      --  just in order to avoid eight separate cases of default parameters
       Close_Tag : String := "</" & Tag & ">";
    begin
-      Open_Tag := To_Unbounded_String ("<" & Tag);
-      if Acronym = "" then
-         Title := To_Unbounded_String (Data);
-      else
-         Title := To_Unbounded_String ("<acronym title=""" & Acronym & """>"
-                                       & Data & "</acronym>");
-      end if;
+      --  Start open tag
+      Put ("<" & Tag);
+
       if Class /= "" then
-         Open_Tag := Open_Tag & " class=""" & Class & """";
+         Put (" class=""" & Class & """");
       end if;
       if Colspan /= 1 then
-         Open_Tag := Open_Tag & " colspan=""" & Colspan'Img & """";
+         Put (" colspan=""" & Colspan'Img & """");
       end if;
-      Open_Tag := Open_Tag & ">";
+      Put (">");
+      --  Open tag ended
 
-      if Link_Param = "" then
-         Put_Line (To_String (Open_Tag & Title) & Close_Tag);
-      else
-         Put_Line (To_String (Open_Tag) & "<a href=""" & CGI.My_URL & "?"
-                   & Link_Param & "=" & Data & """>"
-                   & To_String (Title) & "</a>" & Close_Tag);
+      --  Start link
+      if Link_Param /= "" then
+         Put ("<a href=""" & CGI.My_URL & "?"
+               & Link_Param & "=" & Data & """>");
       end if;
+
+      if Acronym /= "" then
+         Put ("<acronym title=""" & Acronym & """>");
+      end if;
+
+      Put (Data);
+
+      if Acronym /= "" then
+         Put ("</acronym>");
+      end if;
+
+      if Link_Param /= "" then
+         Put ("</a>");
+      end if;
+      --  Link ended
+
+      Put_Line (Close_Tag);
    end Put_Cell;
 
    procedure Put_Cell (Data       : Unbounded_String;
