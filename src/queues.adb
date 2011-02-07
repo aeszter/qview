@@ -20,7 +20,8 @@ package body Queues is
    function New_Queue
      (Used, Reserved, Total : Natural;
       State                 : String;
-      Memory, Cores         : String;
+      Memory                : String;
+      Cores                 : Natural;
       Network               : Resources.Network;
       Model                 : Resources.CPU_Model;
       Runtime               : Unbounded_String)
@@ -58,10 +59,8 @@ package body Queues is
       Q.Network  := Network;
       Q.Model    := Model;
       Q.Runtime  := Runtime;
-      if Cores = "" then
+      if Cores = 0 then
          Q.Cores := Q.Total;
-      else
-         Q.Cores := Integer'Value (Cores);
       end if;
 
       return Q;

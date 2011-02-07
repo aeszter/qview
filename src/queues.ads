@@ -17,7 +17,8 @@ package Queues is
 
    function New_Queue (Used, Reserved, Total : Natural;
       State                 : String;
-      Memory, Cores         : String;
+      Memory                : String;
+      Cores                 : Natural;
       Network               : Resources.Network;
       Model                 : Resources.CPU_Model;
       Runtime               : Unbounded_String)

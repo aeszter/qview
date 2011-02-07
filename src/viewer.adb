@@ -343,7 +343,8 @@ package body Viewer is
             A                     : Attr;
             Used, Reserved, Total : Natural := 0;
             State                 : Unbounded_String;
-            Mem, Cores, Runtime   : Unbounded_String;
+            Mem, Runtime          : Unbounded_String;
+            Cores                 : Natural;
             Network               : Resources.Network := none;
             Model                 : Unbounded_String := Null_Unbounded_String;
             type small is digits 4 range 0.0 .. 1.0;
@@ -363,7 +364,7 @@ package body Viewer is
                   if Value (A) = "mem_total" then
                      Mem := To_Unbounded_String (Value (First_Child (N)));
                   elsif Value (A) = "num_proc" then
-                     Cores := To_Unbounded_String (Value (First_Child (N)));
+                     Cores := Integer'Value (Value (First_Child (N)));
                   elsif Value (A) = "infiniband" and then
                     small'Value (Value (First_Child (N))) = 1.0 then
                      Network := ib;
@@ -382,7 +383,7 @@ package body Viewer is
                                           Reserved => Reserved,
                                           Total    => Total,
                                           Memory   => To_String (Mem),
-                                          Cores    => To_String (Cores),
+                                          Cores    => Cores,
                                           Network  => Network,
                                           Model    => To_Model (Model),
                                           Runtime  => Runtime,
