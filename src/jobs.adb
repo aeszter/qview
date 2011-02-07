@@ -15,7 +15,7 @@ package body Jobs is
 
    function New_Job (Number                            : Natural;
                      Name, Owner                       : Unbounded_String;
-                     Priority                          : Natural;
+                     Priority                          : Fixed;
                      State                             : Job_State;
                      Slots, PE                         : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO                      : Float := 0.0;
@@ -173,7 +173,7 @@ package body Jobs is
       Job_Name        : Unbounded_String;
       Number          : Integer;
       PE, Slots       : Unbounded_String;
-      Priority        : Integer;
+      Priority        : Fixed;
       Owner           : Unbounded_String;
       State           : Jobs.Job_State;
       Submission_Time : Time;
@@ -197,7 +197,7 @@ package body Jobs is
             if Name (C) = "JB_job_number" then
                Number := Integer'Value (Value (First_Child (C)));
             elsif Name (C) = "JAT_prio" then
-               Priority := Integer'Value (Value (First_Child (C)));
+               Priority := Fixed'Value (Value (First_Child (C)));
             elsif Name (C) = "JB_name" then
                Job_Name := To_Unbounded_String (Value (First_Child (C)));
             elsif Name (C) = "JB_owner" then

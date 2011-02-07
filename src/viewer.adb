@@ -183,7 +183,7 @@ package body Viewer is
             State                : Job_State;
             Job_Slots, Job_Queue : Unbounded_String;
             PE                   : Unbounded_String;
-            Priority             : Natural;
+            Priority             : Fixed;
             Time_Buffer          : String (1 .. 19);
             Submission_Time      : Time;
             Hard, Soft           : Resources.Resource_Lists.List;
@@ -194,7 +194,7 @@ package body Viewer is
                if Name (N) = "JB_job_number" then
                   Number := Integer'Value (Value (First_Child (N)));
                elsif Name (N) = "JAT_prio" then
-                  Priority := Integer'Value (Value (First_Child (N)));
+                  Priority := Fixed'Value (Value (First_Child (N)));
                elsif Name (N) = "JB_name" then
                   Job_Name := To_Unbounded_String (Value (First_Child (N)));
                elsif Name (N) = "JB_owner" then
@@ -255,6 +255,8 @@ package body Viewer is
          exception
             when E : others =>
                HTML.Error ("Failed to parse job: " & Exception_Message (E));
+               HTML.Error ("Node type: """ & Name (N)
+                           & """ Value: """ & Value (First_Child (N)) & """");
          end Parse_One_Job;
 
 
@@ -570,7 +572,7 @@ package body Viewer is
             HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
             Ada.Text_IO.Put ("</tr>");
          exception
-            when E : others => HTML.Error (Message => "Error in Job: "
+            when E : others => HTML.Error (Message => "Error while outputting job: "
                                            & Exception_Message (E));
          end Put_Job_List_Entry;
 

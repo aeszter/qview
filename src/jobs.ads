@@ -16,7 +16,7 @@ package Jobs is
       Name               : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
       Name_Truncated     : Boolean;          -- Whether Full_Name and Name differ
       Owner              : Unbounded_String; -- User whom this job belongs to
-      Priority           : Natural; -- Numerical priority
+      Priority           : Fixed; -- Numerical priority
       State              : Job_State;
       Slots              : Unbounded_String; -- how many slots/CPUs to use
       PE                 : Unbounded_String; -- Parallel environment
@@ -50,7 +50,7 @@ package Jobs is
 
    function New_Job (Number                            : Natural;
                      Name, Owner                       : Unbounded_String;
-                     Priority                          : Natural;
+                     Priority                          : Fixed;
                      State                             : Job_State;
                      Slots, PE                         : Unbounded_String; Submission_Time : Time;
                      CPU, Mem, IO                      : Float := 0.0;
