@@ -20,6 +20,7 @@ with Viewer; use Viewer.String_Lists;
 with Diagnostics;
 with Ada.Calendar; use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
+with Ada.Strings.Fixed;
 
 package body Viewer is
 
@@ -530,7 +531,8 @@ package body Viewer is
             J : Jobs.Job := Jobs.Job_Lists.Element (Job);
          begin
             Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data => J.Number'Img, Link_Param => "job_id");
+            HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
+                           Link_Param => "job_id");
             HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
             if J.Name_Truncated then
                HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
@@ -934,7 +936,8 @@ package body Viewer is
             J : Jobs.Job := Jobs.Job_Lists.Element (Job);
          begin
             Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data => J.Number'Img, Link_Param => "job_id");
+            HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
+                           Link_Param => "job_id");
             HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
             if J.Name_Truncated then
                HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
@@ -950,6 +953,7 @@ package body Viewer is
             when E : others => HTML.Error (Message => "Error while outputting job: "
                                            & Exception_Message (E));
          end Put_Job_List_Entry;
+
       begin
          SGE_Out := Setup_Parser (Selector => "-u \* -s r -r");
 
