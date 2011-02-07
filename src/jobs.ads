@@ -48,11 +48,15 @@ package Jobs is
    function On_Hold (J : Job) return Boolean;
    function Has_Error (J : Job) return Boolean;
 
+   function End_Time (J : Job) return Time;
+   function Remaining_Time (J : Job) return Duration;
+
    function New_Job (Number                            : Natural;
                      Name, Owner                       : Unbounded_String;
                      Priority                          : Fixed;
                      State                             : Job_State;
-                     Slots, PE                         : Unbounded_String; Submission_Time : Time;
+                     Slots, PE                         : Unbounded_String;
+                     Submission_Time                   : Time;
                      CPU, Mem, IO                      : Float := 0.0;
                      Override_Tickets, Share_Tickets   : Natural := 0;
                      Functional_Tickets                : Natural := 0;

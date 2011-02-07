@@ -21,7 +21,13 @@ package body Resources is
       R : Resource;
    begin
       R.Name := Name;
-      R.Value := Value;
+      if R.Name = "h_rt" then
+         R.Numerical := Integer'Value (To_String (Value));
+         R.Value := To_Unbounded_String (Format_Duration (R.Numerical));
+      else
+         R.Value := Value;
+         R.Numerical := 0;
+      end if;
       return R;
    end New_Resource;
 
@@ -49,23 +55,18 @@ package body Resources is
    procedure Put (R : Resource) is
       Label : Unbounded_String := R.Name;
       Value : Unbounded_String := R.Value;
-      Days  : Natural;
-      Secs  : Natural;
-      Dur   : Duration;
    begin
       if Label = "h_rt" then
-         Secs := Integer'Value (To_String (Value));
-         Days := Secs / 86400;
-         Dur := Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Secs - Days*86400));
-         if Days > 0 then
-            Value := To_Unbounded_String (Days'Img & "d " & Image (Dur));
-         else
-            Value := To_Unbounded_String (Image (Dur));
-         end if;
-         Label := To_Unbounded_String ("<acronym title=""hard runtime limit"">h_rt</acronym>");
+         HTML.Put_Paragraph (Label    => "<acronym title=""hard runtime limit"">h_rt</acronym>",
+                             Contents => Value);
+      else
+         HTML.Put_Paragraph (Label, Value);
       end if;
-      HTML.Put_Paragraph (Label, Value);
    end Put;
+
+   -------------------------
+   -- To_Unbounded_String --
+   -------------------------
 
    function To_Unbounded_String (L : Resource_Lists.List) return Unbounded_String is
       S : Unbounded_String := Null_Unbounded_String;
@@ -83,6 +84,23 @@ package body Resources is
       end loop;
       return S;
    end To_Unbounded_String;
+
+   ---------------------
+   -- Format_Duration --
+   ---------------------
+
+   function Format_Duration (Secs : Natural) return String is
+      Days  : Natural;
+      Dur   : Duration;
+   begin
+         Days := Secs / 86400;
+         Dur := Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Secs - Days*86400));
+         if Days > 0 then
+            return Days'Img & "d " & Image (Dur);
+         else
+            return Image (Dur);
+         end if;
+   end Format_Duration;
 
 
    ----------
@@ -182,5 +200,56 @@ package body Resources is
    begin
       return Model'Img;
    end To_String;
+
+   ---------------
+   -- Get_Value --
+   ---------------
+
+   function Get_Value (List : Resource_Lists.List; Name : Unbounded_String)
+                       return Unbounded_String is
+      Res : Resource;
+      Cursor : Resource_Lists.Cursor;
+   begin
+      Cursor := First (List);
+      loop
+         Res := Element (Cursor);
+         if Res.Name = Name then
+            return Res.Value;
+         end if;
+         exit when Cursor = Last (List);
+         Next (Cursor);
+      end loop;
+      raise Resource_Error with "Resource """ & To_String (Name) & """ not found";
+   end Get_Value;
+
+   function Get_Value (List : Resource_Lists.List; Name : String)
+                       return Unbounded_String is
+   begin
+      return Get_Value (List, To_Unbounded_String (Name));
+   end Get_Value;
+
+   function Get_Numerical (List : Resource_Lists.List; Name : String)
+                           return Integer is
+   begin
+      return Get_Numerical (List, To_Unbounded_String (Name));
+   end Get_Numerical;
+
+   function Get_Numerical (List : Resource_Lists.List; Name : Unbounded_String)
+                           return Integer is
+      Res : Resource;
+      Cursor : Resource_Lists.Cursor;
+   begin
+      Cursor := First (List);
+      loop
+         Res := Element (Cursor);
+         if Res.Name = Name then
+            return Res.Numerical;
+         end if;
+         exit when Cursor = Last (List);
+         Next (Cursor);
+      end loop;
+      raise Resource_Error with "Resource """ & To_String (Name) & """ not found";
+   end Get_Numerical;
+
 
 end Resources;

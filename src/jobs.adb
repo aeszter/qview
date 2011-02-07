@@ -6,6 +6,7 @@ with GNAT.Calendar.Time_IO;
 with Resources;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
+with Ada.Real_Time;
 
 package body Jobs is
 
@@ -161,6 +162,22 @@ package body Jobs is
       end if;
 
    end Name_As_HTML;
+
+   --------------
+   -- End_Time --
+   --------------
+
+   function End_Time (J : Job) return Time is
+   begin
+      return J.Submission_Time
+        + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Resources.Get_Numerical (J.Hard, "h_rt")));
+   end End_Time;
+
+   function Remaining_Time (J : Job) return Duration is
+   begin
+      return End_Time (J) - Ada.Calendar.Clock;
+   end Remaining_Time;
+
 
    -----------------
    -- Append_List --

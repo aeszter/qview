@@ -53,6 +53,8 @@ package body Viewer is
                                    Link_Param => "categories=demand");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
                                    Link_Param => "categories=both");
+         HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
+                                   Link_Param => "forecast=y");
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
       end Put_Headers;
@@ -906,6 +908,70 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
+      -------------------
+      -- View_Forecast --
+      -------------------
+
+      procedure View_Forecast is
+         SGE_Out     : DOM.Core.Document;
+
+
+         procedure Put_Table_Header is
+         begin
+            HTML.Begin_Div (Class => "job_list");
+            Ada.Text_IO.Put ("<table><tr>");
+            HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Name", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Ends In", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Ends At", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "State", Params => My_Params);
+            Ada.Text_IO.Put ("</tr>");
+         end Put_Table_Header;
+
+         procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
+            J : Jobs.Job := Jobs.Job_Lists.Element (Job);
+         begin
+            Ada.Text_IO.Put ("<tr>");
+            HTML.Put_Cell (Data => J.Number'Img, Link_Param => "job_id");
+            HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
+            if J.Name_Truncated then
+               HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
+                              & J.Name & "</acronym>");
+            else
+               HTML.Put_Cell (Data => J.Name);
+            end if;
+            HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
+            HTML.Put_Time_Cell (End_Time (J));
+            HTML.Put_Duration_Cell (Remaining_Time (J));
+            HTML.Put_Img_Cell (State_As_String (J));
+         exception
+            when E : others => HTML.Error (Message => "Error while outputting job: "
+                                           & Exception_Message (E));
+         end Put_Job_List_Entry;
+      begin
+         SGE_Out := Setup_Parser (Selector => "-u \* -s r -r");
+
+         Put_Table_Header;
+
+         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+         if not HTML.Param_Is ("sort", "") then
+            if Length (Sort_Direction) /= 3 then
+               --  something wrong -- maybe an attack?
+               Sort_Direction := To_Unbounded_String ("inc");
+            end if;
+            Jobs.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => To_String (Sort_Direction));
+         end if;
+         Job_List.Iterate (Put_Job_List_Entry'Access);
+
+         --  Table Footer
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "job_list");
+      end View_Forecast;
+
+
       N : Positive;
 
    begin
@@ -958,6 +1024,8 @@ package body Viewer is
                View_Detailed_Queues;
                View_Job_Overview;
             end if;
+         elsif HTML.Param_Is ("forecast", "y") then
+            View_Forecast;
          elsif not HTML.Param_Is ("profile", "") then
             N := Integer'Value (CGI.Value ("profile"));
             if N > 10 then

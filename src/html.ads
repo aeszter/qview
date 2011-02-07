@@ -18,6 +18,7 @@ package HTML is
    procedure Put_Img_Cell (Image : String);
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
+   procedure Put_Duration_Cell (Span : Duration);
    procedure Put_Header_Cell (Data     : String;
                               Acronym : String := "";
                               Params   : Unbounded_String;

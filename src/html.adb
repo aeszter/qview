@@ -60,6 +60,10 @@ package body HTML is
       Put_Line (Close_Tag);
    end Put_Cell;
 
+   --------------
+   -- Put_Cell --
+   --------------
+
    procedure Put_Cell (Data       : Unbounded_String;
                        Link_Param : String := "";
                        Tag        : String := "td";
@@ -71,6 +75,10 @@ package body HTML is
                 Class      => Class);
    end Put_Cell;
 
+   ------------------
+   -- Put_Img_Cell --
+   ------------------
+
    procedure Put_Img_Cell (Image : String) is
       Data : String := "<img src=""/icons/" & Image
            & ".png"" alt=""" & Image & """ title="""
@@ -78,6 +86,10 @@ package body HTML is
    begin
       Put_Cell (Data => Data);
    end Put_Img_Cell;
+
+   -------------------
+   -- Put_Time_Cell --
+   -------------------
 
    procedure Put_Time_Cell (Time : Calendar.Time) is
       Year, This_Year   : Ada.Calendar.Year_Number;
@@ -120,6 +132,20 @@ package body HTML is
                   Class => "right");
       end if;
    end Put_Duration_Cell;
+
+   -----------------------
+   -- Put_Duration_Cell --
+   -----------------------
+
+   procedure Put_Duration_Cell (Span : Duration) is
+   begin
+      Put_Cell (Data => Ada.Calendar.Formatting.Image (Span),
+                Class => "right");
+   end Put_Duration_Cell;
+
+   ---------------------
+   -- Put_Header_Cell --
+   ---------------------
 
    procedure Put_Header_Cell (Data     : String;
                               Acronym : String := "";
