@@ -16,17 +16,11 @@ with Jobs; use Jobs; use Jobs.Job_Lists;
 with Bunches; use Bunches; use Bunches.Bunch_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
-with Viewer; use Viewer.String_Lists;
+with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
-with Ada.Calendar; use Ada.Calendar;
-with GNAT.Calendar.Time_IO;
 with Ada.Strings.Fixed;
 
 package body Viewer is
-
-
-
-
 
    ----------
    -- View --
@@ -176,92 +170,6 @@ package body Viewer is
 
       procedure View_Job_Overview is
 
-         Job_List : Jobs.Job_Lists.List;
-
-         procedure Parse_One_Job (Nodes : Node_List) is
-            N                    : Node;
-            A                    : Attr;
-            Number               : Natural;
-            Job_Name, Owner      : Unbounded_String;
-            State                : Job_State;
-            Job_Slots, Job_Queue : Unbounded_String;
-            PE                   : Unbounded_String;
-            Priority             : Fixed;
-            Time_Buffer          : String (1 .. 19);
-            Submission_Time      : Time;
-            Hard, Soft           : Resources.Resource_Lists.List;
-
-         begin
-            for Index in 1 .. Length (Nodes) loop
-               N := Item (Nodes, Index - 1);
-               if Name (N) = "JB_job_number" then
-                  Number := Integer'Value (Value (First_Child (N)));
-               elsif Name (N) = "JAT_prio" then
-                  Priority := Fixed'Value (Value (First_Child (N)));
-               elsif Name (N) = "JB_name" then
-                  Job_Name := To_Unbounded_String (Value (First_Child (N)));
-               elsif Name (N) = "JB_owner" then
-                  Owner := To_Unbounded_String (Value (First_Child (N)));
-               elsif Name (N) = "state" then
-                     State := To_State (Value (First_Child (N)));
-               elsif Name (N) = "queue_name" then
-                  null; -- ignore
-               elsif Name (N) = "hard_req_queue" then
-                     Job_Queue := To_Unbounded_String (Value (First_Child (N)));
-               elsif Name (N) = "slots" then
-                  Job_Slots := To_Unbounded_String (Value (First_Child (N)));
-               elsif Name (N) = "full_job_name" then
-                  null; -- ignore
-               elsif Name (N) = "requested_pe" then
-                  A := Get_Named_Item (Attributes (N), "name");
-                  PE := To_Unbounded_String (Value (A));
-
-               elsif Name (N) = "JB_submission_time" or else
-                     Name (N) = "JAT_start_time" then
-                  Time_Buffer := Value (First_Child (N));
-                  if Time_Buffer (11) /= 'T' then
-                     raise Time_Error;
-                  end if;
-                  Time_Buffer (11) := ' ';
-                  Submission_Time := GNAT.Calendar.Time_IO.Value (Time_Buffer);
-               elsif Name (N) = "hard_request" then
-                  A := Get_Named_Item (Attributes (N), "name");
-                  Hard.Append (New_Resource (Name  => Value (A),
-                                             Value => Value (First_Child (N))));
-               elsif Name (N) = "soft_request" then
-                  A := Get_Named_Item (Attributes (N), "name");
-                  Soft.Append (New_Resource (Name  => Value (A),
-                                             Value => Value (First_Child (N))));
-               elsif Name (N) = "predecessor_jobs" or else
-                 Name (N) = "predecessor_jobs_req" then
-                  null; -- ignore
-               elsif Name (N) /= "#text" then
-                  Ada.Text_IO.Put_Line ("Unknown Field: " & Name (N));
-               end if;
-            end loop;
-
-            if Job_Queue = "" then
-               Job_Queue := To_Unbounded_String ("*");
-            end if;
-            Job_List.Append (New_Job (Number   => Number,
-                                      Name            => Job_Name,
-                                      Owner           => Owner,
-                                      Priority        => Priority,
-                                      Submission_Time => Submission_Time,
-                                      State           => State,
-                                      Slots           => Job_Slots,
-                                      PE              => PE,
-                                      Queue           => Job_Queue,
-                                      Hard_Requests   => Hard,
-                                      Soft_Requests   => Soft
-                                         ));
-         exception
-            when E : others =>
-               HTML.Error ("Failed to parse job: " & Exception_Message (E));
-               HTML.Error ("Node type: """ & Name (N)
-                           & """ Value: """ & Value (First_Child (N)) & """");
-         end Parse_One_Job;
-
 
          procedure Put_Bunch (Bunch : Bunches.Bunch_Lists.Cursor) is
             B : Bunches.Bunch := Bunches.Bunch_Lists.Element (Bunch);
@@ -307,9 +215,7 @@ package body Viewer is
             return;
          end if;
 
-         for Index in 1 .. Length (Nodes) loop
-            Parse_One_Job (Child_Nodes (Item (Nodes, Index - 1)));
-         end loop;
+         Jobs.Append_List (Nodes);
 
          --  Detect different bunches
          Bunches.Build_List (Job_List, Bunch_List);
@@ -541,7 +447,7 @@ package body Viewer is
                HTML.Put_Cell (Data => J.Name);
             end if;
             HTML.Put_Time_Cell (J.Submission_Time);
-            HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
+            HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
             HTML.Put_Img_Cell (State_As_String (J));
             if J.CPU > 0.1 then
                HTML.Put_Duration_Cell (Integer (J.CPU));
@@ -632,188 +538,19 @@ package body Viewer is
       procedure View_Job (Job_ID : String) is
          SGE_Out       : DOM.Core.Document;
          List          : Node_List;
-         Children      : Node_List;
-         N             : Node;
-         C             : Node;
-         Resource_List : Resources.Resource_Lists.List;
-         Slot_List     : Slots.Slot_Lists.List;
-         Queue_List    : String_Lists.List;
-         Message_List  : String_Lists.List;
 
 
-         J_Number          : Unbounded_String; -- Job ID
-         J_Name            : Unbounded_String; -- Job name
-         J_Owner           : Unbounded_String; -- User whom this job belongs to
-         J_Group           : Unbounded_String;
-         J_PE              : Unbounded_String; -- Parallel environment
-         J_Exec_File       : Unbounded_String;
-         J_Script_File     : Unbounded_String;
-         J_Merge_Std_Err   : Unbounded_String;
-         J_Array           : Unbounded_String;
-         J_Directory       : Unbounded_String;
-         J_Reserve         : Unbounded_String;
-
-         procedure Extract_Resource_List is
-            Resource_Nodes     : Node_List := Child_Nodes (C);
-            Resource_Tags      : Node_List;
-
-            N, R               : Node;
-            Res_Value          : Unbounded_String;
-            Res_Name           : Unbounded_String;
-
-         begin
-            for I in 1 .. Length (Resource_Nodes) loop
-               N := Item (Resource_Nodes, I - 1);
-               if Name (N) = "qstat_l_requests" then
-                  Resource_Tags := Child_Nodes (N);
-                  for J in 1 .. Length (Resource_Tags) loop
-                     R := Item (Resource_Tags, J - 1);
-                     if Name (R) = "CE_name" then
-                        Res_Name := To_Unbounded_String (Value (First_Child (R)));
-                     elsif Name (R) = "CE_stringval" then
-                        Res_Value := To_Unbounded_String (Value (First_Child (R)));
-                        --  maybe check for relop here?
-                     end if;
-                  end loop;
-                  Resource_List.Append (New_Resource (Name  => Res_Name,
-                                                      Value => Res_Value));
-               end if;
-            end loop;
-         end Extract_Resource_List;
-
-         procedure Extract_Queue_List is
-            Destin_Nodes : Node_List := Child_Nodes (C);
-            QR_Nodes     : Node_List;
-            N, Q         : Node;
-
-         begin
-            for I in 1 .. Length (Destin_Nodes) loop
-               N := Item (Destin_Nodes, I - 1);
-               if Name (N) = "destin_ident_list" then
-                  QR_Nodes := Child_Nodes (N);
-                  for J in 1 .. Length (QR_Nodes) loop
-                     Q := Item (QR_Nodes, J - 1);
-                     if Name (Q) = "QR_name" then
-                        Queue_List.Append (To_Unbounded_String (Value (First_Child (Q))));
-                     end if;
-                  end loop;
-               end if;
-            end loop;
-         end Extract_Queue_List;
-
-         procedure Extract_PE_Range is
-            Children                         : Node_List := Child_Nodes (C);
-            Ranges                           : Node_List;
-            N, R                             : Node;
-            Slots_Min, Slots_Step, Slots_Max : Natural;
-         begin
-            for I in 1 .. Length (Children) loop
-               N := Item (Children, I - 1);
-               if Name (N) = "ranges" then
-                  Ranges := Child_Nodes (N);
-                  for J in 1 .. Length (Ranges) loop
-                     R := Item (Ranges, J - 1);
-                     if Name (R) = "RN_min" then
-                        Slots_Min := Integer'Value (Value (First_Child (R)));
-                     elsif Name (R) = "RN_max" then
-                        Slots_Max := Integer'Value (Value (First_Child (R)));
-                     elsif Name (R) = "RN_step" then
-                        Slots_Step := Integer'Value (Value (First_Child (R)));
-                     end if;
-                  end loop;
-                  Slot_List.Append (New_Range (Min  => Slots_Min,
-                                               Max  => Slots_Max,
-                                               Step => Slots_Step));
-               end if;
-
-            end loop;
-         end Extract_PE_Range;
-
-         procedure Extract_Errors is
-            Children : Node_List;
-            Messages : Node_List;
-            Task_Nodes : Node_List := Child_Nodes (C);
-            N, M     : Node;
-            JA_Tasks : Node;
-            Sublist  : Node;
-
-         begin
-
-            for H in 1 .. Length (Task_Nodes) loop
-               JA_Tasks := Item (Task_Nodes, H - 1);
-               if Name (JA_Tasks) = "ja_tasks"
-                 or else Name (JA_Tasks) = "ulong_sublist" then
-                  Children := Child_Nodes (JA_Tasks);
-                  for I in 1 .. Length (Children) loop
-                     N := Item (Children, I - 1);
-                     if Name (N) = "JAT_message_list" then
-                        Sublist := Item (Child_Nodes (N), 1);
-                        if Name (Sublist) /= "ulong_sublist" then
-                           raise Assumption_Error;
-                        end if;
-                        Messages := Child_Nodes (Sublist);
-                        for K in 1 .. Length (Messages) loop
-                           M := Item (Messages, K - 1);
-                           if Name (M) = "QIM_message" then
-                              Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
-                           end if;
-                        end loop;
-                     end if;
-
-                  end loop;
-               end if;
-            end loop;
-         end Extract_Errors;
-
-         procedure Parse_One_Job is
-         begin
-            Resource_List.Clear;
-            Queue_List.Clear;
-            Message_List.Clear;
-            for Ch_Index in 0 .. Length (Children) - 1 loop
-               C := Item (Children, Ch_Index);
-               if Name (C) = "JB_job_number" then
-                  J_Number := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_ar" then
-                  J_Array := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_exec_file" then
-                  J_Exec_File := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_owner" then
-                  J_Owner := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_group" then
-                  J_Group := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_merge_stderr" then
-                  J_Merge_Std_Err := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_job_name" then
-                  J_Name := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_hard_resource_list" then
-                  Extract_Resource_List;
-               elsif Name (C) = "JB_hard_queue_list" then
-                  Extract_Queue_List;
-               elsif Name (C) = "JB_script_file" then
-                  J_Script_File := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_ja_tasks" then
-                  Extract_Errors;
-               elsif Name (C) = "JB_cwd" then
-                  J_Directory := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_reserve" then
-                  J_Reserve := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_pe" then
-                  J_PE := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "JB_pe_range" then
-                  Extract_PE_Range;
-               end if;
-            end loop;
-         end Parse_One_Job;
-
-         procedure Output_One_Job is
+         procedure Output_One_Job  (Cursor : Job_Lists.Cursor) is
             Res        : Resource_Lists.Cursor;
             Slot_Range : Slot_Lists.Cursor;
             Q, Msg     : String_Lists.Cursor;
+
+            J : Job := Job_Lists.Element (Cursor);
          begin
+            HTML.Begin_Div (Class => "job_info");
             HTML.Begin_Div (Class => "job_name");
-            HTML.Put_Paragraph ("Name", J_Name);
-            Msg := Message_List.First;
+            HTML.Put_Paragraph ("Name", J.Name);
+            Msg := J.Message_List.First;
             loop
                exit when Msg = String_Lists.No_Element;
                Ada.Text_IO.Put_Line ("<p class=""message"">"
@@ -824,46 +561,54 @@ package body Viewer is
             HTML.End_Div;
 
             HTML.Begin_Div (Class => "job_meta");
-            HTML.Put_Paragraph ("ID", J_Number);
-            HTML.Put_Paragraph ("Owner", J_Owner);
-            HTML.Put_Paragraph ("Group", J_Group);
-            Ada.Text_IO.Put ("<p>Array: ");
-            HTML.Put_True_False (J_Array);
-            Ada.Text_IO.Put_Line ("</p>");
+            HTML.Put_Paragraph ("ID", J.Number'Img);
+            HTML.Put_Paragraph ("Owner", J.Owner);
+            HTML.Put_Paragraph ("Group", J.Group);
+            HTML.Put_Paragraph ("Account", J.Account);
+            HTML.Put_Paragraph ("Array", J.Job_Array);
             Ada.Text_IO.Put ("<p>Reserve: ");
-            HTML.Put_True_False (J_Reserve);
+            HTML.Put (J.Reserve);
             Ada.Text_IO.Put_Line ("</p>");
             HTML.End_Div (Class => "job_meta");
 
             HTML.Begin_Div (Class => "job_files");
-            HTML.Put_Paragraph ("Directory", J_Directory);
-            HTML.Put_Paragraph ("Script", J_Script_File);
-            HTML.Put_Paragraph ("Executable", J_Exec_File);
+            HTML.Put_Paragraph ("Directory", J.Directory);
+            HTML.Put_Paragraph ("Script", J.Script_File);
+            HTML.Put_Paragraph ("Executable", J.Exec_File);
             Ada.Text_IO.Put ("<p>Merge StdErr: ");
-            HTML.Put_True_False (J_Merge_Std_Err);
+            HTML.Put (J.Merge_Std_Err);
+            Ada.Text_IO.Put_Line ("</p>");
+            Ada.Text_IO.Put ("<p>Notify: ");
+            HTML.Put (J.Notify);
             Ada.Text_IO.Put_Line ("</p>");
             HTML.End_Div (Class => "job_files");
 
             HTML.Begin_Div (Class => "job_queue");
-            Q := Queue_List.First;
+            Q := J.Queue_List.First;
             loop
                exit when Q = String_Lists.No_Element;
                HTML.Put_Paragraph (Label    => "Queue",
                                    Contents => String_Lists.Element (Q));
-               Q := Next (Q);
+               Next (Q);
             end loop;
 
-            HTML.Put_Paragraph ("PE", J_PE);
-            Slot_Range := Slot_List.First;
+            HTML.Put_Paragraph ("PE", J.PE);
+            Slot_Range := J.Slot_List.First;
             loop
                exit when Slot_Range = Slots.Slot_Lists.No_Element;
                Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
-               Slot_Range := Next (Slot_Range);
+               Next (Slot_Range);
             end loop;
             HTML.End_Div (Class => "job_queue");
 
             HTML.Begin_Div (Class => "job_resources");
-            Res := Resource_List.First;
+            Res := J.Hard.First;
+            loop
+               exit when Res = Resources.Resource_Lists.No_Element;
+               Resources.Put (Resources.Resource_Lists.Element (Res));
+               Res := Next (Res);
+            end loop;
+            Res := J.Soft.First;
             loop
                exit when Res = Resources.Resource_Lists.No_Element;
                Resources.Put (Resources.Resource_Lists.Element (Res));
@@ -871,6 +616,9 @@ package body Viewer is
             end loop;
             HTML.End_Div (Class => "job_resources");
 
+            HTML.Put_Clearer;
+            HTML.End_Div (Class => "job_info");
+            HTML.Put_Clearer;
          end Output_One_Job;
 
 
@@ -886,25 +634,8 @@ package body Viewer is
             return;
          end if;
 
-         for Index in 1 .. Length (List) loop
-
-            HTML.Begin_Div (Class => "job_info");
-            Children := Child_Nodes (Item (List, Index - 1)); -- djob_info
-            N := Item (Children, 1);
-            --  element; this is probably faster than
-            --  looping through the list;
-            --  in case we err, raise an exception
-            if Name (N) /= "element" then
-               raise Assumption_Error;
-            end if;
-            Children := Child_Nodes (N); -- data fields of the job
-
-            Parse_One_Job;
-            Output_One_Job;
-            HTML.Put_Clearer;
-            HTML.End_Div (Class => "job_info");
-            HTML.Put_Clearer;
-         end loop;
+         Append_List (List);
+         Job_List.Iterate (Output_One_Job'Access);
 
       exception
          when Sax.Readers.XML_Fatal_Error =>
@@ -946,7 +677,7 @@ package body Viewer is
             else
                HTML.Put_Cell (Data => J.Name);
             end if;
-            HTML.Put_Cell (Data => J.Slots, Tag => "td class=""right""");
+            HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
             HTML.Put_Time_Cell (End_Time (J));
             HTML.Put_Duration_Cell (Remaining_Time (J));
             HTML.Put_Img_Cell (State_As_String (J));

@@ -3,11 +3,14 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with DOM.Core; use DOM.Core;
 with Ada.Calendar; use Ada.Calendar;
 with Resources;
+with Slots;
+with Utils; use Utils;
 
 package Jobs is
 
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw);
    type Fixed is delta 0.0001 digits 5;
+
 
    type Job is record
       --  basic attributes
@@ -16,11 +19,27 @@ package Jobs is
       Name               : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
       Name_Truncated     : Boolean;          -- Whether Full_Name and Name differ
       Owner              : Unbounded_String; -- User whom this job belongs to
+      Group              : Unbounded_String;
+      Account            : Unbounded_String;
+
       Priority           : Fixed; -- Numerical priority
       State              : Job_State;
-      Slots              : Unbounded_String; -- how many slots/CPUs to use
+      Slot_Number        : Unbounded_String; -- how many slots/CPUs to use
       PE                 : Unbounded_String; -- Parallel environment
       Submission_Time    : Time;    -- when submitted
+      Project            : Unbounded_String;
+      Department         : Unbounded_String;
+      Job_Array          : Unbounded_String;
+      Notify             : Tri_State;
+
+
+      --  File related stuff
+      Exec_File          : Unbounded_String;
+      Script_File        : Unbounded_String;
+      Directory          : Unbounded_String;
+      Reserve            : Tri_State;
+      Merge_Std_Err      : Tri_State;
+
 
       --  qstat -ext
       CPU, Mem, IO       : Float;
@@ -37,8 +56,13 @@ package Jobs is
       Posix_Priority     : Natural;
 
       --  resources used for Bunching jobs
-      Queue              : Unbounded_String;
-      Hard, Soft         : Resources.Resource_Lists.List;
+      Queue        : Unbounded_String;
+      Hard, Soft   : Resources.Resource_Lists.List;
+
+      Slot_List    : Slots.Slot_Lists.List;
+      Queue_List   : String_Lists.List;
+      Message_List : String_Lists.List;
+
 
    end record;
 
@@ -51,22 +75,11 @@ package Jobs is
    function End_Time (J : Job) return Time;
    function Remaining_Time (J : Job) return Duration;
 
-   function New_Job (Number                            : Natural;
-                     Name, Owner                       : Unbounded_String;
-                     Priority                          : Fixed;
-                     State                             : Job_State;
-                     Slots, PE                         : Unbounded_String;
-                     Submission_Time                   : Time;
-                     CPU, Mem, IO                      : Float := 0.0;
-                     Override_Tickets, Share_Tickets   : Natural := 0;
-                     Functional_Tickets                : Natural := 0;
-                     Urgency                           : Float   := 0.0;
-                     Resource_Contrib, Waiting_Contrib : Natural := 0;
-                     Posix_Priority                    : Integer := 0;
-                     Hard_Requests, Soft_Requests      : Resources.Resource_Lists.List
-                     := Resources.Resource_Lists.Empty_List;
-                     Queue                             : Unbounded_String := Null_Unbounded_String
-                    ) return Job;
+   function New_Job (List : Node_List) return Job;
+   procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List);
+   procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
+   procedure Extract_Errors (J : in out Job; Task_Nodes : Node_List);
+   procedure Extract_PE_Range (J : in out Job; Children : Node_List);
 
    procedure Append_List (List : Node_List);
    procedure Sort_By (Field : String; Direction : String);
