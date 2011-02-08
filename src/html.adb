@@ -222,23 +222,23 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
-   procedure Put_True_False (Truth : String) is
+   ---------
+   -- Put --
+   ---------
+
+   procedure Put (Data : Tri_State) is
    begin
       Ada.Text_IO.Put ("<img src=""");
-      if Truth = "true" then
-         Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
-      elsif Truth = "false" then
-         Ada.Text_IO.Put ("/icons/cross.png"" alt=""false"" title=""false""");
-      else
-         Ada.Text_IO.Put ("/icons/error.png"" alt=""undefined"" title=""undefined""");
-      end if;
+      case Data is
+         when True =>
+            Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
+         when False =>
+            Ada.Text_IO.Put ("/icons/cross.png"" alt=""false"" title=""false""");
+         when Undecided =>
+            Ada.Text_IO.Put ("/icons/error.png"" alt=""undefined"" title=""undefined""");
+      end case;
       Ada.Text_IO.Put_Line (" />");
-   end Put_True_False;
-
-   procedure Put_True_False (Truth : Unbounded_String) is
-   begin
-      Put_True_False (To_String (Truth));
-   end Put_True_False;
+   end Put;
 
    procedure Error (Message : String) is
    begin

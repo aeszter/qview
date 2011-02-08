@@ -1,6 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
+with Utils; use Utils;
 
 package HTML is
    procedure Put_Cell (Data       : String;
@@ -33,8 +34,7 @@ package HTML is
    procedure Put_Paragraph (Label : String; Contents : String);
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
-   procedure Put_True_False (Truth : String);
-   procedure Put_True_False (Truth : Unbounded_String);
+   procedure Put (Data : Tri_State);
 
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
