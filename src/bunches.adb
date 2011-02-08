@@ -26,7 +26,7 @@ package body Bunches is
          J := Element (Cursor);
          --  New Bunch?
          if not (B.PE = J.PE and then
-                   B.Slots = J.Slots and then
+                   B.Slots = J.Slot_Number and then
                    Resources.Equal (B.Hard, J.Hard) and then
                    Resources.Equal (B.Soft, J.Soft) and then
                    B.Queue = J.Queue) then
@@ -36,7 +36,7 @@ package body Bunches is
          end if;
 
          --  Update totals
-         Slots := Integer'Value (To_String (J.Slots));
+         Slots := Integer'Value (To_String (J.Slot_Number));
          B.Total_Slots := B.Total_Slots + Slots;
          if On_Hold (J) then
             B.Slots_On_Hold := B.Slots_On_Hold + Slots;
@@ -60,7 +60,7 @@ package body Bunches is
       B : Bunch;
    begin
       B.PE := J.PE;
-      B.Slots := J.Slots;
+      B.Slots := J.Slot_Number;
       B.Queue := J.Queue;
       B.Hard := J.Hard;
       B.Soft := J.Soft;
