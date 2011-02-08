@@ -741,7 +741,8 @@ package body Viewer is
 
             for H in 1 .. Length (Task_Nodes) loop
                JA_Tasks := Item (Task_Nodes, H - 1);
-               if Name (JA_Tasks) = "ja_tasks" then
+               if Name (JA_Tasks) = "ja_tasks"
+                 or else Name (JA_Tasks) = "ulong_sublist" then
                   Children := Child_Nodes (JA_Tasks);
                   for I in 1 .. Length (Children) loop
                      N := Item (Children, I - 1);
