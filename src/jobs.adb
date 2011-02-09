@@ -263,6 +263,8 @@ package body Jobs is
             J.Notify := To_Tri_State (Value (First_Child (C)));
          elsif Name (C) = "JB_account" then
             J.Account := To_Unbounded_String (Value (First_Child (C)));
+         elsif Name (C) = "granted_pe" then
+            null;
          elsif Name (C) = "JB_urg" or else
            Name (C) = "JB_dlcontr" or else
            Name (C) = "JAT_ntix" or else
