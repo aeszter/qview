@@ -138,9 +138,23 @@ package body HTML is
    -----------------------
 
    procedure Put_Duration_Cell (Span : Duration) is
+      Days : Natural;
+      Seconds : Duration;
    begin
-      Put_Cell (Data => Ada.Calendar.Formatting.Image (Span),
-                Class => "right");
+      if Span < 0.0 then
+         Put_Cell (Data => "<i>expired</i>",
+                   Class => "right");
+      else
+         Days := Integer (Span / 86_400 + 0.5) - 1;
+         Seconds := Span - Duration (Days * 86_400);
+         if Days > 0 then
+            Put_Cell (Data  => Days'Img & "d " & Ada.Calendar.Formatting.Image (Seconds),
+                      Class => "right");
+         else
+            Put_Cell (Data  => Ada.Calendar.Formatting.Image (Seconds),
+                      Class => "right");
+         end if;
+      end if;
    end Put_Duration_Cell;
 
    ---------------------
