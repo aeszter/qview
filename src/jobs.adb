@@ -459,8 +459,11 @@ package body Jobs is
          Sorting_By_Waiting_Contrib.Sort (Job_List);
       elsif Field = "Custom" then
          Sorting_By_Posix_Priority.Sort (Job_List);
+      elsif Field = "Ends In" or else
+        Field = "Ends At" then
+         Sorting_By_End.Sort (Job_List);
       else
-         Ada.Text_IO.Put_Line ("<em>Error</em>: Sorting by " & Field & " unimplemented");
+         HTML.Error ("Sorting by " & Field & " unimplemented");
       end if;
       if Direction = "dec" then
          Job_List.Reverse_Elements;
@@ -743,6 +746,15 @@ package body Jobs is
    begin
       return Left.Posix_Priority < Right.Posix_Priority;
    end Precedes_By_Posix_Priority;
+
+   ---------------------
+   -- Precedes_By_End --
+   ---------------------
+
+   function Precedes_By_End (Left, Right : Job) return Boolean is
+   begin
+      return End_Time (Left) < End_Time (Right);
+      end;
 
 
    ------------------------

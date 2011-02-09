@@ -100,6 +100,7 @@ package Jobs is
    function Precedes_By_Waiting_Contrib (Left, Right : Job) return Boolean;
    function Precedes_By_Resource_Contrib (Left, Right : Job) return Boolean;
    function Precedes_By_Posix_Priority (Left, Right : Job) return Boolean;
+   function Precedes_By_End (Left, Right : Job) return Boolean;
 
    function Precedes_By_Resources (Left, Right : Job) return Boolean;
 
@@ -144,6 +145,8 @@ package Jobs is
       new Job_Lists.Generic_Sorting ("<" => Precedes_By_Waiting_Contrib);
    package Sorting_By_Posix_Priority is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Posix_Priority);
+   package Sorting_By_End is
+      new Job_Lists.Generic_Sorting ("<" => Precedes_By_End);
 
    package Sorting_By_Resources is
       new Job_Lists.Generic_Sorting ("<" => Precedes_By_Resources);
