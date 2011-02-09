@@ -1,6 +1,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with CGI;
 with Ada.Calendar; with Ada.Calendar.Formatting;
+with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO; use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
@@ -96,19 +97,36 @@ package body HTML is
       Month, This_Month : Ada.Calendar.Month_Number;
       Day, This_Day     : Ada.Calendar.Day_Number;
       Secs              : Ada.Calendar.Day_Duration;
+      Diff_Days         : Calendar.Arithmetic.Day_Count;
+      Diff_Seconds      : Duration;
+      Diff_Leap_Seconds : Integer;
    begin
-      Ada.Calendar.Split (Date    => Time,
+      Calendar.Split (Date    => Time,
                           Year    => Year,
                           Month   => Month,
                           Day     => Day,
                           Seconds => Secs);
-      Ada.Calendar.Split (Date    => Ada.Calendar.Clock,
+      Calendar.Split (Date    => Ada.Calendar.Clock,
                           Year    => This_Year,
                           Month   => This_Month,
                           Day     => This_Day,
                           Seconds => Secs);
-      if Day = This_Day and then Month = This_Month and then Year = This_Year then
+      Difference (Calendar.Time_Of (Year    => Year,
+                                    Month   => Month,
+                                    Day     => Day,
+                                    Seconds => 0.0),
+        Calendar.Time_Of (Year                                  => This_Year,
+                          Month                                 => This_Month,
+                          Day                                   => This_Day,
+                          Seconds                               => 0.0),
+        Diff_Days, Diff_Seconds, Diff_Leap_Seconds);
+
+      if Diff_Days = 0 then
          Put_Cell (Data => "today, " & Image (Time, "%H:%M:%S"));
+      elsif Diff_Days = -1 then
+         Put_Cell (Data => "yesterday, " & Image (Time, "%H:%M:%S"));
+      elsif Diff_Days = 1 then
+         Put_Cell (Data => "tomorrow, " & Image (Time, "%H:%M:%S"));
       else
          Put_Cell (Data => Image (Time, ISO_Date & " %H:%M:%S"));
       end if;

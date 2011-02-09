@@ -754,7 +754,7 @@ package body Jobs is
    function Precedes_By_End (Left, Right : Job) return Boolean is
    begin
       return End_Time (Left) < End_Time (Right);
-      end;
+   end Precedes_By_End;
 
 
    ------------------------
