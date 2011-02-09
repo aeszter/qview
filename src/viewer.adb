@@ -678,8 +678,8 @@ package body Viewer is
                HTML.Put_Cell (Data => J.Name);
             end if;
             HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
-            HTML.Put_Time_Cell (End_Time (J));
             HTML.Put_Duration_Cell (Remaining_Time (J));
+            HTML.Put_Time_Cell (End_Time (J));
             HTML.Put_Img_Cell (State_As_String (J));
          exception
             when E : others => HTML.Error (Message => "Error while outputting job: "
@@ -761,6 +761,7 @@ package body Viewer is
                View_Job_Overview;
             end if;
          elsif HTML.Param_Is ("forecast", "y") then
+            Set_Params ("forecast=y");
             View_Forecast;
          elsif not HTML.Param_Is ("profile", "") then
             N := Integer'Value (CGI.Value ("profile"));
