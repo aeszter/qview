@@ -3,12 +3,14 @@ with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
 with Ada.Calendar;   use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
+with Ada.Calendar.Conversions;
 with Resources;      use Resources;
 with Slots;
 with Utils; use Utils; use Utils.String_Lists;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
+with Interfaces.C;
 
 package body Jobs is
 
@@ -172,7 +174,16 @@ package body Jobs is
          elsif Name (C) = "state" then
             J.State := To_State (Value (First_Child (C)));
          elsif Name (C) = "JB_submission_time" then
-            null;
+            if Value (First_Child (C))'Length > 11 and then
+              Value (First_Child (C)) (11) = 'T' then
+               Time_Buffer := Value (First_Child (C));
+               Time_Buffer (11) := ' ';
+               J.Submission_Time := GNAT.Calendar.Time_IO.Value (Time_Buffer);
+            else
+               J.Submission_Time := Ada.Calendar.Conversions.To_Ada_Time
+                 (Interfaces.C.long'Value (Value (First_Child (C))));
+            end if;
+
          elsif Name (C) = "JAT_start_time" then
             Time_Buffer := Value (First_Child (C));
             if Time_Buffer (11) /= 'T' then
