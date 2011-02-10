@@ -174,9 +174,9 @@ package body Viewer is
          procedure Put_Bunch (Bunch : Bunches.Bunch_Lists.Cursor) is
             B : Bunches.Bunch := Bunches.Bunch_Lists.Element (Bunch);
          begin
-            if B.Slots_Error > 0 then
+            if B.Error > 0 then
                Ada.Text_IO.Put ("<tr class=""job-error"">");
-            elsif B.Slots_Waiting = 0 then
+            elsif B.Waiting = 0 then
                Ada.Text_IO.Put ("<tr class=""job-held"">");
             else
                Ada.Text_IO.Put ("<tr>");
@@ -186,10 +186,10 @@ package body Viewer is
             HTML.Put_Cell (Data => B.Queue);
             HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
             HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));
-            HTML.Put_Cell (Data => B.Total_Slots'Img, Class => "right");
-            HTML.Put_Cell (Data => B.Slots_Waiting'Img, Class => "right");
-            HTML.Put_Cell (Data => B.Slots_On_Hold'Img, Class => "right");
-            HTML.Put_Cell (Data => B.Slots_Error'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Total'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Waiting'Img, Class => "right");
+            HTML.Put_Cell (Data => B.On_Hold'Img, Class => "right");
+            HTML.Put_Cell (Data => B.Error'Img, Class => "right");
             Ada.Text_IO.Put ("</tr>");
          end Put_Bunch;
 

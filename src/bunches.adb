@@ -14,7 +14,6 @@ package body Bunches is
       B : Bunch;
       J : Job;
       Cursor : Jobs.Job_Lists.Cursor;
-      Slots : Natural;
    begin
       Sorting_By_Resources.Sort (Job_List);
       Cursor := Job_List.First;
@@ -36,14 +35,13 @@ package body Bunches is
          end if;
 
          --  Update totals
-         Slots := Integer'Value (To_String (J.Slot_Number));
-         B.Total_Slots := B.Total_Slots + Slots;
+         B.Total := B.Total + 1;
          if On_Hold (J) then
-            B.Slots_On_Hold := B.Slots_On_Hold + Slots;
+            B.On_Hold := B.On_Hold + 1;
          elsif Has_Error (J) then
-            B.Slots_Error := B.Slots_Error + Slots;
+            B.Error := B.Error + 1;
          else
-            B.Slots_Waiting := B.Slots_Waiting + Slots;
+            B.Waiting := B.Waiting + 1;
          end if;
          --  Advance
          Cursor := Next (Cursor);
@@ -64,10 +62,10 @@ package body Bunches is
       B.Queue := J.Queue;
       B.Hard := J.Hard;
       B.Soft := J.Soft;
-      B.Total_Slots := 0;
-      B.Slots_On_Hold := 0;
-      B.Slots_Waiting := 0;
-      B.Slots_Error := 0;
+      B.Total := 0;
+      B.On_Hold := 0;
+      B.Waiting := 0;
+      B.Error := 0;
       return B;
    end New_Bunch;
 
