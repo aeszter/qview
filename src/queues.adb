@@ -61,6 +61,8 @@ package body Queues is
       Q.Runtime  := Runtime;
       if Cores = 0 then
          Q.Cores := Q.Total;
+      else
+         Q.Cores := Cores;
       end if;
 
       return Q;

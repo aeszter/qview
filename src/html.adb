@@ -277,6 +277,10 @@ package body HTML is
          "</a></li>");
    end Put_Navigation_Link;
 
+   -------------------
+   -- Put_Paragraph --
+   -------------------
+
    procedure Put_Paragraph (Label : String; Contents : String) is
    begin
       Ada.Text_IO.Put_Line ("<p>" & Label & ": " & Contents & "</p>");
@@ -294,6 +298,12 @@ package body HTML is
    begin
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
+
+   procedure Comment (Data : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<!-- " & Data & " -->");
+   end Comment;
+
 
    ---------
    -- Put --
