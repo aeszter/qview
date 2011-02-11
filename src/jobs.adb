@@ -195,8 +195,6 @@ package body Jobs is
             null; -- ignore
          elsif Name (C) = "slots" then
             J.Slot_Number := To_Unbounded_String (Value (First_Child (C)));
-         elsif Name (C) = "requested_pe" then
-            J.PE := To_Unbounded_String (Value (First_Child (C)));
          elsif Name (C) = "ftickets" then
             J.Functional_Tickets := Integer'Value (Value (First_Child (C)));
          elsif Name (C) = "stickets" then
