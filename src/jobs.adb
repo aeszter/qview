@@ -241,7 +241,7 @@ package body Jobs is
          elsif Name (C) = "JB_hard_queue_list" then
             Extract_Queue_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_ja_tasks" then
-            Extract_Errors (J, Child_Nodes (C));
+            Extract_Tasks (J, Child_Nodes (C));
          elsif Name (C) = "JB_pe_range" then
             Extract_PE_Range (J, Child_Nodes (C));
 
@@ -395,20 +395,24 @@ package body Jobs is
       end loop;
    end Extract_PE_Range;
 
-   procedure Extract_Errors (J : in out Job; Task_Nodes : Node_List) is
-      Children : Node_List;
-      Messages : Node_List;
-      N, M     : Node;
-      JA_Tasks : Node;
-      Sublist  : Node;
+   procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List) is
+      Children                                 : Node_List;
+      Messages                                 : Node_List;
+      Task_List_Nodes, PE_Task_Nodes, JG_Nodes : Node_List;
+      N, M                                     : Node;
+      JA_Tasks                                 : Node;
+      Sublist                                  : Node;
+      PE_Task_Entry, Element_Node, JG_Entry    : Node;
    begin
       for H in 1 .. Length (Task_Nodes) loop
          JA_Tasks := Item (Task_Nodes, H - 1);
          if Name (JA_Tasks) = "ja_tasks"
            or else Name (JA_Tasks) = "ulong_sublist" then
             Children := Child_Nodes (JA_Tasks);
+            HTML.Comment ("JA_Tasks """ & Name (JA_Tasks) & """" & Length (Children)'Img);
             for I in 1 .. Length (Children) loop
                N := Item (Children, I - 1);
+               HTML.Comment (Name (N));
                if Name (N) = "JAT_message_list" then
                   Sublist := Item (Child_Nodes (N), 1);
                   if Name (Sublist) /= "ulong_sublist" then
@@ -421,11 +425,45 @@ package body Jobs is
                         J.Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
                      end if;
                   end loop;
+               elsif Name (N) = "JAT_task_list" then
+                  HTML.Comment ("JAT_tast_list : ");
+                  Task_List_Nodes := Child_Nodes (N);
+                  HTML.Comment (Length (Task_List_Nodes)'Img);
+                  for K in 1 .. Length (Task_List_Nodes) loop
+                     HTML.Comment (Name (Item (Task_List_Nodes, K - 1)));
+                     if Name (Item (Task_List_Nodes, K - 1)) = "pe_tasks" or else
+                        Name (Item (Task_List_Nodes, K - 1)) = "element" then
+                        PE_Task_Nodes := Child_Nodes (Item (Task_List_Nodes, K - 1));
+                        HTML.Comment (Length (PE_Task_Nodes)'Img);
+                        for L in 1 .. Length (PE_Task_Nodes) loop
+                           PE_Task_Entry := Item (PE_Task_Nodes, L - 1);
+                           if Name (PE_Task_Entry) = "PET_granted_destin_identifier_list" then
+                              Element_Node := Item (Child_Nodes (PE_Task_Entry), 1);
+                              if Name (Element_Node) /= "element" then
+                                 raise Assumption_Error;
+                              end if;
+                              JG_Nodes := Child_Nodes (Element_Node);
+                              HTML.Comment (Length (JG_Nodes)'Img);
+                              for M in 1 .. Length (JG_Nodes) loop
+                                 JG_Entry := Item (JG_Nodes, M - 1);
+                                 HTML.Comment (Name (JG_Entry));
+                                 if Name (JG_Entry) = "JG_qname" then
+                                    HTML.Comment (Length (Child_Nodes (JG_Entry))'Img);
+                                    J.Task_List.Append (To_Unbounded_String (Value (First_Child (JG_Entry))));
+                                 end if;
+                              end loop;
+                           end if;
+                        end loop;
+                     end if;
+                  end loop;
                end if;
             end loop;
          end if;
       end loop;
-   end Extract_Errors;
+   exception
+      when E : others =>
+         HTML.Error ("Failed to parse job tasks: " & Exception_Message (E));
+   end Extract_Tasks;
 
    ------------------
    -- Sort_By      --

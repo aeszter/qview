@@ -53,15 +53,16 @@ package Jobs is
       Waiting_Contrib    : Natural;
 
       --  qstat -pri
-      Posix_Priority     : Natural;
+      Posix_Priority : Natural;
 
       --  resources used for Bunching jobs
-      Queue        : Unbounded_String;
-      Hard, Soft   : Resources.Resource_Lists.List;
+      Queue          : Unbounded_String;
+      Hard, Soft     : Resources.Resource_Lists.List;
 
-      Slot_List    : Slots.Slot_Lists.List;
-      Queue_List   : String_Lists.List;
-      Message_List : String_Lists.List;
+      Slot_List      : Slots.Slot_Lists.List;
+      Queue_List     : String_Lists.List;
+      Message_List   : String_Lists.List;
+      Task_List      : String_Lists.List;
 
 
    end record;
@@ -78,7 +79,7 @@ package Jobs is
    function New_Job (List : Node_List) return Job;
    procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
-   procedure Extract_Errors (J : in out Job; Task_Nodes : Node_List);
+   procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
 
    procedure Append_List (List : Node_List);

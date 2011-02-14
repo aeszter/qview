@@ -569,6 +569,7 @@ package body Viewer is
             Ada.Text_IO.Put ("<p>Reserve: ");
             HTML.Put (J.Reserve);
             Ada.Text_IO.Put_Line ("</p>");
+            HTML.Put_Clearer;
             HTML.End_Div (Class => "job_meta");
 
             HTML.Begin_Div (Class => "job_files");
@@ -584,6 +585,8 @@ package body Viewer is
             HTML.End_Div (Class => "job_files");
 
             HTML.Begin_Div (Class => "job_queue");
+            CGI.Put_HTML_Heading (Title => "Requested",
+                                  Level => 3);
             Q := J.Queue_List.First;
             loop
                exit when Q = String_Lists.No_Element;
@@ -599,6 +602,18 @@ package body Viewer is
                Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
                Next (Slot_Range);
             end loop;
+
+            CGI.Put_HTML_Heading (Title => "Assigned",
+                                  Level => 3);
+            Ada.Text_IO.Put ("<ul>");
+            Q := J.Task_List.First;
+            loop
+               exit when Q = String_Lists.No_Element;
+               Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
+               Next (Q);
+            end loop;
+            Ada.Text_IO.Put ("</ul>");
+            HTML.Put_Clearer;
             HTML.End_Div (Class => "job_queue");
 
             HTML.Begin_Div (Class => "job_resources");
