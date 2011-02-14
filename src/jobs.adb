@@ -152,6 +152,9 @@ package body Jobs is
    begin
       J.Merge_Std_Err := Undecided;
       J.Reserve := Undecided;
+      J.Mem := 0.0;
+      J.IO := 0.0;
+      J.CPU := 0.0;
       for Index in 0 .. Length (List) - 1 loop
          C := Item (List, Index);
          if Name (C) = "JB_job_number" then
