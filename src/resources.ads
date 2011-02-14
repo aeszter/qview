@@ -1,12 +1,15 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Utils; use Utils;
 
 package Resources is
 
    type Resource is record
-      Name : Unbounded_String;
-      Value : Unbounded_String;
-      Numerical : Integer;
+      Name           : Unbounded_String;
+      Value          : Unbounded_String;
+      Numerical      : Integer;
+      Boolean_Valued : Boolean;
+      State          : Tri_State;
    end record;
 
    type Network is (none, eth, ib);
@@ -18,7 +21,10 @@ package Resources is
    function To_String (Model : CPU_Model) return String;
    function Format_Duration (Secs : Natural) return String;
 
-   function New_Resource (Name : Unbounded_String; Value : Unbounded_String)
+   function New_Resource (Name  : Unbounded_String;
+                          Value : Unbounded_String;
+                          Boolean_Valued : Boolean;
+                          State : Tri_State)
      return Resource;
    function New_Resource (Name : String; Value : String)
      return Resource;

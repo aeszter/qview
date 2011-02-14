@@ -326,30 +326,46 @@ package body Jobs is
          return J;
    end New_Job;
 
-      procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List) is
+   procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List) is
          Resource_Tags      : Node_List;
          N, R               : Node;
          Res_Value          : Unbounded_String;
-         Res_Name           : Unbounded_String;
-      begin
-         for I in 1 .. Length (Resource_Nodes) loop
-            N := Item (Resource_Nodes, I - 1);
-            if Name (N) = "qstat_l_requests" then
-               Resource_Tags := Child_Nodes (N);
-               for J in 1 .. Length (Resource_Tags) loop
-                  R := Item (Resource_Tags, J - 1);
-                  if Name (R) = "CE_name" then
-                     Res_Name := To_Unbounded_String (Value (First_Child (R)));
-                  elsif Name (R) = "CE_stringval" then
-                     Res_Value := To_Unbounded_String (Value (First_Child (R)));
-                     --  maybe check for relop here?
-                  end if;
-               end loop;
+      Res_Name           : Unbounded_String;
+      Res_Bool           : Boolean;
+      Res_State : Tri_State;
+   begin
+      for I in 1 .. Length (Resource_Nodes) loop
+         N := Item (Resource_Nodes, I - 1);
+         if Name (N) = "qstat_l_requests" then
+            Res_Bool := False;
+            Res_State := Undecided;
+            Resource_Tags := Child_Nodes (N);
+            for J in 1 .. Length (Resource_Tags) loop
+               R := Item (Resource_Tags, J - 1);
+               if Name (R) = "CE_name" then
+                  Res_Name := To_Unbounded_String (Value (First_Child (R)));
+               elsif Name (R) = "CE_stringval" then
+                  Res_Value := To_Unbounded_String (Value (First_Child (R)));
+               elsif Name (R) = "CE_valtype" and then
+              Value (First_Child (R)) = "5" then
+                  Res_Bool := True;
+                  --  maybe check for relop here?
+               end if;
+            end loop;
+            if Res_Bool then
+               if Res_Value = "TRUE" then
+                  Res_State := True;
+               elsif Res_Value = "FALSE" then
+                  Res_State := False;
+               end if;
                J.Hard.Append (New_Resource (Name  => Res_Name,
-                                            Value => Res_Value));
+                                            Value => Res_Value,
+                                            Boolean_Valued => Res_Bool,
+                                            State => Res_State));
             end if;
-         end loop;
-      end Extract_Resource_List;
+         end if;
+      end loop;
+   end Extract_Resource_List;
 
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List) is
       QR_Nodes     : Node_List;

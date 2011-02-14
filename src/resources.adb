@@ -5,6 +5,8 @@ with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Real_Time;
 with Resources; use Resources.Resource_Lists;
 with Ada.Containers; use Ada.Containers;
+with Utils; use Utils;
+with Ada.Text_IO;
 
 package body Resources is
 
@@ -16,7 +18,10 @@ package body Resources is
    --  Returns: the newly created resource
    ------------------
 
-   function New_Resource (Name : Unbounded_String; Value : Unbounded_String)
+   function New_Resource (Name  : Unbounded_String;
+                          Value : Unbounded_String;
+                          Boolean_Valued : Boolean;
+                          State : Tri_State)
                           return Resource is
       R : Resource;
    begin
@@ -27,6 +32,8 @@ package body Resources is
       else
          R.Value := Value;
          R.Numerical := 0;
+         R.Boolean_Valued := Boolean_Valued;
+         R.State := State;
       end if;
       return R;
    end New_Resource;
@@ -41,9 +48,20 @@ package body Resources is
 
    function New_Resource (Name : String; Value : String)
                           return Resource is
+      Boolean_Valued : Boolean := False;
+      State : Tri_State := Undecided;
    begin
+      if Value = "TRUE" then
+         Boolean_Valued := True;
+         State := True;
+      elsif Value = "FALSE" then
+         Boolean_Valued := True;
+         State := False;
+      end if;
       return New_Resource (Name  => To_Unbounded_String (Name),
-                           Value => To_Unbounded_String (Value));
+                           Value => To_Unbounded_String (Value),
+                           Boolean_Valued => Boolean_Valued,
+                           State => State);
    end New_Resource;
 
    -----------------------
@@ -59,6 +77,10 @@ package body Resources is
       if Label = "h_rt" then
          HTML.Put_Paragraph (Label    => "<acronym title=""hard runtime limit"">h_rt</acronym>",
                              Contents => Value);
+      elsif R.Boolean_Valued then
+         Ada.Text_IO.Put ("<p>" & To_String (Label) & ": ");
+         HTML.Put (R.State);
+         Ada.Text_IO.Put ("</p>");
       else
          HTML.Put_Paragraph (Label, Value);
       end if;
