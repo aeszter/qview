@@ -305,31 +305,6 @@ package body Viewer is
          end Parse_One_Queue;
 
 
-         procedure Put_Partition (Partition : Partitions.Partition_Lists.Cursor) is
-            P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
-         begin
-            if P.Available > 0 then
-               Ada.Text_IO.Put ("<tr class=""available"">");
-            elsif P.Offline = P.Total then
-               Ada.Text_IO.Put ("<tr class=""offline"">");
-            else
-               Ada.Text_IO.Put ("<tr>");
-            end if;
-            HTML.Put_Cell (Data => P.Network'Img);
-            HTML.Put_Cell (Data => Model_As_String (P));
-            HTML.Put_Cell (Data => P.Cores'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Memory'Img & "G", Class => "right");
-            HTML.Put_Cell (Data => P.Runtime, Class => "right");
-            HTML.Put_Cell (Data => P.Total'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Used'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Reserved'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Available'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Suspended'Img, Class => "right");
-            HTML.Put_Cell (Data => P.Offline'Img, Class => "right");
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Partition;
-
-
          SGE_Out        : DOM.Core.Document;
          Nodes          : Node_List;
          Partition_List : Partitions.Partition_Lists.List;
@@ -361,6 +336,8 @@ package body Viewer is
 
          --  Output
          Ada.Text_IO.Put_Line ("<table><tr>");
+         HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
+                        & "Detail</acronym>", Tag => "th");
          HTML.Put_Cell (Data => "Interconnect", Tag => "th");
          HTML.Put_Cell (Data => "CPU<a href=""http://wiki.mpibpc.gwdg.de"
                            & "/grubmueller/index.php/CPU Families"">"
@@ -375,7 +352,7 @@ package body Viewer is
          HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Suspended</acronym>", Tag => "th");
          HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
          Ada.Text_IO.Put_Line ("</tr>");
-         Partition_List.Iterate (Put_Partition'Access);
+         Partition_List.Iterate (Partitions.Put'Access);
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
@@ -623,6 +600,33 @@ package body Viewer is
          HTML.End_Div (Class => "job_list");
       end View_Forecast;
 
+      procedure View_Hosts (What : String) is
+         SGE_Out     : DOM.Core.Document;
+         Host_Nodes  : Node_List;
+         Value_Nodes : Node_List;
+         N, V        : Node;
+      begin
+         if What /= "partition" then
+            raise Constraint_Error with "Expected ""partition"" but got """
+              & What & """";
+         end if;
+         SGE_Out := Setup_Parser (Command => "qhost", Selector => "");
+         Host_Nodes := Get_Elements_By_Tag_Name (SGE_Out, "host");
+         Ada.Text_IO.Put ("<ul>");
+         for I in 1 .. Length (Host_Nodes) loop
+            N := Item (Host_Nodes, I - 1);
+            Ada.Text_IO.Put ("<li>");
+            Ada.Text_IO.Put ("<ul>");
+            Value_Nodes := Child_Nodes (N);
+            for J in 1 .. Length (Value_Nodes) loop
+               V := Item (Value_Nodes, J);
+               Ada.Text_IO.Put_Line ("<li>" & Value (V) & "</li>");
+            end loop;
+            Ada.Text_IO.Put ("</ul>");
+         end loop;
+         Ada.Text_IO.Put ("</ul>");
+
+      end View_Hosts;
 
       N : Positive;
 
@@ -654,6 +658,9 @@ package body Viewer is
          if not HTML.Param_Is ("queue", "") then
             Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
+         elsif not HTML.Param_Is ("hosts", "") then
+            Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
+            View_Hosts (Sanitise (CGI.Value ("hosts")));
          elsif not HTML.Param_Is ("user", "") then
             Set_Params ("user=" & Sanitise (CGI.Value ("user")));
             View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
@@ -718,13 +725,14 @@ package body Viewer is
    -- Setup_Parser --
    ------------------
 
-   function Setup_Parser (Selector : String) return DOM.Core.Document is
+   function Setup_Parser (Command  : String := "qstat";
+                          Selector : String) return DOM.Core.Document is
       Reader      : DOM.Readers.Tree_Reader;
       SGE_Command : Pipe_Stream;
    begin
       SGE_Command.Set_Public_Id ("qstat");
       SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
-        & "/bin/lx26-amd64/qstat " & Selector & " -xml"
+        & "/bin/lx26-amd64/" & Command & " " & Selector & " -xml"
         & ASCII.NUL,
         Pipe_Commands.read_file);
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);

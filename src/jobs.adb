@@ -981,6 +981,7 @@ package body Jobs is
          end loop;
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
+
       procedure Put_Files is
       begin
             HTML.Begin_Div (Class => "job_files");

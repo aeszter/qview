@@ -1,6 +1,10 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Queues; use Queues.Queue_Lists;
 with Resources; use Resources;
+with Ada.Text_IO;
+with HTML; use HTML;
+with CGI;
+with Ada.Strings.Fixed;
 
 package body Partitions is
 
@@ -86,5 +90,37 @@ package body Partitions is
    begin
       return To_String (P.Model);
    end Model_As_String;
+
+   procedure Put (Partition : Partitions.Partition_Lists.Cursor) is
+      P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
+   begin
+      if P.Available > 0 then
+         Ada.Text_IO.Put ("<tr class=""available"">");
+      elsif P.Offline = P.Total then
+         Ada.Text_IO.Put ("<tr class=""offline"">");
+      else
+         Ada.Text_IO.Put ("<tr>");
+      end if;
+      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
+                     & "&net=" & P.Network'Img
+                     & "&model=" & Model_As_String (P)
+                     & "&cores=" & Ada.Strings.Fixed.Trim (P.Cores'Img, Ada.Strings.Left)
+                     & "&mem=" & Ada.Strings.Fixed.Trim (P.Memory'Img, Ada.Strings.Left)
+                     & "&rt=" & To_String (P.Runtime)
+                     & """><img src=""/icons/arrow_right.png"" /></a>");
+
+      HTML.Put_Cell (Data => P.Network'Img);
+      HTML.Put_Cell (Data => Model_As_String (P));
+      HTML.Put_Cell (Data => P.Cores'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Memory'Img & "G", Class => "right");
+      HTML.Put_Cell (Data => P.Runtime, Class => "right");
+      HTML.Put_Cell (Data => P.Total'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Used'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Reserved'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Available'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Suspended'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Offline'Img, Class => "right");
+      Ada.Text_IO.Put ("</tr>");
+   end Put;
 
 end Partitions;
