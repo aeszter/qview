@@ -325,11 +325,21 @@ package body HTML is
       Ada.Text_IO.Put_Line (" />");
    end Put;
 
+   -----------
+   -- Error --
+   -----------
+
    procedure Error (Message : String) is
    begin
       Ada.Text_IO.Put_Line
         ("<p class=""error""> Error: " & CGI.HTML_Encode (Message) & "</p>");
    end Error;
+
+   procedure Put_Heading (Title : String; Level : Positive) is
+   begin
+      CGI.Put_HTML_Heading (Title => Title,
+                            Level => Level);
+   end Put_Heading;
 
    procedure Put_Stylesheet (URL : String) is
    begin

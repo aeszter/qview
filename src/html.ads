@@ -40,6 +40,7 @@ package HTML is
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
    procedure Error (Message : String);
+   procedure Put_Heading (Title : String; Level : Positive);
 
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure Begin_Div (Class : String := ""; ID : String := "");
