@@ -4,9 +4,9 @@ with Ada.Text_IO;
 with Ada.Calendar;   use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
 with Ada.Calendar.Conversions;
-with Resources;      use Resources;
-with Slots;
-with Utils; use Utils; use Utils.String_Lists;
+with Resources;      use Resources; use Resources.Resource_Lists;
+with Slots;          use Slots; use Slots.Slot_Lists;
+with Utils;          use Utils; use Utils.String_Lists;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
@@ -34,6 +34,10 @@ package body Jobs is
       end case;
 
    end State_As_String;
+
+   --------------
+   -- To_State --
+   --------------
 
    function To_State (State : String) return Job_State is
    begin
@@ -263,6 +267,10 @@ package body Jobs is
             J.Group := To_Unbounded_String (Value (First_Child (C)));
          elsif Name (C) = "JB_merge_stderr" then
             J.Merge_Std_Err := To_Tri_State (Value (First_Child (C)));
+         elsif Name (C) = "JB_stdout_path_list" then
+            Extract_Paths (J.Std_Out_Paths, Child_Nodes (C));
+         elsif Name (C) = "JB_stderr_path_list" then
+            Extract_Paths (J.Std_Err_Paths, Child_Nodes (C));
          elsif Name (C) = "JB_script_file" then
             J.Script_File := To_Unbounded_String (Value (First_Child (C)));
          elsif Name (C) = "JB_cwd" then
@@ -326,6 +334,10 @@ package body Jobs is
          return J;
    end New_Job;
 
+   ---------------------------
+   -- Extract_Resource_List --
+   ---------------------------
+
    procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List) is
          Resource_Tags      : Node_List;
          N, R               : Node;
@@ -367,6 +379,10 @@ package body Jobs is
       end loop;
    end Extract_Resource_List;
 
+   ------------------------
+   -- Extract_Queue_List --
+   ------------------------
+
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List) is
       QR_Nodes     : Node_List;
       N, Q         : Node;
@@ -384,6 +400,10 @@ package body Jobs is
          end if;
       end loop;
    end Extract_Queue_List;
+
+   ----------------------
+   -- Extract_PE_Range --
+   ----------------------
 
    procedure Extract_PE_Range (J : in out Job; Children : Node_List) is
       Ranges                           : Node_List;
@@ -410,6 +430,10 @@ package body Jobs is
          end if;
       end loop;
    end Extract_PE_Range;
+
+   -------------------
+   -- Extract_Tasks --
+   -------------------
 
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List) is
       Children                                 : Node_List;
@@ -480,6 +504,30 @@ package body Jobs is
       when E : others =>
          HTML.Error ("Failed to parse job tasks: " & Exception_Message (E));
    end Extract_Tasks;
+
+   -------------------
+   -- Extract_Paths --
+   -------------------
+
+   procedure Extract_Paths (Path_List  : in out String_Lists.List;
+                            List_Nodes  : Node_List) is
+      List_Node, N : Node;
+      Path_Nodes : Node_List;
+   begin
+      for I in 1 .. Length (List_Nodes) loop
+         List_Node := Item (List_Nodes, I - 1);
+         if Name (List_Node) = "path_list" then
+            Path_Nodes := Child_Nodes (List_Node);
+            for I in 1 .. Length (Path_Nodes) loop
+               N := Item (Path_Nodes, I - 1);
+               if Name (N) = "PN_path" then
+                  Path_List.Append (To_Unbounded_String (Value (First_Child (N))));
+               end if;
+            end loop;
+         end if;
+      end loop;
+   end Extract_Paths;
+
 
    ------------------
    -- Sort_By      --
@@ -844,5 +892,143 @@ package body Jobs is
          return False;
       end if;
    end Same;
+
+   procedure Put  (Cursor : Job_Lists.Cursor) is
+      Res        : Resource_Lists.Cursor;
+      Slot_Range : Slot_Lists.Cursor;
+      Q, Msg     : String_Lists.Cursor;
+      J          : Job := Job_Lists.Element (Cursor);
+
+      procedure Put_Name is
+      begin
+         HTML.Begin_Div (Class => "job_name");
+         HTML.Put_Paragraph ("Name", J.Name);
+         Msg := J.Message_List.First;
+         loop
+            exit when Msg = String_Lists.No_Element;
+            Ada.Text_IO.Put_Line ("<p class=""message"">"
+                               & To_String (String_Lists.Element (Msg))
+                               & "</p>");
+            Msg := Next (Msg);
+         end loop;
+         HTML.End_Div (Class => "job_name");
+      end Put_Name;
+
+      procedure Put_Meta is
+      begin
+         HTML.Begin_Div (Class => "job_meta");
+         HTML.Put_Paragraph ("ID", J.Number'Img);
+         HTML.Put_Paragraph ("Owner", J.Owner);
+         HTML.Put_Paragraph ("Group", J.Group);
+         HTML.Put_Paragraph ("Account", J.Account);
+         HTML.Put_Paragraph ("Array", J.Job_Array);
+         Ada.Text_IO.Put ("<p>Reserve: ");
+         HTML.Put (J.Reserve);
+         Ada.Text_IO.Put_Line ("</p>");
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "job_meta");
+      end Put_Meta;
+
+      procedure Put_Queues is
+      begin
+         HTML.Begin_Div (Class => "job_queue");
+         HTML.Put_Heading (Title => "Requested",
+                            Level => 3);
+         Q := J.Queue_List.First;
+         loop
+            exit when Q = String_Lists.No_Element;
+            HTML.Put_Paragraph (Label    => "Queue",
+                             Contents => String_Lists.Element (Q));
+            Next (Q);
+         end loop;
+
+         HTML.Put_Paragraph ("PE", J.PE);
+         Slot_Range := J.Slot_List.First;
+         loop
+            exit when Slot_Range = Slots.Slot_Lists.No_Element;
+            Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
+            Next (Slot_Range);
+         end loop;
+
+         HTML.Put_Heading (Title => "Assigned",
+                            Level => 3);
+         Ada.Text_IO.Put ("<ul>");
+         Q := J.Task_List.First;
+         loop
+            exit when Q = String_Lists.No_Element;
+            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
+            Next (Q);
+         end loop;
+         Ada.Text_IO.Put ("</ul>");
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "job_queue");
+      end Put_Queues;
+
+      procedure Put_Resources is
+      begin
+         HTML.Begin_Div (Class => "job_resources");
+         Res := J.Hard.First;
+         loop
+            exit when Res = Resources.Resource_Lists.No_Element;
+            Resources.Put (Resources.Resource_Lists.Element (Res));
+            Res := Next (Res);
+         end loop;
+         Res := J.Soft.First;
+         loop
+            exit when Res = Resources.Resource_Lists.No_Element;
+            Resources.Put (Resources.Resource_Lists.Element (Res));
+            Res := Next (Res);
+         end loop;
+         HTML.End_Div (Class => "job_resources");
+      end Put_Resources;
+      procedure Put_Files is
+      begin
+            HTML.Begin_Div (Class => "job_files");
+         HTML.Put_Paragraph ("Directory", J.Directory);
+         HTML.Put_Paragraph ("Script", J.Script_File);
+         HTML.Put_Paragraph ("Executable", J.Exec_File);
+         Ada.Text_IO.Put ("<p>Merge StdErr: ");
+         HTML.Put (J.Merge_Std_Err);
+         Ada.Text_IO.Put_Line ("</p>");
+         HTML.Put_Heading (Title => "StdOut",
+                        Level => 3);
+         Q := J.Std_Out_Paths.First;
+         Ada.Text_IO.Put ("<ul>");
+         loop
+            exit when Q = String_Lists.No_Element;
+            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
+            Next (Q);
+         end loop;
+         Ada.Text_IO.Put ("</ul>");
+
+         HTML.Put_Heading (Title => "StdErr",
+                        Level => 3);
+         Q := J.Std_Err_Paths.First;
+         Ada.Text_IO.Put ("<ul>");
+         loop
+            exit when Q = String_Lists.No_Element;
+            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
+            Next (Q);
+         end loop;
+         Ada.Text_IO.Put ("</ul>");
+         Ada.Text_IO.Put ("<p>Notify: ");
+         HTML.Put (J.Notify);
+         Ada.Text_IO.Put_Line ("</p>");
+         HTML.End_Div (Class => "job_files");
+      end Put_Files;
+
+   begin
+      HTML.Begin_Div (Class => "job_info");
+
+      Put_Name;
+      Put_Meta;
+      Put_Queues;
+      Put_Resources;
+      Put_Files;
+
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "job_info");
+      HTML.Put_Clearer;
+   end Put;
 
 end Jobs;

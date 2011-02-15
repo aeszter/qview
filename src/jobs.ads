@@ -48,21 +48,24 @@ package Jobs is
       Functional_Tickets : Natural;
 
       --  qstat -urg
-      Urgency            : Fixed;
-      Resource_Contrib   : Natural;
-      Waiting_Contrib    : Natural;
+      Urgency          : Fixed;
+      Resource_Contrib : Natural;
+      Waiting_Contrib  : Natural;
 
       --  qstat -pri
-      Posix_Priority : Natural;
+      Posix_Priority   : Natural;
 
       --  resources used for Bunching jobs
-      Queue          : Unbounded_String;
-      Hard, Soft     : Resources.Resource_Lists.List;
+      Queue            : Unbounded_String;
+      Hard, Soft       : Resources.Resource_Lists.List;
 
-      Slot_List      : Slots.Slot_Lists.List;
-      Queue_List     : String_Lists.List;
-      Message_List   : String_Lists.List;
-      Task_List      : String_Lists.List;
+      Slot_List        : Slots.Slot_Lists.List;
+      Queue_List       : String_Lists.List;
+      Message_List     : String_Lists.List;
+      Task_List        : String_Lists.List;
+
+      Std_Out_Paths    : String_Lists.List;
+      Std_Err_Paths    : String_Lists.List;
 
 
    end record;
@@ -81,6 +84,8 @@ package Jobs is
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
+   procedure Extract_Paths (Path_List  : in out String_Lists.List;
+                            List_Nodes  : Node_List);
 
    procedure Append_List (List : Node_List);
    procedure Sort_By (Field : String; Direction : String);
@@ -113,6 +118,8 @@ package Jobs is
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
        ("<" => Precedes_By_Name);
+
+   procedure Put (Cursor : Job_Lists.Cursor);
 
    package Sorting_By_Number is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Number);

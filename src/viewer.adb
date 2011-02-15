@@ -538,105 +538,6 @@ package body Viewer is
       procedure View_Job (Job_ID : String) is
          SGE_Out       : DOM.Core.Document;
          List          : Node_List;
-
-
-         procedure Output_One_Job  (Cursor : Job_Lists.Cursor) is
-            Res        : Resource_Lists.Cursor;
-            Slot_Range : Slot_Lists.Cursor;
-            Q, Msg     : String_Lists.Cursor;
-
-            J : Job := Job_Lists.Element (Cursor);
-         begin
-            HTML.Begin_Div (Class => "job_info");
-            HTML.Begin_Div (Class => "job_name");
-            HTML.Put_Paragraph ("Name", J.Name);
-            Msg := J.Message_List.First;
-            loop
-               exit when Msg = String_Lists.No_Element;
-               Ada.Text_IO.Put_Line ("<p class=""message"">"
-                                     & To_String (String_Lists.Element (Msg))
-                                     & "</p>");
-               Msg := Next (Msg);
-            end loop;
-            HTML.End_Div;
-
-            HTML.Begin_Div (Class => "job_meta");
-            HTML.Put_Paragraph ("ID", J.Number'Img);
-            HTML.Put_Paragraph ("Owner", J.Owner);
-            HTML.Put_Paragraph ("Group", J.Group);
-            HTML.Put_Paragraph ("Account", J.Account);
-            HTML.Put_Paragraph ("Array", J.Job_Array);
-            Ada.Text_IO.Put ("<p>Reserve: ");
-            HTML.Put (J.Reserve);
-            Ada.Text_IO.Put_Line ("</p>");
-            HTML.Put_Clearer;
-            HTML.End_Div (Class => "job_meta");
-
-            HTML.Begin_Div (Class => "job_files");
-            HTML.Put_Paragraph ("Directory", J.Directory);
-            HTML.Put_Paragraph ("Script", J.Script_File);
-            HTML.Put_Paragraph ("Executable", J.Exec_File);
-            Ada.Text_IO.Put ("<p>Merge StdErr: ");
-            HTML.Put (J.Merge_Std_Err);
-            Ada.Text_IO.Put_Line ("</p>");
-            Ada.Text_IO.Put ("<p>Notify: ");
-            HTML.Put (J.Notify);
-            Ada.Text_IO.Put_Line ("</p>");
-            HTML.End_Div (Class => "job_files");
-
-            HTML.Begin_Div (Class => "job_queue");
-            CGI.Put_HTML_Heading (Title => "Requested",
-                                  Level => 3);
-            Q := J.Queue_List.First;
-            loop
-               exit when Q = String_Lists.No_Element;
-               HTML.Put_Paragraph (Label    => "Queue",
-                                   Contents => String_Lists.Element (Q));
-               Next (Q);
-            end loop;
-
-            HTML.Put_Paragraph ("PE", J.PE);
-            Slot_Range := J.Slot_List.First;
-            loop
-               exit when Slot_Range = Slots.Slot_Lists.No_Element;
-               Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
-               Next (Slot_Range);
-            end loop;
-
-            CGI.Put_HTML_Heading (Title => "Assigned",
-                                  Level => 3);
-            Ada.Text_IO.Put ("<ul>");
-            Q := J.Task_List.First;
-            loop
-               exit when Q = String_Lists.No_Element;
-               Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
-               Next (Q);
-            end loop;
-            Ada.Text_IO.Put ("</ul>");
-            HTML.Put_Clearer;
-            HTML.End_Div (Class => "job_queue");
-
-            HTML.Begin_Div (Class => "job_resources");
-            Res := J.Hard.First;
-            loop
-               exit when Res = Resources.Resource_Lists.No_Element;
-               Resources.Put (Resources.Resource_Lists.Element (Res));
-               Res := Next (Res);
-            end loop;
-            Res := J.Soft.First;
-            loop
-               exit when Res = Resources.Resource_Lists.No_Element;
-               Resources.Put (Resources.Resource_Lists.Element (Res));
-               Res := Next (Res);
-            end loop;
-            HTML.End_Div (Class => "job_resources");
-
-            HTML.Put_Clearer;
-            HTML.End_Div (Class => "job_info");
-            HTML.Put_Clearer;
-         end Output_One_Job;
-
-
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
@@ -650,7 +551,7 @@ package body Viewer is
          end if;
 
          Append_List (List);
-         Job_List.Iterate (Output_One_Job'Access);
+         Job_List.Iterate (Jobs.Put'Access);
 
       exception
          when Sax.Readers.XML_Fatal_Error =>
