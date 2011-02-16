@@ -597,9 +597,12 @@ package body Viewer is
             HTML.Put_Duration_Cell (Remaining_Time (J));
             HTML.Put_Time_Cell (End_Time (J));
             HTML.Put_Img_Cell (State_As_String (J));
+            Ada.Text_IO.Put ("<tr>");
          exception
-            when E : others => HTML.Error (Message => "Error while outputting job: "
+            when E :
+               others => HTML.Error (Message => "Error while outputting job: "
                                            & Exception_Message (E));
+               Ada.Text_IO.Put ("<tr>");
          end Put_Job_List_Entry;
 
       begin

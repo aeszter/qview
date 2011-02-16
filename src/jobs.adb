@@ -112,8 +112,15 @@ package body Jobs is
    function End_Time (J : Job) return Time is
    begin
       return J.Submission_Time
-        + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Resources.Get_Numerical (J.Hard, "h_rt")));
+        + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
+          Resources.Get_Numerical (J.Hard, "h_rt")));
+   exception
+         when Resource_Error => return Ada.Calendar.Clock;
    end End_Time;
+
+   --------------------
+   -- Remaining_Time --
+   --------------------
 
    function Remaining_Time (J : Job) return Duration is
    begin
