@@ -263,11 +263,11 @@ package body Resources is
    begin
       Cursor := First (List);
       loop
+         exit when Cursor = No_Element;
          Res := Element (Cursor);
          if Res.Name = Name then
             return Res.Numerical;
          end if;
-         exit when Cursor = Last (List);
          Next (Cursor);
       end loop;
       raise Resource_Error with "Resource """ & To_String (Name) & """ not found";

@@ -112,8 +112,15 @@ package body Jobs is
    function End_Time (J : Job) return Time is
    begin
       return J.Submission_Time
-        + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (Resources.Get_Numerical (J.Hard, "h_rt")));
+        + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
+          Resources.Get_Numerical (J.Hard, "h_rt")));
+   exception
+         when Resource_Error => return Ada.Calendar.Clock;
    end End_Time;
+
+   --------------------
+   -- Remaining_Time --
+   --------------------
 
    function Remaining_Time (J : Job) return Duration is
    begin
@@ -371,10 +378,10 @@ package body Jobs is
                   Res_State := False;
                end if;
             end if;
-               J.Hard.Append (New_Resource (Name  => Res_Name,
-                                            Value => Res_Value,
-                                            Boolean_Valued => Res_Bool,
-                                            State => Res_State));
+            J.Hard.Append (New_Resource (Name           => Res_Name,
+                                         Value          => Res_Value,
+                                         Boolean_Valued => Res_Bool,
+                                         State          => Res_State));
          end if;
       end loop;
    end Extract_Resource_List;

@@ -577,9 +577,9 @@ package body Viewer is
             HTML.Put_Img_Cell (State_As_String (J));
             Ada.Text_IO.Put ("<tr>");
          exception
-            when E : others =>
-               HTML.Error (Message => "Error while outputting job: "
-                                      & Exception_Message (E));
+            when E :
+               others => HTML.Error (Message => "Error while outputting job: "
+                                           & Exception_Message (E));
                Ada.Text_IO.Put ("<tr>");
          end Put_Job_List_Entry;
 
