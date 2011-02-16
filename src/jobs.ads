@@ -87,7 +87,7 @@ package Jobs is
    procedure Extract_Paths (Path_List  : in out String_Lists.List;
                             List_Nodes  : Node_List);
 
-   procedure Append_List (List : Node_List);
+   procedure Append_List (Nodes : Node_List);
    procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;
    function Precedes_By_Number (Left, Right : Job) return Boolean;
@@ -161,5 +161,5 @@ package Jobs is
 
 
    Max_Name_Length : constant Positive := 20;
-   Job_List : Job_Lists.List;
+   List : Job_Lists.List;
 end Jobs;

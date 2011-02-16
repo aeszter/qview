@@ -125,11 +125,11 @@ package body Jobs is
    -- Append_List --
    -----------------
 
-   procedure Append_List (List : Node_List) is
+   procedure Append_List (Nodes : Node_List) is
       N : Node;
    begin
-      for Index in 1 .. Length (List) loop
-         N := Item (List, Index - 1);
+      for Index in 1 .. Length (Nodes) loop
+         N := Item (Nodes, Index - 1);
          if Name (N) = "djob_info" then
             N := Item (Child_Nodes (N), 1);
             if Name (N) /= "element" then
@@ -137,7 +137,7 @@ package body Jobs is
                  & Name (N) & """";
             end if;
          end if;
-         Job_List.Append (New_Job (Child_Nodes (N)));
+         List.Append (New_Job (Child_Nodes (N)));
       end loop;
    exception
       when E : others
@@ -359,7 +359,7 @@ package body Jobs is
                elsif Name (R) = "CE_stringval" then
                   Res_Value := To_Unbounded_String (Value (First_Child (R)));
                elsif Name (R) = "CE_valtype" and then
-              Value (First_Child (R)) = "5" then
+                  Value (First_Child (R)) = "5" then
                   Res_Bool := True;
                   --  maybe check for relop here?
                end if;
@@ -370,11 +370,11 @@ package body Jobs is
                elsif Res_Value = "FALSE" then
                   Res_State := False;
                end if;
+            end if;
                J.Hard.Append (New_Resource (Name  => Res_Name,
                                             Value => Res_Value,
                                             Boolean_Valued => Res_Bool,
                                             State => Res_State));
-            end if;
          end if;
       end loop;
    end Extract_Resource_List;
@@ -538,49 +538,49 @@ package body Jobs is
    procedure Sort_By (Field : String; Direction : String) is
    begin
       if Field = "Number" then
-         Sorting_By_Number.Sort (Job_List);
+         Sorting_By_Number.Sort (List);
       elsif Field = "Name" then
-         Sorting_By_Name.Sort (Job_List);
+         Sorting_By_Name.Sort (List);
       elsif Field = "Owner" then
-         Sorting_By_Owner.Sort (Job_List);
+         Sorting_By_Owner.Sort (List);
       elsif Field = "Priority" then
-         Sorting_By_Priority.Sort (Job_List);
+         Sorting_By_Priority.Sort (List);
       elsif Field = "Submitted" then
-         Sorting_By_Submission_Time.Sort (Job_List);
+         Sorting_By_Submission_Time.Sort (List);
       elsif Field = "Slots" then
-         Sorting_By_Slots.Sort (Job_List);
+         Sorting_By_Slots.Sort (List);
       elsif Field = "State" then
-         Sorting_By_State.Sort (Job_List);
+         Sorting_By_State.Sort (List);
       elsif Field = "CPU" then
-         Sorting_By_CPU_Used.Sort (Job_List);
+         Sorting_By_CPU_Used.Sort (List);
       elsif Field = "Memory" then
-         Sorting_By_Memory_Used.Sort (Job_List);
+         Sorting_By_Memory_Used.Sort (List);
       elsif Field = "IO" then
-         Sorting_By_IO_Used.Sort (Job_List);
+         Sorting_By_IO_Used.Sort (List);
       elsif Field = "Priority" then
-         Sorting_By_Priority.Sort (Job_List);
+         Sorting_By_Priority.Sort (List);
       elsif Field = "O" then
-         Sorting_By_Override.Sort (Job_List);
+         Sorting_By_Override.Sort (List);
       elsif Field = "S" then
-         Sorting_By_Share.Sort (Job_List);
+         Sorting_By_Share.Sort (List);
       elsif Field = "F" then
-         Sorting_By_Functional.Sort (Job_List);
+         Sorting_By_Functional.Sort (List);
       elsif Field = "Urgency" then
-         Sorting_By_Urgency.Sort (Job_List);
+         Sorting_By_Urgency.Sort (List);
       elsif Field = "Resource" then
-         Sorting_By_Resource_Contrib.Sort (Job_List);
+         Sorting_By_Resource_Contrib.Sort (List);
       elsif Field = "Waiting" then
-         Sorting_By_Waiting_Contrib.Sort (Job_List);
+         Sorting_By_Waiting_Contrib.Sort (List);
       elsif Field = "Custom" then
-         Sorting_By_Posix_Priority.Sort (Job_List);
+         Sorting_By_Posix_Priority.Sort (List);
       elsif Field = "Ends In" or else
         Field = "Ends At" then
-         Sorting_By_End.Sort (Job_List);
+         Sorting_By_End.Sort (List);
       else
          HTML.Error ("Sorting by " & Field & " unimplemented");
       end if;
       if Direction = "dec" then
-         Job_List.Reverse_Elements;
+         List.Reverse_Elements;
       end if;
    end Sort_By;
 
@@ -984,7 +984,7 @@ package body Jobs is
 
       procedure Put_Files is
       begin
-            HTML.Begin_Div (Class => "job_files");
+         HTML.Begin_Div (Class => "job_files");
          HTML.Put_Paragraph ("Directory", J.Directory);
          HTML.Put_Paragraph ("Script", J.Script_File);
          HTML.Put_Paragraph ("Executable", J.Exec_File);

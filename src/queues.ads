@@ -5,7 +5,7 @@ with Resources;
 package Queues is
    type Gigs is delta 0.1 digits 5;
 
-   type Queue is record
+   type Queue is tagged record
       Used, Reserved, Total : Natural;
       Suspended, Offline    : Boolean;
       Network               : Resources.Network;

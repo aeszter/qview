@@ -16,6 +16,7 @@ with Jobs; use Jobs; use Jobs.Job_Lists;
 with Bunches; use Bunches; use Bunches.Bunch_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
+with Hosts; use Hosts; use Hosts.Host_Lists;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
 with Ada.Strings.Fixed;
@@ -218,7 +219,7 @@ package body Viewer is
          Jobs.Append_List (Nodes);
 
          --  Detect different bunches
-         Bunches.Build_List (Job_List, Bunch_List);
+         Bunches.Build_List (Jobs.List, Bunch_List);
 
          --  Output
          Ada.Text_IO.Put_Line ("<table><tr>");
@@ -318,7 +319,7 @@ package body Viewer is
                                Level => 2);
          end if;
 
-         SGE_Out := Setup_Parser (Selector => "-F h_rt,eth,ib,mem_total,num_proc,cm");
+         SGE_Out := Setup_Parser (Selector => Resource_Selector);
 
          --  Fetch Queues
          Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
@@ -479,7 +480,7 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
-         Job_List.Iterate (Put_Job_List_Entry'Access);
+         Jobs.List.Iterate (Put_Job_List_Entry'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -527,8 +528,8 @@ package body Viewer is
             return;
          end if;
 
-         Append_List (List);
-         Job_List.Iterate (Jobs.Put'Access);
+         Jobs.Append_List (List);
+         Jobs.List.Iterate (Jobs.Put'Access);
 
       exception
          when Sax.Readers.XML_Fatal_Error =>
@@ -574,9 +575,12 @@ package body Viewer is
             HTML.Put_Duration_Cell (Remaining_Time (J));
             HTML.Put_Time_Cell (End_Time (J));
             HTML.Put_Img_Cell (State_As_String (J));
+            Ada.Text_IO.Put ("<tr>");
          exception
-            when E : others => HTML.Error (Message => "Error while outputting job: "
-                                           & Exception_Message (E));
+            when E : others =>
+               HTML.Error (Message => "Error while outputting job: "
+                                      & Exception_Message (E));
+               Ada.Text_IO.Put ("<tr>");
          end Put_Job_List_Entry;
 
       begin
@@ -593,37 +597,40 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
-         Job_List.Iterate (Put_Job_List_Entry'Access);
+         Jobs.List.Iterate (Put_Job_List_Entry'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "job_list");
       end View_Forecast;
 
+      ----------------
+      -- View_Hosts --
+      ----------------
+
       procedure View_Hosts (What : String) is
          SGE_Out     : DOM.Core.Document;
-         Host_Nodes  : Node_List;
-         Value_Nodes : Node_List;
-         N, V        : Node;
+
+         procedure Put_Table_Header is
+         begin
+            Ada.Text_IO.Put ("<ul>");
+         end Put_Table_Header;
+
       begin
          if What /= "partition" then
             raise Constraint_Error with "Expected ""partition"" but got """
               & What & """";
          end if;
-         SGE_Out := Setup_Parser (Command => "qhost", Selector => "");
-         Host_Nodes := Get_Elements_By_Tag_Name (SGE_Out, "host");
-         Ada.Text_IO.Put ("<ul>");
-         for I in 1 .. Length (Host_Nodes) loop
-            N := Item (Host_Nodes, I - 1);
-            Ada.Text_IO.Put ("<li>");
-            Ada.Text_IO.Put ("<ul>");
-            Value_Nodes := Child_Nodes (N);
-            for J in 1 .. Length (Value_Nodes) loop
-               V := Item (Value_Nodes, J);
-               Ada.Text_IO.Put_Line ("<li>" & Value (V) & "</li>");
-            end loop;
-            Ada.Text_IO.Put ("</ul>");
-         end loop;
+         SGE_Out := Setup_Parser (Command => "qhost", Selector => Resource_Selector);
+         Put_Table_Header;
+
+         Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+         Host_List.Iterate (Hosts.Put'Access);
+
+         --  Table Footer
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "host_list");
+
          Ada.Text_IO.Put ("</ul>");
 
       end View_Hosts;
