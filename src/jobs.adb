@@ -370,11 +370,11 @@ package body Jobs is
                elsif Res_Value = "FALSE" then
                   Res_State := False;
                end if;
-               J.Hard.Append (New_Resource (Name  => Res_Name,
-                                            Value => Res_Value,
-                                            Boolean_Valued => Res_Bool,
-                                            State => Res_State));
             end if;
+            J.Hard.Append (New_Resource (Name           => Res_Name,
+                                         Value          => Res_Value,
+                                         Boolean_Valued => Res_Bool,
+                                         State          => Res_State));
          end if;
       end loop;
    end Extract_Resource_List;
