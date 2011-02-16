@@ -613,7 +613,8 @@ package body Viewer is
 
          procedure Put_Table_Header is
          begin
-            Ada.Text_IO.Put ("<ul>");
+            HTML.Begin_Div (Class => "host_list");
+            Ada.Text_IO.Put_Line ("<table>");
          end Put_Table_Header;
 
       begin
@@ -630,9 +631,6 @@ package body Viewer is
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "host_list");
-
-         Ada.Text_IO.Put ("</ul>");
-
       end View_Hosts;
 
       N : Positive;
