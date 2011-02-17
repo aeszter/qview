@@ -1,4 +1,3 @@
-with Ada.Text_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Resources; use Resources;
 
@@ -43,15 +42,7 @@ package body Queues is
       end if;
 
       if Memory /= "" then
-         if Memory (Memory'Last) = 'G' then
-            Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
-         elsif Memory (Memory'Last) = 'M' then
-            Q.Memory := Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
-         else
-            Ada.Text_IO.Put_Line ("<i>unknown memory encountered: "
-                               & Memory & "</i>");
-            Q.Memory := 0.0;
-         end if;
+         Q.Memory := To_Gigs (Memory);
       else
          Q.Memory := 0.0;
       end if;
@@ -67,6 +58,22 @@ package body Queues is
 
       return Q;
    end New_Queue;
+
+   -------------
+   -- To_Gigs --
+   -------------
+
+   function To_Gigs (Memory : String) return Gigs is
+   begin
+      if Memory (Memory'Last) = 'G' then
+         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
+      elsif Memory (Memory'Last) = 'M' then
+         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
+      else
+         raise Constraint_Error with "unknown memory encountered: " & Memory;
+      end if;
+   end To_Gigs;
+
 
    ---------------------------
    -- Precedes_By_Resources --

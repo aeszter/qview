@@ -43,11 +43,13 @@ package body Hosts is
       A           : Attr;
       H           : Host;
       Job_ID      : Positive;
-      type Fixed is digits 4;
+      type Fixed is delta 0.1 digits 4;
 
    begin
       for I in 1 .. Length (Host_Nodes) loop
          N := Item (Host_Nodes, I - 1);
+         H.Properties.Network := none;
+         H.Properties.Model := none;
          A := Get_Named_Item (Attributes (N), "name");
          H.Name := To_Unbounded_String (Value (A));
          Value_Nodes := Child_Nodes (N);
@@ -67,6 +69,10 @@ package body Hosts is
                   if Fixed'Value (Value (First_Child (V))) = 1.0 then
                      H.Properties.Network := ib;
                   end if;
+               elsif Value (A) = "cpu_model" then
+                  H.Properties.Model := To_Model (Value (First_Child (V)));
+               elsif Value (A) = "mem_total" then
+                  H.Properties.Memory := To_Gigs (Value (First_Child (V)));
                else
                   HTML.Put_Paragraph (Value (A), Value (First_Child (V)));
                end if;
@@ -96,8 +102,11 @@ package body Hosts is
       H : Host := Host_Lists.Element (Cursor);
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => H.Properties.Cores'Img);
+      HTML.Put_Cell (Data => H.Name);
       HTML.Put_Cell (Data => H.Properties.Network'Img);
+      HTML.Put_Cell (Data => H.Properties.Model'Img);
+      HTML.Put_Cell (Data => H.Properties.Cores'Img, Class => "right");
+      HTML.Put_Cell (Data => H.Properties.Memory'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
    exception
       when E : others =>

@@ -18,6 +18,7 @@ package Resources is
    Resource_Error : exception;
 
    function To_Model (S : Unbounded_String) return CPU_Model;
+   function To_Model (S : String) return CPU_Model;
    function To_String (Model : CPU_Model) return String;
    function Format_Duration (Secs : Natural) return String;
 

@@ -199,7 +199,7 @@ package body Resources is
    -- To_Model --
    --------------
 
-   function To_Model (S : Unbounded_String) return CPU_Model is
+   function To_Model (S : String) return CPU_Model is
    begin
       if S = "" then
          return none;
@@ -216,6 +216,11 @@ package body Resources is
       else
          raise Constraint_Error;
       end if;
+   end To_Model;
+
+   function To_Model (S : Unbounded_String) return CPU_Model is
+   begin
+      return To_Model (To_String (S));
    end To_Model;
 
    function To_String (Model : CPU_Model) return String is

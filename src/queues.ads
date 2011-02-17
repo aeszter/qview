@@ -5,7 +5,7 @@ with Resources;
 package Queues is
    type Gigs is delta 0.1 digits 5;
 
-   type Queue is tagged record
+   type Queue is record
       Used, Reserved, Total : Natural;
       Suspended, Offline    : Boolean;
       Network               : Resources.Network;
@@ -23,6 +23,8 @@ package Queues is
       Model                 : Resources.CPU_Model;
       Runtime               : Unbounded_String)
                        return Queue;
+
+   function To_Gigs (Memory : String) return Gigs;
 
    function Precedes_By_Resources (Left, Right : Queue) return Boolean;
 

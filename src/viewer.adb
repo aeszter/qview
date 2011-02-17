@@ -613,8 +613,19 @@ package body Viewer is
 
          procedure Put_Table_Header is
          begin
+            HTML.Put_Heading (Title => "Hosts",
+                              Level => 2);
             HTML.Begin_Div (Class => "host_list");
-            Ada.Text_IO.Put_Line ("<table>");
+            Ada.Text_IO.Put_Line ("<table><tr>");
+            HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Interconnect", Params => My_Params);
+            HTML.Put_Cell (Data     => "CPU<a href=""http://wiki.mpibpc.gwdg.de"
+                           & "/grubmueller/index.php/CPU Families"">"
+                           & "<img src=""/icons/help.png"" /></a>",
+                          Tag => "th");
+            HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
+            Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
       begin
