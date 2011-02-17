@@ -39,11 +39,11 @@ package body Hosts is
 
    procedure Append_List (Host_Nodes : Node_List) is
       Value_Nodes : Node_List;
-      N, V        : Node;
+      N, V, C     : Node;
       A           : Attr;
       H           : Host;
       Job_ID      : Positive;
-      type Fixed is delta 0.1 digits 4;
+      Job_Nodes : Node_List;
 
    begin
       for I in 1 .. Length (Host_Nodes) loop
@@ -76,12 +76,41 @@ package body Hosts is
                else
                   HTML.Put_Paragraph (Value (A), Value (First_Child (V)));
                end if;
-            elsif Name (V) = "jobvalue" then
+            elsif Name (V) = "hostvalue" then
                A := Get_Named_Item (Attributes (V), "name");
-               if Value (A) = "pe_master" then
-                  Job_ID := Integer'Value (Value (Get_Named_Item (Attributes (V), "jobid")));
-                  H.Jobs.Append (New_Job (Job_ID, Value (First_Child (V))));
+               if Value (A) = "load_avg" then
+                  begin
+                     H.Load := Fixed'Value (Value (First_Child (V)));
+                     exception when Constraint_Error => H.Load := 0.0;
+                  end;
+               elsif Value (A) = "mem_used" then
+                  begin
+                     H.Mem_Used := To_Gigs (Value (First_Child (V)));
+                     exception when Constraint_Error => H.Mem_Used := 0.0;
+                  end;
+               elsif Value (A) = "swap_total" then
+                  begin
+                     H.Swap_Total := To_Gigs (Value (First_Child (V)));
+                     exception when Constraint_Error => H.Swap_Total := 0.0;
+                  end;
+               elsif Value (A) = "swap_used" then
+                  begin
+                     H.Swap_Used := To_Gigs (Value (First_Child (V)));
+                     exception when Constraint_Error => H.Swap_Used := 0.0;
+                  end;
                end if;
+            elsif Name (V) = "job" then
+               Job_Nodes := Child_Nodes (V);
+               for K in 1 .. Length (Job_Nodes) loop
+                  C := Item (Job_Nodes, K - 1);
+                  if Name (C) = "jobvalues" then
+                     A := Get_Named_Item (Attributes (C), "name");
+                     if Value (A) = "pe_master" then
+                        Job_ID := Integer'Value (Value (Get_Named_Item (Attributes (C), "jobid")));
+                        H.Jobs.Append (New_Job (Job_ID, Value (First_Child (C))));
+                     end if;
+                  end if;
+               end loop;
             end if;
          end loop;
          Host_List.Append (H);
@@ -107,11 +136,104 @@ package body Hosts is
       HTML.Put_Cell (Data => H.Properties.Model'Img);
       HTML.Put_Cell (Data => H.Properties.Cores'Img, Class => "right");
       HTML.Put_Cell (Data => H.Properties.Memory'Img, Class => "right");
+      HTML.Put_Cell (Data => Load_Per_Core (H)'Img, Class => "right");
+      HTML.Put_Cell (Data => Mem_Percentage (H)'Img, Class => "right");
+      HTML.Put_Cell (Data => Swap_Percentage (H)'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
+      H.Jobs.Iterate (Put_Jobs'Access);
    exception
       when E : others =>
          HTML.Error ("Error while putting host: " & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
+
+   procedure Put_Jobs (Cursor : Job_Lists.Cursor) is
+      J : Job := Job_Lists.Element (Cursor);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => ""); -- H.Name
+      if J.Master then
+         HTML.Put_Cell (Data => "<img src=""/icons/eye.png"" />");
+      else
+         HTML.Put_Cell (Data => "");
+      end if;
+      HTML.Put_Cell (Data => J.ID'Img);
+
+      Ada.Text_IO.Put ("</tr>");
+   end Put_Jobs;
+
+   -------------------
+   -- Load_Per_Core --
+   --  Purpose: Compute the Unix load per CPU core
+   --  Parameter H: The host record under consideration
+   -------------------
+
+   function Load_Per_Core (H : Host) return Fixed is
+   begin
+      if H.Properties.Cores = 0 then
+         raise Constraint_Error with "host """ & To_String (H.Name)
+           & """ has no cores";
+      else
+         return H.Load / H.Properties.Cores;
+      end if;
+   end Load_Per_Core;
+
+   ---------------
+   -- Mem_Ratio --
+   --  Purpose: Compute the percentage of RAM used
+   --  Parameter H: The host record under consideration
+   --  Returns: RAM used, 1 means all RAM is used
+   ---------------
+
+   function Mem_Ratio (H : Host) return Fixed is
+   begin
+      if H.Properties.Memory = 0.0 then
+         raise Constraint_Error with "host """ & To_String (H.Name)
+           & """ has no memory";
+      else
+         return H.Mem_Used / H.Properties.Memory;
+      end if;
+   end Mem_Ratio;
+
+   --------------------
+   -- Mem_Percentage --
+   --  Purpose: Compute the percentage of RAM used
+   --  Parameter H: The host record under consideration
+   --  Returns: RAM used, 100 means all RAM is used
+   --------------------
+
+   function Mem_Percentage (H : Host) return Percent is
+   begin
+      return Percent (Mem_Ratio (H) * 100.0);
+   end Mem_Percentage;
+
+   ---------------
+   -- Swap_Ratio --
+   --  Purpose: Compute the percentage of swap space used
+   --  Parameter H: The host record under consideration
+   --  Returns: swap used, 1 means all swap is used
+   ---------------
+
+   function Swap_Ratio (H : Host) return Fixed is
+   begin
+      if H.Swap_Total = 0.0 then
+         raise Constraint_Error with "host """ & To_String (H.Name)
+           & """ has no swap space";
+      else
+         return H.Swap_Used / H.Swap_Total;
+      end if;
+   end Swap_Ratio;
+
+   ---------------------
+   -- Swap_Percentage --
+   --  Purpose: Compute the percentage of swap space used
+   --  Parameter H: The host record under consideration
+   --  Returns: swap used, 100 means all swap is used
+   ---------------------
+
+   function Swap_Percentage (H : Host) return Percent is
+   begin
+      return Percent (Swap_Ratio (H) * 100.0);
+   end Swap_Percentage;
 
 end Hosts;

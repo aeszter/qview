@@ -625,6 +625,11 @@ package body Viewer is
                           Tag => "th");
             HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Load", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
+                                  Acronym => "% used");
+            HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
+                                  Acronym => "% used");
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
@@ -633,7 +638,8 @@ package body Viewer is
             raise Constraint_Error with "Expected ""partition"" but got """
               & What & """";
          end if;
-         SGE_Out := Setup_Parser (Command => "qhost", Selector => Resource_Selector);
+         SGE_Out := Setup_Parser (Command  => "qhost",
+                                  Selector => "-j " & Resource_Selector);
          Put_Table_Header;
 
          Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
