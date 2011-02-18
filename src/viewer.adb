@@ -633,13 +633,27 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
+         Selector : Unbounded_String;
       begin
          if What /= "partition" then
             raise Constraint_Error with "Expected ""partition"" but got """
               & What & """";
          end if;
+         if HTML.Param_Is (Param    => "net",
+                           Expected => "ETH") then
+            Selector := To_Unbounded_String (" -l eth");
+         elsif HTML.Param_Is (Param    => "net",
+                              Expected => "IB") then
+            Selector := To_Unbounded_String (" -l ib");
+         end if;
+         if not HTML.Param_Is (Param    => "model",
+                               Expected => "") then
+            Selector := Selector & " -l cm=" & Sanitise (CGI.Value ("model"));
+         end if;
+
          SGE_Out := Setup_Parser (Command  => "qhost",
-                                  Selector => "-j " & Resource_Selector);
+                                  Selector => "-j " & Resource_Selector
+                                  & To_String (Selector));
          Put_Table_Header;
 
          Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));

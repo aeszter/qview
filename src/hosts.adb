@@ -301,7 +301,7 @@ package body Hosts is
          HTML.Put_Cell (Data => "<img src=""/icons/eye.png"" />" & J.Slaves'Img,
                        Class => "right");
       else
-         HTML.Put_Cell (Data => J.Slaves'Img,Class => "right");
+         HTML.Put_Cell (Data => J.Slaves'Img, Class => "right");
       end if;
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (J.ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
