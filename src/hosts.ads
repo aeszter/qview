@@ -8,14 +8,20 @@ package Hosts is
    type Job is record
       Master : Boolean;
       ID     : Positive;
+      Slaves : Natural;
    end record;
+
+   function Equal (Left, Right : Job) return Boolean;
 
    type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
    type Percent is range 0 .. 100;
 
    package Job_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job);
+     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job,
+                                             "="          => Equal);
    subtype Job_List is Job_Lists.List;
+
+   procedure Add_Slave_Process (J : in out Job);
 
    function New_Job (ID : Positive; Master : Boolean) return Job;
    function New_Job (ID : Positive; PE_Master : String) return Job;
@@ -32,12 +38,18 @@ package Hosts is
    end record;
 
    procedure Append_List (Host_Nodes : Node_List);
+   procedure Parse_Resource (H : in out Host; N : Node);
+   procedure Parse_Hostvalue (H : in out Host; N : Node);
+   procedure Parse_Job (H : in out Host; N : Node);
+
+
    package Host_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Host);
 
 
    procedure Put (Cursor : Host_Lists.Cursor);
    procedure Put_Jobs (Cursor : Job_Lists.Cursor);
+   procedure Compactify (List : in out Job_List);
 
    function Load_Per_Core (H : Host) return Fixed;
    function Mem_Ratio (H : Host) return Fixed;
