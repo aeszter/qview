@@ -44,6 +44,9 @@ package Hosts is
    function Mem_Percentage (H : Host) return Percent;
    function Swap_Ratio (H : Host) return Fixed;
    function Swap_Percentage (H : Host) return Percent;
+   function Color_Class (P : Percent) return String;
+   function Color_Class (Load : Fixed) return String;
+
 
    Host_List : Host_Lists.List;
 

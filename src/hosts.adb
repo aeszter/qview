@@ -136,9 +136,12 @@ package body Hosts is
       HTML.Put_Cell (Data => H.Properties.Model'Img);
       HTML.Put_Cell (Data => H.Properties.Cores'Img, Class => "right");
       HTML.Put_Cell (Data => H.Properties.Memory'Img, Class => "right");
-      HTML.Put_Cell (Data => Load_Per_Core (H)'Img, Class => "right");
-      HTML.Put_Cell (Data => Mem_Percentage (H)'Img, Class => "right");
-      HTML.Put_Cell (Data => Swap_Percentage (H)'Img, Class => "right");
+      HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
+                     Class => "right " & Color_Class (Load_Per_Core (H)));
+      HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
+                     Class => "right " & Color_Class (Mem_Percentage (H)));
+                     HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
+                                    Class => "right " & Color_Class (Swap_Percentage (H)));
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
@@ -235,5 +238,54 @@ package body Hosts is
    begin
       return Percent (Swap_Ratio (H) * 100.0);
    end Swap_Percentage;
+
+   -----------------
+   -- Color_Class --
+   --  Purpose: translate a percentage to a string suitable
+   --  for use as a CSS class
+   --  Parameter P : percentage to classify
+   --  Returns: one of "pct_cold", "pct_low", "pct_med",
+   --  "pct_high", or "pct_hot"
+   -----------------
+
+   function Color_Class (P : Percent) return String is
+   begin
+      if P < 10 then
+         return "pct_cold";
+      elsif P < 30 then
+         return "pct_low";
+      elsif P < 60 then
+         return "pct_med";
+      elsif P < 90 then
+         return "pct_high";
+      else
+         return "pct_hot";
+      end if;
+   end Color_Class;
+
+   -----------------
+   -- Color_Class --
+   --  Purpose: translate a load value to a string suitable
+   --  for use as a CSS class
+   --  Parameter Load: the load to classify
+   --  Returns: one of "load_cold", "load_low", "load_normal",
+   --  "load_high", "load_extreme"
+   -----------------
+
+   function Color_Class (Load : Fixed) return String is
+   begin
+      if Load < 0.1 then
+         return "load_cold";
+      elsif Load < 0.8 then
+         return "load_low";
+      elsif Load < 1.1 then
+         return "load_normal";
+      elsif Load < 1.5 then
+         return "load_high";
+      else
+         return "load_extreme";
+      end if;
+   end Color_Class;
+
 
 end Hosts;
