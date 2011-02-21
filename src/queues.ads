@@ -3,7 +3,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Resources;
 
 package Queues is
-   type Gigs is delta 0.1 digits 5;
+   type Gigs is delta 0.001 digits 7;
 
    type Queue is record
       Used, Reserved, Total : Natural;
