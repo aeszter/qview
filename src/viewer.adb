@@ -20,6 +20,7 @@ with Hosts; use Hosts; use Hosts.Host_Lists;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
 with Ada.Strings.Fixed;
+with Ada.Characters.Handling;
 
 package body Viewer is
 
@@ -624,6 +625,7 @@ package body Viewer is
                            & "<img src=""/icons/help.png"" /></a>",
                           Tag => "th");
             HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Load", Params => My_Params);
             HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
@@ -648,7 +650,13 @@ package body Viewer is
          end if;
          if not HTML.Param_Is (Param    => "model",
                                Expected => "") then
-            Selector := Selector & " -l cm=" & Sanitise (CGI.Value ("model"));
+            if HTML.Param_Is (Param    => "model",
+                              Expected => "MAGNYCOURS") then
+               Selector := Selector & " -l cm=magny-cours";
+            else
+               Selector := Selector & " -l cm="
+                 & Ada.Characters.Handling.To_Lower (Sanitise (CGI.Value ("model")));
+            end if;
          end if;
 
          SGE_Out := Setup_Parser (Command  => "qhost",
@@ -657,11 +665,20 @@ package body Viewer is
          Put_Table_Header;
 
          Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+         Hosts.Prune_List (Net     => CGI.Value ("net"),
+                           Cores   => CGI.Value ("cores"),
+                           Memory  => CGI.Value ("mem"),
+                           Runtime => CGI.Value ("runtime"));
          Host_List.Iterate (Hosts.Put'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "host_list");
+      exception
+         when E : others =>
+            HTML.Error ("Error while putting host: " & Exception_Message (E));
+            Ada.Text_IO.Put_Line ("</table>");
+            HTML.End_Div (Class => "host_list");
       end View_Hosts;
 
       N : Positive;
@@ -732,6 +749,7 @@ package body Viewer is
                View_Global_Jobs;
                View_Detailed_Queues;
                View_Job_Overview;
+               View_Hosts (What => "partition");
             end loop;
          end if;
       end if;
@@ -765,12 +783,15 @@ package body Viewer is
                           Selector : String) return DOM.Core.Document is
       Reader      : DOM.Readers.Tree_Reader;
       SGE_Command : Pipe_Stream;
+      Command_String : String := sgeroot
+        & "/bin/lx26-amd64/" & Command & " " & Selector & " -xml";
    begin
       SGE_Command.Set_Public_Id ("qstat");
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " & sgeroot
-        & "/bin/lx26-amd64/" & Command & " " & Selector & " -xml"
-        & ASCII.NUL,
-        Pipe_Commands.read_file);
+      HTML.Comment (Command_String);
+      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
+                           Command_String
+                           & ASCII.NUL,
+                           Pipe_Commands.read_file);
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
       Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
       Reader.Parse (SGE_Command);

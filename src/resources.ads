@@ -20,6 +20,7 @@ package Resources is
    function To_Model (S : Unbounded_String) return CPU_Model;
    function To_Model (S : String) return CPU_Model;
    function To_String (Model : CPU_Model) return String;
+   function To_Network (S : String) return Network;
    function Format_Duration (Secs : Natural) return String;
 
    function New_Resource (Name  : Unbounded_String;

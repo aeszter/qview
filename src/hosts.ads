@@ -38,6 +38,7 @@ package Hosts is
    end record;
 
    procedure Append_List (Host_Nodes : Node_List);
+   procedure Prune_List (Net, Cores, Memory, Runtime : String);
    procedure Parse_Resource (H : in out Host; N : Node);
    procedure Parse_Hostvalue (H : in out Host; N : Node);
    procedure Parse_Job (H : in out Host; N : Node);
@@ -50,6 +51,7 @@ package Hosts is
    procedure Put (Cursor : Host_Lists.Cursor);
    procedure Put_Jobs (Cursor : Job_Lists.Cursor);
    procedure Compactify (List : in out Job_List);
+   procedure Update_Used_Slots (H : in out Host);
 
    function Load_Per_Core (H : Host) return Fixed;
    function Mem_Ratio (H : Host) return Fixed;

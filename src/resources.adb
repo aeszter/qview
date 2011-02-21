@@ -228,6 +228,27 @@ package body Resources is
       return Model'Img;
    end To_String;
 
+   ----------------
+   -- To_Network --
+   --  Purpose : Convert from a String to a Network type
+   --  Parameter S: the String to read
+   --  returns: The network determined from S
+   --  Raises: Constraint_Error if S is not one of "NONE", "IB", "ETH"
+   ----------------
+
+   function To_Network (S : String) return Network is
+   begin
+      if S = "NONE" then
+         return none;
+      elsif S = "IB" then
+         return ib;
+      elsif S = "ETH" then
+         return eth;
+      else
+         raise Constraint_Error with "Unknown network " & S;
+      end if;
+   end To_Network;
+
    ---------------
    -- Get_Value --
    ---------------

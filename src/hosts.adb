@@ -5,7 +5,7 @@ with DOM.Core.Attrs; use DOM.Core.Attrs;
 with HTML;
 with Resources; use Resources;
 with Ada.Strings.Fixed;
-with Hosts; use Hosts.Job_Lists;
+with Hosts; use Hosts.Job_Lists; use Hosts.Host_Lists;
 
 package body Hosts is
 
@@ -69,7 +69,7 @@ package body Hosts is
    ----------------
 
    procedure Compactify (List : in out Job_List) is
-      Pos        : Cursor := List.First;
+      Pos        : Job_Lists.Cursor := List.First;
       Short_List : Job_List;
       Orig       : Job;
 
@@ -77,16 +77,12 @@ package body Hosts is
       if List.Is_Empty then
          return;
       end if;
-      while Pos /= No_Element loop
+      while Pos /= Job_Lists.No_Element loop
          Orig := Job_Lists.Element (Pos);
          if Short_List.Is_Empty or else
             not Equal (Short_List.Last_Element, Orig) then
             Short_List.Append (Orig);
          else
-            if Orig.ID = 362992 then
-               HTML.Comment ("Updating");
-            end if;
-
             Short_List.Update_Element (Position => Short_List.Last,
                                        Process  => Add_Slave_Process'Access);
          end if;
@@ -98,6 +94,31 @@ package body Hosts is
       when E : others =>
          HTML.Error ("Unable to sort job list: " & Exception_Message (E));
    end Compactify;
+
+
+   -----------------------
+   -- Update_Used_Slots --
+   --  Purpose: Count the number of used slots (from the host's job list)
+   --          and store the result in Properties.Used
+   --  Parameter H: The host to modify
+   -----------------------
+
+   procedure Update_Used_Slots (H : in out Host) is
+      Pos        : Job_Lists.Cursor := H.Jobs.First;
+      J          : Job;
+   begin
+      while Pos /= Job_Lists.No_Element loop
+         J := Job_Lists.Element (Pos);
+         H.Properties.Used := H.Properties.Used + J.Slaves;
+         Next (Pos);
+      end loop;
+   exception
+      when E : others =>
+         HTML.Error ("Unable to count slots for host "
+                     & To_String (H.Name)
+                     & ": " & Exception_Message (E));
+         H.Properties.Used := 0;
+   end Update_Used_Slots;
 
    -----------------------
    -- Add_Slave_Process --
@@ -127,6 +148,9 @@ package body Hosts is
          H.Properties.Network := none;
          H.Properties.Model := none;
          H.Jobs := Job_Lists.Empty_List;
+         H.Properties.Cores := 1;
+         H.Properties.Memory := 0.0;
+         H.Properties.Used := 0;
          A := Get_Named_Item (Attributes (N), "name");
          H.Name := To_Unbounded_String (Value (A));
          if Value (A) /= "global" then
@@ -143,6 +167,7 @@ package body Hosts is
                end if;
             end loop Host_Attributes;
             Compactify (H.Jobs);
+            Update_Used_Slots (H);
             Host_List.Append (H);
          end if;
       end loop Hosts;
@@ -152,6 +177,42 @@ package body Hosts is
          HTML.Error ("Node " & Name (V) & ":" & Value (V));
          HTML.Error ("Host " & Name (A) & ":" & Value (A));
    end Append_List;
+
+   ----------------
+   -- Prune_List --
+   --  Purpose: Prune the Host list by removing all entries that do not
+   --          fulfill the given requirements
+   --  Parameter Network: Network requirement
+   --  Parameter Cores: Required number of Cores. Note: this is not a minimum
+   --           requirement, but must be matched exactly
+   --  Parameter Memory: Required amount of Memory, must be matched exactly
+   --  Parameter Runtime: Required Queue h_rt, must be matched exactly
+   ----------------
+
+   procedure Prune_List (Net, Cores, Memory, Runtime : String) is
+      Temp      : Host_Lists.List;
+      Pos       : Host_Lists.Cursor := Host_List.First;
+      H         : Host;
+      Mem       : Gigs;
+      Req_Cores : Positive;
+      Req_Net   : Network;
+   begin
+      Req_Net := To_Network (Net);
+      Req_Cores := Positive'Value (Cores);
+      Mem := Gigs'Value (Memory);
+      loop
+         exit when Pos = Host_Lists.No_Element;
+         H := Host_Lists.Element (Pos);
+         if H.Properties.Network = Req_Net and then
+           H.Properties.Memory = Mem and then
+           H.Properties.Cores = Req_Cores and then
+           H.Properties.Runtime = Runtime then
+            Temp.Append (H);
+         end if;
+         Next (Pos);
+      end loop;
+      Host_List := Temp;
+   end Prune_List;
 
    ---------------------
    -- Parse_Resources --
@@ -164,7 +225,7 @@ package body Hosts is
    procedure Parse_Resource (H : in out Host; N : Node) is
       A : Attr;
    begin
-            A := Get_Named_Item (Attributes (N), "name");
+      A := Get_Named_Item (Attributes (N), "name");
       if Value (A) = "num_proc" then
          H.Properties.Cores := Integer (Fixed'Value (Value (First_Child (N))));
       elsif
@@ -200,7 +261,7 @@ package body Hosts is
    procedure Parse_Hostvalue (H : in out Host; N : Node) is
       A : Attr;
    begin
-            A := Get_Named_Item (Attributes (N), "name");
+      A := Get_Named_Item (Attributes (N), "name");
       if Value (A) = "load_avg" then
          begin
             H.Load := Fixed'Value (Value (First_Child (N)));
@@ -267,12 +328,15 @@ package body Hosts is
 
    procedure Put (Cursor : Host_Lists.Cursor) is
       H : Host := Host_Lists.Element (Cursor);
+      Free : Natural;
    begin
+      Free := H.Properties.Cores - H.Properties.Used;
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => H.Name);
       HTML.Put_Cell (Data => H.Properties.Network'Img);
       HTML.Put_Cell (Data => H.Properties.Model'Img);
       HTML.Put_Cell (Data => H.Properties.Cores'Img, Class => "right");
+      HTML.Put_Cell (Data => Free'Img, Class => "right");
       HTML.Put_Cell (Data => H.Properties.Memory'Img, Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (H)));
@@ -284,7 +348,8 @@ package body Hosts is
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host: " & Exception_Message (E));
+         HTML.Error ("Error while putting host "& To_String (H.Name) & ": "
+                     & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
 
