@@ -1,6 +1,8 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 with Ada.Text_IO;
+with Ada.Strings.Fixed;
+with CGI;
 with HTML;
 with Resources; use Resources;
 
@@ -75,8 +77,8 @@ package body Bunches is
 
    ---------
    -- Put --
-   -- Purpose: Output one Bunch of Jobs as a single line in a table.
-   -- Parameter Pos : Cursor into a List of Bunches, signifies the Bunch to be output
+   --  Purpose: Output one Bunch of Jobs as a single line in a table.
+   --  Parameter Pos : Cursor into a List of Bunches, signifies the Bunch to be output
    ---------
 
    procedure Put (Pos : Bunch_Lists.Cursor) is
@@ -90,12 +92,12 @@ package body Bunches is
          Ada.Text_IO.Put ("<tr>");
       end if;
 
-      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=partition"
-               & "&net=" & P.Network'Img
-               & "&model=" & Model_As_String (P)
-               & "&cores=" & Ada.Strings.Fixed.Trim (P.Cores'Img, Ada.Strings.Left)
-               & "&mem=" & Ada.Strings.Fixed.Trim (P.Memory'Img, Ada.Strings.Left)
-               & "&rt=" & To_String (P.Runtime)
+      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=bunch"
+               & "&pe=" & B.PE
+               & "&slots=" & B.Slots
+               & "&queue=" & B.Queue
+               & "&hr=" & Resources.Hash (B.Hard)
+               & "&sr=" & Hash (B.Slow)
                & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => B.PE);

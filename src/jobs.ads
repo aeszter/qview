@@ -88,6 +88,8 @@ package Jobs is
                             List_Nodes  : Node_List);
 
    procedure Append_List (Nodes : Node_List);
+   procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String);
+
    procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;
    function Precedes_By_Number (Left, Right : Job) return Boolean;

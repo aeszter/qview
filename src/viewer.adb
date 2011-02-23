@@ -693,11 +693,11 @@ package body Viewer is
                           Hard_Requests => CGI.Value ("hr"),
                           Soft_Requests => CGI.Value ("sr")
                          );
-         Job_List.Iterate (Jobs.Put'Access);
+         Jobs.List.Iterate (Jobs.Put'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "host_list");
+         HTML.End_Div (Class => "job_list");
       exception
          when E : others =>
             HTML.Error ("Error while putting job: " & Exception_Message (E));
