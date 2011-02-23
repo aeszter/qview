@@ -190,6 +190,9 @@ package body Hosts is
    ----------------
 
    procedure Prune_List (Net, Cores, Memory, Runtime : String) is
+      pragma Unreferenced (Runtime); -- hosts do not have an associated runtime
+                                     -- Bug #999: maybe we can call qstat to get the
+                                     -- necessary values?
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
@@ -205,9 +208,8 @@ package body Hosts is
          H := Host_Lists.Element (Pos);
          if H.Properties.Network = Req_Net and then
            H.Properties.Memory = Mem and then
-           H.Properties.Cores = Req_Cores and then
-           H.Properties.Runtime = Runtime then
-            Temp.Append (H);
+           H.Properties.Cores = Req_Cores  then
+               Temp.Append (H);
          end if;
          Next (Pos);
       end loop;

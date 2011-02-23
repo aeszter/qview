@@ -668,7 +668,7 @@ package body Viewer is
          Hosts.Prune_List (Net     => CGI.Value ("net"),
                            Cores   => CGI.Value ("cores"),
                            Memory  => CGI.Value ("mem"),
-                           Runtime => CGI.Value ("runtime"));
+                           Runtime => CGI.Value ("rt"));
          Host_List.Iterate (Hosts.Put'Access);
 
          --  Table Footer
