@@ -1,5 +1,8 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
+with Ada.Text_IO;
+with HTML;
+with Resources; use Resources;
 
 package body Bunches is
 
@@ -68,5 +71,44 @@ package body Bunches is
       B.Error := 0;
       return B;
    end New_Bunch;
+
+
+   ---------
+   -- Put --
+   -- Purpose: Output one Bunch of Jobs as a single line in a table.
+   -- Parameter Pos : Cursor into a List of Bunches, signifies the Bunch to be output
+   ---------
+
+   procedure Put (Pos : Bunch_Lists.Cursor) is
+      B : Bunch := Bunch_Lists.Element (Pos);
+   begin
+      if B.Error > 0 then
+         Ada.Text_IO.Put ("<tr class=""job-error"">");
+      elsif B.Waiting = 0 then
+         Ada.Text_IO.Put ("<tr class=""job-held"">");
+      else
+         Ada.Text_IO.Put ("<tr>");
+      end if;
+
+      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=partition"
+               & "&net=" & P.Network'Img
+               & "&model=" & Model_As_String (P)
+               & "&cores=" & Ada.Strings.Fixed.Trim (P.Cores'Img, Ada.Strings.Left)
+               & "&mem=" & Ada.Strings.Fixed.Trim (P.Memory'Img, Ada.Strings.Left)
+               & "&rt=" & To_String (P.Runtime)
+               & """><img src=""/icons/arrow_right.png"" /></a>");
+
+      HTML.Put_Cell (Data => B.PE);
+      HTML.Put_Cell (Data => B.Slots, Class => "right");
+      HTML.Put_Cell (Data => B.Queue);
+      HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
+      HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));
+      HTML.Put_Cell (Data => B.Total'Img, Class => "right");
+      HTML.Put_Cell (Data => B.Waiting'Img, Class => "right");
+      HTML.Put_Cell (Data => B.On_Hold'Img, Class => "right");
+      HTML.Put_Cell (Data => B.Error'Img, Class => "right");
+      Ada.Text_IO.Put ("</tr>");
+   end Put;
+
 
 end Bunches;

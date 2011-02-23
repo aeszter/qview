@@ -172,29 +172,22 @@ package body Viewer is
 
       procedure View_Job_Overview is
 
-
-         procedure Put_Bunch (Bunch : Bunches.Bunch_Lists.Cursor) is
-            B : Bunches.Bunch := Bunches.Bunch_Lists.Element (Bunch);
+         procedure Put_Table_Header is
          begin
-            if B.Error > 0 then
-               Ada.Text_IO.Put ("<tr class=""job-error"">");
-            elsif B.Waiting = 0 then
-               Ada.Text_IO.Put ("<tr class=""job-held"">");
-            else
-               Ada.Text_IO.Put ("<tr>");
-            end if;
-            HTML.Put_Cell (Data => B.PE);
-            HTML.Put_Cell (Data => B.Slots, Class => "right");
-            HTML.Put_Cell (Data => B.Queue);
-            HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
-            HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));
-            HTML.Put_Cell (Data => B.Total'Img, Class => "right");
-            HTML.Put_Cell (Data => B.Waiting'Img, Class => "right");
-            HTML.Put_Cell (Data => B.On_Hold'Img, Class => "right");
-            HTML.Put_Cell (Data => B.Error'Img, Class => "right");
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Bunch;
-
+            Ada.Text_IO.Put_Line ("<table><tr>");
+            HTML.Put_Cell (Data => "<acronym title=""click on arrow to view job list"">"
+                           & "Detail</acronym>", Tag => "th");
+            HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
+                           Tag => "th");
+            HTML.Put_Cell (Data => "Slots", Tag => "th");
+            HTML.Put_Cell (Data => "Queue", Tag => "th");
+            HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
+            HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
+            HTML.Put_Cell (Data => "Total", Tag => "th");
+            HTML.Put_Cell (Data => "Waiting", Tag => "th");
+            HTML.Put_Cell (Data => "Held", Tag => "th");
+            HTML.Put_Cell (Data => "Error", Tag => "th");
+         end Put_Table_Header;
 
          SGE_Out     : DOM.Core.Document;
          Nodes       : Node_List;
@@ -223,19 +216,9 @@ package body Viewer is
          Bunches.Build_List (Jobs.List, Bunch_List);
 
          --  Output
-         Ada.Text_IO.Put_Line ("<table><tr>");
-         HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
-                        Tag => "th");
-         HTML.Put_Cell (Data => "Slots", Tag => "th");
-         HTML.Put_Cell (Data => "Queue", Tag => "th");
-         HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
-         HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
-         HTML.Put_Cell (Data => "Total", Tag => "th");
-         HTML.Put_Cell (Data => "Waiting", Tag => "th");
-         HTML.Put_Cell (Data => "Held", Tag => "th");
-         HTML.Put_Cell (Data => "Error", Tag => "th");
+         Put_Table_Header;
          Ada.Text_IO.Put_Line ("</tr>");
-         Bunch_List.Iterate (Put_Bunch'Access);
+         Bunch_List.Iterate (Bunches.Put'Access);
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "bunches");
       end View_Job_Overview;
@@ -681,6 +664,47 @@ package body Viewer is
             HTML.End_Div (Class => "host_list");
       end View_Hosts;
 
+      procedure View_Bunch is
+         SGE_Out     : DOM.Core.Document;
+
+         procedure Put_Table_Header is
+         begin
+            HTML.Put_Heading (Title => "Jobs",
+                              Level => 2);
+            HTML.Begin_Div (Class => "job_list");
+            Ada.Text_IO.Put_Line ("<table><tr>");
+            HTML.Put_Header_Cell (Data     => "ID", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Owner", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "PE", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Slots", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Resources", Params => My_Params);
+            Ada.Text_IO.Put ("</tr>");
+         end Put_Table_Header;
+
+      begin
+         SGE_Out := Setup_Parser (Command  => "qstat",
+                                  Selector => "-u \*");
+         Put_Table_Header;
+
+         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+         Jobs.Prune_List (PE            => CGI.Value ("pe"),
+                          Slots         => CGI.Value ("slots"),
+                          Queue         => CGI.Value ("q"),
+                          Hard_Requests => CGI.Value ("hr"),
+                          Soft_Requests => CGI.Value ("sr")
+                         );
+         Job_List.Iterate (Jobs.Put'Access);
+
+         --  Table Footer
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "host_list");
+      exception
+         when E : others =>
+            HTML.Error ("Error while putting job: " & Exception_Message (E));
+            Ada.Text_IO.Put_Line ("</table>");
+            HTML.End_Div (Class => "job_list");
+      end View_Bunch;
+
       N : Positive;
 
    begin
@@ -720,12 +744,15 @@ package body Viewer is
          elsif not HTML.Param_Is ("job_id", "") then
             Set_Params ("job_id=" & Sanitise (CGI.Value ("job_id")));
             View_Job (Sanitise (CGI.Value ("job_id")));
-         elsif HTML.Param_Is ("all_jobs", "y") then
-            Set_Params ("all_jobs=y");
+         elsif HTML.Param_Is ("jobs", "all") then
+            Set_Params ("jobs=all");
             View_Global_Jobs;
-         elsif HTML.Param_Is ("waiting_jobs", "y") then
-            Set_Params ("waiting_jobs=y");
+         elsif HTML.Param_Is ("jobs", "waiting") then
+            Set_Params ("jobs=waiting");
             View_Waiting_Jobs;
+         elsif HTML.Param_Is ("jobs", "bunch") then
+            Set_Params ("jobs=bunch");
+            View_Bunch;
          elsif not HTML.Param_Is ("categories", "") then
             Set_Params ("categories=" & CGI.Value ("categories"));
             if HTML.Param_Is ("categories", "supply") then

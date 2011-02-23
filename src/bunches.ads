@@ -18,5 +18,7 @@ package Bunches is
 
    procedure Build_List (Job_List : in out Jobs.Job_Lists.List;
                          Bunch_List : out Bunch_Lists.List);
+   procedure Put (Pos : Bunch_Lists.Cursor);
+
    function New_Bunch (J : Job) return Bunch;
 end Bunches;
