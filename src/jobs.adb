@@ -1,12 +1,14 @@
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
+with Ada.Strings.Fixed;
 with Ada.Calendar;   use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
 with Ada.Calendar.Conversions;
 with Resources;      use Resources; use Resources.Resource_Lists;
 with Slots;          use Slots; use Slots.Slot_Lists;
 with Utils;          use Utils; use Utils.String_Lists;
+with Jobs; use Jobs.Job_Lists;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
@@ -535,6 +537,38 @@ package body Jobs is
       end loop;
    end Extract_Paths;
 
+   ----------------
+   -- Prune_List --
+   --  Purpose: Prune a Job_List, keeping only Jobs that fulfill
+   --          the given requirements
+   --  Parameter: PE: Parallel environment required
+   --  Parameter Slots: Slot number required (must be matched exactly)
+   --  Parameter Queue: Queue required
+   --  Parameter Hard_Requests: List of hard resource requests
+   --  Parameter Soft_Requests: List of soft resource requests
+   ----------------
+
+   procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String) is
+      Temp : Job_Lists.List;
+      Pos  : Job_Lists.Cursor := List.First;
+      J    : Job;
+
+   begin
+      loop
+         exit when Pos = Job_Lists.No_Element;
+         J := Job_Lists.Element (Pos);
+         if not (J.Slot_Number = Slots and then
+                 J.PE = PE and then
+                 J.Queue = Queue and then
+                 Hash (J.Hard) = Hard_Requests and then
+                 Hash (J.Soft) = Soft_Requests)
+         then
+            Temp.Append (J);
+         end if;
+         Next (Pos);
+      end loop;
+      List := Temp;
+   end Prune_List;
 
    ------------------
    -- Sort_By      --
@@ -900,6 +934,10 @@ package body Jobs is
       end if;
    end Same;
 
+   ---------
+   -- Put --
+   ---------
+
    procedure Put  (Cursor : Job_Lists.Cursor) is
       Res        : Resource_Lists.Cursor;
       Slot_Range : Slot_Lists.Cursor;
@@ -1038,5 +1076,99 @@ package body Jobs is
       HTML.End_Div (Class => "job_info");
       HTML.Put_Clearer;
    end Put;
+
+   -------------------
+   -- Put_Core_Line --
+   --  Purpose: Output standard data for one job as a number of table cells (td).
+   --  This included ID, name, and owner
+   -------------------
+
+   procedure Put_Core_Line (J : Job) is
+   begin
+      HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
+                     Link_Param => "job_id");
+      HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
+      if J.Name_Truncated then
+         HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
+                        & J.Name & "</acronym>");
+      else
+         HTML.Put_Cell (Data => J.Name);
+      end if;
+   end Put_Core_Line;
+
+   -------------------
+   -- Put_Time_Line --
+   --  Purpose: Output one Job, including prospective end time, as a table row (tr).
+   -------------------
+
+   procedure Put_Time_Line (Pos : Job_Lists.Cursor) is
+      J : Job := Jobs.Job_Lists.Element (Pos);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      Put_Core_Line (J);
+
+      HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
+      HTML.Put_Duration_Cell (Remaining_Time (J));
+      HTML.Put_Time_Cell (End_Time (J));
+      HTML.Put_Img_Cell (State_As_String (J));
+      Ada.Text_IO.Put ("</tr>");
+   exception
+      when E :
+         others => HTML.Error (Message => "Error while outputting job: "
+                                     & Exception_Message (E));
+         Ada.Text_IO.Put ("</tr>");
+   end Put_Time_Line;
+
+   ------------------
+   -- Put_Res_Line --
+   --  Purpose: Output one Job, including resource usage, as a table row (tr)
+   ------------------
+
+   procedure Put_Res_Line (Pos : Job_Lists.Cursor) is
+      J : Job := Jobs.Job_Lists.Element (Pos);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      Put_Core_Line (J);
+
+      HTML.Put_Time_Cell (J.Submission_Time);
+      HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
+      HTML.Put_Img_Cell (State_As_String (J));
+      if J.CPU > 0.1 then
+         HTML.Put_Duration_Cell (Integer (J.CPU));
+      else
+         HTML.Put_Cell ("");
+      end if;
+      if J.Mem > 3_600.0 then
+         HTML.Put_Cell (Data  => Integer'Image (Integer (J.Mem / 3_600.0)),
+                        Class => "right");
+      elsif J.Mem > 1.0 then
+         HTML.Put_Cell (Data  => HTML.Encode ("<1"),
+                        Class => "right");
+      else
+         HTML.Put_Cell ("");
+      end if;
+      if J.IO > 1.0 then
+         HTML.Put_Cell (Data  => Integer'Image (Integer (J.IO)),
+                        Class => "right");
+      elsif J.IO > 0.01 then
+         HTML.Put_Cell (Data  => "<1",
+                        Class => "right");
+      else
+         HTML.Put_Cell ("");
+      end if;
+      HTML.Put_Cell (Data => J.Priority'Img);
+      HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Urgency'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Resource_Contrib'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
+      Ada.Text_IO.Put ("</tr>");
+   exception
+      when E : others => HTML.Error (Message => "Error while outputting job: "
+                                     & Exception_Message (E));
+      Ada.Text_IO.Put ("</tr>");
+   end Put_Res_Line;
 
 end Jobs;

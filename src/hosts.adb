@@ -191,7 +191,7 @@ package body Hosts is
 
    procedure Prune_List (Net, Cores, Memory, Runtime : String) is
       pragma Unreferenced (Runtime); -- hosts do not have an associated runtime
-                                     -- Bug #999: maybe we can call qstat to get the
+                                       --  Bug #999: maybe we can call qstat to get the
                                        --  necessary values?
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;

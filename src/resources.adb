@@ -1,12 +1,13 @@
 with HTML;
 with Ada.Calendar; use Ada.Calendar;
-use Ada.Calendar;
 with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Real_Time;
-with Resources; use Resources.Resource_Lists;
-with Ada.Containers; use Ada.Containers;
-with Utils; use Utils;
 with Ada.Text_IO;
+with Ada.Strings; use Ada.Strings;
+with Ada.Strings.Unbounded.Hash;
+with Ada.Containers; use Ada.Containers;
+with Resources; use Resources.Resource_Lists;
+with Utils; use Utils;
 
 package body Resources is
 
@@ -63,6 +64,37 @@ package body Resources is
                            Boolean_Valued => Boolean_Valued,
                            State => State);
    end New_Resource;
+
+   ----------
+   -- Hash --
+   --  Purpose: Calculate a hash value for a given resource list
+   --  Parameter List: The resource list to consider
+   --  Returns: Hash value as a string
+   ----------
+
+   function Hash (List : Resource_Lists.List) return String is
+      Temp : Ada.Containers.Hash_Type := 0;
+      Pos : Resource_Lists.Cursor := List.First;
+   begin
+      while Pos /= Resource_Lists.No_Element loop
+         Temp := Temp xor Hash (Element (Pos));
+         Next (Pos);
+      end loop;
+      return Temp'Img;
+   end Hash;
+
+   ----------
+   -- Hash --
+   --  Purpose: Calculate a hash value for a given resource
+   --  Parameter R : The resource to consider
+   --  Returns: Hash value
+   ----------
+
+   function Hash (R : Resource) return Hash_Type is
+   begin
+      return Hash (R.Name) xor Hash (R.Value);
+   end Hash;
+
 
    -----------------------
    -- Put               --

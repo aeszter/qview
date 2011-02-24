@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 with CGI;
 with HTML;
 with Resources; use Resources;
@@ -97,7 +96,7 @@ package body Bunches is
                & "&slots=" & B.Slots
                & "&queue=" & B.Queue
                & "&hr=" & Resources.Hash (B.Hard)
-               & "&sr=" & Hash (B.Slow)
+               & "&sr=" & Hash (B.Soft)
                & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => B.PE);

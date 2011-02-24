@@ -1,6 +1,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Utils; use Utils;
+with Ada.Containers; use Ada.Containers;
 
 package Resources is
 
@@ -31,6 +32,7 @@ package Resources is
    function New_Resource (Name : String; Value : String)
      return Resource;
    procedure Put (R : Resource);
+   function Hash (R : Resource) return Hash_Type;
 
 
 
@@ -39,6 +41,7 @@ package Resources is
 
    procedure Sort (L : in out Resource_Lists.List);
    function Equal (Left, Right : Resource_Lists.List) return Boolean;
+   function Hash (List : Resource_Lists.List) return String;
    function Precedes (Left, Right : Resource) return Boolean;
    function "<" (Left, Right : Resource) return Boolean;
    function Precedes (Left, Right : Resource_Lists.List) return Boolean;

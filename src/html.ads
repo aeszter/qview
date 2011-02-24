@@ -2,6 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with Utils; use Utils;
+with CGI; use CGI;
 
 package HTML is
    procedure Put_Cell (Data       : String;
@@ -46,6 +47,7 @@ package HTML is
    procedure Begin_Div (Class : String := ""; ID : String := "");
    procedure End_Div (Class : String := ""; ID : String := "");
    procedure Finalize_Divs (Silent : Boolean := False);
+   function Encode (S : String) return String renames CGI.HTML_Encode;
 private
    type Div is record
       Class : Unbounded_String;

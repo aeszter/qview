@@ -122,6 +122,8 @@ package Jobs is
        ("<" => Precedes_By_Name);
 
    procedure Put (Cursor : Job_Lists.Cursor);
+   procedure Put_Time_Line (Pos : Job_Lists.Cursor);
+   procedure Put_Res_Line (Pos : Job_Lists.Cursor);
 
    package Sorting_By_Number is
      new Job_Lists.Generic_Sorting ("<" => Precedes_By_Number);

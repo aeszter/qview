@@ -19,7 +19,6 @@ with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Hosts; use Hosts; use Hosts.Host_Lists;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
-with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
 
 package body Viewer is
@@ -395,60 +394,6 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
-         procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
-            J : Jobs.Job := Jobs.Job_Lists.Element (Job);
-         begin
-            Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
-                           Link_Param => "job_id");
-            HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
-            if J.Name_Truncated then
-               HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
-                              & J.Name & "</acronym>");
-            else
-               HTML.Put_Cell (Data => J.Name);
-            end if;
-            HTML.Put_Time_Cell (J.Submission_Time);
-            HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
-            HTML.Put_Img_Cell (State_As_String (J));
-            if J.CPU > 0.1 then
-               HTML.Put_Duration_Cell (Integer (J.CPU));
-            else
-               HTML.Put_Cell ("");
-            end if;
-            if J.Mem > 3_600.0 then
-               HTML.Put_Cell (Data  => Integer'Image (Integer (J.Mem / 3_600.0)),
-                              Class => "right");
-            elsif J.Mem > 1.0 then
-               HTML.Put_Cell (Data  => CGI.HTML_Encode ("<1"),
-                              Class => "right");
-            else
-               HTML.Put_Cell ("");
-            end if;
-            if J.IO > 1.0 then
-               HTML.Put_Cell (Data  => Integer'Image (Integer (J.IO)),
-                              Class => "right");
-            elsif J.IO > 0.01 then
-               HTML.Put_Cell (Data  => "<1",
-                              Class => "right");
-            else
-               HTML.Put_Cell ("");
-            end if;
-
-            HTML.Put_Cell (Data => J.Priority'Img);
-            HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Urgency'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Resource_Contrib'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
-            HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
-            Ada.Text_IO.Put ("</tr>");
-         exception
-            when E : others => HTML.Error (Message => "Error while outputting job: "
-                                           & Exception_Message (E));
-         end Put_Job_List_Entry;
-
 
       begin
          SGE_Out := Setup_Parser (Selector => "-urg -pri -ext " & Selector);
@@ -464,7 +409,7 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
-         Jobs.List.Iterate (Put_Job_List_Entry'Access);
+         Jobs.List.Iterate (Jobs.Put_Res_Line'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -542,31 +487,6 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
-         procedure Put_Job_List_Entry (Job : Jobs.Job_Lists.Cursor) is
-            J : Jobs.Job := Jobs.Job_Lists.Element (Job);
-         begin
-            Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
-                           Link_Param => "job_id");
-            HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
-            if J.Name_Truncated then
-               HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
-                              & J.Name & "</acronym>");
-            else
-               HTML.Put_Cell (Data => J.Name);
-            end if;
-            HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
-            HTML.Put_Duration_Cell (Remaining_Time (J));
-            HTML.Put_Time_Cell (End_Time (J));
-            HTML.Put_Img_Cell (State_As_String (J));
-            Ada.Text_IO.Put ("<tr>");
-         exception
-            when E :
-               others => HTML.Error (Message => "Error while outputting job: "
-                                           & Exception_Message (E));
-               Ada.Text_IO.Put ("<tr>");
-         end Put_Job_List_Entry;
-
       begin
          SGE_Out := Setup_Parser (Selector => "-u \* -s r -r");
 
@@ -581,7 +501,7 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
-         Jobs.List.Iterate (Put_Job_List_Entry'Access);
+         Jobs.List.Iterate (Jobs.Put_Time_Line'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -610,7 +530,8 @@ package body Viewer is
             HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Load", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Load", Params => My_Params,
+                                 Acronym => "per core");
             HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
                                   Acronym => "% used");
             HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
@@ -664,6 +585,10 @@ package body Viewer is
             HTML.End_Div (Class => "host_list");
       end View_Hosts;
 
+      ----------------
+      -- View_Bunch --
+      ----------------
+
       procedure View_Bunch is
          SGE_Out     : DOM.Core.Document;
 
@@ -693,14 +618,15 @@ package body Viewer is
                           Hard_Requests => CGI.Value ("hr"),
                           Soft_Requests => CGI.Value ("sr")
                          );
-         Jobs.List.Iterate (Jobs.Put'Access);
+         Jobs.List.Iterate (Jobs.Put_Time_Line'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "job_list");
       exception
          when E : others =>
-            HTML.Error ("Error while putting job: " & Exception_Message (E));
+            HTML.Error ("Error while viewing bunch of jobs: "
+                        & Exception_Message (E));
             Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
@@ -731,8 +657,25 @@ package body Viewer is
          View_Cluster_Queues;
       end if;
 
+      --  Note: until we clean up our parameters, order is important here.
+      --  The problem is that some (like queue) can be used with or without
+      --  a command. Therefore, check for clear commands like categories or
+      --  jobs=bunch first.
       if CGI.Input_Received then
-         if not HTML.Param_Is ("queue", "") then
+         if not HTML.Param_Is ("categories", "") then
+            Set_Params ("categories=" & CGI.Value ("categories"));
+            if HTML.Param_Is ("categories", "supply") then
+               View_Detailed_Queues;
+            elsif HTML.Param_Is ("categories", "demand") then
+               View_Job_Overview;
+            elsif HTML.Param_Is ("categories", "both") then
+               View_Detailed_Queues;
+               View_Job_Overview;
+            end if;
+         elsif HTML.Param_Is ("jobs", "bunch") then
+            Set_Params ("jobs=bunch");
+            View_Bunch;
+         elsif not HTML.Param_Is ("queue", "") then
             Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
          elsif not HTML.Param_Is ("hosts", "") then
@@ -750,19 +693,6 @@ package body Viewer is
          elsif HTML.Param_Is ("jobs", "waiting") then
             Set_Params ("jobs=waiting");
             View_Waiting_Jobs;
-         elsif HTML.Param_Is ("jobs", "bunch") then
-            Set_Params ("jobs=bunch");
-            View_Bunch;
-         elsif not HTML.Param_Is ("categories", "") then
-            Set_Params ("categories=" & CGI.Value ("categories"));
-            if HTML.Param_Is ("categories", "supply") then
-               View_Detailed_Queues;
-            elsif HTML.Param_Is ("categories", "demand") then
-               View_Job_Overview;
-            elsif HTML.Param_Is ("categories", "both") then
-               View_Detailed_Queues;
-               View_Job_Overview;
-            end if;
          elsif HTML.Param_Is ("forecast", "y") then
             Set_Params ("forecast=y");
             View_Forecast;
