@@ -139,6 +139,16 @@ package body Resources is
       return S;
    end To_Unbounded_String;
 
+   ---------------
+   -- To_String --
+   -- Purpose: Convert a Resource_List to a String for output
+   ---------------
+
+   function To_String (L : Resource_Lists.List) return String is
+   begin
+      return To_String (To_Unbounded_String (L));
+   end To_String;
+
    ---------------------
    -- Format_Duration --
    ---------------------

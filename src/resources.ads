@@ -56,6 +56,7 @@ package Resources is
          return Integer;
 
    function To_Unbounded_String (L : Resource_Lists.List) return Unbounded_String;
+   function To_String (L : Resource_Lists.List) return String;
 
    package Sorting is
       new Resource_Lists.Generic_Sorting ("<" => Precedes);

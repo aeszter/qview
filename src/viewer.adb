@@ -41,8 +41,8 @@ package body Viewer is
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
          HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "");
-         HTML.Put_Navigation_Link ("All Jobs", "all_jobs=y");
-         HTML.Put_Navigation_Link ("Waiting Jobs", "waiting_jobs=y");
+         HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
+         HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
          HTML.Put_Navigation_Link (Data       => "Detailed Queues",
                                    Link_Param => "categories=supply");
          HTML.Put_Navigation_Link (Data       => "Job Overview",
@@ -600,25 +600,28 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<table><tr>");
             HTML.Put_Header_Cell (Data     => "ID", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Owner", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "PE", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Slots", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Resources", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Hard", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "Soft", Params => My_Params);
+            HTML.Put_Header_Cell (Data     => "State", Params => My_Params);
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
       begin
          SGE_Out := Setup_Parser (Command  => "qstat",
-                                  Selector => "-u \*");
+                                  Selector => "-r -s p -u \*");
          Put_Table_Header;
 
          Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
                           Slots         => CGI.Value ("slots"),
-                          Queue         => CGI.Value ("q"),
+                          Queue         => CGI.Value ("queue"),
                           Hard_Requests => CGI.Value ("hr"),
                           Soft_Requests => CGI.Value ("sr")
                          );
-         Jobs.List.Iterate (Jobs.Put_Time_Line'Access);
+         Jobs.List.Iterate (Jobs.Put_Bunch_Line'Access);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");

@@ -557,16 +557,34 @@ package body Jobs is
       loop
          exit when Pos = Job_Lists.No_Element;
          J := Job_Lists.Element (Pos);
-         if not (J.Slot_Number = Slots and then
+         if J.Slot_Number = Slots and then
                  J.PE = PE and then
                  J.Queue = Queue and then
                  Hash (J.Hard) = Hard_Requests and then
-                 Hash (J.Soft) = Soft_Requests)
+                 Hash (J.Soft) = Soft_Requests
          then
             Temp.Append (J);
+         else
+            HTML.Comment (J.Number'Img);
+            if J.Slot_Number /= Slots then
+               HTML.Comment (J.Number'Img & ": " & To_String (J.Slot_Number) & " /= " & Slots);
+            end if;
+            if J.PE /= PE then
+               HTML.Comment (J.Number'Img & ": " & To_String (J.PE) & " /= " & PE);
+            end if;
+            if J.Queue /= Queue then
+               HTML.Comment (To_String (J.Queue) & " /= " & Queue);
+            end if;
+            if Hash (J.Hard) /= Hard_Requests then
+               HTML.Comment (J.Number'Img & ": " & To_String (J.Hard) & " /= " & Hard_Requests);
+            end if;
+            if Hash (J.Soft) /= Soft_Requests then
+               HTML.Comment (J.Number'Img & ": " & To_String (J.Soft) & " /= " & Soft_Requests);
+            end if;
          end if;
          Next (Pos);
       end loop;
+      HTML.Comment (Temp.Length'Img);
       List := Temp;
    end Prune_List;
 
@@ -1118,6 +1136,29 @@ package body Jobs is
                                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put_Time_Line;
+
+   -------------------
+   -- Put_Bunch_Line --
+   --  Purpose: Output one Job
+   -------------------
+
+   procedure Put_Bunch_Line (Pos : Job_Lists.Cursor) is
+      J : Job := Jobs.Job_Lists.Element (Pos);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      Put_Core_Line (J);
+      HTML.Put_Cell (Data => J.PE);
+      HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
+      HTML.Put_Cell (Data       => To_Unbounded_String (J.Hard));
+      HTML.Put_Cell (Data       => To_Unbounded_String (J.Soft));
+      HTML.Put_Img_Cell (State_As_String (J));
+      Ada.Text_IO.Put ("</tr>");
+   exception
+      when E :
+         others => HTML.Error (Message => "Error while outputting job: "
+                                     & Exception_Message (E));
+         Ada.Text_IO.Put ("</tr>");
+   end Put_Bunch_Line;
 
    ------------------
    -- Put_Res_Line --
