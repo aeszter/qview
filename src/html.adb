@@ -110,53 +110,8 @@ package body HTML is
    -------------------
 
    procedure Put_Time_Cell (Time : Calendar.Time) is
-      Year, This_Year   : Ada.Calendar.Year_Number;
-      Month, This_Month : Ada.Calendar.Month_Number;
-      Day, This_Day     : Ada.Calendar.Day_Number;
-      Secs              : Ada.Calendar.Day_Duration;
-      Diff_Days         : Calendar.Arithmetic.Day_Count;
-      Diff_Seconds      : Duration;
-      Diff_Leap_Seconds : Integer;
-      This_Midnight, That_Midnight : Calendar.Time;
    begin
-      Calendar.Split
-        (Date    => Time,
-         Year    => Year,
-         Month   => Month,
-         Day     => Day,
-         Seconds => Secs);
-      Calendar.Split
-        (Date    => Ada.Calendar.Clock,
-         Year    => This_Year,
-         Month   => This_Month,
-         Day     => This_Day,
-         Seconds => Secs);
-      That_Midnight := Calendar.Time_Of
-            (Year    => Year,
-             Month   => Month,
-             Day     => Day,
-             Seconds => 0.0);
-      This_Midnight := Calendar.Time_Of
-            (Year    => This_Year,
-             Month   => This_Month,
-             Day     => This_Day,
-             Seconds => 0.0);
-      Difference
-        (Left => That_Midnight,
-         Right => This_Midnight,
-         Days => Diff_Days,
-         Seconds => Diff_Seconds,
-         Leap_Seconds => Diff_Leap_Seconds);
-
-      if Diff_Days = 0 then
-         Put_Cell (Data => "today, " & Image (Time, "%H:%M:%S"));
-      elsif Diff_Days = -1 then
-         Put_Cell (Data => "yesterday, " & Image (Time, "%H:%M:%S"));
-      elsif Diff_Days = 1 then
-         Put_Cell (Data => "tomorrow, " & Image (Time, "%H:%M:%S"));
-      else
-         Put_Cell (Data => Image (Time, ISO_Date & " %H:%M:%S"));
-      end if;
+      Put_Cell (To_String (Time));
    end Put_Time_Cell;
 
    -----------------------
@@ -284,6 +239,11 @@ package body HTML is
    procedure Put_Paragraph (Label : String; Contents : String) is
    begin
       Ada.Text_IO.Put_Line ("<p>" & Label & ": " & Contents & "</p>");
+   end Put_Paragraph;
+
+   procedure Put_Paragraph (Label : String; Contents : Calendar.Time) is
+   begin
+      Put_Paragraph (Label => Label, Contents => To_String (Contents));
    end Put_Paragraph;
 
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String) is
@@ -424,6 +384,56 @@ package body HTML is
          Div_List.Delete_Last;
       end loop;
    end Finalize_Divs;
+
+   function To_String (Time : Calendar.Time) return String is
+            Year, This_Year   : Ada.Calendar.Year_Number;
+      Month, This_Month : Ada.Calendar.Month_Number;
+      Day, This_Day     : Ada.Calendar.Day_Number;
+      Secs              : Ada.Calendar.Day_Duration;
+      Diff_Days         : Calendar.Arithmetic.Day_Count;
+      Diff_Seconds      : Duration;
+      Diff_Leap_Seconds : Integer;
+      This_Midnight, That_Midnight : Calendar.Time;
+   begin
+      Calendar.Split
+        (Date    => Time,
+         Year    => Year,
+         Month   => Month,
+         Day     => Day,
+         Seconds => Secs);
+      Calendar.Split
+        (Date    => Ada.Calendar.Clock,
+         Year    => This_Year,
+         Month   => This_Month,
+         Day     => This_Day,
+         Seconds => Secs);
+      That_Midnight := Calendar.Time_Of
+            (Year    => Year,
+             Month   => Month,
+             Day     => Day,
+             Seconds => 0.0);
+      This_Midnight := Calendar.Time_Of
+            (Year    => This_Year,
+             Month   => This_Month,
+             Day     => This_Day,
+             Seconds => 0.0);
+      Difference
+        (Left => That_Midnight,
+         Right => This_Midnight,
+         Days => Diff_Days,
+         Seconds => Diff_Seconds,
+         Leap_Seconds => Diff_Leap_Seconds);
+
+      if Diff_Days = 0 then
+         return "today, " & Image (Time, "%H:%M:%S");
+      elsif Diff_Days = -1 then
+         return "yesterday, " & Image (Time, "%H:%M:%S");
+      elsif Diff_Days = 1 then
+         return "tomorrow, " & Image (Time, "%H:%M:%S");
+      else
+         return Image (Time, ISO_Date & " %H:%M:%S");
+      end if;
+   end To_String;
 
 
 end HTML;

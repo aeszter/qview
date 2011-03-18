@@ -33,6 +33,7 @@ package HTML is
    --  navigation section
 
    procedure Put_Paragraph (Label : String; Contents : String);
+   procedure Put_Paragraph (Label : String; Contents : Calendar.Time);
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Comment (Data : String);
@@ -48,6 +49,8 @@ package HTML is
    procedure End_Div (Class : String := ""; ID : String := "");
    procedure Finalize_Divs (Silent : Boolean := False);
    function Encode (S : String) return String renames CGI.HTML_Encode;
+
+   function To_String (Time : Calendar.Time) return String;
 private
    type Div is record
       Class : Unbounded_String;

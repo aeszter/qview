@@ -141,7 +141,7 @@ package body Resources is
 
    ---------------
    -- To_String --
-   -- Purpose: Convert a Resource_List to a String for output
+   --  Purpose: Convert a Resource_List to a String for output
    ---------------
 
    function To_String (L : Resource_Lists.List) return String is

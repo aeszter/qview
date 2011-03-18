@@ -984,6 +984,8 @@ package body Jobs is
          HTML.Put_Paragraph ("Owner", J.Owner);
          HTML.Put_Paragraph ("Group", J.Group);
          HTML.Put_Paragraph ("Account", J.Account);
+         HTML.Put_Paragraph (Label    => "Submitted",
+                             Contents => J.Submission_Time);
          HTML.Put_Paragraph ("Array", J.Job_Array);
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (J.Reserve);
