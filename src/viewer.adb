@@ -644,15 +644,15 @@ package body Viewer is
             else
                Sort_Direction := CGI.Value ("dir");
                CGI.Set_Cookie (Key   => CGI.Value ("sort") & "sort",
-                            Value => To_String (Sort_Direction));
+                               Value => To_String (Sort_Direction));
             end if;
          end if;
          Put_Headers;
       exception
          when E : others =>
             Put_Headers;
-                     HTML.Error ("Unhandled Exception occurred.");
-         HTML.Error (Exception_Message (E));
+            HTML.Error ("Unhandled Exception occurred.");
+            HTML.Error (Exception_Message (E));
 
       end;
       HTML.Begin_Div (ID => "content");
