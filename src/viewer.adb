@@ -30,17 +30,18 @@ package body Viewer is
 
    procedure View is
 
-      procedure Put_Headers is
+      procedure Put_Headers (Title : String) is
       begin
          CGI.Put_CGI_Header;
-         Ada.Text_IO.Put_Line ("<html><head><title>Owl Status</title>");
+         Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
+                               & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet ("/status.css");
          Ada.Text_IO.Put_Line ("</head><body>");
          HTML.Begin_Div (ID => "page");
          HTML.Begin_Div (ID => "header");
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
-         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "");
+         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "cqueues=y");
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
          HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
          HTML.Put_Navigation_Link (Data       => "Detailed Queues",
@@ -53,6 +54,7 @@ package body Viewer is
                                    Link_Param => "forecast=y");
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
+         HTML.Begin_Div (ID => "content");
       end Put_Headers;
 
       procedure Put_Diagnostics is
@@ -647,18 +649,13 @@ package body Viewer is
                                Value => To_String (Sort_Direction));
             end if;
          end if;
-         Put_Headers;
       exception
          when E : others =>
-            Put_Headers;
+            Put_Headers (Title => "Error");
             HTML.Error ("Unhandled Exception occurred.");
             HTML.Error (Exception_Message (E));
 
       end;
-      HTML.Begin_Div (ID => "content");
-      if HTML.Param_Is ("categories", "") then
-         View_Cluster_Queues;
-      end if;
 
       --  Note: until we clean up our parameters, order is important here.
       --  The problem is that some (like queue) can be used with or without
@@ -668,35 +665,56 @@ package body Viewer is
          if not HTML.Param_Is ("categories", "") then
             Set_Params ("categories=" & CGI.Value ("categories"));
             if HTML.Param_Is ("categories", "supply") then
+               Put_Headers (Title => "Supply");
                View_Detailed_Queues;
             elsif HTML.Param_Is ("categories", "demand") then
+               Put_Headers (Title => "Demand");
                View_Job_Overview;
             elsif HTML.Param_Is ("categories", "both") then
+               Put_Headers (Title => "Supply & Demand");
                View_Detailed_Queues;
                View_Job_Overview;
             end if;
+         elsif HTML.Param_Is ("cqueues", "y") then
+            Put_Headers (Title => "Overview");
+            View_Cluster_Queues;
          elsif HTML.Param_Is ("jobs", "bunch") then
+            Put_Headers (Title => "Job Group");
             Set_Params ("jobs=bunch");
             View_Bunch;
          elsif not HTML.Param_Is ("queue", "") then
+            Put_Headers (Title => "Queue " & CGI.Value ("queue"));
             Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
             View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
          elsif not HTML.Param_Is ("hosts", "") then
+            Put_Headers (Title => "Hosts: "
+                         & CGI.Value ("net") & "/"
+                         & CGI.Value ("model") & "/"
+                         & CGI.Value ("cores") & "/"
+                         & CGI.Value ("mem")
+                         -- & "/" & CGI.Value "rt"
+                         -- currently not used, so do not confuse the user
+                        );
             Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
             View_Hosts (Sanitise (CGI.Value ("hosts")));
          elsif not HTML.Param_Is ("user", "") then
+            Put_Headers (Title => "User " & CGI.Value ("user"));
             Set_Params ("user=" & Sanitise (CGI.Value ("user")));
             View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
          elsif not HTML.Param_Is ("job_id", "") then
+            Put_Headers (Title => "Job " & CGI.Value ("job_id"));
             Set_Params ("job_id=" & Sanitise (CGI.Value ("job_id")));
             View_Job (Sanitise (CGI.Value ("job_id")));
          elsif HTML.Param_Is ("jobs", "all") then
+            Put_Headers (Title => "All Jobs");
             Set_Params ("jobs=all");
             View_Global_Jobs;
          elsif HTML.Param_Is ("jobs", "waiting") then
+            Put_Headers (Title => "Waiting Jobs");
             Set_Params ("jobs=waiting");
             View_Waiting_Jobs;
          elsif HTML.Param_Is ("forecast", "y") then
+            Put_Headers (Title => "Finishing Jobs");
             Set_Params ("forecast=y");
             View_Forecast;
          elsif not HTML.Param_Is ("profile", "") then
