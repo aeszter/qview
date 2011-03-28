@@ -1,11 +1,13 @@
 with Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with HTML;
 with Resources; use Resources;
 with Ada.Strings.Fixed;
 with Hosts; use Hosts.Job_Lists; use Hosts.Host_Lists;
+with Utils; use Utils;
 
 package body Hosts is
 
@@ -131,6 +133,16 @@ package body Hosts is
       J.Slaves := J.Slaves + 1;
    end Add_Slave_Process;
 
+   ------------------
+   -- Append_Queue --
+   ------------------
+
+   procedure Append_Queue (H : out Host; State : String) is
+   begin
+      H.Queues.Append (To_Unbounded_String (State));
+   end Append_Queue;
+
+
    -----------------
    -- Append_List --
    -----------------
@@ -148,6 +160,7 @@ package body Hosts is
          H.Properties.Network := none;
          H.Properties.Model := none;
          H.Jobs := Job_Lists.Empty_List;
+         H.Queues := String_Lists.Empty_List;
          H.Properties.Cores := 1;
          H.Properties.Memory := 0.0;
          H.Properties.Used := 0;
@@ -164,6 +177,8 @@ package body Hosts is
                   Parse_Hostvalue (H => H, N => V);
                elsif Name (V) = "job" then
                   Parse_Job (H => H, N => V);
+               elsif Name (V) = "queue" then
+                  Parse_Queue (H => H, N => V);
                end if;
             end loop Host_Attributes;
             Compactify (H.Jobs);
@@ -216,6 +231,41 @@ package body Hosts is
       Host_List := Temp;
    end Prune_List;
 
+   -----------------
+   -- Parse_Queue --
+   -----------------
+
+   procedure Parse_Queue (H : in out Host; N : Node) is
+      A, Q_Name : Attr;
+      pragma Unreferenced (Q_Name);
+      --  probably not needed; not storing this simplifies the Host type
+      --  since we can use a list of strings instead of a customized list
+      Q_Values : Node_List := Child_Nodes (N);
+      Q_Value : Node;
+   begin
+      Q_Name := Get_Named_Item (Attributes (N), "name");
+
+      Queue_Values :
+      for I in 1 .. Length (Q_Values) loop
+         Q_Value := Item (List  => Q_Values,
+                          Index => I - 1);
+         if Name (Q_Value) = "queuevalue" then
+            A := Get_Named_Item (Attributes (Q_Value), "name");
+            if Value (A) = "state_string" and then
+               Has_Child_Nodes (Q_Value) then
+               Append_Queue (H     => H,
+                             State => Value (First_Child (Q_Value)));
+               HTML.Comment ("appended");
+            end if;
+         end if;
+      end loop Queue_Values;
+
+
+   exception
+      when E : others =>
+         HTML.Error ("Unable to read queue: " & Exception_Message (E));
+   end Parse_Queue;
+
    ---------------------
    -- Parse_Resources --
    --  Purpose: Given a Node of an XML DOM tree,
@@ -252,12 +302,9 @@ package body Hosts is
          HTML.Error ("Unable to read resource: " & Exception_Message (E));
    end Parse_Resource;
 
+
    ---------------------
    -- Parse_Hostvalue --
-   --  Purpose: Given a Node of an XML DOM tree,
-   --  read host attributes
-   --  Parameter H : The Host record to update
-   --  Parameter V : The Node to read from
    ---------------------
 
    procedure Parse_Hostvalue (H : in out Host; N : Node) is
@@ -328,6 +375,10 @@ package body Hosts is
    --  Parameter Pos : Cursor pointing to the Job record to output
    ---------
 
+   ---------
+   -- Put --
+   ---------
+
    procedure Put (Cursor : Host_Lists.Cursor) is
       H : Host := Host_Lists.Element (Cursor);
       Free : Natural;
@@ -346,6 +397,7 @@ package body Hosts is
                      Class => "right " & Color_Class (Mem_Percentage (H)));
                      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                                     Class => "right " & Color_Class (Swap_Percentage (H)));
+      H.Queues.Iterate (Put_Status'Access);
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
@@ -375,6 +427,16 @@ package body Hosts is
 
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
+
+   ----------------
+   -- Put_Status --
+   ----------------
+
+   procedure Put_Status (Cursor : Utils.String_Lists.Cursor) is
+      S : String := To_String (String_Lists.Element (Cursor));
+   begin
+      HTML.Put_Img_Cell (Image => S);
+   end Put_Status;
 
    -------------------
    -- Load_Per_Core --

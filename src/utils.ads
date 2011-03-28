@@ -9,4 +9,7 @@ package Utils is
 
    package String_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Unbounded_String);
+
+
+   subtype String_List is String_Lists.List;
 end Utils;

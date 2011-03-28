@@ -538,6 +538,9 @@ package body Viewer is
                                   Acronym => "% used");
             HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
                                   Acronym => "% used");
+            HTML.Put_Header_Cell (Data     => "Queues",
+                                  Params   => My_Params,
+                                  Sortable => False);
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
@@ -566,7 +569,7 @@ package body Viewer is
          end if;
 
          SGE_Out := Setup_Parser (Command  => "qhost",
-                                  Selector => "-j " & Resource_Selector
+                                  Selector => "-q -j " & Resource_Selector
                                   & To_String (Selector));
          Put_Table_Header;
 
@@ -692,9 +695,9 @@ package body Viewer is
                          & CGI.Value ("model") & "/"
                          & CGI.Value ("cores") & "/"
                          & CGI.Value ("mem")
-                         -- & "/" & CGI.Value "rt"
-                         -- currently not used, so do not confuse the user
                         );
+                         -- & "/" & CGI.Value "rt"
+                         --  currently not used, so do not confuse the user
             Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
             View_Hosts (Sanitise (CGI.Value ("hosts")));
          elsif not HTML.Param_Is ("user", "") then
