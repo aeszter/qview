@@ -30,9 +30,12 @@ package body Viewer is
 
    procedure View is
 
+      Headers_Sent : Boolean := False;
+
       procedure Put_Headers (Title : String) is
       begin
          CGI.Put_CGI_Header;
+         Headers_Sent := True;
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet ("/status.css");
@@ -733,6 +736,8 @@ package body Viewer is
                View_Hosts (What => "partition");
             end loop;
          end if;
+      else
+         Put_Headers (Title => "");
       end if;
       HTML.End_Div (ID => "content");
       Put_Footer;
@@ -740,6 +745,9 @@ package body Viewer is
       CGI.Put_HTML_Tail;
    exception
       when E : others =>
+         if not Headers_Sent then
+            Put_Headers (Title => "Error");
+         end if;
          HTML.Error ("Unhandled Exception occurred.");
          HTML.Error (Exception_Message (E));
          HTML.Finalize_Divs (Silent => True);
