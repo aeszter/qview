@@ -116,8 +116,6 @@ package body Jobs is
       return J.Submission_Time
         + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
           Resources.Get_Numerical (J.Hard, "h_rt")));
-   exception
-         when Resource_Error => return Ada.Calendar.Clock;
    end End_Time;
 
    --------------------
@@ -927,6 +925,9 @@ package body Jobs is
    function Precedes_By_End (Left, Right : Job) return Boolean is
    begin
       return End_Time (Left) < End_Time (Right);
+   exception
+      when Resource_Error =>
+         return True;
    end Precedes_By_End;
 
 
@@ -1128,8 +1129,18 @@ package body Jobs is
       Put_Core_Line (J);
 
       HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
-      HTML.Put_Duration_Cell (Remaining_Time (J));
-      HTML.Put_Time_Cell (End_Time (J));
+      begin
+         HTML.Put_Duration_Cell (Remaining_Time (J));
+      exception
+         when Resource_Error =>
+            HTML.Put_Cell (Data => "<i>unknown</i>", Class => "right");
+      end;
+      begin
+         HTML.Put_Time_Cell (End_Time (J));
+      exception
+         when Resource_Error =>
+            HTML.Put_Cell (Data => "<i>unknown</i>");
+      end;
       HTML.Put_Img_Cell (State_As_String (J));
       Ada.Text_IO.Put ("</tr>");
    exception
