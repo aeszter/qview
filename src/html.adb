@@ -16,7 +16,8 @@ package body HTML is
    procedure Put_Search_Box is
    begin
       Put ("<li><form>");
-      Put ("<input type=""text"" name=""search"" size=""8"" value=""search"">");
+      Put ("<input type=""text"" name=""search"" size=""8"" value=""search"""
+           & " onclick=""select()"">");
       Put ("</form></li>");
    end Put_Search_Box;
 
