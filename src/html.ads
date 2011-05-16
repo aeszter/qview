@@ -52,6 +52,13 @@ package HTML is
    procedure Finalize_Divs (Silent : Boolean := False);
    function Encode (S : String) return String renames CGI.HTML_Encode;
 
+   function Help_Icon (Topic : String) return String;
+   --  Purpose: generate a string that contains html tags to display a help
+   --  icon and link to an external help page (in the wiki)
+   --  Parameter Topic: Help topic to be included in the link
+   --  Returns: generated string, for inclusion in Put_Cell, Put_Paragraph
+   --  or the like
+
    function To_String (Time : Calendar.Time) return String;
 private
    type Div is record

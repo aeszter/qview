@@ -21,6 +21,18 @@ package body HTML is
       Put ("</form></li>");
    end Put_Search_Box;
 
+   ---------------
+   -- Help_Icon --
+   ---------------
+
+   function Help_Icon (Topic : String) return String is
+   begin
+      return "<a href=""http://wiki.mpibpc.gwdg.de"
+        & "/grubmueller/index.php/"
+        & Topic & """>"
+        & "<img src=""/icons/help.png"" /></a>";
+   end Help_Icon;
+
    --------------
    -- Put_Cell --
    --  Purpose: Write a table cell with given contents.

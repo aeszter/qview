@@ -329,9 +329,8 @@ package body Viewer is
          HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
                         & "Detail</acronym>", Tag => "th");
          HTML.Put_Cell (Data => "Interconnect", Tag => "th");
-         HTML.Put_Cell (Data => "CPU<a href=""http://wiki.mpibpc.gwdg.de"
-                           & "/grubmueller/index.php/CPU Families"">"
-                           & "<img src=""/icons/help.png"" /></a>", Tag => "th");
+         HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                        Tag => "th");
          HTML.Put_Cell (Data => "Cores", Tag => "th");
          HTML.Put_Cell (Data => "RAM", Tag => "th");
          HTML.Put_Cell (Data => "Runtime", Tag => "th");
@@ -363,9 +362,7 @@ package body Viewer is
                            Tag => "th",
                            Colspan => 3,
                            Class => "delimited");
-            HTML.Put_Cell (Data => "Priority<a href=""http://wiki.mpibpc.gwdg.de"
-                           & "/grubmueller/index.php/Job_priority"">"
-                           & "<img src=""/icons/help.png"" /></a>",
+            HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
                            Tag => "th",
                            Colspan => 8,
                            Class => "delimited");
@@ -529,9 +526,7 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("<table><tr>");
             HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Interconnect", Params => My_Params);
-            HTML.Put_Cell (Data     => "CPU<a href=""http://wiki.mpibpc.gwdg.de"
-                           & "/grubmueller/index.php/CPU Families"">"
-                           & "<img src=""/icons/help.png"" /></a>",
+            HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                           Tag => "th");
             HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
             HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
