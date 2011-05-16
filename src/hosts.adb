@@ -111,7 +111,8 @@ package body Hosts is
    begin
       while Pos /= Job_Lists.No_Element loop
          J := Job_Lists.Element (Pos);
-         H.Properties.Used := H.Properties.Used + J.Slaves;
+         H.Properties.Used := H.Properties.Used + Positive'Min (1, J.Slaves);
+         --  serial jobs have J.Slaves = 0 (they are only a master process)
          Next (Pos);
       end loop;
    exception
@@ -417,8 +418,13 @@ package body Hosts is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Name
       if J.Master then
-         HTML.Put_Cell (Data => "<img src=""/icons/eye.png"" />" & J.Slaves'Img,
-                       Class => "right");
+         if J.Slaves > 0 then -- master
+            HTML.Put_Cell (Data => "<img src=""/icons/master.png"" />" & J.Slaves'Img,
+                           Class => "right");
+         else -- serial
+            HTML.Put_Cell (Data => "<img src=""/icons/serial.png"" />" & "1",
+                           Class => "right");
+         end if;
       else
          HTML.Put_Cell (Data => J.Slaves'Img, Class => "right");
       end if;
