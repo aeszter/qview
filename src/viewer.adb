@@ -520,7 +520,7 @@ package body Viewer is
 
          procedure Put_Table_Header is
          begin
-            HTML.Put_Heading (Title => "Hosts",
+            HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
                               Level => 2);
             HTML.Begin_Div (Class => "host_list");
             Ada.Text_IO.Put_Line ("<table><tr>");
