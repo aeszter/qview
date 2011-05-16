@@ -55,6 +55,7 @@ package body Viewer is
                                    Link_Param => "categories=both");
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
+         HTML.Put_Search_Box;
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
          HTML.Begin_Div (ID => "content");
@@ -681,6 +682,20 @@ package body Viewer is
                View_Detailed_Queues;
                View_Job_Overview;
             end if;
+         elsif not HTML.Param_Is ("search", "") then
+            declare ID : Positive;
+               pragma Unreferenced (ID);
+            begin
+               ID := Positive'Value (CGI.Value ("search"));
+               Put_Headers (Title => "Job " & CGI.Value ("search"));
+               Set_Params ("job_id=" & Sanitise (CGI.Value ("search")));
+               View_Job (Sanitise (CGI.Value ("search")));
+            exception
+               when Constraint_Error =>
+                  Put_Headers (Title => "User " & CGI.Value ("search"));
+                  Set_Params ("user=" & Sanitise (CGI.Value ("search")));
+                  View_Jobs_Of_User (Sanitise (CGI.Value ("search")));
+            end;
          elsif HTML.Param_Is ("cqueues", "y") then
             Put_Headers (Title => "Overview");
             View_Cluster_Queues;

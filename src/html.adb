@@ -9,6 +9,17 @@ with Ada.Real_Time;
 
 package body HTML is
 
+   --------------------
+   -- Put_Search_Box --
+   --------------------
+
+   procedure Put_Search_Box is
+   begin
+      Put ("<li><form>");
+      Put ("<input type=""text"" name=""search"" size=""8"" value=""search"">");
+      Put ("</form></li>");
+   end Put_Search_Box;
+
    --------------
    -- Put_Cell --
    --  Purpose: Write a table cell with given contents.

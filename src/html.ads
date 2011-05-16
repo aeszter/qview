@@ -25,7 +25,9 @@ package HTML is
                               Acronym : String := "";
                               Params   : Unbounded_String;
                               Sortable : Boolean := True);
-
+   procedure Put_Search_Box;
+   --  Purpose: put a text input element used to search for a job or user
+   --  Parameters: none
 
    procedure Put_Navigation_Begin;
    procedure Put_Navigation_End;
