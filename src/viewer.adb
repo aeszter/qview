@@ -552,19 +552,35 @@ package body Viewer is
          if HTML.Param_Is (Param    => "net",
                            Expected => "ETH") then
             Selector := To_Unbounded_String (" -l eth");
+            Append_Params ("net=ETH");
          elsif HTML.Param_Is (Param    => "net",
                               Expected => "IB") then
             Selector := To_Unbounded_String (" -l ib");
+            Append_Params ("net=IB");
          end if;
          if not HTML.Param_Is (Param    => "model",
                                Expected => "") then
             if HTML.Param_Is (Param    => "model",
                               Expected => "MAGNYCOURS") then
                Selector := Selector & " -l cm=magny-cours";
+               Append_Params ("model=MAGNYCOURS");
             else
                Selector := Selector & " -l cm="
                  & Ada.Characters.Handling.To_Lower (Sanitise (CGI.Value ("model")));
+               Append_Params ("model=" & CGI.Value ("model"));
             end if;
+         end if;
+         if not HTML.Param_Is (Param    => "cores",
+                               Expected => "") then
+            Append_Params ("cores=" & CGI.Value ("cores"));
+         end if;
+         if not HTML.Param_Is (Param    => "rt",
+                               Expected => "rt") then
+            Append_Params ("rt=" & CGI.Value ("rt"));
+         end if;
+         if not HTML.Param_Is (Param    => "mem",
+                               Expected => "") then
+            Append_Params ("mem=" & CGI.Value ("mem"));
          end if;
 
          SGE_Out := Setup_Parser (Command  => "qhost",
@@ -773,6 +789,15 @@ package body Viewer is
    begin
       My_Params := To_Unbounded_String (Params);
    end Set_Params;
+
+   -------------------
+   -- Append_Params --
+   -------------------
+
+   procedure Append_Params (Params : String) is
+   begin
+      My_Params := My_Params & "&" & Params;
+   end Append_Params;
 
    ------------------
    -- Setup_Parser --
