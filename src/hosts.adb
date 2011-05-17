@@ -11,6 +11,109 @@ with Utils; use Utils;
 
 package body Hosts is
 
+   ----------------------
+   -- Precedes_By_Free --
+   ----------------------
+
+   function Precedes_By_Free (Left, Right : Host) return Boolean is
+   begin
+      return Left.Properties.Cores - Left.Properties.Used <
+        Right.Properties.Cores - Right.Properties.Used;
+   end Precedes_By_Free;
+
+   ----------------------
+   -- Precedes_By_Swap --
+   ----------------------
+
+   function Precedes_By_Swap (Left, Right : Host) return Boolean is
+   begin
+      return Swap_Ratio (Left) < Swap_Ratio (Right);
+   end Precedes_By_Swap;
+
+   ---------------------
+   -- Precedes_By_Mem --
+   ---------------------
+
+   function Precedes_By_Mem (Left, Right : Host) return Boolean is
+   begin
+      return Mem_Ratio (Left) < Mem_Ratio (Right);
+   end Precedes_By_Mem;
+
+   ----------------------
+   -- Precedes_By_Load --
+   ----------------------
+
+   function Precedes_By_Load (Left, Right : Host) return Boolean is
+   begin
+      return Left.Load < Right.Load;
+   end Precedes_By_Load;
+
+   ---------------------
+   -- Precedes_By_RAM --
+   ---------------------
+
+   function Precedes_By_RAM (Left, Right : Host) return Boolean is
+   begin
+      return Left.Properties.Memory < Right.Properties.Memory;
+   end Precedes_By_RAM;
+
+   -----------------------
+   -- Precedes_By_Cores --
+   -----------------------
+
+   function Precedes_By_Cores (Left, Right : Host) return Boolean is
+   begin
+      return Left.Properties.Cores < Right.Properties.Cores;
+   end Precedes_By_Cores;
+
+   ---------------------
+   -- Precedes_By_Net --
+   ---------------------
+
+   function Precedes_By_Net (Left, Right : Host) return Boolean is
+   begin
+      return Left.Properties.Network < Right.Properties.Network;
+   end Precedes_By_Net;
+
+   ----------------------
+   -- Precedes_By_Name --
+   ----------------------
+
+   function Precedes_By_Name (Left, Right : Host) return Boolean is
+   begin
+      return Left.Name < Right.Name;
+   end Precedes_By_Name;
+
+   -------------
+   -- Sort_By --
+   -------------
+
+   procedure Sort_By (Field, Direction : String) is
+   begin
+      if Field = "Free" then
+         By_Free.Sort (Host_List);
+      elsif Field = "Name" then
+         By_Name.Sort (Host_List);
+      elsif Field = "Interconnect" then
+         By_Net.Sort (Host_List);
+      elsif Field = "Cores" then
+         By_Cores.Sort (Host_List);
+      elsif Field = "RAM" then
+         By_RAM.Sort (Host_List);
+      elsif Field = "Load" then
+         By_Load.Sort (Host_List);
+      elsif Field = "Mem" then
+         By_Mem.Sort (Host_List);
+      elsif Field = "Swap" then
+         By_Swap.Sort (Host_List);
+      else
+         HTML.Error ("Sorting by " & Field & " unimplemented");
+      end if;
+      if Direction = "dec" then
+         Host_List.Reverse_Elements;
+      end if;
+   end Sort_By;
+
    -----------
    -- Equal --
    --  Purpose: Two jobs are equal iff their IDs are identical

@@ -593,6 +593,17 @@ package body Viewer is
                            Cores   => CGI.Value ("cores"),
                            Memory  => CGI.Value ("mem"),
                            Runtime => CGI.Value ("rt"));
+
+         --  Can we factor this out?
+         if not HTML.Param_Is ("sort", "") then
+            if Length (Sort_Direction) /= 3 then
+               --  something wrong -- maybe an attack?
+               Sort_Direction := To_Unbounded_String ("inc");
+            end if;
+            Hosts.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => To_String (Sort_Direction));
+         end if;
+
          Host_List.Iterate (Hosts.Put'Access);
 
          --  Table Footer

@@ -14,7 +14,7 @@ package Hosts is
 
    function Equal (Left, Right : Job) return Boolean;
 
-      package Job_Lists is
+   package Job_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job,
                                              "="          => Equal);
    subtype Job_List is Job_Lists.List;
@@ -96,6 +96,38 @@ package Hosts is
    function Color_Class (P : Percent) return String;
    function Color_Class (Load : Fixed) return String;
 
+   function Precedes_By_Free (Left, Right : Host) return Boolean;
+   function Precedes_By_Net (Left, Right : Host) return Boolean;
+   function Precedes_By_Cores (Left, Right : Host) return Boolean;
+   function Precedes_By_RAM (Left, Right : Host) return Boolean;
+   function Precedes_By_Load (Left, Right : Host) return Boolean;
+   function Precedes_By_Mem (Left, Right : Host) return Boolean;
+   function Precedes_By_Swap (Left, Right : Host) return Boolean;
+   function Precedes_By_Name (Left, Right : Host) return Boolean;
+
+   ------------------
+   -- Sort_By      --
+   --  Purpose:  Sort the host list by any column/field
+   --  Parameter Field: Title of the column to sort by
+   ------------------
+   procedure Sort_By (Field : String; Direction : String);
+
+   package By_Free is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Free);
+   package By_Net is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Net);
+   package By_Cores is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Cores);
+   package By_RAM is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_RAM);
+   package By_Load is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Load);
+   package By_Mem is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Mem);
+   package By_Swap is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Swap);
+   package By_Name is
+     new Host_Lists.Generic_Sorting ("<" => Precedes_By_Name);
 
    Host_List : Host_Lists.List;
 
