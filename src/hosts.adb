@@ -111,7 +111,7 @@ package body Hosts is
    begin
       while Pos /= Job_Lists.No_Element loop
          J := Job_Lists.Element (Pos);
-         H.Properties.Used := H.Properties.Used + Positive'Min (1, J.Slaves);
+         H.Properties.Used := H.Properties.Used + Positive'Max (1, J.Slaves);
          --  serial jobs have J.Slaves = 0 (they are only a master process)
          Next (Pos);
       end loop;
