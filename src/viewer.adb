@@ -1,13 +1,11 @@
-with Ada.Text_IO, CGI, Pipe_Commands, Pipe_Streams;
-use  Pipe_Streams;
-with Ada.Strings.Unbounded;
-use Ada.Strings.Unbounded;
+with Ada.Text_IO, CGI;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Sax.Readers;
-with DOM.Readers, DOM.Core;
-use  DOM.Core;
+with DOM.Core; use  DOM.Core;
 with DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
 use  DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
 with HTML;
+with Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
@@ -94,7 +92,7 @@ package body Viewer is
       Sort_Direction : Unbounded_String := To_Unbounded_String ("inc");
 
       procedure View_Cluster_Queues is
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
          List        : Node_List;
          Children    : Node_List;
          N           : Node;
@@ -110,7 +108,7 @@ package body Viewer is
          Q_Offline   : Unbounded_String;
          --  Cluster Queue Statistics
       begin
-         SGE_Out := Setup_Parser (Selector => "-g c");
+         SGE_Out := Parser.Setup (Selector => "-g c");
 
          HTML.Begin_Div (Class => "cqueues");
          CGI.Put_HTML_Heading (Title => "Cluster Queues", Level => 2);
@@ -194,7 +192,7 @@ package body Viewer is
             HTML.Put_Cell (Data => "Error", Tag => "th");
          end Put_Table_Header;
 
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
          Nodes       : Node_List;
          Bunch_List : Bunches.Bunch_Lists.List;
       begin
@@ -206,7 +204,7 @@ package body Viewer is
             CGI.Put_HTML_Heading (Title => "Demand",
                                Level => 2);
          end if;
-         SGE_Out := Setup_Parser (Selector => "-j \* -r -s p");
+         SGE_Out := Parser.Setup (Selector => "-u \* -r -s p");
 
          --  Fetch Queues
          Nodes := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
@@ -295,7 +293,7 @@ package body Viewer is
          end Parse_One_Queue;
 
 
-         SGE_Out        : DOM.Core.Document;
+         SGE_Out        : Parser.Tree;
          Nodes          : Node_List;
          Partition_List : Partitions.Partition_Lists.List;
       begin
@@ -308,7 +306,7 @@ package body Viewer is
                                Level => 2);
          end if;
 
-         SGE_Out := Setup_Parser (Selector => Resource_Selector);
+         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
          --  Fetch Queues
          Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
@@ -399,7 +397,7 @@ package body Viewer is
 
 
       begin
-         SGE_Out := Setup_Parser (Selector => "-urg -pri -ext " & Selector);
+         SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
          Put_Table_Header;
 
@@ -446,12 +444,12 @@ package body Viewer is
       end View_Jobs_Of_User;
 
       procedure View_Job (Job_ID : String) is
-         SGE_Out       : DOM.Core.Document;
+         SGE_Out       : Parser.Tree;
          List          : Node_List;
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
-         SGE_Out := Setup_Parser (Selector => "-j " & Job_ID);
+         SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          --  Fetch Jobs
          List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
@@ -491,7 +489,7 @@ package body Viewer is
          end Put_Table_Header;
 
       begin
-         SGE_Out := Setup_Parser (Selector => "-u \* -s r -r");
+         SGE_Out := Parser.Setup (Selector => "-u \* -s r -r");
 
          Put_Table_Header;
 
@@ -583,8 +581,8 @@ package body Viewer is
             Append_Params ("mem=" & CGI.Value ("mem"));
          end if;
 
-         SGE_Out := Setup_Parser (Command  => "qhost",
-                                  Selector => "-q -j " & Resource_Selector
+         SGE_Out := Parser.Setup (Command  => "qhost",
+                                  Selector => "-q -j " & Parser.Resource_Selector
                                   & To_String (Selector));
          Put_Table_Header;
 
@@ -641,7 +639,7 @@ package body Viewer is
          end Put_Table_Header;
 
       begin
-         SGE_Out := Setup_Parser (Command  => "qstat",
+         SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -j \*");
          Put_Table_Header;
 
@@ -809,31 +807,5 @@ package body Viewer is
    begin
       My_Params := My_Params & "&" & Params;
    end Append_Params;
-
-   ------------------
-   -- Setup_Parser --
-   ------------------
-
-   function Setup_Parser (Command  : String := "qstat";
-                          Selector : String) return DOM.Core.Document is
-      Reader      : DOM.Readers.Tree_Reader;
-      SGE_Command : Pipe_Stream;
-      Command_String : String := sgeroot
-        & "/bin/lx26-amd64/" & Command & " " & Selector & " -xml";
-   begin
-      SGE_Command.Set_Public_Id ("qstat");
-      HTML.Comment (Command_String);
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
-                           Command_String
-                           & ASCII.NUL,
-                           Pipe_Commands.read_file);
-      Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
-      Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
-      Reader.Parse (SGE_Command);
-      SGE_Command.Close;
-      Pipe_Streams.Wait_For_Children;
-      return Reader.Get_Tree;
-   end Setup_Parser;
-
 
 end Viewer;
