@@ -79,7 +79,23 @@ package Jobs is
    function End_Time (J : Job) return Time;
    function Remaining_Time (J : Job) return Duration;
 
+   -------------
+   -- New_Job --
+   --  Purpose: Create a new job and populate its fields from a given list
+   --  of XML nodes
+   --  Parameter List: A list of XML nodes containing information about the job
+   --  Returns: The newly created job
+   -------------
+
    function New_Job (List : Node_List) return Job;
+
+   ----------------
+   -- Update_Job --
+   --  Purpose: Populate the fields of a given job from a list of XML nodes
+   --  Parameter J: The job to update
+   --  Parameter List: A list of XML nodes containing information about the job
+   ----------------
+   procedure Update_Job (J : in out Job; List : Node_List);
    procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
@@ -88,6 +104,15 @@ package Jobs is
                             List_Nodes  : Node_List);
 
    procedure Append_List (Nodes : Node_List);
+
+   ------------------------------
+   -- Update_List_From_Qstat_J --
+   --  Purpose: Get more information on existing jobs;
+   --  call qstat -j for each Job in List, filling in information for
+   --  previously empty fields
+   ------------------------------
+   procedure Update_List_From_Qstat_J;
+
    procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String);
 
    procedure Sort_By (Field : String; Direction : String);
@@ -117,9 +142,18 @@ package Jobs is
    package Job_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
 
+   -----------------------------
+   -- Update_Job_From_Qstat_J --
+   --  Purpose: Get more information on an existing job;
+   --  call qstat -j for the given Job, filling in information for
+   --  previously empty fields
+   -----------------------------
+   procedure Update_Job_From_Qstat_J (J : in out Job);
+
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
        ("<" => Precedes_By_Name);
+
 
    procedure Put (Cursor : Job_Lists.Cursor);
    procedure Put_Time_Line (Pos : Job_Lists.Cursor);

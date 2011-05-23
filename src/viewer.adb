@@ -207,13 +207,14 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-u \* -r -s p");
 
          --  Fetch Queues
-         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
+         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
          if Length (Nodes) = 0 then
             Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
             return;
          end if;
 
          Jobs.Append_List (Nodes);
+         Jobs.Update_List_From_Qstat_J;
 
          --  Detect different bunches
          Bunches.Build_List (Jobs.List, Bunch_List);

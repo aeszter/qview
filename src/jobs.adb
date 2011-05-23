@@ -10,6 +10,7 @@ with Slots;          use Slots; use Slots.Slot_Lists;
 with Utils;          use Utils; use Utils.String_Lists;
 with Jobs; use Jobs.Job_Lists;
 with HTML;
+with Parser;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
 with Interfaces.C;
@@ -151,21 +152,80 @@ package body Jobs is
          => HTML.Error ("Unable to read job info: " & Exception_Message (E));
    end Append_List;
 
+   ------------------------------
+   -- Update_List_From_Qstat_J --
+   ------------------------------
+
+   procedure Update_List_From_Qstat_J is
+      Pos : Job_Lists.Cursor;
+   begin
+      Pos := List.First;
+      while Pos /= Job_Lists.No_Element loop
+         List.Update_Element (Position => Pos,
+                              Process  => Update_Job_From_Qstat_J'Access);
+         Next (Pos);
+      end loop;
+   end Update_List_From_Qstat_J;
+
+   -----------------------------
+   -- Update_Job_From_Qstat_J --
+   -----------------------------
+
+   procedure Update_Job_From_Qstat_J (J : in out Job) is
+      SGE_Out : DOM.Core.Document;
+      Nodes   : Node_List;
+      N       : Node;
+   begin
+      SGE_Out := Parser.Setup (Selector => "-j " & J.Number'Img);
+
+      --  Fetch Jobs
+      Nodes := Parser.Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
+
+      for Index in 1 .. Length (Nodes) loop
+         N := Item (Nodes, Index - 1);
+         if Name (N) = "djob_info" then
+            N := Item (Child_Nodes (N), 1);
+            if Name (N) /= "element" then
+               raise Assumption_Error with "Expected ""element"" Found """
+                 & Name (N) & """";
+            end if;
+         end if;
+         Update_Job (J, Child_Nodes (N));
+      end loop;
+   exception
+      when E : others
+         => HTML.Error ("Unable to read job info (" & J.Number'Img & "):"
+                        & Exception_Message (E));
+   end Update_Job_From_Qstat_J;
+
    -------------
    -- New_Job --
    -------------
 
    function New_Job (List : Node_List) return Job is
-      C           : Node;
-      A           : Attr;
       J           : Job;
-      Time_Buffer : String (1 .. 19);
    begin
       J.Merge_Std_Err := Undecided;
       J.Reserve := Undecided;
       J.Mem := 0.0;
       J.IO := 0.0;
       J.CPU := 0.0;
+      Update_Job (J => J, List => List);
+
+      Resources.Sort (J.Hard);
+      Resources.Sort (J.Soft);
+      return J;
+   end New_Job;
+
+   ----------------
+   -- Update_Job --
+   ----------------
+
+   procedure Update_Job (J : in out Job; List : Node_List) is
+      C           : Node;
+      A           : Attr;
+      Time_Buffer : String (1 .. 19);
+   begin
       for Index in 0 .. Length (List) - 1 loop
          C := Item (List, Index);
          if Name (C) = "JB_job_number" then
@@ -297,6 +357,9 @@ package body Jobs is
            Name (C) = "JAT_ntix" or else
            Name (C) = "JAT_share" or else
            Name (C) = "JB_jobshare" or else
+           Name (C) = "JB_jid_predecessor_list" or else
+           Name (C) = "JB_jid_successor_list" or else
+           Name (C) = "JB_jid_request_list" or else
            Name (C) = "tickets" or else
            Name (C) = "JB_nppri" or else
            Name (C) = "JB_uid" or else
@@ -328,18 +391,13 @@ package body Jobs is
       if J.Queue = "" then
          J.Queue := To_Unbounded_String ("*");
       end if;
-
-
-      Resources.Sort (J.Hard);
-      Resources.Sort (J.Soft);
-      return J;
-   exception
+            exception
       when E : others =>
          HTML.Error ("Failed to parse job: " & Exception_Message (E));
          HTML.Error ("Node type: """ & Name (C)
                      & """ Value: """ & Value (First_Child (C)) & """");
-         return J;
-   end New_Job;
+
+   end Update_Job;
 
    ---------------------------
    -- Extract_Resource_List --
