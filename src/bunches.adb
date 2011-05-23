@@ -1,5 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
+with Slots; use Slots; use Slots.Slot_Lists;
 with Ada.Text_IO;
 with CGI;
 with HTML;
@@ -25,11 +26,11 @@ package body Bunches is
 
       --  Create Bunch according to first Job
       B := New_Bunch (J);
-      while Cursor /= No_Element loop
+      while Cursor /= Jobs.Job_Lists.No_Element loop
          J := Element (Cursor);
          --  New Bunch?
          if not (B.PE = J.PE and then
-                   B.Slots = J.Slot_Number and then
+                   B.Slot_List = J.Slot_List and then
                    Resources.Equal (B.Hard, J.Hard) and then
                    Resources.Equal (B.Soft, J.Soft) and then
                    B.Queue = J.Queue) then
@@ -62,7 +63,7 @@ package body Bunches is
       B : Bunch;
    begin
       B.PE := J.PE;
-      B.Slots := J.Slot_Number;
+      B.Slot_List := J.Slot_List;
       B.Queue := J.Queue;
       B.Hard := J.Hard;
       B.Soft := J.Soft;
@@ -93,14 +94,14 @@ package body Bunches is
 
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=bunch"
                & "&pe=" & B.PE
-               & "&slots=" & B.Slots
+               & "&slots=" & Slots.Hash (B.Slot_List)
                & "&queue=" & B.Queue
                & "&hr=" & Resources.Hash (B.Hard)
                & "&sr=" & Hash (B.Soft)
                & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => B.PE);
-      HTML.Put_Cell (Data => B.Slots, Class => "right");
+      Slots.Put_Cell (Data => B.Slot_List, Class => "right");
       HTML.Put_Cell (Data => B.Queue);
       HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
       HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));

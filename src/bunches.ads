@@ -2,11 +2,17 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Jobs; use Jobs;
 with Resources;
+with Slots; use Slots;
 
 package Bunches is
 
    type Bunch is record
-      PE, Slots, Queue : Unbounded_String;
+      PE, Queue : Unbounded_String;
+      --  Slots : Unbounded_String;
+      --  When/how/why is this needed? Probably just for running jobs,
+      --  but bunches are only made up of waiting jobs, so we can ignore
+      --  the "slots" tag
+      Slot_List        : Slots.Slot_Lists.List;
       Hard, Soft       : Resources.Resource_Lists.List;
       Total, On_Hold   : Natural;
       Error, Waiting   : Natural;

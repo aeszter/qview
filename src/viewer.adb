@@ -206,10 +206,10 @@ package body Viewer is
             CGI.Put_HTML_Heading (Title => "Demand",
                                Level => 2);
          end if;
-         SGE_Out := Setup_Parser (Selector => "-u \* -r -s p");
+         SGE_Out := Setup_Parser (Selector => "-j \* -r -s p");
 
          --  Fetch Queues
-         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
+         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
          if Length (Nodes) = 0 then
             Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
             return;
@@ -642,10 +642,10 @@ package body Viewer is
 
       begin
          SGE_Out := Setup_Parser (Command  => "qstat",
-                                  Selector => "-r -s p -u \*");
+                                  Selector => "-r -s p -j \*");
          Put_Table_Header;
 
-         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "djob_info"));
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
                           Slots         => CGI.Value ("slots"),
                           Queue         => CGI.Value ("queue"),
@@ -737,7 +737,7 @@ package body Viewer is
                          & CGI.Value ("mem")
                         );
                          -- & "/" & CGI.Value "rt"
-                         --  currently not used, so do not confuse the user
+                         -- currently not used, so do not confuse the user
             Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
             View_Hosts (Sanitise (CGI.Value ("hosts")));
          elsif not HTML.Param_Is ("user", "") then
