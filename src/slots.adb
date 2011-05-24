@@ -48,6 +48,9 @@ package body Slots is
       while Pos /= Slot_Lists.No_Element loop
          S := S & To_String (What => Element (Pos), Short => True);
          Next (Pos);
+         if Pos /= Slot_Lists.No_Element then
+            S := S & ",";
+         end if;
       end loop;
       HTML.Put_Cell (Data => S, Class => Class);
    end Put_Cell;
@@ -58,7 +61,7 @@ package body Slots is
 
    function To_String (What : Slots; Short : Boolean) return String is
    begin
-      if not Short and then What.Min = What.Max then
+      if Short and then What.Min = What.Max then
          return What.Min'Img;
       elsif What.Step = 1 then
          return What.Min'Img & " -" & What.Max'Img;
