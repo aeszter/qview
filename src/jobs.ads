@@ -57,7 +57,7 @@ package Jobs is
 
       --  resources used for Bunching jobs
       Queue            : Unbounded_String;
-      Hard, Soft       : Resources.Resource_Lists.List;
+      Hard, Soft       : Resources.Resource_Lists.Map;
 
       Slot_List        : Slots.Slot_Lists.List;
       Queue_List       : String_Lists.List;

@@ -4,7 +4,7 @@ with Slots; use Slots; use Slots.Slot_Lists;
 with Ada.Text_IO;
 with CGI;
 with HTML;
-with Resources; use Resources;
+with Resources; use Resources; use Resources.Resource_Lists;
 
 package body Bunches is
 
@@ -31,8 +31,8 @@ package body Bunches is
          --  New Bunch?
          if not (B.PE = J.PE and then
                    B.Slot_List = J.Slot_List and then
-                   Resources.Equal (B.Hard, J.Hard) and then
-                   Resources.Equal (B.Soft, J.Soft) and then
+                   B.Hard = J.Hard and then
+                   B.Soft = J.Soft and then
                    B.Queue = J.Queue) then
             --  Yes. Store previous one.
             Bunch_List.Append (B);

@@ -19,15 +19,14 @@ package body Resources is
    --  Returns: the newly created resource
    ------------------
 
-   function New_Resource (Name  : Unbounded_String;
+   function New_Resource (Name  : String;
                           Value : Unbounded_String;
                           Boolean_Valued : Boolean;
                           State : Tri_State)
                           return Resource is
       R : Resource;
    begin
-      R.Name := Name;
-      if R.Name = "h_rt" then
+      if Name = "h_rt" then
          R.Numerical := Integer'Value (To_String (Value));
          R.Value := To_Unbounded_String (Format_Duration (R.Numerical));
       else
@@ -59,7 +58,7 @@ package body Resources is
          Boolean_Valued := True;
          State := False;
       end if;
-      return New_Resource (Name  => To_Unbounded_String (Name),
+      return New_Resource (Name  => Name,
                            Value => To_Unbounded_String (Value),
                            Boolean_Valued => Boolean_Valued,
                            State => State);
@@ -72,12 +71,12 @@ package body Resources is
    --  Returns: Hash value as a string
    ----------
 
-   function Hash (List : Resource_Lists.List) return String is
+   function Hash (List : Resource_Lists.Map) return String is
       Temp : Ada.Containers.Hash_Type := 0;
       Pos : Resource_Lists.Cursor := List.First;
    begin
       while Pos /= Resource_Lists.No_Element loop
-         Temp := Temp xor Hash (Element (Pos));
+         Temp := Temp xor Hash (Element (Pos)) xor Hash (Key (Pos));
          Next (Pos);
       end loop;
       return Temp'Img;
@@ -92,7 +91,7 @@ package body Resources is
 
    function Hash (R : Resource) return Hash_Type is
    begin
-      return Hash (R.Name) xor Hash (R.Value);
+      return Hash (R.Value);
    end Hash;
 
 
@@ -102,16 +101,18 @@ package body Resources is
    --  Parameter R: the resource to print
    -----------------------
 
-   procedure Put (R : Resource) is
-      Label : Unbounded_String := R.Name;
-      Value : Unbounded_String := R.Value;
+   procedure Put (Pos : Resource_Lists.Cursor) is
+      Label : Unbounded_String := Key (Pos);
+      Res   : Resource := Element (Pos);
+      Value : Unbounded_String := Res.Value;
+
    begin
       if Label = "h_rt" then
          HTML.Put_Paragraph (Label    => "<acronym title=""hard runtime limit"">h_rt</acronym>",
                              Contents => Value);
-      elsif R.Boolean_Valued then
+      elsif Res.Boolean_Valued then
          Ada.Text_IO.Put ("<p>" & To_String (Label) & ": ");
-         HTML.Put (R.State);
+         HTML.Put (Res.State);
          Ada.Text_IO.Put ("</p>");
       else
          HTML.Put_Paragraph (Label, Value);
@@ -122,7 +123,7 @@ package body Resources is
    -- To_Unbounded_String --
    -------------------------
 
-   function To_Unbounded_String (L : Resource_Lists.List) return Unbounded_String is
+   function To_Unbounded_String (L : Resource_Lists.Map) return Unbounded_String is
       S : Unbounded_String := Null_Unbounded_String;
       Cursor : Resource_Lists.Cursor;
    begin
@@ -131,7 +132,7 @@ package body Resources is
       end if;
       Cursor := L.First;
       loop
-         S := S & Element (Cursor).Name & ": " & Element (Cursor).Value;
+         S := S & Key (Cursor) & ": " & Element (Cursor).Value;
          exit when Cursor = L.Last;
          Cursor := Next (Cursor);
          S := S & "; ";
@@ -144,7 +145,7 @@ package body Resources is
    --  Purpose: Convert a Resource_List to a String for output
    ---------------
 
-   function To_String (L : Resource_Lists.List) return String is
+   function To_String (L : Resource_Lists.Map) return String is
    begin
       return To_String (To_Unbounded_String (L));
    end To_String;
@@ -167,32 +168,6 @@ package body Resources is
    end Format_Duration;
 
 
-   ----------
-   -- Sort --
-   ----------
-
-   procedure Sort (L : in out Resource_Lists.List) is
-   begin
-      Sorting.Sort (L);
-   end Sort;
-
-   -----------
-   -- Equal --
-   -----------
-
-   function Equal (Left, Right : Resource_Lists.List) return Boolean is
-   begin
-      return Left = Right;
-   end Equal;
-
-   --------------
-   -- Precedes --
-   --------------
-
-   function Precedes (Left, Right : Resource) return Boolean is
-   begin
-      return Left.Name < Right.Name;
-   end Precedes;
 
    ---------
    -- "<" --
@@ -200,11 +175,6 @@ package body Resources is
 
    function "<" (Left, Right : Resource) return Boolean is
    begin
-      if Precedes (Left, Right) then
-         return True;
-      elsif Precedes (Right, Left) then
-         return False;
-      end if;
       return Left.Value < Right.Value;
    end "<";
 
@@ -212,7 +182,7 @@ package body Resources is
    -- Precedes --
    --------------
 
-   function Precedes (Left, Right : Resource_Lists.List) return Boolean is
+   function Precedes (Left, Right : Resource_Lists.Map) return Boolean is
       L_Cursor, R_Cursor : Resource_Lists.Cursor;
    begin
       if Left.Length < Right.Length then
@@ -224,15 +194,18 @@ package body Resources is
       end if;
       L_Cursor := Left.First;
       R_Cursor := Right.First;
-      loop
-         if Element (L_Cursor) < Element (R_Cursor) then
+      while L_Cursor /= No_Element and then R_Cursor /= No_Element loop
+         if L_Cursor < R_Cursor then
+            return True;
+         elsif R_Cursor < L_Cursor then
+            return False;
+         elsif Element (L_Cursor) < Element (R_Cursor) then
             return True;
          elsif Element (R_Cursor) < Element (L_Cursor) then
             return False;
          end if;
-         exit when L_Cursor = Left.Last or else R_Cursor = Right.Last;
-         L_Cursor := Next (L_Cursor);
-         R_Cursor := Next (R_Cursor);
+         Next (L_Cursor);
+         Next (R_Cursor);
       end loop;
       return False;
    end Precedes;
@@ -290,56 +263,6 @@ package body Resources is
          raise Constraint_Error with "Unknown network " & S;
       end if;
    end To_Network;
-
-   ---------------
-   -- Get_Value --
-   ---------------
-
-   function Get_Value (List : Resource_Lists.List; Name : Unbounded_String)
-                       return Unbounded_String is
-      Res : Resource;
-      Cursor : Resource_Lists.Cursor;
-   begin
-      Cursor := First (List);
-      loop
-         Res := Element (Cursor);
-         if Res.Name = Name then
-            return Res.Value;
-         end if;
-         exit when Cursor = Last (List);
-         Next (Cursor);
-      end loop;
-      raise Resource_Error with "Resource """ & To_String (Name) & """ not found";
-   end Get_Value;
-
-   function Get_Value (List : Resource_Lists.List; Name : String)
-                       return Unbounded_String is
-   begin
-      return Get_Value (List, To_Unbounded_String (Name));
-   end Get_Value;
-
-   function Get_Numerical (List : Resource_Lists.List; Name : String)
-                           return Integer is
-   begin
-      return Get_Numerical (List, To_Unbounded_String (Name));
-   end Get_Numerical;
-
-   function Get_Numerical (List : Resource_Lists.List; Name : Unbounded_String)
-                           return Integer is
-      Res : Resource;
-      Cursor : Resource_Lists.Cursor;
-   begin
-      Cursor := First (List);
-      loop
-         exit when Cursor = No_Element;
-         Res := Element (Cursor);
-         if Res.Name = Name then
-            return Res.Numerical;
-         end if;
-         Next (Cursor);
-      end loop;
-      raise Resource_Error with "Resource """ & To_String (Name) & """ not found";
-   end Get_Numerical;
 
 
 end Resources;

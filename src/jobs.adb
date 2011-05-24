@@ -116,7 +116,8 @@ package body Jobs is
    begin
       return J.Submission_Time
         + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
-          Resources.Get_Numerical (J.Hard, "h_rt")));
+            Resources.Resource_Lists.Element (
+               J.Hard, To_Unbounded_String ("h_rt")).Numerical));
    end End_Time;
 
    --------------------
@@ -211,9 +212,6 @@ package body Jobs is
       J.IO := 0.0;
       J.CPU := 0.0;
       Update_Job (J => J, List => List);
-
-      Resources.Sort (J.Hard);
-      Resources.Sort (J.Soft);
       return J;
    end New_Job;
 
@@ -225,6 +223,8 @@ package body Jobs is
       C           : Node;
       A           : Attr;
       Time_Buffer : String (1 .. 19);
+      Inserted    : Boolean;
+      Inserted_At : Resource_Lists.Cursor;
    begin
       for Index in 0 .. Length (List) - 1 loop
          C := Item (List, Index);
@@ -298,12 +298,18 @@ package body Jobs is
             J.PE := To_Unbounded_String (Value (A));
          elsif Name (C) = "hard_request" then
             A := Get_Named_Item (Attributes (C), "name");
-            J.Hard.Append (New_Resource (Name  => Value (A),
-                                        Value => Value (First_Child (C))));
+            J.Hard.Insert (Key      => To_Unbounded_String (Value (A)),
+                           New_Item => New_Resource (Name  => Value (A),
+                                                     Value => Value (First_Child (C))),
+                           Position => Inserted_At,
+                           Inserted => Inserted);
          elsif Name (C) = "soft_request" then
             A := Get_Named_Item (Attributes (C), "name");
-            J.Soft.Append (New_Resource (Name  => Value (A),
-                                        Value => Value (First_Child (C))));
+            J.Soft.Insert (Key      => To_Unbounded_String (Value (A)),
+                           New_Item => New_Resource (Name  => Value (A),
+                                                     Value => Value (First_Child (C))),
+                           Position => Inserted_At,
+                           Inserted => Inserted);
          elsif Name (C) = "predecessor_jobs" or else
             Name (C) = "predecessor_jobs_req" then
             null; -- ignore
@@ -404,12 +410,15 @@ package body Jobs is
    ---------------------------
 
    procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List) is
-         Resource_Tags      : Node_List;
-         N, R               : Node;
-         Res_Value          : Unbounded_String;
+      Resource_Tags      : Node_List;
+      N, R               : Node;
+      Res_Value          : Unbounded_String;
       Res_Name           : Unbounded_String;
       Res_Bool           : Boolean;
-      Res_State : Tri_State;
+      Res_State          : Tri_State;
+      Inserted           : Boolean;
+      Inserted_At        : Resource_Lists.Cursor;
+
    begin
       for I in 1 .. Length (Resource_Nodes) loop
          N := Item (Resource_Nodes, I - 1);
@@ -436,10 +445,13 @@ package body Jobs is
                   Res_State := False;
                end if;
             end if;
-            J.Hard.Append (New_Resource (Name           => Res_Name,
-                                         Value          => Res_Value,
-                                         Boolean_Valued => Res_Bool,
-                                         State          => Res_State));
+            J.Hard.Insert (Key      => Res_Name,
+                           New_Item => New_Resource (Name  => To_String (Res_Name),
+                                                     Value => Res_Value,
+                                                     Boolean_Valued => Res_Bool,
+                                                     State => Res_State),
+                           Position => Inserted_At,
+                           Inserted => Inserted);
          end if;
       end loop;
    end Extract_Resource_List;
@@ -1092,16 +1104,15 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_resources");
          Res := J.Hard.First;
-         loop
-            exit when Res = Resources.Resource_Lists.No_Element;
-            Resources.Put (Resources.Resource_Lists.Element (Res));
-            Res := Next (Res);
+         while Res /= Resources.Resource_Lists.No_Element loop
+            Resources.Put (Res);
+            Next (Res);
          end loop;
+
          Res := J.Soft.First;
-         loop
-            exit when Res = Resources.Resource_Lists.No_Element;
-            Resources.Put (Resources.Resource_Lists.Element (Res));
-            Res := Next (Res);
+         while Res /= Resources.Resource_Lists.No_Element loop
+            Resources.Put (Res);
+            Next (Res);
          end loop;
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
