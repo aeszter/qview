@@ -113,6 +113,16 @@ package Jobs is
    ------------------------------
    procedure Update_List_From_Qstat_J;
 
+   ----------------
+   -- Prune_List --
+   --  Purpose: Prune a Job_List, keeping only Jobs that fulfill
+   --          the given requirements
+   --  Parameter: PE: Parallel environment required
+   --  Parameter Slots: Hash of the allowed slot ranges
+   --  Parameter Queue: Queue required
+   --  Parameter Hard_Requests: List of hard resource requests
+   --  Parameter Soft_Requests: List of soft resource requests
+   ----------------
    procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String);
 
    procedure Sort_By (Field : String; Direction : String);
