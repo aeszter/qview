@@ -614,7 +614,7 @@ package body Jobs is
       loop
          exit when Pos = Job_Lists.No_Element;
          J := Job_Lists.Element (Pos);
-         if J.Slot_Number = Slots and then
+         if Hash (J.Slot_List) = Slots and then
                  J.PE = PE and then
                  J.Queue = Queue and then
                  Hash (J.Hard) = Hard_Requests and then
@@ -623,8 +623,8 @@ package body Jobs is
             Temp.Append (J);
          else
             HTML.Comment (J.Number'Img);
-            if J.Slot_Number /= Slots then
-               HTML.Comment (J.Number'Img & ": " & To_String (J.Slot_Number) & " /= " & Slots);
+            if Hash (J.Slot_List) /= Slots then
+               HTML.Comment (J.Number'Img & ": " & Hash (J.Slot_List) & " /= " & Slots);
             end if;
             if J.PE /= PE then
                HTML.Comment (J.Number'Img & ": " & To_String (J.PE) & " /= " & PE);
@@ -1219,7 +1219,7 @@ package body Jobs is
       Ada.Text_IO.Put ("<tr>");
       Put_Core_Line (J);
       HTML.Put_Cell (Data => J.PE);
-      HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
+      Slots.Put_Cell (Data => J.Slot_List, Class => "right");
       HTML.Put_Cell (Data       => To_Unbounded_String (J.Hard));
       HTML.Put_Cell (Data       => To_Unbounded_String (J.Soft));
       HTML.Put_Img_Cell (State_As_String (J));
