@@ -203,6 +203,7 @@ package body Jobs is
    begin
       J.Merge_Std_Err := Undecided;
       J.Reserve := Undecided;
+      J.State := unknown;
       J.Mem := 0.0;
       J.IO := 0.0;
       J.CPU := 0.0;
@@ -467,6 +468,9 @@ package body Jobs is
                Q := Item (QR_Nodes, K - 1);
                if Name (Q) = "QR_name" then
                   J.Queue_List.Append (To_Unbounded_String (Value (First_Child (Q))));
+                  if J.Queue = Null_Unbounded_String then
+                     J.Queue := To_Unbounded_String (Value (First_Child (Q)));
+                  end if;
                end if;
             end loop;
          end if;
