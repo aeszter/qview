@@ -139,14 +139,9 @@ package body Jobs is
    begin
       for Index in 1 .. Length (Nodes) loop
          N := Item (Nodes, Index - 1);
-         if Name (N) = "djob_info" then
-            N := Item (Child_Nodes (N), 1);
-            if Name (N) /= "element" then
-               raise Assumption_Error with "Expected ""element"" Found """
-                 & Name (N) & """";
-            end if;
+         if Name (N) /= "#text" then
+            List.Append (New_Job (Child_Nodes (N)));
          end if;
-         List.Append (New_Job (Child_Nodes (N)));
       end loop;
    exception
       when E : others

@@ -2,10 +2,10 @@ with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Sax.Readers;
 with DOM.Core; use  DOM.Core;
-with DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
-use  DOM.Core.Documents, DOM.Core.Nodes, DOM.Core.Attrs;
+with DOM.Core.Nodes, DOM.Core.Attrs;
+use  DOM.Core.Nodes, DOM.Core.Attrs;
 with HTML;
-with Parser;
+with Parser; use Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
@@ -193,7 +193,6 @@ package body Viewer is
          end Put_Table_Header;
 
          SGE_Out     : Parser.Tree;
-         Nodes       : Node_List;
          Bunch_List : Bunches.Bunch_Lists.List;
       begin
          HTML.Begin_Div (Class => "bunches");
@@ -206,14 +205,7 @@ package body Viewer is
          end if;
          SGE_Out := Parser.Setup (Selector => "-u \* -r -s p");
 
-         --  Fetch Queues
-         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "job_list");
-         if Length (Nodes) = 0 then
-            Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
-            return;
-         end if;
-
-         Jobs.Append_List (Nodes);
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Jobs.Update_List_From_Qstat_J;
 
          --  Detect different bunches
@@ -402,7 +394,7 @@ package body Viewer is
 
          Put_Table_Header;
 
-         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          if not HTML.Param_Is ("sort", "") then
             if Length (Sort_Direction) /= 3 then
                --  something wrong -- maybe an attack?
@@ -446,20 +438,12 @@ package body Viewer is
 
       procedure View_Job (Job_ID : String) is
          SGE_Out       : Parser.Tree;
-         List          : Node_List;
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
-         --  Fetch Jobs
-         List := Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
-         if Length (List) = 0 then
-            Ada.Text_IO.Put_Line ("<i>unknown job</i>");
-            return;
-         end if;
-
-         Jobs.Append_List (List);
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          Jobs.List.Iterate (Jobs.Put'Access);
 
       exception
@@ -494,7 +478,7 @@ package body Viewer is
 
          Put_Table_Header;
 
-         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "job_list"));
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          if not HTML.Param_Is ("sort", "") then
             if Length (Sort_Direction) /= 3 then
                --  something wrong -- maybe an attack?
@@ -641,10 +625,11 @@ package body Viewer is
 
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
-                                  Selector => "-r -s p -j \*");
+                                  Selector => "-r -s p -u \*");
          Put_Table_Header;
 
-         Jobs.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "djob_info"));
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
+         Jobs.Update_List_From_Qstat_J;
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
                           Slots         => CGI.Value ("slots"),
                           Queue         => CGI.Value ("queue"),

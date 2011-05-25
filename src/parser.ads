@@ -11,7 +11,13 @@ package Parser is
    function Setup (Command  : String := "qstat";
                    Selector : String) return DOM.Core.Document;
    function Get_Elements_By_Tag_Name
-     (Doc : DOM.Core.Document; Tag_Name : DOM.Core.DOM_String := "*") return DOM.Core.Node_List
+     (Doc : DOM.Core.Document; Tag_Name : DOM.Core.DOM_String := "*")
+      return DOM.Core.Node_List
       renames DOM.Core.Documents.Get_Elements_By_Tag_Name;
+
+   function Get_Job_Nodes_From_Qstat_J (Doc : DOM.Core.Document)
+                                           return DOM.Core.Node_List;
+   function Get_Job_Nodes_From_Qstat_U (Doc : DOM.Core.Document)
+                                           return DOM.Core.Node_List;
 
 end Parser;
