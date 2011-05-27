@@ -629,13 +629,13 @@ package body Viewer is
          Put_Table_Header;
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Jobs.Update_List_From_Qstat_J;
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
-                          Slots         => CGI.Value ("slots"),
                           Queue         => CGI.Value ("queue"),
                           Hard_Requests => CGI.Value ("hr"),
                           Soft_Requests => CGI.Value ("sr")
                          );
+         Jobs.Update_List_From_Qstat_J;
+         Jobs.Prune_List_By_Slots (Slots => CGI.Value ("slots"));
          Jobs.List.Iterate (Jobs.Put_Bunch_Line'Access);
 
          --  Table Footer

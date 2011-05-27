@@ -115,15 +115,22 @@ package Jobs is
 
    ----------------
    -- Prune_List --
-   --  Purpose: Prune a Job_List, keeping only Jobs that fulfill
+   --  Purpose: Prune the Job_List, keeping only Jobs that fulfill
    --          the given requirements
    --  Parameter: PE: Parallel environment required
-   --  Parameter Slots: Hash of the allowed slot ranges
    --  Parameter Queue: Queue required
    --  Parameter Hard_Requests: List of hard resource requests
    --  Parameter Soft_Requests: List of soft resource requests
    ----------------
-   procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String);
+   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String);
+
+   ----------------
+   -- Prune_List --
+   --  Purpose: Prune the Job_List, keeping only Jobs that fulfill
+   --          the given requirements
+   --  Parameter Slots: Hash of the allowed slot ranges
+   ----------------
+   procedure Prune_List_By_Slots (Slots : String);
 
    procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;

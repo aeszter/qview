@@ -609,7 +609,7 @@ package body Jobs is
    -- Prune_List --
    ----------------
 
-   procedure Prune_List (PE, Slots, Queue, Hard_Requests, Soft_Requests : String) is
+   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String) is
       Temp : Job_Lists.List;
       Pos  : Job_Lists.Cursor := List.First;
       J    : Job;
@@ -618,18 +618,14 @@ package body Jobs is
       loop
          exit when Pos = Job_Lists.No_Element;
          J := Job_Lists.Element (Pos);
-         if Hash (J.Slot_List) = Slots and then
-                 J.PE = PE and then
-                 J.Queue = Queue and then
-                 Hash (J.Hard) = Hard_Requests and then
-                 Hash (J.Soft) = Soft_Requests
+         if J.PE = PE and then
+            J.Queue = Queue and then
+            Hash (J.Hard) = Hard_Requests and then
+            Hash (J.Soft) = Soft_Requests
          then
             Temp.Append (J);
          else
             HTML.Comment (J.Number'Img);
-            if Hash (J.Slot_List) /= Slots then
-               HTML.Comment (J.Number'Img & ": " & Hash (J.Slot_List) & " /= " & Slots);
-            end if;
             if J.PE /= PE then
                HTML.Comment (J.Number'Img & ": " & To_String (J.PE) & " /= " & PE);
             end if;
@@ -648,6 +644,33 @@ package body Jobs is
       HTML.Comment (Temp.Length'Img);
       List := Temp;
    end Prune_List;
+
+   ----------------
+   -- Prune_List --
+   ----------------
+
+   procedure Prune_List_By_Slots (Slots : String) is
+      Temp : Job_Lists.List;
+      Pos  : Job_Lists.Cursor := List.First;
+      J    : Job;
+
+   begin
+      loop
+         exit when Pos = Job_Lists.No_Element;
+         J := Job_Lists.Element (Pos);
+         if Hash (J.Slot_List) = Slots then
+            Temp.Append (J);
+         else
+            HTML.Comment (J.Number'Img);
+            if Hash (J.Slot_List) /= Slots then
+               HTML.Comment (J.Number'Img & ": " & Hash (J.Slot_List) & " /= " & Slots);
+            end if;
+         end if;
+         Next (Pos);
+      end loop;
+      HTML.Comment (Temp.Length'Img);
+      List := Temp;
+   end Prune_List_By_Slots;
 
    ------------------
    -- Sort_By      --
@@ -706,7 +729,8 @@ package body Jobs is
 
    ------------------------
    -- Precedes_By_Resources   --
-   --  Purpose: Check whether one job should precede another when sorted by various resources
+   --  Purpose: Check whether one job should precede another when sorted by
+   --           various resources
    --  Parameter Left: First Job
    --  Parameter Right: Second Job
    --  Returns: Whether Left precedes Right
