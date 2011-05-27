@@ -13,7 +13,7 @@ package Bunches is
       --  but bunches are only made up of waiting jobs, so we can ignore
       --  the "slots" tag
       Slot_List        : Slots.Slot_Lists.List;
-      Hard, Soft       : Resources.Resource_Lists.Map;
+      Hard, Soft       : Resources.Hashed_List;
       Total, On_Hold   : Natural;
       Error, Waiting   : Natural;
 

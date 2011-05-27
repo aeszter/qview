@@ -116,8 +116,7 @@ package body Jobs is
    begin
       return J.Submission_Time
         + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
-            Resources.Resource_Lists.Element (
-               J.Hard, To_Unbounded_String ("h_rt")).Numerical));
+            J.Hard.Numerical ("h_rt")));
    end End_Time;
 
    --------------------
@@ -620,8 +619,8 @@ package body Jobs is
          J := Job_Lists.Element (Pos);
          if J.PE = PE and then
             J.Queue = Queue and then
-            Hash (J.Hard) = Hard_Requests and then
-            Hash (J.Soft) = Soft_Requests
+            J.Hard.Hash = Hard_Requests and then
+            J.Soft.Hash = Soft_Requests
          then
             Temp.Append (J);
          else
@@ -632,10 +631,10 @@ package body Jobs is
             if J.Queue /= Queue then
                HTML.Comment (To_String (J.Queue) & " /= " & Queue);
             end if;
-            if Hash (J.Hard) /= Hard_Requests then
+            if J.Hard.Hash /= Hard_Requests then
                HTML.Comment (J.Number'Img & ": " & To_String (J.Hard) & " /= " & Hard_Requests);
             end if;
-            if Hash (J.Soft) /= Soft_Requests then
+            if J.Soft.Hash /= Soft_Requests then
                HTML.Comment (J.Number'Img & ": " & To_String (J.Soft) & " /= " & Soft_Requests);
             end if;
          end if;
