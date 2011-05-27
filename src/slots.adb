@@ -33,7 +33,7 @@ package body Slots is
    procedure Put (S : Slots) is
    begin
       HTML.Put_Paragraph (Label  => "Slots",
-                          Contents => To_String (What => S, Short => False));
+                          Contents => To_String (What => S, Short => True));
 
    end Put;
 
