@@ -540,6 +540,8 @@ package body Viewer is
                               Expected => "IB") then
             Selector := To_Unbounded_String (" -l ib");
             Append_Params ("net=IB");
+         else
+            Append_Params ("net=" & CGI.Value (Key => "net"));
          end if;
          if not HTML.Param_Is (Param    => "model",
                                Expected => "") then
