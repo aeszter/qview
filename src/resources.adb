@@ -64,23 +64,6 @@ package body Resources is
                            State => State);
    end New_Resource;
 
-   ----------
-   -- Hash --
-   --  Purpose: Calculate a hash value for a given resource list
-   --  Parameter List: The resource list to consider
-   --  Returns: Hash value as a string
-   ----------
-
-   function Hash (List : Resource_Lists.Map) return String is
-      Temp : Ada.Containers.Hash_Type := 0;
-      Pos : Resource_Lists.Cursor := List.First;
-   begin
-      while Pos /= Resource_Lists.No_Element loop
-         Temp := Temp xor Hash (Element (Pos)) xor Hash (Key (Pos));
-         Next (Pos);
-      end loop;
-      return Temp'Img;
-   end Hash;
 
    ----------
    -- Hash --
@@ -123,7 +106,7 @@ package body Resources is
    -- To_Unbounded_String --
    -------------------------
 
-   function To_Unbounded_String (L : Resource_Lists.Map) return Unbounded_String is
+   function To_Unbounded_String (L : Hashed_List) return Unbounded_String is
       S : Unbounded_String := Null_Unbounded_String;
       Cursor : Resource_Lists.Cursor;
    begin
@@ -145,7 +128,7 @@ package body Resources is
    --  Purpose: Convert a Resource_List to a String for output
    ---------------
 
-   function To_String (L : Resource_Lists.Map) return String is
+   function To_String (L : Hashed_List) return String is
    begin
       return To_String (To_Unbounded_String (L));
    end To_String;
@@ -182,7 +165,7 @@ package body Resources is
    -- Precedes --
    --------------
 
-   function Precedes (Left, Right : Resource_Lists.Map) return Boolean is
+   function Precedes (Left, Right : Hashed_List) return Boolean is
       L_Cursor, R_Cursor : Resource_Lists.Cursor;
    begin
       if Left.Length < Right.Length then
@@ -263,6 +246,129 @@ package body Resources is
          raise Constraint_Error with "Unknown network " & S;
       end if;
    end To_Network;
+
+   ------------
+   -- Insert --
+   ------------
+
+   overriding procedure Insert
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      New_Item  : Resource;
+      Position  : out Resource_Lists.Cursor;
+      Inserted  : out Boolean) is
+   begin
+      Resource_Lists.Insert (Container => Map (Container),
+                     Key       => Key,
+                     New_Item  => New_Item,
+                     Position  => Position,
+                     Inserted  => Inserted);
+      if Inserted then
+         Container.Hash_Value := Container.Hash_Value
+         xor Hash (Key)
+         xor Hash (New_Item);
+         Container.Hash_String :=
+           Container.Hash_Value'Img (2 .. Container.Hash_Value'Img'Last);
+      end if;
+   end Insert;
+
+   ------------
+   -- Insert --
+   ------------
+
+   overriding procedure Insert
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      Position  : out Resource_Lists.Cursor;
+      Inserted  : out Boolean) is
+   begin
+      Resource_Lists.Insert (Container => Map (Container),
+                  Key       => Key,
+                  Position  => Position,
+                  Inserted  => Inserted);
+      if Inserted then
+         Container.Rehash;
+      end if;
+   end Insert;
+
+   ------------
+   -- Insert --
+   ------------
+
+   overriding procedure Insert
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      New_Item  : Resource) is
+   begin
+      Resource_Lists.Insert (Container => Map (Container),
+                  Key       => Key,
+                  New_Item  => New_Item);
+      Container.Hash_Value := Container.Hash_Value
+       xor Hash (Key)
+       xor Hash (New_Item);
+      Container.Hash_String :=
+         Container.Hash_Value'Img (2 .. Container.Hash_Value'Img'Last);
+   end Insert;
+
+   -------------
+   -- Include --
+   -------------
+
+   overriding procedure Include
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      New_Item  : Resource) is
+   begin
+      Resource_Lists.Include (Container => Map (Container),
+                              Key       => Key,
+                              New_Item  => New_Item);
+      Container.Rehash;
+   end Include;
+
+   ----------
+   -- Hash --
+   ----------
+
+   function Hash (List : Hashed_List) return String is
+   begin
+      return List.Hash_String;
+   end Hash;
+
+   -----------
+   -- Value --
+   -----------
+
+   function Value (L : Hashed_List; Name : String) return String is
+   begin
+      raise Program_Error;
+      return Value (L, Name);
+   end Value;
+
+   ---------------
+   -- Numerical --
+   ---------------
+
+   function Numerical (L : Hashed_List; Name : String) return Integer is
+   begin
+      raise Program_Error;
+      return Numerical (L, Name);
+   end Numerical;
+
+   ------------
+   -- Rehash --
+   ------------
+
+   procedure Rehash (List : in out Hashed_List) is
+      Temp : Ada.Containers.Hash_Type := 0;
+      Pos : Resource_Lists.Cursor := List.First;
+   begin
+      while Pos /= Resource_Lists.No_Element loop
+         Temp := Temp xor Hash (Element (Pos)) xor Hash (Key (Pos));
+         Next (Pos);
+      end loop;
+      List.Hash_String := Temp'Img (2 .. Temp'Img'Last);
+      List.Hash_Value := Temp;
+   end Rehash;
 
 
 end Resources;

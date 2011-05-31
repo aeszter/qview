@@ -48,26 +48,26 @@ package Resources is
       Inserted  : out Boolean);
 
    overriding procedure Insert
-     (Container : in out Map;
-      Key       : Key_Type;
-      Position  : out Cursor;
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      Position  : out Resource_Lists.Cursor;
       Inserted  : out Boolean);
 
    overriding procedure Insert
-     (Container : in out Map;
-      Key       : Key_Type;
-      New_Item  : Element_Type);
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      New_Item  : Resource);
 
    overriding procedure Include
-     (Container : in out Map;
-      Key       : Key_Type;
-      New_Item  : Element_Type);
+     (Container : in out Hashed_List;
+      Key       : Unbounded_String;
+      New_Item  : Resource);
 
    procedure Put (Pos : Resource_Lists.Cursor);
-   function Hash (List : Resource_Lists.Map) return String;
    function "<" (Left, Right : Resource) return Boolean;
 
 
+   --  Purpose: Return the Lists's hash value
    function Hash (List : Hashed_List) return String;
    function Precedes (Left, Right : Hashed_List) return Boolean;
 
@@ -80,10 +80,11 @@ package Resources is
 private
    type Hashed_List is new Resource_Lists.Map with
       record
-         Hashed : Boolean := False;
-         Hash_Value   : Hash_Type;
+         Hash_Value : Hash_Type;
+         Hash_String : String (1 .. 10);
       end record;
 
-
+   --  Purpose: unconditionally compute the List's hash value
+   procedure Rehash (List : in out Hashed_List);
 
 end Resources;
