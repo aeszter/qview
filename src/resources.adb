@@ -166,31 +166,8 @@ package body Resources is
    --------------
 
    function Precedes (Left, Right : Hashed_List) return Boolean is
-      L_Cursor, R_Cursor : Resource_Lists.Cursor;
    begin
-      if Left.Length < Right.Length then
-         return True;
-      elsif Left.Length > Right.Length then
-         return False;
-      elsif Left.Is_Empty then
-         return False;
-      end if;
-      L_Cursor := Left.First;
-      R_Cursor := Right.First;
-      while L_Cursor /= No_Element and then R_Cursor /= No_Element loop
-         if L_Cursor < R_Cursor then
-            return True;
-         elsif R_Cursor < L_Cursor then
-            return False;
-         elsif Element (L_Cursor) < Element (R_Cursor) then
-            return True;
-         elsif Element (R_Cursor) < Element (L_Cursor) then
-            return False;
-         end if;
-         Next (L_Cursor);
-         Next (R_Cursor);
-      end loop;
-      return False;
+      return Left.Hash < Right.Hash;
    end Precedes;
 
    --------------
