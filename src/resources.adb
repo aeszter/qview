@@ -7,7 +7,7 @@ with Ada.Strings; use Ada.Strings;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Containers; use Ada.Containers;
 with Resources; use Resources.Resource_Lists;
-with Utils; use Utils;
+with Utils; use Utils; use Utils.Hash_Strings;
 
 package body Resources is
 
@@ -267,9 +267,12 @@ package body Resources is
          Container.Hash_Value := Container.Hash_Value
          xor Hash (Key)
          xor Hash (New_Item);
-         Container.Hash_String :=
-           Container.Hash_Value'Img (2 .. Container.Hash_Value'Img'Last);
+         Container.Hash_String := To_Hash_String (Container.Hash_Value'Img);
       end if;
+   exception
+      when Constraint_Error => HTML.Error (Container.Hash_Value'Img'First'Img
+                                          & " .." & Container.Hash_Value'Img'Last'Img);
+         raise;
    end Insert;
 
    ------------
@@ -306,8 +309,7 @@ package body Resources is
       Container.Hash_Value := Container.Hash_Value
        xor Hash (Key)
        xor Hash (New_Item);
-      Container.Hash_String :=
-         Container.Hash_Value'Img (2 .. Container.Hash_Value'Img'Last);
+      Container.Hash_String := To_Hash_String (Container.Hash_Value'Img);
    end Insert;
 
    -------------
@@ -331,7 +333,7 @@ package body Resources is
 
    function Hash (List : Hashed_List) return String is
    begin
-      return List.Hash_String;
+      return To_String (List.Hash_String);
    end Hash;
 
    -----------
@@ -366,7 +368,7 @@ package body Resources is
          Temp := Temp xor Hash (Element (Pos)) xor Hash (Key (Pos));
          Next (Pos);
       end loop;
-      List.Hash_String := Temp'Img (2 .. Temp'Img'Last);
+      List.Hash_String := To_Hash_String (Temp'Img);
       List.Hash_Value := Temp;
    end Rehash;
 
