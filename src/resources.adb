@@ -319,8 +319,7 @@ package body Resources is
 
    function Value (L : Hashed_List; Name : String) return String is
    begin
-      raise Program_Error;
-      return Value (L, Name);
+      return To_String (L.Element (Key => To_Unbounded_String (Name)).Value);
    end Value;
 
    ---------------
@@ -329,8 +328,7 @@ package body Resources is
 
    function Numerical (L : Hashed_List; Name : String) return Integer is
    begin
-      raise Program_Error;
-      return Numerical (L, Name);
+      return L.Element (Key => To_Unbounded_String (Name)).Numerical;
    end Numerical;
 
    ------------
