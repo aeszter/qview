@@ -82,8 +82,6 @@ package body Viewer is
                                & "&product=Private%20projects"">"
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
-         HTML.Put_Navigation_Link (Data       => "Profiling Mode",
-                                   Link_Param => "profile=10");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
@@ -651,7 +649,6 @@ package body Viewer is
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
 
-      N : Positive;
 
    begin
       begin
@@ -746,18 +743,6 @@ package body Viewer is
             Put_Headers (Title => "Finishing Jobs");
             Set_Params ("forecast=y");
             View_Forecast;
-         elsif not HTML.Param_Is ("profile", "") then
-            N := Integer'Value (CGI.Value ("profile"));
-            if N > 10 then
-               N := 1;
-            end if;
-
-            for I in 1 .. N  loop
-               View_Global_Jobs;
-               View_Detailed_Queues;
-               View_Job_Overview;
-               View_Hosts (What => "partition");
-            end loop;
          end if;
       else
          Put_Headers (Title => "");
