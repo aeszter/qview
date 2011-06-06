@@ -51,6 +51,8 @@ package body Viewer is
                                    Link_Param => "categories=demand");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
                                    Link_Param => "categories=both");
+         HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("With Slot Ranges"),
+                                   Link_Param => "categories=with_slots");
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
          HTML.Put_Search_Box;
@@ -171,7 +173,7 @@ package body Viewer is
       -- View_Job_Overview --
       -----------------------
 
-      procedure View_Job_Overview is
+      procedure View_Job_Overview (Slot_Ranges : Boolean) is
 
          procedure Put_Table_Header is
          begin
@@ -204,7 +206,9 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-u \* -r -s p");
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Jobs.Update_List_From_Qstat_J;
+         if Slot_Ranges then
+            Jobs.Update_List_From_Qstat_J;
+         end if;
 
          --  Detect different bunches
          Bunches.Build_List (Jobs.List, Bunch_List);
@@ -681,11 +685,15 @@ package body Viewer is
                View_Detailed_Queues;
             elsif HTML.Param_Is ("categories", "demand") then
                Put_Headers (Title => "Demand");
-               View_Job_Overview;
+               View_Job_Overview (Slot_Ranges => False);
             elsif HTML.Param_Is ("categories", "both") then
                Put_Headers (Title => "Supply & Demand");
                View_Detailed_Queues;
-               View_Job_Overview;
+               View_Job_Overview (Slot_Ranges => False);
+            elsif HTML.Param_Is ("categories", "with_slots") then
+               Put_Headers (Title => "Supply & Demand (with slot ranges)");
+               View_Detailed_Queues;
+               View_Job_Overview (Slot_Ranges => True);
             end if;
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
