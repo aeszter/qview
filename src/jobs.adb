@@ -392,6 +392,15 @@ package body Jobs is
       if J.Queue = "" then
          J.Queue := To_Unbounded_String ("*");
       end if;
+      if J.Slot_List.Is_Empty then
+         declare
+            S : Natural;
+         begin
+            S := Natural'Value (To_String (J.Slot_Number));
+            J.Slot_List.Append (Slots.Slots'(Min => S, Step => 1, Max => S));
+         end;
+      end if;
+
             exception
       when E : others =>
          HTML.Error ("Failed to parse job: " & Exception_Message (E));
