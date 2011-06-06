@@ -103,7 +103,23 @@ package Jobs is
    procedure Extract_Paths (Path_List  : in out String_Lists.List;
                             List_Nodes  : Node_List);
 
+   -----------------
+   -- Append_List --
+   --  Purpose: Read Jobs from a given list of (DOM) Nodes and populate the List
+   --  accordingly
+   -----------------
+
    procedure Append_List (Nodes : Node_List);
+
+   -----------------
+   -- Append_List --
+   --  Purpose: Read Jobs from a given list of (DOM) Nodes and populate the List
+   --  accordingly. Jobs are selected according to certain criteria
+   -----------------
+   procedure Append_List (Nodes                    : Node_List;
+                          PE, Queue, Hard_Requests,
+                          Soft_Requests,
+                          Slots                    : Unbounded_String);
 
    ------------------------------
    -- Update_List_From_Qstat_J --
@@ -111,6 +127,8 @@ package Jobs is
    --  call qstat -j for each Job in List, filling in information for
    --  previously empty fields
    ------------------------------
+
+   --  Is this still needed?
    procedure Update_List_From_Qstat_J;
 
    ----------------
@@ -122,7 +140,8 @@ package Jobs is
    --  Parameter Hard_Requests: List of hard resource requests
    --  Parameter Soft_Requests: List of soft resource requests
    ----------------
-   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String);
+   --   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String);
+   --  outdated. move functionality to Append_List
 
    ----------------
    -- Prune_List --
@@ -131,6 +150,7 @@ package Jobs is
    --  Parameter Slots: Hash of the allowed slot ranges
    ----------------
    procedure Prune_List_By_Slots (Slots : String);
+   --  outdated. move functionality to Append_List. Does GPS notice this?
 
    procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;

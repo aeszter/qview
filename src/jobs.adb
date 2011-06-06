@@ -139,6 +139,16 @@ package body Jobs is
       for Index in 1 .. Length (Nodes) loop
          N := Item (Nodes, Index - 1);
          if Name (N) /= "#text" then
+            -- something like:
+            -- J := New_Job
+            -- if J.PE = .. and then J.Queue = ...
+            -- then Update (J); if J.Slots = ...
+            -- then Append (J)
+
+            note big problem: we have two kinds of jobs, i.e. those
+            with and without slot ranges; how do we properly select bunches
+                    without cluttering the code even more?
+
             List.Append (New_Job (Child_Nodes (N)));
          end if;
       end loop;

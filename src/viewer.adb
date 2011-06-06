@@ -632,14 +632,14 @@ package body Viewer is
                                   Selector => "-r -s p -u \*");
          Put_Table_Header;
 
-         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Jobs.Prune_List (PE            => CGI.Value ("pe"),
-                          Queue         => CGI.Value ("queue"),
-                          Hard_Requests => CGI.Value ("hr"),
-                          Soft_Requests => CGI.Value ("sr")
-                         );
-         Jobs.Update_List_From_Qstat_J;
-         Jobs.Prune_List_By_Slots (Slots => CGI.Value ("slots"));
+         Jobs.Append_List (
+                           Nodes         => Get_Job_Nodes_From_Qstat_U (SGE_Out),
+                           PE            => CGI.Value ("pe"),
+                           Queue         => CGI.Value ("queue"),
+                           Hard_Requests => CGI.Value ("hr"),
+                           Soft_Requests => CGI.Value ("sr"),
+                           Slots         => CGI.Value ("slots")
+                          );
          Jobs.List.Iterate (Jobs.Put_Bunch_Line'Access);
 
          --  Table Footer
