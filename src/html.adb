@@ -283,9 +283,18 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
+   -------------
+   -- Comment --
+   -------------
+
    procedure Comment (Data : String) is
    begin
       Ada.Text_IO.Put_Line ("<!-- " & Data & " -->");
+   end Comment;
+
+   procedure Comment (Data : Unbounded_String) is
+   begin
+      Comment (To_String (Data));
    end Comment;
 
 

@@ -39,6 +39,7 @@ package HTML is
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Comment (Data : String);
+   procedure Comment (Data : Unbounded_String);
    procedure Put (Data : Tri_State);
 
    procedure Put_Stylesheet (URL : String);
