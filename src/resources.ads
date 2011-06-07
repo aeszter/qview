@@ -80,7 +80,7 @@ package Resources is
 private
    type Hashed_List is new Resource_Lists.Map with
       record
-         Hash_Value : Hash_Type;
+         Hash_Value : Hash_Type := 0;
          Hash_String : Utils.Hash_String_Type;
       end record;
 
