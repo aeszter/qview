@@ -29,11 +29,7 @@ package body Bunches is
       while Cursor /= Jobs.Job_Lists.No_Element loop
          J := Element (Cursor);
          --  New Bunch?
-         if not (B.PE = J.PE and then
-                   B.Slot_List = J.Slot_List and then
-                   B.Hard = J.Hard and then
-                   B.Soft = J.Soft and then
-                   B.Queue = J.Queue) then
+         if B /= J then
             --  Yes. Store previous one.
             Bunch_List.Append (B);
             B := New_Bunch (J);
@@ -118,5 +114,26 @@ package body Bunches is
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
+   ---------
+   -- "=" --
+   ---------
 
+   function "=" (Left : Job; Right : Bunch) return Boolean is
+   begin
+      return Right = Left;
+   end "=";
+
+   ---------
+   -- "=" --
+   ---------
+
+   function "=" (Left : Bunch; Right : Job) return Boolean is
+   begin
+      return (Left.PE = Right.PE and then
+                   Left.Slot_Number = Right.Slot_Number and then
+                   Left.Slot_List = Right.Slot_List and then
+                   Left.Hard = Right.Hard and then
+                   Left.Soft = Right.Soft and then
+       Left.Queue = Right.Queue);
+   end "=";
 end Bunches;
