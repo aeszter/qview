@@ -187,6 +187,13 @@ package Jobs is
    -----------------------------
    procedure Update_Job_From_Qstat_J (J : in out Job);
 
+   -------------------
+   -- Update_Status --
+   -- Purpose: Read the job's status from an appropriate source
+   -- (such as a qstat -u call)
+   -------------------
+   procedure Update_Status (Position : in out Job_Lists.Cursor);
+
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
        ("<" => Precedes_By_Name);

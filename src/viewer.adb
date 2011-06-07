@@ -446,6 +446,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Jobs.List.Iterate (Jobs.Update_Status'Access);
          Jobs.List.Iterate (Jobs.Put'Access);
 
       exception
