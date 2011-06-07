@@ -7,15 +7,12 @@ with Slots; use Slots;
 package Bunches is
 
    type Bunch is record
-      PE, Queue : Unbounded_String;
-      --  Slots : Unbounded_String;
-      --  When/how/why is this needed? Probably just for running jobs,
-      --  but bunches are only made up of waiting jobs, so we can ignore
-      --  the "slots" tag
-      Slot_List        : Slots.Slot_Lists.List;
-      Hard, Soft       : Resources.Hashed_List;
-      Total, On_Hold   : Natural;
-      Error, Waiting   : Natural;
+      PE, Queue      : Unbounded_String;
+      Slot_Number    : Unbounded_String;
+      Slot_List      : Slots.Slot_Lists.List;
+      Hard, Soft     : Resources.Hashed_List;
+      Total, On_Hold : Natural;
+      Error, Waiting : Natural;
 
    end record;
 
@@ -27,4 +24,11 @@ package Bunches is
    procedure Put (Pos : Bunch_Lists.Cursor);
 
    function New_Bunch (J : Job) return Bunch;
+   ---------
+   -- "=" --
+   --  Returns True if a given Job does belong to a given Bunch
+   ---------
+
+   function "=" (Left : Bunch; Right : Job) return Boolean;
+   function "=" (Left : Job; Right : Bunch) return Boolean;
 end Bunches;

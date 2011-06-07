@@ -62,15 +62,16 @@ package body Bunches is
    function New_Bunch (J : Job) return Bunch is
       B : Bunch;
    begin
-      B.PE := J.PE;
-      B.Slot_List := J.Slot_List;
-      B.Queue := J.Queue;
-      B.Hard := J.Hard;
-      B.Soft := J.Soft;
-      B.Total := 0;
-      B.On_Hold := 0;
-      B.Waiting := 0;
-      B.Error := 0;
+      B.PE          := J.PE;
+      B.Slot_List   := J.Slot_List;
+      B.Slot_Number := J.Slot_Number;
+      B.Queue       := J.Queue;
+      B.Hard        := J.Hard;
+      B.Soft        := J.Soft;
+      B.Total       := 0;
+      B.On_Hold     := 0;
+      B.Waiting     := 0;
+      B.Error       := 0;
       return B;
    end New_Bunch;
 
@@ -94,14 +95,19 @@ package body Bunches is
 
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=bunch"
                & "&pe=" & B.PE
-               & "&slots=" & Slots.Hash (B.Slot_List)
+               & "&slot_ranges=" & Slots.Hash (B.Slot_List)
+               & "&slot_number=" & B.Slot_Number
                & "&queue=" & B.Queue
                & "&hr=" & Resources.Hash (B.Hard)
                & "&sr=" & Hash (B.Soft)
                & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => B.PE);
-      Slots.Put_Cell (Data => B.Slot_List, Class => "right");
+      if not B.Slot_List.Is_Empty then
+         Slots.Put_Cell (Data => B.Slot_List, Class => "right");
+      else
+         HTML.Put_Cell (Data => B.Slot_Number);
+      end if;
       HTML.Put_Cell (Data => B.Queue);
       HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
       HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));

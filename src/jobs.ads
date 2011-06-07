@@ -119,7 +119,7 @@ package Jobs is
    procedure Append_List (Nodes                    : Node_List;
                           PE, Queue, Hard_Requests,
                           Soft_Requests,
-                          Slots                    : Unbounded_String);
+                          Slot_Number, Slot_Ranges : Unbounded_String);
 
    ------------------------------
    -- Update_List_From_Qstat_J --

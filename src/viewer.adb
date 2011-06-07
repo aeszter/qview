@@ -638,7 +638,8 @@ package body Viewer is
                            Queue         => CGI.Value ("queue"),
                            Hard_Requests => CGI.Value ("hr"),
                            Soft_Requests => CGI.Value ("sr"),
-                           Slots         => CGI.Value ("slots")
+                           Slot_Ranges   => CGI.Value ("slot_ranges"),
+                           Slot_Number   => CGI.Value ("slot_number")
                           );
          Jobs.List.Iterate (Jobs.Put_Bunch_Line'Access);
 

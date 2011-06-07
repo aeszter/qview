@@ -139,17 +139,59 @@ package body Jobs is
       for Index in 1 .. Length (Nodes) loop
          N := Item (Nodes, Index - 1);
          if Name (N) /= "#text" then
-            -- something like:
-            -- J := New_Job
-            -- if J.PE = .. and then J.Queue = ...
-            -- then Update (J); if J.Slots = ...
-            -- then Append (J)
-
-            note big problem: we have two kinds of jobs, i.e. those
-            with and without slot ranges; how do we properly select bunches
-                    without cluttering the code even more?
-
             List.Append (New_Job (Child_Nodes (N)));
+         end if;
+      end loop;
+   exception
+      when E : others
+         => HTML.Error ("Unable to read job info: " & Exception_Message (E));
+   end Append_List;
+
+   -----------------
+   -- Append_List --
+   -----------------
+
+   procedure Append_List (Nodes                    : Node_List;
+                          PE, Queue, Hard_Requests,
+                          Soft_Requests,
+                          Slot_Number, Slot_Ranges : Unbounded_String) is
+            N : Node;
+            J : Job;
+   begin
+      for Index in 1 .. Length (Nodes) loop
+         N := Item (Nodes, Index - 1);
+         if Name (N) /= "#text" then
+            J := New_Job (Child_Nodes (N));
+            if J.PE /= PE then
+               HTML.Comment (J.Number'Img & ":" & J.PE & " /= " & PE);
+            elsif J.Queue /= Queue then
+               HTML.Comment (J.Number'Img & ":" & J.Queue & " /= " & Queue);
+            elsif J.Hard.Hash /= Hard_Requests then
+               HTML.Comment (J.Number'Img & ":" & J.Hard.To_String & "(" & J.Hard.Hash & ")"
+                             & " /= " & Hard_Requests);
+            elsif J.Soft.Hash /= Soft_Requests then
+               HTML.Comment (J.Number'Img & ":" & J.Soft.To_String & "(" & J.Soft.Hash & ")"
+                             & " /= " & Soft_Requests);
+            else -- all equal
+               Update_Job_From_Qstat_J (J);
+               if Integer'Value (To_String (Slot_Ranges)) = 0 then
+                  --  checking against a string (i.e. " 0") would be too brittle,
+                  --  since any change in leading blanks would break this code
+                  if J.Slot_Number = Slot_Number then
+                     List.Append (J);
+                  else
+                     HTML.Comment (J.Number'Img & ":" & J.Slot_Number & " /= "
+                                     & Slot_Number);
+                  end if;
+               else
+                  if Hash (J.Slot_List) = Slot_Ranges then
+                     List.Append (J);
+                  else
+                     HTML.Comment (J.Number'Img & ":" & Hash (J.Slot_List) & " /= "
+                                     & Slot_Ranges);
+                  end if;
+               end if;
+            end if;
          end if;
       end loop;
    exception
@@ -402,16 +444,8 @@ package body Jobs is
       if J.Queue = "" then
          J.Queue := To_Unbounded_String ("*");
       end if;
-      if J.Slot_List.Is_Empty then
-         declare
-            S : Natural;
-         begin
-            S := Natural'Value (To_String (J.Slot_Number));
-            J.Slot_List.Append (Slots.Slots'(Min => S, Step => 1, Max => S));
-         end;
-      end if;
 
-            exception
+   exception
       when E : others =>
          HTML.Error ("Failed to parse job: " & Exception_Message (E));
          HTML.Error ("Node type: """ & Name (C)
@@ -627,45 +661,6 @@ package body Jobs is
    -- Prune_List --
    ----------------
 
-   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String) is
-      Temp : Job_Lists.List;
-      Pos  : Job_Lists.Cursor := List.First;
-      J    : Job;
-
-   begin
-      loop
-         exit when Pos = Job_Lists.No_Element;
-         J := Job_Lists.Element (Pos);
-         if J.PE = PE and then
-            J.Queue = Queue and then
-            J.Hard.Hash = Hard_Requests and then
-            J.Soft.Hash = Soft_Requests
-         then
-            Temp.Append (J);
-         else
-            HTML.Comment (J.Number'Img);
-            if J.PE /= PE then
-               HTML.Comment (J.Number'Img & ": " & To_String (J.PE) & " /= " & PE);
-            end if;
-            if J.Queue /= Queue then
-               HTML.Comment (To_String (J.Queue) & " /= " & Queue);
-            end if;
-            if J.Hard.Hash /= Hard_Requests then
-               HTML.Comment (J.Number'Img & ": " & To_String (J.Hard) & " /= " & Hard_Requests);
-            end if;
-            if J.Soft.Hash /= Soft_Requests then
-               HTML.Comment (J.Number'Img & ": " & To_String (J.Soft) & " /= " & Soft_Requests);
-            end if;
-         end if;
-         Next (Pos);
-      end loop;
-      HTML.Comment (Temp.Length'Img);
-      List := Temp;
-   end Prune_List;
-
-   ----------------
-   -- Prune_List --
-   ----------------
 
    procedure Prune_List_By_Slots (Slots : String) is
       Temp : Job_Lists.List;
