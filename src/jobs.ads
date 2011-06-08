@@ -71,6 +71,7 @@ package Jobs is
    end record;
 
    function State_As_String (J : Job) return String;
+   function To_String (State : Job_State) return String;
    function To_State (State : String) return Job_State;
    function Name_As_HTML (J : Job) return String;
    function On_Hold (J : Job) return Boolean;
@@ -189,10 +190,10 @@ package Jobs is
 
    -------------------
    -- Update_Status --
-   -- Purpose: Read the job's status from an appropriate source
-   -- (such as a qstat -u call)
+   --  Purpose: Read the job's status from an appropriate source
+   --  (such as a qstat -u call)
    -------------------
-   procedure Update_Status (Position : in out Job_Lists.Cursor);
+   procedure Update_Status (Position : Job_Lists.Cursor);
 
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
@@ -245,4 +246,14 @@ package Jobs is
 
    Max_Name_Length : constant Positive := 20;
    List : Job_Lists.List;
+
+private
+   -------------------
+   -- Update_Status --
+   --  Purpose: Read the job's status from an appropriate source
+   --  (such as a qstat -u call)
+   -------------------
+
+   procedure Update_Status (J : in out Job);
+
 end Jobs;

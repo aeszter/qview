@@ -38,6 +38,22 @@ package body Jobs is
 
    end State_As_String;
 
+   function To_String (State : Job_State) return String is
+   begin
+      case State is
+         when dt => return "dt";
+         when dr => return "dr";
+         when Eqw => return "Eqw";
+         when t => return "t";
+         when r => return "r";
+         when Rr => return "Rr";
+         when Rq => return "Rq";
+         when qw => return "qw";
+         when hqw => return "hqw";
+         when unknown => return "unknown";
+      end case;
+   end To_String;
+
    --------------
    -- To_State --
    --------------
@@ -244,6 +260,57 @@ package body Jobs is
          => HTML.Error ("Unable to read job info (" & J.Number'Img & "):"
                         & Exception_Message (E));
    end Update_Job_From_Qstat_J;
+
+   -------------------
+   -- Update_Status --
+   -------------------
+
+   procedure Update_Status (Position : Job_Lists.Cursor) is
+   begin
+      Update_Element (Container => List,
+                      Position  => Position,
+                      Process   => Update_Status'Access);
+   end Update_Status;
+
+   -------------------
+   -- Update_Status --
+   -------------------
+
+   procedure Update_Status (J : in out Job) is
+      SGE_Out     : DOM.Core.Document;
+      Nodes       : Node_List;
+      Field_Nodes : Node_List;
+      Field       : Node;
+      Number      : Positive;
+      State       : Job_State;
+   begin
+      SGE_Out := Parser.Setup (Selector => "-u " & To_String (J.Owner));
+
+      --  Fetch Jobs
+      Nodes := Parser.Get_Elements_By_Tag_Name (SGE_Out, "job_list");
+
+      Jobs :
+      for Index in 1 .. Length (Nodes) loop
+         Field_Nodes := Child_Nodes (Item (Nodes, Index - 1));
+         Fields :
+         for Field_Index in 1 .. Length (Field_Nodes) loop
+            Field := Item (Field_Nodes, Field_Index - 1);
+            if Name (Field) = "JB_job_number" then
+               Number := Integer'Value (Value (First_Child (Field)));
+            elsif Name (Field) = "state" then
+               State := To_State (Value (First_Child (Field)));
+            end if;
+         end loop Fields;
+         if Number = J.Number then
+            J.State := State;
+            exit Jobs;
+         end if;
+      end loop Jobs;
+   exception
+      when E : others
+         => HTML.Error ("Unable to read job status (" & J.Number'Img & "):"
+                        & Exception_Message (E));
+   end Update_Status;
 
    -------------
    -- New_Job --
@@ -1090,6 +1157,9 @@ package body Jobs is
          HTML.Put_Paragraph ("Array", J.Job_Array);
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (J.Reserve);
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>State: ");
+         HTML.Put (J.State);
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");

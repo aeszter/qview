@@ -2,6 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with Utils; use Utils;
+with Jobs;
 with CGI; use CGI;
 
 package HTML is
@@ -18,6 +19,7 @@ package HTML is
                        Tag        : String := "td";
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String);
+   procedure Put (What : Jobs.Job_State);
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Duration_Cell (Span : Duration);

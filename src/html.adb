@@ -6,6 +6,7 @@ with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
+with Jobs;
 
 package body HTML is
 
@@ -128,6 +129,17 @@ package body HTML is
    begin
       Put_Cell (Data => Data);
    end Put_Img_Cell;
+
+   ---------
+   -- Put --
+   ---------
+
+   procedure Put (What : Jobs.Job_State) is
+      S : String := Jobs.To_String (What);
+   begin
+      Ada.Text_IO.Put ("<img src=""/icons/" & S & ".png"" ");
+      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & """ />");
+   end Put;
 
    -------------------
    -- Put_Time_Cell --
