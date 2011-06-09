@@ -8,6 +8,24 @@ with Ada.Strings.Fixed;
 
 package body Partitions is
 
+   ---------
+   -- "=" --
+   ---------
+
+   function "=" (Left : Partition; Right : Queue) return Boolean is
+   begin
+      return Left.Network = Right.Network and then
+             Left.Model = Right.Model and then
+             Left.Memory = Right.Memory and then
+             Left.Cores = Right.Cores and then
+             Left.Runtime = Right.Runtime;
+   end "=";
+
+   function "=" (Left : Queue; Right : Partition) return Boolean is
+   begin
+      return Right = Left;
+   end "=";
+
    -------------------
    -- New_Partition --
    --  Purpose: Build a partition list from a queue list.
@@ -33,11 +51,7 @@ package body Partitions is
       while Cursor /= No_Element loop
          Q := Element (Cursor);
          --  New Partition?
-         if not (P.Network = Q.Network and then
-                   P.Model = Q.Model and then
-                  P.Memory = Q.Memory and then
-                   P.Cores = Q.Cores and then
-                 P.Runtime = Q.Runtime) then
+         if P /= Q then
             --  Yes. Store previous one.
             Part_List.Append (P);
             P := New_Partition (Q);

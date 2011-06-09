@@ -24,4 +24,7 @@ package Partitions is
    function New_Partition (Q : Queue) return Partition;
    procedure Put (Partition : Partitions.Partition_Lists.Cursor);
    function Model_As_String (P : Partition) return String;
+
+   function "=" (Left : Partition; Right : Queue) return Boolean;
+   function "=" (Left : Queue; Right : Partition) return Boolean;
 end Partitions;
