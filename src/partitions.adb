@@ -93,6 +93,7 @@ package body Partitions is
       P.Used      := 0;
       P.Reserved  := 0;
       P.Available := 0;
+      P.Name      := Q.Name;
       return P;
    end New_Partition;
 
@@ -120,7 +121,7 @@ package body Partitions is
                      & "&model=" & Model_As_String (P)
                      & "&cores=" & Ada.Strings.Fixed.Trim (P.Cores'Img, Ada.Strings.Left)
                      & "&mem=" & Ada.Strings.Fixed.Trim (P.Memory'Img, Ada.Strings.Left)
-                     & "&rt=" & To_String (P.Runtime)
+                     & "&q=" & To_String (P.Name)
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => P.Network'Img);

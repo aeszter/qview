@@ -238,7 +238,7 @@ package body Viewer is
             Mem, Runtime          : Unbounded_String;
             Cores                 : Natural;
             Network               : Resources.Network := none;
-            Model                 : Unbounded_String := Null_Unbounded_String;
+            Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
             type small is digits 4 range 0.0 .. 1.0;
          begin
             for Index in 1 .. Length (Nodes) loop
@@ -267,6 +267,8 @@ package body Viewer is
                      Runtime := To_Unbounded_String (Value (First_Child (N)));
                   elsif Value (A) = "cpu_model" then
                      Model := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "qname" then
+                     Queue_Name := To_Unbounded_String (Value (First_Child (N)));
                   end if;
                end if;
             end loop;
@@ -279,6 +281,7 @@ package body Viewer is
                                           Network  => Network,
                                           Model    => To_Model (Model),
                                           Runtime  => Runtime,
+                                          Name     => Queue_Name,
                                           State    => To_String (State)
                                          ));
          exception
@@ -580,7 +583,7 @@ package body Viewer is
          Hosts.Prune_List (Net     => CGI.Value ("net"),
                            Cores   => CGI.Value ("cores"),
                            Memory  => CGI.Value ("mem"),
-                           Runtime => CGI.Value ("rt"));
+                           Queue_Name => CGI.Value ("q"));
 
          --  Can we factor this out?
          if not HTML.Param_Is ("sort", "") then

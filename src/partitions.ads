@@ -13,7 +13,7 @@ package Partitions is
       Model                 : Resources.CPU_Model;
       Memory                : Gigs;
       Cores                 : Positive;
-      Runtime               : Unbounded_String;
+      Runtime, Name         : Unbounded_String;
    end record;
 
    package Partition_Lists is

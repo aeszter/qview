@@ -1,5 +1,6 @@
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Resources; use Resources;
+with HTML;
 
 package body Queues is
 
@@ -18,12 +19,13 @@ package body Queues is
 
    function New_Queue
      (Used, Reserved, Total : Natural;
-      State                 : String;
-      Memory                : String;
-      Cores                 : Natural;
-      Network               : Resources.Network;
-      Model                 : Resources.CPU_Model;
-      Runtime               : Unbounded_String)
+                       State                 : String;
+                       Memory                : String;
+                       Cores                 : Natural;
+                       Network               : Resources.Network;
+                       Model                 : Resources.CPU_Model;
+                       Runtime               : Unbounded_String;
+                      Name : Unbounded_String)
       return Queue
    is
       Q : Queue;
@@ -50,6 +52,8 @@ package body Queues is
       Q.Network  := Network;
       Q.Model    := Model;
       Q.Runtime  := Runtime;
+      Q.Name     := Name;
+      HTML.Comment ("New queue """ & Q.Name & """");
       if Cores = 0 then
          Q.Cores := Q.Total;
       else

@@ -13,15 +13,17 @@ package Queues is
       Memory                : Gigs;
       Cores                 : Positive;
       Runtime               : Unbounded_String;
+      Name                  : Unbounded_String;
    end record;
 
    function New_Queue (Used, Reserved, Total : Natural;
-      State                 : String;
-      Memory                : String;
-      Cores                 : Natural;
-      Network               : Resources.Network;
-      Model                 : Resources.CPU_Model;
-      Runtime               : Unbounded_String)
+                       State                 : String;
+                       Memory                : String;
+                       Cores                 : Natural;
+                       Network               : Resources.Network;
+                       Model                 : Resources.CPU_Model;
+                       Runtime               : Unbounded_String;
+                      Name : Unbounded_String)
                        return Queue;
 
    function To_Gigs (Memory : String) return Gigs;

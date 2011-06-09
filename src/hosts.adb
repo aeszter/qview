@@ -7,7 +7,7 @@ with HTML;
 with Resources; use Resources;
 with Ada.Strings.Fixed;
 with Hosts; use Hosts.Job_Lists; use Hosts.Host_Lists;
-with Utils; use Utils;
+with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 
 package body Hosts is
 
@@ -241,9 +241,10 @@ package body Hosts is
    -- Append_Queue --
    ------------------
 
-   procedure Append_Queue (H : out Host; State : String) is
+   procedure Append_Queue (H : out Host; Name, State : String) is
    begin
-      H.Queues.Append (To_Unbounded_String (State));
+      H.Queues.Insert (Key      => To_Unbounded_String (Name),
+                       New_Item => Queue_States.To_Bounded_String (State));
    end Append_Queue;
 
 
@@ -264,7 +265,7 @@ package body Hosts is
          H.Properties.Network := none;
          H.Properties.Model := none;
          H.Jobs := Job_Lists.Empty_List;
-         H.Queues := String_Lists.Empty_List;
+         H.Queues := Queue_Maps.Empty_Map;
          H.Properties.Cores := 1;
          H.Properties.Memory := 0.0;
          H.Properties.Used := 0;
@@ -308,10 +309,7 @@ package body Hosts is
    --  Parameter Runtime: Required Queue h_rt, must be matched exactly
    ----------------
 
-   procedure Prune_List (Net, Cores, Memory, Runtime : String) is
-      pragma Unreferenced (Runtime); -- hosts do not have an associated runtime
-                                       --  Bug #999: maybe we can call qstat to get the
-                                       --  necessary values?
+   procedure Prune_List (Net, Cores, Memory, Queue_Name : String) is
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
@@ -327,7 +325,8 @@ package body Hosts is
          H := Host_Lists.Element (Pos);
          if H.Properties.Network = Req_Net and then
            H.Properties.Memory = Mem and then
-           H.Properties.Cores = Req_Cores  then
+           H.Properties.Cores = Req_Cores and then
+           H.Queues.Contains (To_Unbounded_String (Queue_Name)) then
                Temp.Append (H);
          end if;
          Next (Pos);
@@ -341,11 +340,8 @@ package body Hosts is
 
    procedure Parse_Queue (H : in out Host; N : Node) is
       A, Q_Name : Attr;
-      pragma Unreferenced (Q_Name);
-      --  probably not needed; not storing this simplifies the Host type
-      --  since we can use a list of strings instead of a customized list
-      Q_Values : Node_List := Child_Nodes (N);
-      Q_Value : Node;
+      Q_Values  : Node_List := Child_Nodes (N);
+      Q_Value   : Node;
    begin
       Q_Name := Get_Named_Item (Attributes (N), "name");
 
@@ -358,6 +354,7 @@ package body Hosts is
             if Value (A) = "state_string" and then
                Has_Child_Nodes (Q_Value) then
                Append_Queue (H     => H,
+                             Name  => Value (Q_Name),
                              State => Value (First_Child (Q_Value)));
                HTML.Comment ("appended");
             end if;
@@ -541,8 +538,8 @@ package body Hosts is
    -- Put_Status --
    ----------------
 
-   procedure Put_Status (Cursor : Utils.String_Lists.Cursor) is
-      S : String := To_String (String_Lists.Element (Cursor));
+   procedure Put_Status (Cursor : Queue_Maps.Cursor) is
+      S : String := Queue_States.To_String (Queue_Maps.Element (Cursor));
    begin
       HTML.Put_Img_Cell (Image => S);
    end Put_Status;

@@ -2,7 +2,8 @@ with Ada.Containers.Doubly_Linked_Lists;
 with DOM.Core; use DOM.Core;
 with Queues; use Queues;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Utils;
+with Ada.Containers.Ordered_Maps;
+with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 
 package Hosts is
 
@@ -19,6 +20,14 @@ package Hosts is
                                              "="          => Equal);
    subtype Job_List is Job_Lists.List;
 
+   package Queue_States is
+      new Generic_Bounded_Length (Max => 5);
+   package Queue_Maps is
+     new Ada.Containers.Ordered_Maps (Key_Type => Unbounded_String,
+                                      Element_Type => Queue_States.Bounded_String,
+                                     "=" => Queue_States."=");
+   subtype Queue_Map is Queue_Maps.Map;
+
    type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
    type Percent is range 0 .. 100;
 
@@ -31,7 +40,7 @@ package Hosts is
       Mem_Used   : Gigs;
       Swap_Total : Gigs;
       Swap_Used  : Gigs;
-      Queues     : Utils.String_List;
+      Queues     : Queue_Map;
    end record;
 
 
@@ -45,14 +54,14 @@ package Hosts is
    --  Parameter State: The state of the queue
    ------------------
 
-   procedure Append_Queue (H : out Host; State : String);
+   procedure Append_Queue (H : out Host; Name, State : String);
 
    function New_Job (ID : Positive; Master : Boolean) return Job;
    function New_Job (ID : Positive; PE_Master : String) return Job;
 
 
    procedure Append_List (Host_Nodes : Node_List);
-   procedure Prune_List (Net, Cores, Memory, Runtime : String);
+   procedure Prune_List (Net, Cores, Memory, Queue_Name : String);
    procedure Parse_Resource (H : in out Host; N : Node);
    ---------------------
    -- Parse_Hostvalue --
@@ -82,9 +91,9 @@ package Hosts is
    ----------------
    -- Put_Status --
    --  Purpose: Output one queue status
-   --  Parameter Cursor: List Cursor pointing to the queue to output
+   --  Parameter Cursor: Map Cursor pointing to the queue to output
    ----------------
-   procedure Put_Status (Cursor : Utils.String_Lists.Cursor);
+   procedure Put_Status (Cursor : Queue_Maps.Cursor);
    procedure Compactify (List : in out Job_List);
    procedure Update_Used_Slots (H : in out Host);
 
