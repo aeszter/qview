@@ -502,7 +502,7 @@ package body Hosts is
                      Class => "right " & Color_Class (Mem_Percentage (H)));
                      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                                     Class => "right " & Color_Class (Swap_Percentage (H)));
-      H.Queues.Iterate (Put_Status'Access);
+      H.Queues.Iterate (Put_Queue'Access);
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
@@ -542,11 +542,12 @@ package body Hosts is
    -- Put_Status --
    ----------------
 
-   procedure Put_Status (Cursor : Queue_Maps.Cursor) is
+   procedure Put_Queue (Cursor : Queue_Maps.Cursor) is
       S : String := Queue_States.To_String (Queue_Maps.Element (Cursor));
    begin
+      HTML.Put_Cell (Data => Queue_Maps.Key (Cursor));
       HTML.Put_Img_Cell (Image => S);
-   end Put_Status;
+   end Put_Queue;
 
    -------------------
    -- Load_Per_Core --

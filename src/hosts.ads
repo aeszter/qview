@@ -89,11 +89,11 @@ package Hosts is
    procedure Put (Cursor : Host_Lists.Cursor);
    procedure Put_Jobs (Cursor : Job_Lists.Cursor);
    ----------------
-   -- Put_Status --
-   --  Purpose: Output one queue status
+   -- Put_Queue --
+   --  Purpose: Output one queue name and status
    --  Parameter Cursor: Map Cursor pointing to the queue to output
    ----------------
-   procedure Put_Status (Cursor : Queue_Maps.Cursor);
+   procedure Put_Queue (Cursor : Queue_Maps.Cursor);
    procedure Compactify (List : in out Job_List);
    procedure Update_Used_Slots (H : in out Host);
 
