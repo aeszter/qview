@@ -351,12 +351,16 @@ package body Hosts is
                           Index => I - 1);
          if Name (Q_Value) = "queuevalue" then
             A := Get_Named_Item (Attributes (Q_Value), "name");
-            if Value (A) = "state_string" and then
-               Has_Child_Nodes (Q_Value) then
-               Append_Queue (H     => H,
-                             Name  => Value (Q_Name),
-                             State => Value (First_Child (Q_Value)));
-               HTML.Comment ("appended");
+            if Value (A) = "state_string" then
+               if Has_Child_Nodes (Q_Value) then
+                  Append_Queue (H     => H,
+                                Name  => Value (Q_Name),
+                                State => Value (First_Child (Q_Value)));
+               else
+                  Append_Queue (H     => H,
+                                Name  => Value (Q_Name),
+                                State => "");
+               end if;
             end if;
          end if;
       end loop Queue_Values;

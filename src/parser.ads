@@ -5,7 +5,7 @@ package Parser is
    subtype Tree is DOM.Core.Document;
 
    sgeroot : constant String := "/cm/shared/apps/sge/current";
-   Resource_Selector : constant String := "-F h_rt,eth,ib,mem_total,num_proc,cm";
+   Resource_Selector : constant String := "-F h_rt,eth,ib,mem_total,num_proc,cm,q";
 
 
    function Setup (Command  : String := "qstat";
