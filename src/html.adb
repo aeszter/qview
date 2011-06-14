@@ -7,6 +7,7 @@ with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
 with Jobs;
+use Jobs;
 
 package body HTML is
 
@@ -138,7 +139,30 @@ package body HTML is
       S : String := Jobs.To_String (What);
    begin
       Ada.Text_IO.Put ("<img src=""/icons/" & S & ".png"" ");
-      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & """ />");
+      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & ": ");
+      case What is
+         when r =>
+            Ada.Text_IO.Put ("running");
+         when Rr =>
+            Ada.Text_IO.Put ("restarted");
+         when t =>
+            Ada.Text_IO.Put ("in transit");
+         when Rq =>
+            Ada.Text_IO.Put ("requeued");
+         when Eqw =>
+            Ada.Text_IO.Put ("error");
+         when hqw =>
+            Ada.Text_IO.Put ("on hold");
+         when qw =>
+            Ada.Text_IO.Put ("waiting");
+         when dr =>
+            Ada.Text_IO.Put ("running, deletion pending");
+         when dt =>
+            Ada.Text_IO.Put ("in transit, deletion pending");
+         when unknown =>
+            null;
+      end case;
+      Ada.Text_IO.Put (""" />");
    end Put;
 
    -------------------
