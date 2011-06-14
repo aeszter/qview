@@ -9,6 +9,7 @@ with Utils; use Utils;
 package Jobs is
 
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw);
+   type State_Count is array (Job_State) of Natural;
    type Fixed is delta 0.0001 digits 5;
 
 
@@ -194,6 +195,12 @@ package Jobs is
    --  (such as a qstat -u call)
    -------------------
    procedure Update_Status (Position : Job_Lists.Cursor);
+
+   -----------------
+   -- Get_Summary --
+   --  Purpose: Count the number of jobs per state from the List
+   -----------------
+   procedure Get_Summary (Summary : out State_Count);
 
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting

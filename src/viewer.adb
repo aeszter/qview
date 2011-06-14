@@ -393,11 +393,30 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
+         procedure Put_Summary is
+            Summary : Jobs.State_Count;
+         begin
+            Jobs.Get_Summary (Summary);
+            HTML.Begin_Div (ID => "job_summary");
+            Ada.Text_IO.Put ("<ul>");
+            for State in Summary'Range loop
+               if State /= unknown then
+                  Ada.Text_IO.Put ("<li>");
+                  Ada.Text_IO.Put (Summary (State)'Img & " ");
+                  HTML.Put (What => State);
+                  Ada.Text_IO.Put_Line ("</li>");
+               end if;
+            end loop;
+
+            Ada.Text_IO.Put ("</ul>");
+            HTML.End_Div (ID => "job_summary");
+         end Put_Summary;
+
+
 
       begin
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
-         Put_Table_Header;
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          if not HTML.Param_Is ("sort", "") then
@@ -408,6 +427,10 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
+
+         Put_Table_Header;
+         Put_Summary;
+
          Jobs.List.Iterate (Jobs.Put_Res_Line'Access);
 
          --  Table Footer

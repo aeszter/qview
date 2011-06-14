@@ -17,6 +17,25 @@ with Interfaces.C;
 
 package body Jobs is
 
+   -----------------
+   -- Get_Summary --
+   -----------------
+
+   procedure Get_Summary (Summary : out State_Count) is
+
+      procedure Count (Position : Job_Lists.Cursor) is
+         State : Job_State := Job_Lists.Element (Position).State;
+      begin
+         Summary (State) := Summary (State) + 1;
+      end Count;
+
+   begin
+      for S in Summary'Range loop
+         Summary (S) := 0;
+      end loop;
+      List.Iterate (Process => Count'Access);
+   end Get_Summary;
+
    ---------------------
    -- State_As_String --
    ---------------------
