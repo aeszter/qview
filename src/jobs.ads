@@ -98,7 +98,9 @@ package Jobs is
    --  Parameter List: A list of XML nodes containing information about the job
    ----------------
    procedure Update_Job (J : in out Job; List : Node_List);
-   procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List);
+   procedure Extract_Resource_List (J              : in out Job;
+                                    Resource_Nodes : Node_List;
+                                    Soft           : Boolean := False);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);

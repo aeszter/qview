@@ -448,6 +448,8 @@ package body Jobs is
             null; -- ignore
          elsif Name (C) = "JB_hard_resource_list" then
             Extract_Resource_List (J, Child_Nodes (C));
+         elsif Name (C) = "JB_soft_resource_list" then
+            Extract_Resource_List (J, Child_Nodes (C), Soft => True);
          elsif Name (C) = "JB_hard_queue_list" then
             Extract_Queue_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_ja_tasks" then
@@ -543,7 +545,9 @@ package body Jobs is
    -- Extract_Resource_List --
    ---------------------------
 
-   procedure Extract_Resource_List (J : in out Job; Resource_Nodes : Node_List) is
+   procedure Extract_Resource_List (J              : in out Job;
+                                    Resource_Nodes : Node_List;
+                                    Soft : Boolean := False) is
       Resource_Tags      : Node_List;
       N, R               : Node;
       Res_Value          : Unbounded_String;
@@ -573,19 +577,32 @@ package body Jobs is
                end if;
             end loop;
             if Res_Bool then
-               if Res_Value = "TRUE" then
+               if Res_Value = "TRUE" or else Res_Value = "true" then
                   Res_State := True;
-               elsif Res_Value = "FALSE" then
+               elsif Res_Value = "FALSE" or else Res_Value = "false" then
                   Res_State := False;
+               else
+                  raise Constraint_Error
+                    with  """" & To_String (Res_Value) & """ is not boolean";
                end if;
             end if;
-            J.Hard.Insert (Key      => Res_Name,
+            if Soft then
+               J.Soft.Insert (Key      => Res_Name,
                            New_Item => New_Resource (Name  => To_String (Res_Name),
                                                      Value => Res_Value,
                                                      Boolean_Valued => Res_Bool,
                                                      State => Res_State),
                            Position => Inserted_At,
                            Inserted => Inserted);
+            else
+               J.Hard.Insert (Key      => Res_Name,
+                           New_Item => New_Resource (Name  => To_String (Res_Name),
+                                                     Value => Res_Value,
+                                                     Boolean_Valued => Res_Bool,
+                                                     State => Res_State),
+                           Position => Inserted_At,
+                           Inserted => Inserted);
+            end if;
          end if;
       end loop;
    end Extract_Resource_List;
@@ -1222,12 +1239,16 @@ package body Jobs is
       procedure Put_Resources is
       begin
          HTML.Begin_Div (Class => "job_resources");
+         HTML.Put_Heading (Title => "Hard",
+                           Level => 3);
          Res := J.Hard.First;
          while Res /= Resources.Resource_Lists.No_Element loop
             Resources.Put (Res);
             Next (Res);
          end loop;
 
+         HTML.Put_Heading (Title => "Soft",
+                           Level => 3);
          Res := J.Soft.First;
          while Res /= Resources.Resource_Lists.No_Element loop
             Resources.Put (Res);
