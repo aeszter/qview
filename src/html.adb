@@ -159,6 +159,8 @@ package body HTML is
             Ada.Text_IO.Put ("running, deletion pending");
          when dt =>
             Ada.Text_IO.Put ("in transit, deletion pending");
+         when ERq =>
+            Ada.Text_IO.Put ("requeued, with error");
          when unknown =>
             null;
       end case;

@@ -52,6 +52,7 @@ package body Jobs is
          when Rq => return "Rq";
          when qw => return "qw";
          when hqw => return "hqw";
+            when ERq => return "ERq";
          when unknown => return "unknown";
       end case;
 
@@ -69,6 +70,7 @@ package body Jobs is
          when Rq => return "Rq";
          when qw => return "qw";
          when hqw => return "hqw";
+            when ERq => return "ERq";
          when unknown => return "unknown";
       end case;
    end To_String;
@@ -97,6 +99,8 @@ package body Jobs is
          return qw;
       elsif State = "hqw" then
          return hqw;
+      elsif State = "ERq" then
+         return ERq;
       else
          return unknown;
       end if;
