@@ -5,6 +5,7 @@ with Ada.Text_IO;
 with CGI;
 with HTML;
 with Resources; use Resources; use Resources.Resource_Lists;
+with Ada.Exceptions;
 
 package body Bunches is
 
@@ -49,6 +50,11 @@ package body Bunches is
       end loop;
       --  That's it. Store final bunch.
       Bunch_List.Append (B);
+   exception
+      when E : Constraint_Error
+         => HTML.Error ("Unable to build bunch while examining job"
+                        & J.Number'Img
+                       & ": " & Ada.Exceptions.Exception_Message (E));
    end Build_List;
 
    -------------------
