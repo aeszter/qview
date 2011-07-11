@@ -23,33 +23,38 @@ package body Bunches is
    begin
       Sorting_By_Resources.Sort (Job_List);
       Cursor := Job_List.First;
-      J := Element (Cursor);
 
-      --  Create Bunch according to first Job
-      B := New_Bunch (J);
-      while Cursor /= Jobs.Job_Lists.No_Element loop
+      if Cursor = Jobs.Job_Lists.No_Element then
+         Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
+      else
          J := Element (Cursor);
-         --  New Bunch?
-         if B /= J then
-            --  Yes. Store previous one.
-            Bunch_List.Append (B);
-            B := New_Bunch (J);
-         end if;
 
-         --  Update totals
-         B.Total := B.Total + 1;
-         if On_Hold (J) then
-            B.On_Hold := B.On_Hold + 1;
-         elsif Has_Error (J) then
-            B.Error := B.Error + 1;
-         else
-            B.Waiting := B.Waiting + 1;
-         end if;
-         --  Advance
-         Cursor := Next (Cursor);
-      end loop;
-      --  That's it. Store final bunch.
-      Bunch_List.Append (B);
+         --  Create Bunch according to first Job
+         B := New_Bunch (J);
+         while Cursor /= Jobs.Job_Lists.No_Element loop
+            J := Element (Cursor);
+            --  New Bunch?
+            if B /= J then
+               --  Yes. Store previous one.
+               Bunch_List.Append (B);
+               B := New_Bunch (J);
+            end if;
+
+            --  Update totals
+            B.Total := B.Total + 1;
+            if On_Hold (J) then
+               B.On_Hold := B.On_Hold + 1;
+            elsif Has_Error (J) then
+               B.Error := B.Error + 1;
+            else
+               B.Waiting := B.Waiting + 1;
+            end if;
+            --  Advance
+            Cursor := Next (Cursor);
+         end loop;
+         --  That's it. Store final bunch.
+         Bunch_List.Append (B);
+      end if;
    exception
       when E : Constraint_Error
          => HTML.Error ("Unable to build bunch while examining job"
