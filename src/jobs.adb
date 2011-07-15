@@ -155,7 +155,10 @@ package body Jobs is
    begin
       return J.Submission_Time
         + Ada.Real_Time.To_Duration (Ada.Real_Time.Seconds (
-            J.Hard.Numerical ("h_rt")));
+        J.Hard.Numerical ("h_rt")));
+   exception
+      when Constraint_Error =>
+         raise Resource_Error with "Unable to compute end time";
    end End_Time;
 
    --------------------
