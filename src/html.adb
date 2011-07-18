@@ -6,8 +6,8 @@ with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
-with Jobs;
-use Jobs;
+with Jobs; use Jobs;
+with Partitions; use Partitions;
 
 package body HTML is
 
@@ -165,6 +165,24 @@ package body HTML is
             null;
       end case;
       Ada.Text_IO.Put (""" />");
+   end Put;
+
+   procedure Put (What : Partitions.State) is
+   begin
+      case What is
+         when total =>
+            Ada.Text_IO.Put ("Total");
+         when reserved =>
+            Ada.Text_IO.Put ("Reserved");
+         when used =>
+            Ada.Text_IO.Put ("Used");
+         when offline =>
+            Ada.Text_IO.Put ("Offline");
+         when available =>
+            Ada.Text_IO.Put ("Available");
+         when suspended =>
+            Ada.Text_IO.Put ("Suspended");
+      end case;
    end Put;
 
    -------------------

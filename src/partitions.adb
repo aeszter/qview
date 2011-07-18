@@ -26,6 +26,7 @@ package body Partitions is
       return Right = Left;
    end "=";
 
+
    -------------------
    -- New_Partition --
    --  Purpose: Build a partition list from a queue list.
@@ -37,7 +38,7 @@ package body Partitions is
    -------------------
 
    procedure Build_List (Q_List : in out Queues.Queue_Lists.List;
-                          Part_List : out Partition_Lists.List) is
+                          Part_List : out Summarized_List) is
       P : Partition;
       Q : Queue;
       Cursor : Queues.Queue_Lists.Cursor;
@@ -58,15 +59,21 @@ package body Partitions is
          end if;
 
          --  Update totals
-         P.Total := P.Total + Q.Total;
+            P.Total := P.Total + Q.Total;
+            Part_List.Summary (total) := Part_List.Summary (total) + Q.Total;
          if Q.Offline then
             P.Offline := P.Offline + Q.Total;
+            Part_List.Summary (offline) := Part_List.Summary (offline) + Q.Total;
          elsif Q.Suspended then
             P.Suspended := P.Suspended + Q.Total;
+            Part_List.Summary (suspended) := Part_List.Summary (suspended) + Q.Total;
          else
             P.Used := P.Used + Q.Used;
+            Part_List.Summary (used) := Part_List.Summary (used) + Q.Used;
             P.Reserved := P.Reserved + Q.Reserved;
+            Part_List.Summary (reserved) := Part_List.Summary (reserved) + Q.Reserved;
             P.Available := P.Available + Q.Total - Q.Reserved - Q.Used;
+            Part_List.Summary (available) := Part_List.Summary (available) + Q.Total - Q.Reserved - Q.Used;
          end if;
          --  Advance
          Cursor := Next (Cursor);

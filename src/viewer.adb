@@ -290,10 +290,43 @@ package body Viewer is
                                    Contents => Exception_Message (E));
          end Parse_One_Queue;
 
+         procedure Put_Header is
+         begin
+            Ada.Text_IO.Put ("<tr>");
+            HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
+                        & "Detail</acronym>", Tag => "th");
+            HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+            HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                        Tag => "th");
+            HTML.Put_Cell (Data => "Cores", Tag => "th");
+            HTML.Put_Cell (Data => "RAM", Tag => "th");
+            HTML.Put_Cell (Data => "Runtime", Tag => "th");
+            HTML.Put_Cell (Data => "Slots", Tag => "th");
+            HTML.Put_Cell (Data => "Used", Tag => "th");
+            HTML.Put_Cell (Data => "Reserved", Tag => "th");
+            HTML.Put_Cell (Data => "Available", Tag => "th");
+            HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Suspended</acronym>", Tag => "th");
+            HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
+            Ada.Text_IO.Put_Line ("</tr>");
+         end Put_Header;
+
+         procedure Put_Summary (Summary : Partitions.State_Count) is
+         begin
+            HTML.Begin_Div (ID => "partition_summary");
+            Ada.Text_IO.Put ("<ul>");
+            for State in Summary'Range loop
+               Ada.Text_IO.Put ("<li>");
+               Ada.Text_IO.Put (Summary (State)'Img & " ");
+               HTML.Put (What => State);
+               Ada.Text_IO.Put ("</li>");
+            end loop;
+            Ada.Text_IO.Put ("</ul>");
+            HTML.End_Div (ID => "partition_summary");
+         end Put_Summary;
 
          SGE_Out        : Parser.Tree;
          Nodes          : Node_List;
-         Partition_List : Partitions.Partition_Lists.List;
+         Partition_List : Partitions.Summarized_List;
       begin
          HTML.Begin_Div (Class => "partitions");
          if HTML.Param_Is ("categories", "supply") then
@@ -321,22 +354,9 @@ package body Viewer is
          Partitions.Build_List (Queue_List, Partition_List);
 
          --  Output
-         Ada.Text_IO.Put_Line ("<table><tr>");
-         HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
-                        & "Detail</acronym>", Tag => "th");
-         HTML.Put_Cell (Data => "Interconnect", Tag => "th");
-         HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                        Tag => "th");
-         HTML.Put_Cell (Data => "Cores", Tag => "th");
-         HTML.Put_Cell (Data => "RAM", Tag => "th");
-         HTML.Put_Cell (Data => "Runtime", Tag => "th");
-         HTML.Put_Cell (Data => "Slots", Tag => "th");
-         HTML.Put_Cell (Data => "Used", Tag => "th");
-         HTML.Put_Cell (Data => "Reserved", Tag => "th");
-         HTML.Put_Cell (Data => "Available", Tag => "th");
-         HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Suspended</acronym>", Tag => "th");
-         HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
-         Ada.Text_IO.Put_Line ("</tr>");
+         Put_Summary (Summary => Partition_List.Summary);
+         Ada.Text_IO.Put_Line ("<table>");
+         Put_Header;
          Partition_List.Iterate (Partitions.Put'Access);
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "partitions");
