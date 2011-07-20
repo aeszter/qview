@@ -40,6 +40,7 @@ package Jobs is
       Directory          : Unbounded_String;
       Reserve            : Tri_State;
       Merge_Std_Err      : Tri_State;
+      Args               : Utils.String_List;
 
 
       --  qstat -ext
@@ -106,6 +107,8 @@ package Jobs is
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
    procedure Extract_Paths (Path_List  : in out String_Lists.List;
                             List_Nodes  : Node_List);
+   procedure Extract_Args (J : in out Job;
+                           Arg_Nodes : Node_List);
 
    -----------------
    -- Append_List --

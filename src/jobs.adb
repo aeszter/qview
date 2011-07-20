@@ -498,6 +498,8 @@ package body Jobs is
             J.Notify := To_Tri_State (Value (First_Child (C)));
          elsif Name (C) = "JB_account" then
             J.Account := To_Unbounded_String (Value (First_Child (C)));
+         elsif Name (C) = "JB_job_args" then
+            Extract_Args (J, Child_Nodes (C));
          elsif Name (C) = "granted_pe" then
             null;
          elsif Name (C) = "JB_urg" or else
@@ -613,6 +615,37 @@ package body Jobs is
          end if;
       end loop;
    end Extract_Resource_List;
+
+   ------------------
+   -- Extract_Args --
+   ------------------
+
+   procedure Extract_Args (J : in out Job;
+                           Arg_Nodes : Node_List) is
+      N, ST : Node;
+      Sub_Elements : Node_List;
+   begin
+      for I in 1 .. Length (Arg_Nodes) loop
+         HTML.Comment ("Arg " & I'Img);
+         N := Item (Arg_Nodes, I - 1);
+         if Name (N) = "element" then
+            HTML.Comment ("element");
+            Sub_Elements := Child_Nodes (N);
+            if Length (Sub_Elements) < 2 then
+               raise Assumption_Error with "too few sub-elements";
+            end if;
+            ST := Item (Sub_Elements, 1);
+            if Name (ST) /= "ST_name" then
+               raise Assumption_Error with "Expected ""ST_name"" but found """
+                 & Name (ST) & """ instead";
+            else
+               HTML.Comment ("ST_name");
+               J.Args.Append (New_Item => To_Unbounded_String (Value (First_Child (ST))));
+            end if;
+         end if;
+
+      end loop;
+   end Extract_Args;
 
    ------------------------
    -- Extract_Queue_List --
@@ -1168,10 +1201,10 @@ package body Jobs is
    ---------
 
    procedure Put  (Cursor : Job_Lists.Cursor) is
-      Res        : Resource_Lists.Cursor;
-      Slot_Range : Slot_Lists.Cursor;
-      Q, Msg     : String_Lists.Cursor;
-      J          : Job := Job_Lists.Element (Cursor);
+      Res         : Resource_Lists.Cursor;
+      Slot_Range  : Slot_Lists.Cursor;
+      Q, Msg, Arg : String_Lists.Cursor;
+      J           : Job := Job_Lists.Element (Cursor);
 
       procedure Put_Name is
       begin
@@ -1264,11 +1297,23 @@ package body Jobs is
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
 
+
       procedure Put_Files is
       begin
          HTML.Begin_Div (Class => "job_files");
          HTML.Put_Paragraph ("Directory", J.Directory);
          HTML.Put_Paragraph ("Script", J.Script_File);
+         HTML.Put_Heading (Title => "Job Args",
+                           Level => 3);
+         Arg := J.Args.First;
+         Ada.Text_IO.Put ("<ul>");
+         while Arg /= String_Lists.No_Element loop
+            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Arg)) & "</li>");
+            Next (Arg);
+         end loop;
+         Ada.Text_IO.Put ("</ul>");
+
+
          HTML.Put_Paragraph ("Executable", J.Exec_File);
          Ada.Text_IO.Put ("<p>Merge StdErr: ");
          HTML.Put (J.Merge_Std_Err);
