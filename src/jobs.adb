@@ -1203,7 +1203,7 @@ package body Jobs is
    procedure Put  (Cursor : Job_Lists.Cursor) is
       Res         : Resource_Lists.Cursor;
       Slot_Range  : Slot_Lists.Cursor;
-      Q, Msg, Arg : String_Lists.Cursor;
+      Q, Msg : String_Lists.Cursor;
       J           : Job := Job_Lists.Element (Cursor);
 
       procedure Put_Name is
@@ -1263,15 +1263,8 @@ package body Jobs is
          end loop;
 
          HTML.Put_Heading (Title => "Assigned",
-                            Level => 3);
-         Ada.Text_IO.Put ("<ul>");
-         Q := J.Task_List.First;
-         loop
-            exit when Q = String_Lists.No_Element;
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
-            Next (Q);
-         end loop;
-         Ada.Text_IO.Put ("</ul>");
+                           Level => 3);
+         Put_List (J.Task_List);
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_queue");
       end Put_Queues;
@@ -1305,40 +1298,19 @@ package body Jobs is
          HTML.Put_Paragraph ("Script", J.Script_File);
          HTML.Put_Heading (Title => "Job Args",
                            Level => 3);
-         Arg := J.Args.First;
-         Ada.Text_IO.Put ("<ul>");
-         while Arg /= String_Lists.No_Element loop
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Arg)) & "</li>");
-            Next (Arg);
-         end loop;
-         Ada.Text_IO.Put ("</ul>");
-
+         Put_List (J.Args);
 
          HTML.Put_Paragraph ("Executable", J.Exec_File);
          Ada.Text_IO.Put ("<p>Merge StdErr: ");
          HTML.Put (J.Merge_Std_Err);
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Heading (Title => "StdOut",
-                        Level => 3);
-         Q := J.Std_Out_Paths.First;
-         Ada.Text_IO.Put ("<ul>");
-         loop
-            exit when Q = String_Lists.No_Element;
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
-            Next (Q);
-         end loop;
-         Ada.Text_IO.Put ("</ul>");
+                           Level => 3);
+         Put_List (J.Std_Out_Paths);
 
          HTML.Put_Heading (Title => "StdErr",
-                        Level => 3);
-         Q := J.Std_Err_Paths.First;
-         Ada.Text_IO.Put ("<ul>");
-         loop
-            exit when Q = String_Lists.No_Element;
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Q)) & "</li>");
-            Next (Q);
-         end loop;
-         Ada.Text_IO.Put ("</ul>");
+                           Level => 3);
+         Put_List (J.Std_Err_Paths);
          Ada.Text_IO.Put ("<p>Notify: ");
          HTML.Put (J.Notify);
          Ada.Text_IO.Put_Line ("</p>");

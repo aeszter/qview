@@ -1,7 +1,6 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Bounded;
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Containers.Ordered_Maps;
 
 package Utils is
    type Tri_State is (False, True, Undecided);
@@ -12,6 +11,7 @@ package Utils is
    package String_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Unbounded_String);
 
+   procedure Put_List (List : String_Lists.List);
 
    package Hash_Strings is
       new Ada.Strings.Bounded.Generic_Bounded_Length (Max => 10);
