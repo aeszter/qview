@@ -14,6 +14,7 @@ with Parser;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
 with Interfaces.C;
+with Ada.Containers; use Ada.Containers;
 
 package body Jobs is
 
@@ -216,7 +217,7 @@ package body Jobs is
                              & " /= " & Soft_Requests);
             else -- all equal
                Update_Job_From_Qstat_J (J);
-               if Integer'Value (To_String (Slot_Ranges)) = 0 then
+               if Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
                   --  checking against a string (i.e. " 0") would be too brittle,
                   --  since any change in leading blanks would break this code
                   if J.Slot_Number = Slot_Number then
