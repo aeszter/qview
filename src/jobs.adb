@@ -352,6 +352,7 @@ package body Jobs is
       J.Mem := 0.0;
       J.IO := 0.0;
       J.CPU := 0.0;
+      J.Task_ID := 0;
       Update_Job (J => J, List => List);
       return J;
    end New_Job;
@@ -501,6 +502,8 @@ package body Jobs is
             J.Account := To_Unbounded_String (Value (First_Child (C)));
          elsif Name (C) = "JB_job_args" then
             Extract_Args (J, Child_Nodes (C));
+         elsif Name (C) = "tasks" then
+            J.Task_ID := Natural'Value (Value (First_Child (C)));
          elsif Name (C) = "granted_pe" then
             null;
          elsif Name (C) = "JB_urg" or else
@@ -1340,8 +1343,14 @@ package body Jobs is
 
    procedure Put_Core_Line (J : Job) is
    begin
-      HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
-                     Link_Param => "job_id");
+      if J.Task_ID = 0 then
+         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
+                        Link_Param => "job_id");
+      else
+         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left)
+                                      & "-" & Ada.Strings.Fixed.Trim (J.Task_ID'Img, Ada.Strings.Left),
+                        Link_Param => "job_id");
+      end if;
       HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
       if J.Name_Truncated then
          HTML.Put_Cell (Data => "<acronym title=""" & J.Full_Name & """>"
