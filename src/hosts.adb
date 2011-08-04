@@ -116,56 +116,34 @@ package body Hosts is
 
    -----------
    -- Equal --
-   --  Purpose: Two jobs are equal iff their IDs are identical
+   --  Purpose: Two jobs are equal iff their IDs and Task_IDs are identical
    -----------
 
    function Equal (Left, Right : Job) return Boolean is
    begin
-      return Left.ID = Right.ID;
+      return Left.ID = Right.ID and then Left.Task_ID = Right.Task_ID;
    end Equal;
 
    -------------
-   -- New_Job --
-   --  Purpose: Create a new Job record with a given ID and master/slave setting
-   --  Parameter ID: The job ID
+   -- Set_Master --
+   --  Purpose: Set a Job's Master field
+   --  Parameter J: The Job to modify
    --  Parameter PE_Master: either "MASTER" or "SLAVE"
-   --  Returns: The newly created Job record
    --  Throws: Constraint_Error if PE_Master is invalid
    -------------
 
-   function New_Job (ID : Positive; PE_Master : String) return Job is
+   procedure Set_Master (J : in out Job; PE_Master : String) is
    begin
       if PE_Master = "MASTER" then
-         return New_Job (ID => ID, Master => True);
+         J.Master := True;
       elsif
         PE_Master = "SLAVE" then
-         return New_Job (ID => ID, Master => False);
+         J.Master := False;
       else
          raise Constraint_Error with "Expected ""MASTER"" or ""SLAVE"", found """
            & PE_Master & """";
       end if;
-   end New_Job;
-
-   -------------
-   -- New_Job --
-   --  Purpose: Create a new Job record with a given ID and master/slave setting
-   --  Parameter ID: The job ID
-   --  Parameter Master: True for job masters
-   --  Returns: The newly created Job record
-   -------------
-
-   function New_Job (ID : Positive; Master : Boolean) return Job is
-      J : Job;
-   begin
-      J.Master := Master;
-      J.ID := ID;
-      if Master then
-         J.Slaves := 0;
-      else
-         J.Slaves := 1;
-      end if;
-      return J;
-   end New_Job;
+   end Set_Master;
 
    ----------------
    -- Compactify --
@@ -454,7 +432,7 @@ package body Hosts is
       A     : Attr;
       C     : Node;
       Nodes : Node_List;
-      ID    : Natural;
+      J     : Job;
    begin
       Nodes := Child_Nodes (N);
       Job_Attributes :
@@ -463,11 +441,15 @@ package body Hosts is
          if Name (C) = "jobvalue" then
             A := Get_Named_Item (Attributes (C), "name");
             if Value (A) = "pe_master" then
-               ID := Integer'Value (Value (Get_Named_Item (Attributes (C), "jobid")));
-               H.Jobs.Append (New_Job (ID, Value (First_Child (C))));
+               J.ID := Integer'Value (Value (Get_Named_Item (Attributes (C), "jobid")));
+               Set_Master (J, Value (First_Child (C)));
+            elsif Value (A) = "taskid" then
+               J.Task_ID := Integer'Value (Value (First_Child (C)));
             end if;
          end if;
       end loop Job_Attributes;
+      H.Jobs.Append (J);
+
    exception
       when E : others =>
          HTML.Error ("Unable to parse job: " & Exception_Message (E));
@@ -488,8 +470,8 @@ package body Hosts is
       H : Host := Host_Lists.Element (Cursor);
       Free : Natural;
    begin
-      Free := H.Properties.Cores - H.Properties.Used;
       Ada.Text_IO.Put ("<tr>");
+      Free := H.Properties.Cores - H.Properties.Used;
       HTML.Put_Cell (Data => H.Name);
       HTML.Put_Cell (Data => H.Properties.Network'Img);
       HTML.Put_Cell (Data => H.Properties.Model'Img);

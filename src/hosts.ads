@@ -8,9 +8,10 @@ with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 package Hosts is
 
    type Job is record
-      Master : Boolean;
-      ID     : Positive;
-      Slaves : Natural;
+      Master  : Boolean;
+      ID      : Positive;
+      Task_ID : Natural;
+      Slaves  : Natural;
    end record;
 
    function Equal (Left, Right : Job) return Boolean;
@@ -56,8 +57,9 @@ package Hosts is
 
    procedure Append_Queue (H : out Host; Name, State : String);
 
-   function New_Job (ID : Positive; Master : Boolean) return Job;
-   function New_Job (ID : Positive; PE_Master : String) return Job;
+--   function New_Job (ID : Positive; Master : Boolean) return Job;
+
+   procedure Set_Master (J : in out Job; PE_Master : String);
 
 
    procedure Append_List (Host_Nodes : Node_List);
