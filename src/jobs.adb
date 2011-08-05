@@ -719,12 +719,14 @@ package body Jobs is
       Sublist                                  : Node;
       PE_Task_Entry, Element_Node, JG_Entry    : Node;
    begin
+      Over_Task_Nodes :
       for H in 1 .. Length (Task_Nodes) loop
          JA_Tasks := Item (Task_Nodes, H - 1);
          if Name (JA_Tasks) = "ja_tasks"
            or else Name (JA_Tasks) = "ulong_sublist" then
             Children := Child_Nodes (JA_Tasks);
             HTML.Comment ("JA_Tasks """ & Name (JA_Tasks) & """" & Length (Children)'Img);
+            Task_Entries :
             for I in 1 .. Length (Children) loop
                N := Item (Children, I - 1);
                HTML.Comment (Name (N));
@@ -734,22 +736,25 @@ package body Jobs is
                      raise Assumption_Error;
                   end if;
                   Messages := Child_Nodes (Sublist);
+                  Over_Messages :
                   for K in 1 .. Length (Messages) loop
                      M := Item (Messages, K - 1);
                      if Name (M) = "QIM_message" then
                         J.Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
                      end if;
-                  end loop;
+                  end loop Over_Messages;
                elsif Name (N) = "JAT_task_list" then
                   HTML.Comment ("JAT_tast_list : ");
                   Task_List_Nodes := Child_Nodes (N);
                   HTML.Comment (Length (Task_List_Nodes)'Img);
+                  Over_Task_List_Nodes :
                   for K in 1 .. Length (Task_List_Nodes) loop
                      HTML.Comment (Name (Item (Task_List_Nodes, K - 1)));
                      if Name (Item (Task_List_Nodes, K - 1)) = "pe_tasks" or else
                         Name (Item (Task_List_Nodes, K - 1)) = "element" then
                         PE_Task_Nodes := Child_Nodes (Item (Task_List_Nodes, K - 1));
                         HTML.Comment (Length (PE_Task_Nodes)'Img);
+                        Over_PE_Task_Nodes :
                         for L in 1 .. Length (PE_Task_Nodes) loop
                            PE_Task_Entry := Item (PE_Task_Nodes, L - 1);
                            if Name (PE_Task_Entry) = "PET_granted_destin_identifier_list" then
@@ -759,6 +764,7 @@ package body Jobs is
                               end if;
                               JG_Nodes := Child_Nodes (Element_Node);
                               HTML.Comment (Length (JG_Nodes)'Img);
+                              Over_JG_Nodes :
                               for M in 1 .. Length (JG_Nodes) loop
                                  JG_Entry := Item (JG_Nodes, M - 1);
                                  HTML.Comment (Name (JG_Entry));
@@ -766,15 +772,15 @@ package body Jobs is
                                     HTML.Comment (Length (Child_Nodes (JG_Entry))'Img);
                                     J.Task_List.Append (To_Unbounded_String (Value (First_Child (JG_Entry))));
                                  end if;
-                              end loop;
+                              end loop Over_JG_Nodes;
                            end if;
-                        end loop;
+                        end loop Over_PE_Task_Nodes;
                      end if;
-                  end loop;
+                  end loop Over_Task_List_Nodes;
                end if;
-            end loop;
+            end loop Task_Entries;
          end if;
-      end loop;
+      end loop Over_Task_Nodes;
    exception
       when E : others =>
          HTML.Error ("Failed to parse job tasks: " & Exception_Message (E));
