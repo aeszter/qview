@@ -11,6 +11,9 @@ package Jobs is
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq);
    type State_Count is array (Job_State) of Natural;
    type Fixed is delta 0.0001 digits 5;
+   type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem);
+   type Usage_Number is delta 0.00001 digits 18;
+   type Usage is array (Usage_Type) of Usage_Number;
 
 
    type Job is record
@@ -33,6 +36,7 @@ package Jobs is
       Department         : Unbounded_String;
       Job_Array          : Unbounded_String;
       Notify             : Tri_State;
+      Resource_Usage     : Usage;
 
 
       --  File related stuff

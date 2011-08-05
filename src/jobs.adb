@@ -718,6 +718,8 @@ package body Jobs is
       JA_Tasks                                 : Node;
       Sublist                                  : Node;
       PE_Task_Entry, Element_Node, JG_Entry    : Node;
+      Usage_Entries, Scaled_Entries            : Node_List;
+      Scaled, Entry_Field                      : Node;
    begin
       Over_Task_Nodes :
       for H in 1 .. Length (Task_Nodes) loop
@@ -777,6 +779,25 @@ package body Jobs is
                         end loop Over_PE_Task_Nodes;
                      end if;
                   end loop Over_Task_List_Nodes;
+               elsif Name (N) = "JAT_scaled_usage_list" then
+                  Usage_Entries := Child_Nodes (N);
+                  Over_Usage_Entries :
+                  for I in 0 .. Length (Usage_Entries) - 1 loop
+                     Scaled := Item (Usage_Entries, I);
+                     if Name (Scaled) = "scaled" then
+                        Scaled_Entries := Child_Nodes (Scaled);
+                        Over_Scaled_Entries :
+                        for K in 0 .. Length (Scaled_Entries) - 1 loop
+                           Entry_Field := Item (Scaled_Entries, K);
+                           if Name (Entry_Files) = "UA_Name" then
+                              Usage_Type := Usage'Value (Value (First_Child (Entry_Field)));
+                           elsif Name (Entry_Field) = "UA_value" then
+                              Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
+                           end if;
+                        end loop Over_Scaled_Entries;
+                        J.Resource_Usage (Usage_Type) := Usage_Value;
+                     end if;
+                  end loop Over_Usage_Entries;
                end if;
             end loop Task_Entries;
          end if;
