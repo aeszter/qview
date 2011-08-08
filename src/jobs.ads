@@ -36,7 +36,7 @@ package Jobs is
       Department         : Unbounded_String;
       Job_Array          : Unbounded_String;
       Notify             : Tri_State;
-      Resource_Usage     : Usage;
+      Resource_Usage     : Usage := (others => 0.0);
 
 
       --  File related stuff

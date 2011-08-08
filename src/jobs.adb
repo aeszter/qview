@@ -720,6 +720,8 @@ package body Jobs is
       PE_Task_Entry, Element_Node, JG_Entry    : Node;
       Usage_Entries, Scaled_Entries            : Node_List;
       Scaled, Entry_Field                      : Node;
+      Usage_Kind                               : Usage_Type;
+      Usage_Value                              : Usage_Number;
    begin
       Over_Task_Nodes :
       for H in 1 .. Length (Task_Nodes) loop
@@ -789,13 +791,13 @@ package body Jobs is
                         Over_Scaled_Entries :
                         for K in 0 .. Length (Scaled_Entries) - 1 loop
                            Entry_Field := Item (Scaled_Entries, K);
-                           if Name (Entry_Files) = "UA_Name" then
-                              Usage_Type := Usage'Value (Value (First_Child (Entry_Field)));
+                           if Name (Entry_Field) = "UA_name" then
+                              Usage_Kind := Usage_Type'Value (Value (First_Child (Entry_Field)));
                            elsif Name (Entry_Field) = "UA_value" then
                               Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
                            end if;
                         end loop Over_Scaled_Entries;
-                        J.Resource_Usage (Usage_Type) := Usage_Value;
+                        J.Resource_Usage (Usage_Kind) := Usage_Value;
                      end if;
                   end loop Over_Usage_Entries;
                end if;
