@@ -21,6 +21,7 @@ package HTML is
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String);
    procedure Put (What : Jobs.Job_State);
+   procedure Put (Kind : Jobs.Usage_Type; Amount : Jobs.Usage_Number);
    procedure Put (What : Partitions.State);
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);

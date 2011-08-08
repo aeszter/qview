@@ -1323,6 +1323,15 @@ package body Jobs is
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
 
+      procedure Put_Usage is
+      begin
+         HTML.Begin_Div (Class => "job_usage");
+         for T in J.Resource_Usage'Range loop
+            HTML.Put (T, J.Resource_Usage (T));
+         end loop;
+         HTML.End_Div (Class => "job_usage");
+      end Put_Usage;
+
 
       procedure Put_Files is
       begin
@@ -1357,6 +1366,7 @@ package body Jobs is
       Put_Meta;
       Put_Queues;
       Put_Resources;
+      Put_Usage;
       Put_Files;
 
       HTML.Put_Clearer;

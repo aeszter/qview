@@ -131,6 +131,36 @@ package body HTML is
       Put_Cell (Data => Data);
    end Put_Img_Cell;
 
+
+   ---------
+   -- Put --
+   ---------
+
+   procedure Put (Kind : Jobs.Usage_Type; Amount : Jobs.Usage_Number) is
+   begin
+      case Kind is
+         when cpu =>
+            declare
+               Days : Natural;
+               Dur  : Duration;
+            begin
+               Days := Natural (Amount / 86400.0);
+               Dur  := Ada.Real_Time.To_Duration
+                       (Ada.Real_Time.Seconds (Natural (Amount - Days * 86_400.0)));
+               if Days > 0 then
+                  Put_Paragraph
+                  (Contents  => Days'Img & "d " & Ada.Calendar.Formatting.Image (Dur),
+                   Label => Kind'Img);
+               elsif Amount >= 1.0 then
+                  Put_Paragraph (Contents  => Ada.Calendar.Formatting.Image (Dur),
+                                 Label     => Kind'Img);
+               else
+                  Put_Paragraph (Label => "CPU", Contents => "< 1s");
+               end if;
+            end;
+      end case;
+   end Put;
+
    ---------
    -- Put --
    ---------
