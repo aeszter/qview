@@ -57,6 +57,14 @@ package HTML is
    procedure End_Div (Class : String := ""; ID : String := "");
    procedure Finalize_Divs (Silent : Boolean := False);
    function Encode (S : String) return String renames CGI.HTML_Encode;
+   function Acronym (Short, Long : String) return String;
+   --  Purpose: Compose an <acronym> tag
+   --  Returns: A string of the form <acronym title="long">short</acronym>
+   --  for use in Ada.Text_IO.Put or other HTML subprograms
+   function Memory (Amount : Jobs.Usage_Integer) return String;
+   --  Purpose: Compose a memory quantity consisting of a number and a unit
+   --  Returns: A string of the form xx MB, where xx is a number not exceeding
+   --           five digits, and MB is a unit (actually kB, MB, or GB)
 
    function Help_Icon (Topic : String) return String;
    --  Purpose: generate a string that contains html tags to display a help

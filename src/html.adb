@@ -11,6 +11,30 @@ with Partitions; use Partitions;
 
 package body HTML is
 
+   -------------
+   -- Acronym --
+   -------------
+
+   function Acronym (Short, Long : String) return String is
+   begin
+      return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
+   end Acronym;
+
+   ------------
+   -- Memory --
+   ------------
+
+   function Memory (Amount : Usage_Integer) return String is
+   begin
+      if Amount > 2 ** 34 then
+         return Usage_Integer'Image (Amount / 2 ** 30) & " GB";
+      elsif Amount > 2 ** 24 then
+         return Usage_Integer'Image (Amount / 2 ** 20) & " MB";
+      else
+         return Usage_Integer'Image (Amount / 2** 10) & " kB";
+      end if;
+   end Memory;
+
    --------------------
    -- Put_Search_Box --
    --------------------

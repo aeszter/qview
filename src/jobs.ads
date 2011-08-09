@@ -13,6 +13,7 @@ package Jobs is
    type Fixed is delta 0.0001 digits 5;
    type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem);
    type Usage_Number is delta 0.00001 digits 18;
+   type Usage_Integer is range 0 .. 10 ** 12;
    type Usage is array (Usage_Type) of Usage_Number;
 
 
