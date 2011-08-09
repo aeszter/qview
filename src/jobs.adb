@@ -18,6 +18,21 @@ with Ada.Containers; use Ada.Containers;
 
 package body Jobs is
 
+   procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
+
+   procedure Parse_JAT_Task_List
+     (J             : in out Job;
+      Task_List             : Node);
+
+   procedure Parse_PET_Destinations
+     (J             : in out Job;
+      PE_Task_Entry : Node);
+
+   procedure Parse_Usage
+     (Usage_Data : in out Usage;
+      Usage_Tree : Node;
+      Cumulative : Boolean);
+
    -----------------
    -- Get_Summary --
    -----------------
@@ -706,23 +721,131 @@ package body Jobs is
       end loop;
    end Extract_PE_Range;
 
+   procedure Parse_Usage
+     (Usage_Data : in out Usage;
+      Usage_Tree : Node;
+      Cumulative : Boolean)
+   is
+      Usage_Entries, Quantity_Nodes : Node_List;
+      Usage_Entry, Quantity_Field   : Node;
+      Usage_Kind                    : Usage_Type;
+      Usage_Value                   : Usage_Number;
+   begin
+      Usage_Entries := Child_Nodes (Usage_Tree);
+      Over_Usage_Entries :
+      for I in 0 .. Length (Usage_Entries) - 1 loop
+         Usage_Entry := Item (Usage_Entries, I);
+         if Name (Usage_Entry) = "element" or else
+         Name (Usage_Entry) = "scaled" then
+            Quantity_Nodes := Child_Nodes (Usage_Entry);
+            Over_Quantity_Nodes :
+            for K in 0 .. Length (Quantity_Nodes) - 1 loop
+               Quantity_Field := Item (Quantity_Nodes, K);
+               if Name (Quantity_Field) = "UA_name" then
+                  Usage_Kind := Usage_Type'Value (Value (First_Child (Quantity_Field)));
+               elsif Name (Quantity_Field) = "UA_value" then
+                  Usage_Value := Usage_Number'Value (Value (First_Child (Quantity_Field)));
+               end if;
+            end loop Over_Quantity_Nodes;
+            if Cumulative then
+               Usage_Data (Usage_Kind) := Usage_Data (Usage_Kind) + Usage_Value;
+            else
+               Usage_Data (Usage_Kind) := Usage_Value;
+            end if;
+         end if;
+      end loop Over_Usage_Entries;
+   end Parse_Usage;
+
+   ----------------------------
+   -- Parse_PET_Destinations --
+   ----------------------------
+
+   procedure Parse_PET_Destinations
+     (J             : in out Job;
+      PE_Task_Entry : Node)
+   is
+      JG_Nodes : Node_List;
+      JG_Entry : Node;
+      Element_Node : Node;
+   begin
+      Element_Node := Item (Child_Nodes (PE_Task_Entry), 1);
+      if Name (Element_Node) /= "element" then
+         raise Assumption_Error;
+      end if;
+      JG_Nodes := Child_Nodes (Element_Node);
+      HTML.Comment (Length (JG_Nodes)'Img);
+      Over_JG_Nodes :
+      for M in 1 .. Length (JG_Nodes) loop
+         JG_Entry := Item (JG_Nodes, M - 1);
+         HTML.Comment (Name (JG_Entry));
+         if Name (JG_Entry) = "JG_qname" then
+            HTML.Comment (Length (Child_Nodes (JG_Entry))'Img);
+            J.Task_List.Append (To_Unbounded_String (Value (First_Child (JG_Entry))));
+         end if;
+      end loop Over_JG_Nodes;
+   end Parse_PET_Destinations;
+
+   -------------------------
+   -- Parse_JAT_Task_List --
+   -------------------------
+
+   procedure Parse_JAT_Task_List
+     (J             : in out Job;
+      Task_List             : Node)
+   is
+      Task_List_Nodes : Node_List;
+      PE_Task_Nodes   : Node_List;
+      PE_Task_Entry   : Node;
+   begin
+      Task_List_Nodes := Child_Nodes (Task_List);
+      Over_Task_List_Nodes :
+      for K in 1 .. Length (Task_List_Nodes) loop
+         if Name (Item (Task_List_Nodes, K - 1)) = "pe_tasks" or else
+           Name (Item (Task_List_Nodes, K - 1)) = "element" then
+            PE_Task_Nodes := Child_Nodes (Item (Task_List_Nodes, K - 1));
+            Over_PE_Task_Nodes :
+            for L in 1 .. Length (PE_Task_Nodes) loop
+               PE_Task_Entry := Item (PE_Task_Nodes, L - 1);
+               if Name (PE_Task_Entry) = "PET_granted_destin_identifier_list" then
+                  Parse_PET_Destinations (J, PE_Task_Entry);
+               elsif Name (PE_Task_Entry) = "PET_usage" then
+                  Parse_Usage (Usage_Data => J.PET_Usage, Usage_Tree => PE_Task_Entry, Cumulative => True);
+               end if;
+            end loop Over_PE_Task_Nodes;
+         end if;
+      end loop Over_Task_List_Nodes;
+   end Parse_JAT_Task_List;
+
+   ----------------------------
+   -- Parse_JAT_Message_List --
+   ----------------------------
+
+   procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job) is
+      Messages  : Node_List;
+      Sublist, M : Node;
+   begin
+      Sublist := Item (Child_Nodes (Message_List), 1);
+      if Name (Sublist) /= "ulong_sublist" then
+         raise Assumption_Error;
+      end if;
+      Messages := Child_Nodes (Sublist);
+      Over_Messages :
+      for K in 1 .. Length (Messages) loop
+         M := Item (Messages, K - 1);
+         if Name (M) = "QIM_message" then
+            J.Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
+         end if;
+      end loop Over_Messages;
+   end Parse_JAT_Message_List;
+
    -------------------
    -- Extract_Tasks --
    -------------------
 
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List) is
-      Children                                 : Node_List;
-      Messages                                 : Node_List;
-      Task_List_Nodes, PE_Task_Nodes, JG_Nodes : Node_List;
-      N, M                                     : Node;
-      JA_Tasks                                 : Node;
-      Sublist                                  : Node;
-      PE_Task_Entry, Element_Node, JG_Entry    : Node;
-      Usage_Entries, Scaled_Entries            : Node_List;
-      Element_Entries                          : Node_List;
-      Scaled, Entry_Field                      : Node;
-      Usage_Kind                               : Usage_Type;
-      Usage_Value                              : Usage_Number;
+      Children      : Node_List;
+      N             : Node;
+      JA_Tasks      : Node;
    begin
       Over_Task_Nodes :
       for H in 1 .. Length (Task_Nodes) loop
@@ -736,94 +859,11 @@ package body Jobs is
                N := Item (Children, I - 1);
                HTML.Comment (Name (N));
                if Name (N) = "JAT_message_list" then
-                  Sublist := Item (Child_Nodes (N), 1);
-                  if Name (Sublist) /= "ulong_sublist" then
-                     raise Assumption_Error;
-                  end if;
-                  Messages := Child_Nodes (Sublist);
-                  Over_Messages :
-                  for K in 1 .. Length (Messages) loop
-                     M := Item (Messages, K - 1);
-                     if Name (M) = "QIM_message" then
-                        J.Message_List.Append (To_Unbounded_String (Value (First_Child (M))));
-                     end if;
-                  end loop Over_Messages;
+                  Parse_JAT_Message_List (Message_List => N, J => J);
                elsif Name (N) = "JAT_task_list" then
-                  HTML.Comment ("JAT_tast_list : ");
-                  Task_List_Nodes := Child_Nodes (N);
-                  HTML.Comment (Length (Task_List_Nodes)'Img);
-                  Over_Task_List_Nodes :
-                  for K in 1 .. Length (Task_List_Nodes) loop
-                     HTML.Comment (Name (Item (Task_List_Nodes, K - 1)));
-                     if Name (Item (Task_List_Nodes, K - 1)) = "pe_tasks" or else
-                        Name (Item (Task_List_Nodes, K - 1)) = "element" then
-                        PE_Task_Nodes := Child_Nodes (Item (Task_List_Nodes, K - 1));
-                        HTML.Comment (Length (PE_Task_Nodes)'Img);
-                        Over_PE_Task_Nodes :
-                        for L in 1 .. Length (PE_Task_Nodes) loop
-                           PE_Task_Entry := Item (PE_Task_Nodes, L - 1);
-                           if Name (PE_Task_Entry) = "PET_granted_destin_identifier_list" then
-                              Element_Node := Item (Child_Nodes (PE_Task_Entry), 1);
-                              if Name (Element_Node) /= "element" then
-                                 raise Assumption_Error;
-                              end if;
-                              JG_Nodes := Child_Nodes (Element_Node);
-                              HTML.Comment (Length (JG_Nodes)'Img);
-                              Over_JG_Nodes :
-                              for M in 1 .. Length (JG_Nodes) loop
-                                 JG_Entry := Item (JG_Nodes, M - 1);
-                                 HTML.Comment (Name (JG_Entry));
-                                 if Name (JG_Entry) = "JG_qname" then
-                                    HTML.Comment (Length (Child_Nodes (JG_Entry))'Img);
-                                    J.Task_List.Append (To_Unbounded_String (Value (First_Child (JG_Entry))));
-                                 end if;
-                              end loop Over_JG_Nodes;
-                           elsif Name (PE_Task_Entry) = "PET_usage" then
-                              Usage_Entries := Child_Nodes (PE_Task_Entry);
-                              Over_Usage_Entries :
-                              for I in 0 .. Length (Usage_Entries) - 1 loop
-                                 Element_Node := Item (Usage_Entries, I);
-                                 if Name (Element_Node) = "element" then
-                                    HTML.Comment ("element#" & I'Img);
-                                    Element_Entries := Child_Nodes (Element_Node);
-                                    Over_Element_Entries :
-                                    for K in 0 .. Length (Element_Entries) - 1 loop
-                                       Entry_Field := Item (Element_Entries, K);
-                                       if Name (Entry_Field) = "UA_name" then
-                                          Usage_Kind := Usage_Type'Value (Value (First_Child (Entry_Field)));
-                                       elsif Name (Entry_Field) = "UA_value" then
-                                          Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
-                                       end if;
-                                    end loop Over_Element_Entries;
-                                    J.PET_Usage (Usage_Kind) := J.PET_Usage (Usage_Kind) + Usage_Value;
-                                    HTML.Comment (Usage_Kind'Img & " + " & Usage_Value'Img);
-                                 else
-                                    HTML.Comment ("""" & Name (Element_Node) & """" & I'Img);
-                                 end if;
-                              end loop Over_Usage_Entries;
-                           end if;
-                        end loop Over_PE_Task_Nodes;
-                     end if;
-                  end loop Over_Task_List_Nodes;
+                  Parse_JAT_Task_List (J, N);
                elsif Name (N) = "JAT_scaled_usage_list" then
-                  Usage_Entries := Child_Nodes (N);
-                  Over_JAT_Usage_Entries :
-                  for I in 0 .. Length (Usage_Entries) - 1 loop
-                     Scaled := Item (Usage_Entries, I);
-                     if Name (Scaled) = "scaled" then
-                        Scaled_Entries := Child_Nodes (Scaled);
-                        Over_Scaled_Entries :
-                        for K in 0 .. Length (Scaled_Entries) - 1 loop
-                           Entry_Field := Item (Scaled_Entries, K);
-                           if Name (Entry_Field) = "UA_name" then
-                              Usage_Kind := Usage_Type'Value (Value (First_Child (Entry_Field)));
-                           elsif Name (Entry_Field) = "UA_value" then
-                              Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
-                           end if;
-                        end loop Over_Scaled_Entries;
-                        J.JAT_Usage (Usage_Kind) := Usage_Value;
-                     end if;
-                  end loop Over_JAT_Usage_Entries;
+                  Parse_Usage (Usage_Data => J.JAT_Usage, Usage_Tree => N, Cumulative => False);
                end if;
             end loop Task_Entries;
          end if;
