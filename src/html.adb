@@ -178,10 +178,29 @@ package body HTML is
                elsif Amount >= 1.0 then
                   Put_Paragraph (Contents  => Ada.Calendar.Formatting.Image (Dur),
                                  Label     => Kind'Img);
-               else
+               elsif Amount > 0.0 then
                   Put_Paragraph (Label => "CPU", Contents => "< 1s");
+               else
+                  Put_Paragraph (Label    => "CPU",
+                                 Contents => "0");
                end if;
             end;
+         when mem =>
+            Put_Paragraph (Label    => "Memory",
+                           Contents => Natural (Amount)'Img & " "
+                           & Acronym (Short => "GBs",
+                                            Long => "Gigabytes times seconds"));
+         when io =>
+            Put_Paragraph (Label    => "I/O",
+                           Contents => Amount'Img);
+         when vmem =>
+            Put_Paragraph (Label    => "vMem",
+                           Contents => Memory (Usage_Integer (Amount)));
+         when maxvmem =>
+            Put_Paragraph (Label    => "Maximum vMem",
+                           Contents => Memory (Usage_Integer (Amount)));
+         when iow =>
+            null; -- iow is suppressed in qstat -j without -xml as well
       end case;
    end Put;
 
