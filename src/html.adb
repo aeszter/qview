@@ -184,6 +184,10 @@ package body HTML is
                   Put_Paragraph (Label    => "CPU",
                                  Contents => "0");
                end if;
+            exception
+               when Constraint_Error =>
+                  Put_Paragraph (Label    => Kind'Img,
+                                 Contents => "<i>out of range</i>");
             end;
          when mem =>
             Put_Paragraph (Label    => "Memory",
