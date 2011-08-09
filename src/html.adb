@@ -205,6 +205,9 @@ package body HTML is
                            Contents => Memory (Usage_Integer (Amount)));
          when iow =>
             null; -- iow is suppressed in qstat -j without -xml as well
+         when submission_time =>
+            null; -- ignore for now; note that this is also treated as cumulative
+            --  in Jobs.Extract_Tasks, although it represents a point in time
       end case;
    end Put;
 

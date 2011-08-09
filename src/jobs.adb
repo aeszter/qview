@@ -719,6 +719,7 @@ package body Jobs is
       Sublist                                  : Node;
       PE_Task_Entry, Element_Node, JG_Entry    : Node;
       Usage_Entries, Scaled_Entries            : Node_List;
+      Element_Entries                          : Node_List;
       Scaled, Entry_Field                      : Node;
       Usage_Kind                               : Usage_Type;
       Usage_Value                              : Usage_Number;
@@ -777,13 +778,36 @@ package body Jobs is
                                     J.Task_List.Append (To_Unbounded_String (Value (First_Child (JG_Entry))));
                                  end if;
                               end loop Over_JG_Nodes;
+                           elsif Name (PE_Task_Entry) = "PET_usage" then
+                              Usage_Entries := Child_Nodes (PE_Task_Entry);
+                              Over_Usage_Entries :
+                              for I in 0 .. Length (Usage_Entries) - 1 loop
+                                 Element_Node := Item (Usage_Entries, I);
+                                 if Name (Element_Node) = "element" then
+                                    HTML.Comment ("element#" & I'Img);
+                                    Element_Entries := Child_Nodes (Element_Node);
+                                    Over_Element_Entries :
+                                    for K in 0 .. Length (Element_Entries) - 1 loop
+                                       Entry_Field := Item (Element_Entries, K);
+                                       if Name (Entry_Field) = "UA_name" then
+                                          Usage_Kind := Usage_Type'Value (Value (First_Child (Entry_Field)));
+                                       elsif Name (Entry_Field) = "UA_value" then
+                                          Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
+                                       end if;
+                                    end loop Over_Element_Entries;
+                                    J.PET_Usage (Usage_Kind) := J.PET_Usage (Usage_Kind) + Usage_Value;
+                                    HTML.Comment (Usage_Kind'Img & " + " & Usage_Value'Img);
+                                 else
+                                    HTML.Comment ("""" & Name (Element_Node) & """" & I'Img);
+                                 end if;
+                              end loop Over_Usage_Entries;
                            end if;
                         end loop Over_PE_Task_Nodes;
                      end if;
                   end loop Over_Task_List_Nodes;
                elsif Name (N) = "JAT_scaled_usage_list" then
                   Usage_Entries := Child_Nodes (N);
-                  Over_Usage_Entries :
+                  Over_JAT_Usage_Entries :
                   for I in 0 .. Length (Usage_Entries) - 1 loop
                      Scaled := Item (Usage_Entries, I);
                      if Name (Scaled) = "scaled" then
@@ -797,9 +821,9 @@ package body Jobs is
                               Usage_Value := Usage_Number'Value (Value (First_Child (Entry_Field)));
                            end if;
                         end loop Over_Scaled_Entries;
-                        J.Resource_Usage (Usage_Kind) := Usage_Value;
+                        J.JAT_Usage (Usage_Kind) := Usage_Value;
                      end if;
-                  end loop Over_Usage_Entries;
+                  end loop Over_JAT_Usage_Entries;
                end if;
             end loop Task_Entries;
          end if;
@@ -1326,8 +1350,15 @@ package body Jobs is
       procedure Put_Usage is
       begin
          HTML.Begin_Div (Class => "job_usage");
-         for T in J.Resource_Usage'Range loop
-            HTML.Put (T, J.Resource_Usage (T));
+         HTML.Put_Heading (Title => "JAT",
+                           Level => 3);
+         for T in J.JAT_Usage'Range loop
+            HTML.Put (T, J.JAT_Usage (T));
+         end loop;
+         HTML.Put_Heading (Title => "PET",
+                           Level => 3);
+         for T in J.PET_Usage'Range loop
+            HTML.Put (T, J.PET_Usage (T));
          end loop;
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
