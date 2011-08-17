@@ -5,11 +5,20 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 package Ranges is
 
    type Step_Range is record
-      Min, Step, Max : Natural;
+      Min, Step, Max : Natural := 0;
    end record;
 
    function New_Range (Min, Step, Max : Natural)
-                          return Step_Range;
+                       return Step_Range;
+   function To_Step_Range (From : String) return Step_Range;
+   --  Create a Step_Range from a string of the form a-b:s, or from a string
+   --  representing a number
+
+   function Is_Empty (What : Step_Range) return Boolean;
+   function Count (What : Step_Range) return Natural;
+   function Is_Collapsed (What : Step_Range) return Boolean;
+   --  return True if the range collapses to a single number
+
    ---------
    -- Put --
    --  Purpose: Output one slot range as a paragraph

@@ -367,7 +367,6 @@ package body Jobs is
       J.Mem := 0.0;
       J.IO := 0.0;
       J.CPU := 0.0;
-      J.Task_ID := 0;
       Update_Job (J => J, List => List);
       return J;
    end New_Job;
@@ -518,7 +517,7 @@ package body Jobs is
          elsif Name (C) = "JB_job_args" then
             Extract_Args (J, Child_Nodes (C));
          elsif Name (C) = "tasks" then
-            J.Task_ID := Natural'Value (Value (First_Child (C)));
+            J.Task_IDs := To_Step_Range (Value (First_Child (C)));
          elsif Name (C) = "granted_pe" then
             null;
          elsif Name (C) = "JB_urg" or else
@@ -1327,7 +1326,7 @@ package body Jobs is
          HTML.Put_Paragraph ("Account", J.Account);
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => J.Submission_Time);
-         HTML.Put_Paragraph ("Array", J.Job_Array);
+         HTML.Put_Paragraph ("Array Task", J.Job_Array);
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (J.Reserve);
          Ada.Text_IO.Put_Line ("</p>");
@@ -1453,12 +1452,12 @@ package body Jobs is
 
    procedure Put_Core_Line (J : Job) is
    begin
-      if J.Task_ID = 0 then
+      if Is_Empty (J.Task_IDs) or else not Is_Collapsed (J.Task_IDs) then
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
       else
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left)
-                                      & "-" & Ada.Strings.Fixed.Trim (J.Task_ID'Img, Ada.Strings.Left),
+                                      & "-" & Ada.Strings.Fixed.Trim (J.Task_IDs.Min'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
       end if;
       HTML.Put_Cell (Data => J.Owner, Link_Param => "user");

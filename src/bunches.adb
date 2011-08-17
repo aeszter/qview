@@ -41,13 +41,13 @@ package body Bunches is
             end if;
 
             --  Update totals
-            B.Total := B.Total + 1;
+            B.Total := B.Total + Count (J.Task_IDs);
             if On_Hold (J) then
-               B.On_Hold := B.On_Hold + 1;
+               B.On_Hold := B.On_Hold + Count (J.Task_IDs);
             elsif Has_Error (J) then
-               B.Error := B.Error + 1;
+               B.Error := B.Error + Count (J.Task_IDs);
             else
-               B.Waiting := B.Waiting + 1;
+               B.Waiting := B.Waiting + Count (J.Task_IDs);
             end if;
             --  Advance
             Cursor := Next (Cursor);

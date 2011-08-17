@@ -2,6 +2,7 @@ with HTML;
 with Ranges; use Ranges.Range_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 
 package body Ranges is
 
@@ -25,6 +26,91 @@ package body Ranges is
       R.Step := Step;
       return R;
    end New_Range;
+
+   -------------------
+   -- To_Step_Range --
+   -------------------
+
+   function To_Step_Range (From : String) return Step_Range is
+      R : Step_Range;
+      Dash, Colon : Natural;
+   begin
+      Dash := Index (Source  => From,
+                     Pattern => "-");
+      Colon := Index (Source  => From,
+                      Pattern => ":");
+      if Dash = 0 and then Colon = 0 then
+         R.Min := Natural'Value (From);
+         R.Max := R.Min;
+         R.Step := 1;
+      else
+         if Dash = 0 then
+            raise Constraint_Error;
+         elsif
+           Colon = 0 then
+            raise Constraint_Error;
+         elsif Dash <= From'First then
+            raise Constraint_Error;
+         elsif Colon <= Dash + 1 then
+            raise Constraint_Error;
+         elsif From'Last <= Colon then
+            raise Constraint_Error;
+         end if;
+         --  Sanity checks: everything but a pure number or a pattern of the
+         --  form [0-9]+-[0-9]+:[0-9]+ is illegal
+         R.Min := Natural'Value (From (From'First .. Dash - 1));
+         R.Max := Natural'Value (From (Dash + 1 .. Colon - 1));
+         R.Step := Natural'Value (From (Colon + 1 .. From'Last));
+      end if;
+      return R;
+   end To_Step_Range;
+
+   --------------
+   -- Is_Empty --
+   --------------
+
+   function Is_Empty (What : Step_Range) return Boolean is
+   begin
+      if What.Max < What.Min then
+         raise Constraint_Error with What.Min'Img & "-" & What.Max'Img
+           & ":" & What.Step'Img;
+      end if;
+      if What.Step = 0 then
+         return True;
+      else
+         return False;
+      end if;
+
+   end Is_Empty;
+
+   -----------
+   -- Count --
+   -----------
+
+   function Count (What : Step_Range) return Natural is
+   begin
+      if Is_Empty (What) then
+         return 1;
+      else
+         return (What.Max - What.Min) / What.Step + 1;
+      end if;
+   end Count;
+
+   ------------------
+   -- Is_Collapsed --
+   ------------------
+
+   function Is_Collapsed (What : Step_Range) return Boolean is
+   begin
+      if Is_Empty (What) then
+         return False;
+      elsif What.Min = What.Max then
+         return True;
+      else
+         return False;
+      end if;
+   end Is_Collapsed;
+
 
    ---------
    -- Put --
