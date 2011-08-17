@@ -1,6 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
-with Slots; use Slots; use Slots.Slot_Lists;
+with Ranges; use Ranges; use Ranges.Range_Lists;
 with Ada.Text_IO;
 with CGI;
 with HTML;
@@ -102,7 +102,7 @@ package body Bunches is
 
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?jobs=bunch"
                & "&pe=" & B.PE
-               & "&slot_ranges=" & Slots.Hash (B.Slot_List)
+               & "&slot_ranges=" & Ranges.Hash (B.Slot_List)
                & "&slot_number=" & B.Slot_Number
                & "&queue=" & B.Queue
                & "&hr=" & Resources.Hash (B.Hard)
@@ -111,7 +111,7 @@ package body Bunches is
 
       HTML.Put_Cell (Data => B.PE);
       if not B.Slot_List.Is_Empty then
-         Slots.Put_Cell (Data => B.Slot_List, Class => "right");
+         Ranges.Put_Cell (Data => B.Slot_List, Class => "right");
       else
          HTML.Put_Cell (Data => B.Slot_Number);
       end if;

@@ -3,7 +3,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with DOM.Core; use DOM.Core;
 with Ada.Calendar; use Ada.Calendar;
 with Resources;
-with Slots;
+with Ranges;
 with Utils; use Utils;
 
 package Jobs is
@@ -67,7 +67,7 @@ package Jobs is
       Queue            : Unbounded_String;
       Hard, Soft       : Resources.Hashed_List;
 
-      Slot_List        : Slots.Slot_Lists.List;
+      Slot_List        : Ranges.Range_Lists.List;
       Queue_List       : String_Lists.List;
       Message_List     : String_Lists.List;
       Task_List        : String_Lists.List;

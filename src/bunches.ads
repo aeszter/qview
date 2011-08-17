@@ -2,14 +2,14 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Jobs; use Jobs;
 with Resources;
-with Slots; use Slots;
+with Ranges; use Ranges;
 
 package Bunches is
 
    type Bunch is record
       PE, Queue      : Unbounded_String;
       Slot_Number    : Unbounded_String;
-      Slot_List      : Slots.Slot_Lists.List;
+      Slot_List      : Ranges.Range_Lists.List;
       Hard, Soft     : Resources.Hashed_List;
       Total, On_Hold : Natural;
       Error, Waiting : Natural;

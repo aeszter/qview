@@ -6,7 +6,7 @@ with Ada.Calendar;   use Ada.Calendar;
 with GNAT.Calendar.Time_IO;
 with Ada.Calendar.Conversions;
 with Resources;      use Resources; use Resources.Resource_Lists;
-with Slots;          use Slots; use Slots.Slot_Lists;
+with Ranges;          use Ranges; use Ranges.Range_Lists;
 with Utils;          use Utils; use Utils.String_Lists;
 with Jobs; use Jobs.Job_Lists;
 with HTML;
@@ -696,16 +696,16 @@ package body Jobs is
    ----------------------
 
    procedure Extract_PE_Range (J : in out Job; Children : Node_List) is
-      Ranges                           : Node_List;
+      Range_Nodes                      : Node_List;
       N, R                             : Node;
       Slots_Min, Slots_Step, Slots_Max : Natural;
    begin
       for I in 1 .. Length (Children) loop
          N := Item (Children, I - 1);
          if Name (N) = "ranges" then
-            Ranges := Child_Nodes (N);
-            for J in 1 .. Length (Ranges) loop
-               R := Item (Ranges, J - 1);
+            Range_Nodes := Child_Nodes (N);
+            for J in 1 .. Length (Range_Nodes) loop
+               R := Item (Range_Nodes, J - 1);
                if Name (R) = "RN_min" then
                   Slots_Min := Integer'Value (Value (First_Child (R)));
                elsif Name (R) = "RN_max" then
@@ -714,9 +714,9 @@ package body Jobs is
                   Slots_Step := Integer'Value (Value (First_Child (R)));
                end if;
             end loop;
-            J.Slot_List.Append (Slots.New_Range (Min  => Slots_Min,
-                                                 Max  => Slots_Max,
-                                                 Step => Slots_Step));
+            J.Slot_List.Append (Ranges.New_Range (Min  => Slots_Min,
+                                                       Max  => Slots_Max,
+                                                       Step => Slots_Step));
          end if;
       end loop;
    end Extract_PE_Range;
@@ -1299,7 +1299,7 @@ package body Jobs is
 
    procedure Put  (Cursor : Job_Lists.Cursor) is
       Res         : Resource_Lists.Cursor;
-      Slot_Range  : Slot_Lists.Cursor;
+      Slot_Range  : Range_Lists.Cursor;
       Q, Msg : String_Lists.Cursor;
       J           : Job := Job_Lists.Element (Cursor);
 
@@ -1354,8 +1354,8 @@ package body Jobs is
          HTML.Put_Paragraph ("PE", J.PE);
          Slot_Range := J.Slot_List.First;
          loop
-            exit when Slot_Range = Slots.Slot_Lists.No_Element;
-            Slots.Put (Slots.Slot_Lists.Element (Slot_Range));
+            exit when Slot_Range = Ranges.Range_Lists.No_Element;
+            Ranges.Put (Ranges.Range_Lists.Element (Slot_Range));
             Next (Slot_Range);
          end loop;
 
@@ -1514,7 +1514,7 @@ package body Jobs is
       Ada.Text_IO.Put ("<tr>");
       Put_Core_Line (J);
       HTML.Put_Cell (Data => J.PE);
-      Slots.Put_Cell (Data => J.Slot_List, Class => "right");
+      Ranges.Put_Cell (Data => J.Slot_List, Class => "right");
       HTML.Put_Cell (Data       => To_Unbounded_String (J.Hard));
       HTML.Put_Cell (Data       => To_Unbounded_String (J.Soft));
       HTML.Put_Img_Cell (State_As_String (J));

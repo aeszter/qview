@@ -1,9 +1,9 @@
 with HTML;
-with Slots; use Slots.Slot_Lists;
+with Ranges; use Ranges.Range_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
 
-package body Slots is
+package body Ranges is
 
    ---------------
    -- New_Range --
@@ -16,9 +16,9 @@ package body Slots is
 
    function New_Range
      (Min, Step, Max : Natural)
-      return Slots
+      return Step_Range
    is
-      R : Slots;
+      R : Step_Range;
    begin
       R.Min := Min;
       R.Max := Max;
@@ -30,7 +30,7 @@ package body Slots is
    -- Put --
    ---------
 
-   procedure Put (S : Slots) is
+   procedure Put (S : Step_Range) is
    begin
       HTML.Put_Paragraph (Label  => "Slots",
                           Contents => To_String (What => S, Short => True));
@@ -41,14 +41,14 @@ package body Slots is
    -- Put_Cell --
    --------------
 
-   procedure Put_Cell (Data : Slot_Lists.List; Class : String) is
-      Pos : Slot_Lists.Cursor := Data.First;
+   procedure Put_Cell (Data : Range_Lists.List; Class : String) is
+      Pos : Range_Lists.Cursor := Data.First;
       S : Unbounded_String;
    begin
-      while Pos /= Slot_Lists.No_Element loop
+      while Pos /= Range_Lists.No_Element loop
          S := S & To_String (What => Element (Pos), Short => True);
          Next (Pos);
-         if Pos /= Slot_Lists.No_Element then
+         if Pos /= Range_Lists.No_Element then
             S := S & ",";
          end if;
       end loop;
@@ -59,7 +59,7 @@ package body Slots is
    -- To_String --
    ---------------
 
-   function To_String (What : Slots; Short : Boolean) return String is
+   function To_String (What : Step_Range; Short : Boolean) return String is
    begin
       if Short and then What.Min = What.Max then
          return What.Min'Img;
@@ -71,7 +71,7 @@ package body Slots is
       end if;
    end To_String;
 
-   function To_Unbounded_String (What : Slots; Short : Boolean) return Unbounded_String is
+   function To_Unbounded_String (What : Step_Range; Short : Boolean) return Unbounded_String is
    begin
       return To_Unbounded_String (To_String (What => What, Short => Short));
    end To_Unbounded_String;
@@ -81,11 +81,11 @@ package body Slots is
    -- Hash --
    ----------
 
-   function Hash (List : Slot_Lists.List) return String is
+   function Hash (List : Range_Lists.List) return String is
       Temp : Ada.Containers.Hash_Type := 0;
-      Pos : Slot_Lists.Cursor := List.First;
+      Pos : Range_Lists.Cursor := List.First;
    begin
-      while Pos /= Slot_Lists.No_Element loop
+      while Pos /= Range_Lists.No_Element loop
          Temp := Temp xor Hash (Element (Pos));
          Next (Pos);
       end loop;
@@ -97,7 +97,7 @@ package body Slots is
    -- Hash --
    ----------
 
-   function Hash (S : Slots) return Hash_Type is
+   function Hash (S : Step_Range) return Hash_Type is
       Str : Unbounded_String := To_Unbounded_String (What => S, Short => False);
    begin
       HTML.Comment (To_String ("Hash (" & Str & ") =>" & Hash (Str)'Img));
@@ -105,4 +105,4 @@ package body Slots is
    end Hash;
 
 
-end Slots;
+end Ranges;

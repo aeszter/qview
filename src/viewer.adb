@@ -9,7 +9,7 @@ with Parser; use Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
-with Slots; use Slots; use Slots.Slot_Lists;
+with Ranges; use Ranges; use Ranges.Range_Lists;
 with Jobs; use Jobs; use Jobs.Job_Lists;
 with Bunches; use Bunches; use Bunches.Bunch_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
