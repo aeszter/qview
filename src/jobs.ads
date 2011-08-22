@@ -38,6 +38,7 @@ package Jobs is
       Job_Array          : Unbounded_String;
       Notify             : Tri_State;
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
+      Predecessors       : Utils.String_List;
 
 
       --  File related stuff
@@ -109,6 +110,7 @@ package Jobs is
                                     Resource_Nodes : Node_List;
                                     Soft           : Boolean := False);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
+   procedure Extract_Predecessor_List (J : in out Job; Predecessor_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
    procedure Extract_Paths (Path_List  : in out String_Lists.List;
@@ -273,5 +275,8 @@ private
    -------------------
 
    procedure Update_Status (J : in out Job);
+   procedure Put_Predecessor (Position : Utils.String_Lists.Cursor);
+   --  Output the job ID of a predecessor job as a link to the job, together with
+   --  a suitable title
 
 end Jobs;

@@ -15,6 +15,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
 with Interfaces.C;
 with Ada.Containers; use Ada.Containers;
+with CGI;
 
 package body Jobs is
 
@@ -520,12 +521,13 @@ package body Jobs is
             J.Task_IDs := To_Step_Range (Value (First_Child (C)));
          elsif Name (C) = "granted_pe" then
             null;
+         elsif Name (C) = "JB_jid_predecessor_list" then
+            Extract_Predecessor_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_urg" or else
            Name (C) = "JB_dlcontr" or else
            Name (C) = "JAT_ntix" or else
            Name (C) = "JAT_share" or else
            Name (C) = "JB_jobshare" or else
-           Name (C) = "JB_jid_predecessor_list" or else
            Name (C) = "JB_jid_successor_list" or else
            Name (C) = "JB_jid_request_list" or else
            Name (C) = "tickets" or else
@@ -664,6 +666,26 @@ package body Jobs is
 
       end loop;
    end Extract_Args;
+
+   ------------------------------
+   -- Extract_Predecessor_List --
+   ------------------------------
+
+   procedure Extract_Predecessor_List (J : in out Job; Predecessor_Nodes : Node_List) is
+      N, ID_Node : Node;
+   begin
+      for I in 0 .. Length (Predecessor_Nodes) - 1 loop
+         N := Item (Predecessor_Nodes, I);
+         if Name (N) = "job_predecessors" then
+            ID_Node := Item (Child_Nodes (N), 1);
+            if Name (ID_Node) /= "JRE_job_number" then
+               raise Assumption_Error with "Expected ""JRE_job_number"" but found """
+                 & Name (ID_Node) & """ instead";
+            end if;
+            J.Predecessors.Append (New_Item => To_Unbounded_String (Value (First_Child (ID_Node))));
+         end if;
+      end loop;
+   end Extract_Predecessor_List;
 
    ------------------------
    -- Extract_Queue_List --
@@ -1292,6 +1314,20 @@ package body Jobs is
       end if;
    end Same;
 
+
+   ---------------------
+   -- Put_Predecessor --
+   ---------------------
+
+   procedure Put_Predecessor (Position : Utils.String_Lists.Cursor) is
+      ID : String := To_String (Utils.String_Lists.Element (Position));
+   begin
+      HTML.Put_Paragraph (Label    => "Predecessor",
+                          Contents => "<a href=""" & CGI.My_URL &
+                                      "?job_id=" &ID & """>"
+                                      &ID&"</a>");
+   end Put_Predecessor;
+
    ---------
    -- Put --
    ---------
@@ -1326,6 +1362,7 @@ package body Jobs is
          HTML.Put_Paragraph ("Account", J.Account);
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => J.Submission_Time);
+         J.Predecessors.Iterate (Process => Put_Predecessor'Access);
          HTML.Put_Paragraph ("Array Task", J.Job_Array);
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (J.Reserve);
