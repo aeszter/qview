@@ -419,6 +419,17 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
+   ----------------
+   -- Put_Job_ID --
+   ----------------
+
+   procedure Put_Job_ID (Label : String; ID : String) is
+   begin
+      Put_Paragraph (Label    => Label,
+                     Contents => "<a href=""" & CGI.My_URL &
+                                 "?job_id=" & ID & """>" & ID & "</a>");
+   end Put_Job_ID;
+
    -------------
    -- Comment --
    -------------

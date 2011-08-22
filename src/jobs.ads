@@ -19,26 +19,27 @@ package Jobs is
 
    type Job is record
       --  basic attributes
-      Number             : Integer; -- Job ID
-      Task_IDs           : Ranges.Step_Range;
-      Full_Name          : Unbounded_String; -- Job name
-      Name               : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
-      Name_Truncated     : Boolean;          -- Whether Full_Name and Name differ
-      Owner              : Unbounded_String; -- User whom this job belongs to
-      Group              : Unbounded_String;
-      Account            : Unbounded_String;
+      Number               : Integer; -- Job ID
+      Task_IDs             : Ranges.Step_Range;
+      Full_Name            : Unbounded_String; -- Job name
+      Name                 : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
+      Name_Truncated       : Boolean;          -- Whether Full_Name and Name differ
+      Owner                : Unbounded_String; -- User whom this job belongs to
+      Group                : Unbounded_String;
+      Account              : Unbounded_String;
 
-      Priority           : Fixed; -- Numerical priority
-      State              : Job_State;
-      Slot_Number        : Unbounded_String; -- how many slots/CPUs to use
-      PE                 : Unbounded_String; -- Parallel environment
-      Submission_Time    : Time;    -- when submitted
-      Project            : Unbounded_String;
-      Department         : Unbounded_String;
-      Job_Array          : Unbounded_String;
-      Notify             : Tri_State;
+      Priority             : Fixed; -- Numerical priority
+      State                : Job_State;
+      Slot_Number          : Unbounded_String; -- how many slots/CPUs to use
+      PE                   : Unbounded_String; -- Parallel environment
+      Submission_Time      : Time;    -- when submitted
+      Project              : Unbounded_String;
+      Department           : Unbounded_String;
+      Job_Array            : Unbounded_String;
+      Notify               : Tri_State;
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
-      Predecessors       : Utils.String_List;
+      Predecessors         : Utils.String_List;
+      Successors           : Utils.String_List;
 
 
       --  File related stuff
@@ -110,7 +111,8 @@ package Jobs is
                                     Resource_Nodes : Node_List;
                                     Soft           : Boolean := False);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
-   procedure Extract_Predecessor_List (J : in out Job; Predecessor_Nodes : Node_List);
+   procedure Extract_Hold_ID_List (ID_List           : in out String_List;
+                                       Sub_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
    procedure Extract_Paths (Path_List  : in out String_Lists.List;
@@ -277,6 +279,9 @@ private
    procedure Update_Status (J : in out Job);
    procedure Put_Predecessor (Position : Utils.String_Lists.Cursor);
    --  Output the job ID of a predecessor job as a link to the job, together with
+   --  a suitable title
+   procedure Put_Successor (Position : Utils.String_Lists.Cursor);
+   --  Output the job ID of a successor job as a link to the job, together with
    --  a suitable title
 
 end Jobs;
