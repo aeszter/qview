@@ -16,69 +16,7 @@ package Jobs is
    type Usage_Integer is range 0 .. 10 ** 12;
    type Usage is array (Usage_Type) of Usage_Number;
 
-
-   type Job is record
-      --  basic attributes
-      Number               : Integer; -- Job ID
-      Task_IDs             : Ranges.Step_Range;
-      Full_Name            : Unbounded_String; -- Job name
-      Name                 : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
-      Name_Truncated       : Boolean;          -- Whether Full_Name and Name differ
-      Owner                : Unbounded_String; -- User whom this job belongs to
-      Group                : Unbounded_String;
-      Account              : Unbounded_String;
-
-      Priority             : Fixed; -- Numerical priority
-      State                : Job_State;
-      Slot_Number          : Unbounded_String; -- how many slots/CPUs to use
-      PE                   : Unbounded_String; -- Parallel environment
-      Submission_Time      : Time;    -- when submitted
-      Project              : Unbounded_String;
-      Department           : Unbounded_String;
-      Job_Array            : Unbounded_String;
-      Notify               : Tri_State;
-      JAT_Usage, PET_Usage : Usage := (others => 0.0);
-      Predecessors         : Utils.String_List;
-      Successors           : Utils.String_List;
-
-
-      --  File related stuff
-      Exec_File          : Unbounded_String;
-      Script_File        : Unbounded_String;
-      Directory          : Unbounded_String;
-      Reserve            : Tri_State;
-      Merge_Std_Err      : Tri_State;
-      Args               : Utils.String_List;
-
-
-      --  qstat -ext
-      CPU, Mem, IO       : Float;
-      Override_Tickets   : Natural;
-      Share_Tickets      : Natural;
-      Functional_Tickets : Natural;
-
-      --  qstat -urg
-      Urgency          : Fixed;
-      Resource_Contrib : Natural;
-      Waiting_Contrib  : Natural;
-
-      --  qstat -pri
-      Posix_Priority   : Natural;
-
-      --  resources used for Bunching jobs
-      Queue            : Unbounded_String;
-      Hard, Soft       : Resources.Hashed_List;
-
-      Slot_List        : Ranges.Range_Lists.List;
-      Queue_List       : String_Lists.List;
-      Message_List     : String_Lists.List;
-      Task_List        : String_Lists.List;
-
-      Std_Out_Paths    : String_Lists.List;
-      Std_Err_Paths    : String_Lists.List;
-
-
-   end record;
+   type Job is private;
 
    function State_As_String (J : Job) return String;
    function To_String (State : Job_State) return String;
@@ -169,6 +107,11 @@ package Jobs is
    procedure Prune_List_By_Slots (Slots : String);
    --  outdated. move functionality to Append_List. Does GPS notice this?
 
+   procedure Put_Summary;
+   procedure Put_List;
+   procedure Put_Time_List;
+   procedure Put_Bunch_List;
+
    procedure Sort_By (Field : String; Direction : String);
    function Precedes_By_Name (Left, Right : Job) return Boolean;
    function Precedes_By_Number (Left, Right : Job) return Boolean;
@@ -193,9 +136,6 @@ package Jobs is
 
    function Same (Left, Right : Job) return Boolean;
 
-   package Job_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
-
    -----------------------------
    -- Update_Job_From_Qstat_J --
    --  Purpose: Get more information on an existing job;
@@ -203,13 +143,76 @@ package Jobs is
    --  previously empty fields
    -----------------------------
    procedure Update_Job_From_Qstat_J (J : in out Job);
+   procedure Update_Status;
+   procedure Put_Details;
 
-   -------------------
-   -- Update_Status --
-   --  Purpose: Read the job's status from an appropriate source
-   --  (such as a qstat -u call)
-   -------------------
-   procedure Update_Status (Position : Job_Lists.Cursor);
+
+   Max_Name_Length : constant Positive := 20;
+
+private
+   type Job is record
+      --  basic attributes
+      Number               : Integer; -- Job ID
+      Task_IDs             : Ranges.Step_Range;
+      Full_Name            : Unbounded_String; -- Job name
+      Name                 : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
+      Name_Truncated       : Boolean;          -- Whether Full_Name and Name differ
+      Owner                : Unbounded_String; -- User whom this job belongs to
+      Group                : Unbounded_String;
+      Account              : Unbounded_String;
+
+      Priority             : Fixed; -- Numerical priority
+      State                : Job_State;
+      Slot_Number          : Unbounded_String; -- how many slots/CPUs to use
+      PE                   : Unbounded_String; -- Parallel environment
+      Submission_Time      : Time;    -- when submitted
+      Project              : Unbounded_String;
+      Department           : Unbounded_String;
+      Job_Array            : Unbounded_String;
+      Notify               : Tri_State;
+      JAT_Usage, PET_Usage : Usage := (others => 0.0);
+      Predecessors         : Utils.String_List;
+      Successors           : Utils.String_List;
+
+
+      --  File related stuff
+      Exec_File          : Unbounded_String;
+      Script_File        : Unbounded_String;
+      Directory          : Unbounded_String;
+      Reserve            : Tri_State;
+      Merge_Std_Err      : Tri_State;
+      Args               : Utils.String_List;
+
+
+      --  qstat -ext
+      CPU, Mem, IO       : Float;
+      Override_Tickets   : Natural;
+      Share_Tickets      : Natural;
+      Functional_Tickets : Natural;
+
+      --  qstat -urg
+      Urgency          : Fixed;
+      Resource_Contrib : Natural;
+      Waiting_Contrib  : Natural;
+
+      --  qstat -pri
+      Posix_Priority   : Natural;
+
+      --  resources used for Bunching jobs
+      Queue            : Unbounded_String;
+      Hard, Soft       : Resources.Hashed_List;
+
+      Slot_List        : Ranges.Range_Lists.List;
+      Queue_List       : String_Lists.List;
+      Message_List     : String_Lists.List;
+      Task_List        : String_Lists.List;
+
+      Std_Out_Paths    : String_Lists.List;
+      Std_Err_Paths    : String_Lists.List;
+   end record;
+
+   package Job_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
 
    -----------------
    -- Get_Summary --
@@ -266,10 +269,8 @@ package Jobs is
       new Job_Lists.Generic_Sorting ("<" => Precedes_By_Resources);
 
 
-   Max_Name_Length : constant Positive := 20;
    List : Job_Lists.List;
 
-private
    -------------------
    -- Update_Status --
    --  Purpose: Read the job's status from an appropriate source

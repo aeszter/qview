@@ -1,5 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
-with Jobs; use Jobs; use Jobs.Job_Lists;
+with Jobs; use Jobs;
 with Ranges; use Ranges; use Ranges.Range_Lists;
 with Ada.Text_IO;
 with CGI;
@@ -13,9 +13,7 @@ package body Bunches is
    -- Build_List --
    ----------------
 
-   procedure Build_List
-     (Job_List : in out Jobs.Job_Lists.List;
-      Bunch_List : out Bunch_Lists.List)
+   procedure Build_List is
    is
       B : Bunch;
       J : Job;

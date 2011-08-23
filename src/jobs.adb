@@ -8,7 +8,7 @@ with Ada.Calendar.Conversions;
 with Resources;      use Resources; use Resources.Resource_Lists;
 with Ranges;          use Ranges; use Ranges.Range_Lists;
 with Utils;          use Utils; use Utils.String_Lists;
-with Jobs; use Jobs.Job_Lists;
+with Jobs;
 with HTML;
 with Parser;
 with Ada.Exceptions; use Ada.Exceptions;
@@ -17,6 +17,7 @@ with Interfaces.C;
 with Ada.Containers; use Ada.Containers;
 
 package body Jobs is
+   use Job_Lists;
 
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
 
@@ -51,6 +52,26 @@ package body Jobs is
       end loop;
       List.Iterate (Process => Count'Access);
    end Get_Summary;
+
+   procedure Put_Summary is
+      Summary : State_Count;
+   begin
+      Jobs.Get_Summary (Summary);
+      HTML.Begin_Div (ID => "job_summary");
+      Ada.Text_IO.Put ("<ul>");
+      for State in Summary'Range loop
+         if State /= unknown then
+            Ada.Text_IO.Put ("<li>");
+            Ada.Text_IO.Put (Summary (State)'Img & " ");
+            HTML.Put (What => State);
+            Ada.Text_IO.Put_Line ("</li>");
+         end if;
+      end loop;
+
+      Ada.Text_IO.Put ("</ul>");
+      HTML.End_Div (ID => "job_summary");
+   end Put_Summary;
+
 
    ---------------------
    -- State_As_String --
@@ -307,16 +328,16 @@ package body Jobs is
    -- Update_Status --
    -------------------
 
-   procedure Update_Status (Position : Job_Lists.Cursor) is
+   procedure Update_Status is
+      Pos : Job_Lists.Cursor;
    begin
-      Update_Element (Container => List,
-                      Position  => Position,
-                      Process   => Update_Status'Access);
+      Pos := List.First;
+      while Pos /= Job_Lists.No_Element loop
+         List.Update_Element (Position => Pos,
+                              Process  => Update_Status'Access);
+         Next (Pos);
+      end loop;
    end Update_Status;
-
-   -------------------
-   -- Update_Status --
-   -------------------
 
    procedure Update_Status (J : in out Job) is
       SGE_Out     : DOM.Core.Document;
@@ -1340,6 +1361,44 @@ package body Jobs is
                        ID    => ID);
    end Put_Successor;
 
+
+   --------------
+   -- Put_List --
+   --------------
+
+   procedure Put_List is
+   begin
+      List.Iterate (Jobs.Put_Res_Line'Access);
+   end Put_List;
+
+   -------------------
+   -- Put_Time_List --
+   -------------------
+
+   procedure Put_Time_List is
+   begin
+      List.Iterate (Jobs.Put_Time_Line'Access);
+   end Put_Time_List;
+
+   --------------------
+   -- Put_Bunch_List --
+   --------------------
+
+   procedure Put_Bunch_List is
+   begin
+      List.Iterate (Jobs.Put_Bunch_Line'Access);
+   end Put_Bunch_List;
+
+
+   -----------------
+   -- Put_Details --
+   -----------------
+
+   procedure Put_Details is
+   begin
+      List.Iterate (Jobs.Put'Access);
+   end Put_Details;
+
    ---------
    -- Put --
    ---------
@@ -1626,5 +1685,6 @@ package body Jobs is
                                      & Exception_Message (E));
       Ada.Text_IO.Put ("</tr>");
    end Put_Res_Line;
+
 
 end Jobs;

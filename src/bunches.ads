@@ -19,8 +19,7 @@ package Bunches is
    package Bunch_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Bunch);
 
-   procedure Build_List (Job_List : in out Jobs.Job_Lists.List;
-                         Bunch_List : out Bunch_Lists.List);
+   procedure Build_List;
    procedure Put (Pos : Bunch_Lists.Cursor);
 
    function New_Bunch (J : Job) return Bunch;

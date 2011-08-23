@@ -10,7 +10,7 @@ with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Resources; use Resources; use Resources.Resource_Lists;
 with Ranges; use Ranges; use Ranges.Range_Lists;
-with Jobs; use Jobs; use Jobs.Job_Lists;
+with Jobs; use Jobs;
 with Bunches; use Bunches; use Bunches.Bunch_Lists;
 with Queues; use Queues; use Queues.Queue_Lists;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
@@ -211,7 +211,7 @@ package body Viewer is
          end if;
 
          --  Detect different bunches
-         Bunches.Build_List (Jobs.List, Bunch_List);
+         Bunches.Build_List;
 
          --  Output
          Put_Table_Header;
@@ -413,27 +413,6 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
-         procedure Put_Summary is
-            Summary : Jobs.State_Count;
-         begin
-            Jobs.Get_Summary (Summary);
-            HTML.Begin_Div (ID => "job_summary");
-            Ada.Text_IO.Put ("<ul>");
-            for State in Summary'Range loop
-               if State /= unknown then
-                  Ada.Text_IO.Put ("<li>");
-                  Ada.Text_IO.Put (Summary (State)'Img & " ");
-                  HTML.Put (What => State);
-                  Ada.Text_IO.Put_Line ("</li>");
-               end if;
-            end loop;
-
-            Ada.Text_IO.Put ("</ul>");
-            HTML.End_Div (ID => "job_summary");
-         end Put_Summary;
-
-
-
       begin
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
@@ -449,9 +428,9 @@ package body Viewer is
          end if;
 
          Put_Table_Header;
-         Put_Summary;
+         Jobs.Put_Summary;
 
-         Jobs.List.Iterate (Jobs.Put_Res_Line'Access);
+         Jobs.Put_List;
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -492,8 +471,8 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
-         Jobs.List.Iterate (Jobs.Update_Status'Access);
-         Jobs.List.Iterate (Jobs.Put'Access);
+         Jobs.Update_Status;
+         Jobs.Put_Details;
 
       exception
          when Sax.Readers.XML_Fatal_Error =>
@@ -536,7 +515,7 @@ package body Viewer is
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => To_String (Sort_Direction));
          end if;
-         Jobs.List.Iterate (Jobs.Put_Time_Line'Access);
+         Jobs.Put_Time_List;
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -688,7 +667,7 @@ package body Viewer is
                            Slot_Ranges   => CGI.Value ("slot_ranges"),
                            Slot_Number   => CGI.Value ("slot_number")
                           );
-         Jobs.List.Iterate (Jobs.Put_Bunch_Line'Access);
+         Jobs.Put_Bunch_List;
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
