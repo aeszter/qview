@@ -190,6 +190,7 @@ package body Viewer is
             HTML.Put_Cell (Data => "Waiting", Tag => "th");
             HTML.Put_Cell (Data => "Held", Tag => "th");
             HTML.Put_Cell (Data => "Error", Tag => "th");
+            Ada.Text_IO.Put_Line ("</tr>");
          end Put_Table_Header;
 
          SGE_Out     : Parser.Tree;
@@ -214,7 +215,6 @@ package body Viewer is
 
          --  Output
          Put_Table_Header;
-         Ada.Text_IO.Put_Line ("</tr>");
          Bunches.Put_List;
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "bunches");
