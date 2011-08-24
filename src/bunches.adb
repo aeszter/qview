@@ -14,49 +14,49 @@ package body Bunches is
    ----------------
 
    procedure Build_List is
-   is
       B : Bunch;
       J : Job;
-      Cursor : Jobs.Job_Lists.Cursor;
    begin
-      Sorting_By_Resources.Sort (Job_List);
-      Cursor := Job_List.First;
+      Jobs.Sort;
+      Jobs.Rewind;
 
-      if Cursor = Jobs.Job_Lists.No_Element then
+      if Jobs.Empty then
          Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
       else
-         J := Element (Cursor);
+         J := Jobs.Next;
+         HTML.Comment ("Next");
 
          --  Create Bunch according to first Job
          B := New_Bunch (J);
-         while Cursor /= Jobs.Job_Lists.No_Element loop
-            J := Element (Cursor);
+         while not Jobs.At_End loop
+            J := Jobs.Next;
+            HTML.Comment ("Next");
             --  New Bunch?
             if B /= J then
                --  Yes. Store previous one.
-               Bunch_List.Append (B);
+               List.Append (B);
                B := New_Bunch (J);
+               HTML.Comment ("Store Bunch");
             end if;
 
             --  Update totals
-            B.Total := B.Total + Count (J.Task_IDs);
+            B.Total := B.Total + Get_Task_Count (J);
             if On_Hold (J) then
-               B.On_Hold := B.On_Hold + Count (J.Task_IDs);
+               B.On_Hold := B.On_Hold + Get_Task_Count (J);
             elsif Has_Error (J) then
-               B.Error := B.Error + Count (J.Task_IDs);
+               B.Error := B.Error + Get_Task_Count (J);
             else
-               B.Waiting := B.Waiting + Count (J.Task_IDs);
+               B.Waiting := B.Waiting + Get_Task_Count (J);
             end if;
             --  Advance
-            Cursor := Next (Cursor);
          end loop;
          --  That's it. Store final bunch.
-         Bunch_List.Append (B);
+         List.Append (B);
       end if;
    exception
       when E : Constraint_Error
          => HTML.Error ("Unable to build bunch while examining job"
-                        & J.Number'Img
+                        & Get_ID (J)
                        & ": " & Ada.Exceptions.Exception_Message (E));
    end Build_List;
 
@@ -67,12 +67,12 @@ package body Bunches is
    function New_Bunch (J : Job) return Bunch is
       B : Bunch;
    begin
-      B.PE          := J.PE;
-      B.Slot_List   := J.Slot_List;
-      B.Slot_Number := J.Slot_Number;
-      B.Queue       := J.Queue;
-      B.Hard        := J.Hard;
-      B.Soft        := J.Soft;
+      B.PE          := Get_PE (J);
+      B.Slot_List   := Get_Slot_List (J);
+      B.Slot_Number := Get_Slot_Number (J);
+      B.Queue       := Get_Queue (J);
+      B.Hard        := Get_Hard_Resources (J);
+      B.Soft        := Get_Soft_Resources (J);
       B.Total       := 0;
       B.On_Hold     := 0;
       B.Waiting     := 0;
@@ -80,6 +80,11 @@ package body Bunches is
       return B;
    end New_Bunch;
 
+
+   procedure Put_List is
+   begin
+      List.Iterate (Put'Access);
+   end Put_List;
 
    ---------
    -- Put --
@@ -138,11 +143,11 @@ package body Bunches is
 
    function "=" (Left : Bunch; Right : Job) return Boolean is
    begin
-      return (Left.PE = Right.PE and then
-                   Left.Slot_Number = Right.Slot_Number and then
-                   Left.Slot_List = Right.Slot_List and then
-                   Left.Hard = Right.Hard and then
-                   Left.Soft = Right.Soft and then
-       Left.Queue = Right.Queue);
+      return (Left.PE = Get_PE (Right) and then
+                   Left.Slot_Number = Get_Slot_Number (Right) and then
+                   Left.Slot_List = Get_Slot_List (Right) and then
+                   Left.Hard = Get_Hard_Resources (Right) and then
+                   Left.Soft = Get_Soft_Resources (Right) and then
+                   Left.Queue = Get_Queue (Right));
    end "=";
 end Bunches;

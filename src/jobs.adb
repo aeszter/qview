@@ -34,6 +34,84 @@ package body Jobs is
       Usage_Tree : Node;
       Cumulative : Boolean);
 
+   -------------
+   --  accessors
+   -------------
+
+   function Get_Task_Count (J : Job) return Natural is
+   begin
+      return Count (J.Task_IDs);
+   end Get_Task_Count;
+
+   function Get_ID (J : Job) return String is
+   begin
+      return J.Number'Img;
+   end Get_ID;
+
+   function Get_PE (J : Job) return Unbounded_String is
+   begin
+      return J.PE;
+   end Get_PE;
+
+   function Get_Slot_List (J : Job) return Ranges.Range_Lists.List is
+   begin
+      return J.Slot_List;
+   end Get_Slot_List;
+
+   function Get_Slot_Number (J : Job) return Unbounded_String is
+   begin
+      return J.Slot_Number;
+   end Get_Slot_Number;
+
+   function Get_Queue (J : Job) return Unbounded_String is
+   begin
+      return J.Queue;
+   end Get_Queue;
+
+   function Get_Hard_Resources (J : Job) return Resources.Hashed_List is
+   begin
+      return J.Hard;
+   end Get_Hard_Resources;
+
+   function Get_Soft_Resources (J : Job) return Resources.Hashed_List is
+   begin
+      return J.Soft;
+   end Get_Soft_Resources;
+
+   ----------------
+   --  list-related
+   ----------------
+   procedure Sort is
+   begin
+      Sorting_By_Resources.Sort (List);
+   end Sort;
+
+   procedure Rewind is
+   begin
+      List_Cursor := List.First;
+   end Rewind;
+
+   function Empty return Boolean is
+   begin
+      return List.Is_Empty;
+   end Empty;
+
+   function Next return Job is
+   begin
+      Next (List_Cursor);
+      return Job_Lists.Element (List_Cursor);
+   end Next;
+
+   function At_End return Boolean is
+   begin
+      if List_Cursor = Job_Lists.No_Element or else
+        List_Cursor = List.Last then
+         return True;
+      end if;
+      return False;
+   end At_End;
+
+
    -----------------
    -- Get_Summary --
    -----------------

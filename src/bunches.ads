@@ -21,6 +21,7 @@ package Bunches is
 
    procedure Build_List;
    procedure Put (Pos : Bunch_Lists.Cursor);
+   procedure Put_List;
 
    function New_Bunch (J : Job) return Bunch;
    ---------
@@ -30,4 +31,6 @@ package Bunches is
 
    function "=" (Left : Bunch; Right : Job) return Boolean;
    function "=" (Left : Job; Right : Bunch) return Boolean;
+
+   List : Bunch_Lists.List;
 end Bunches;

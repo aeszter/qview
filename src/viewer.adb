@@ -193,7 +193,6 @@ package body Viewer is
          end Put_Table_Header;
 
          SGE_Out     : Parser.Tree;
-         Bunch_List : Bunches.Bunch_Lists.List;
       begin
          HTML.Begin_Div (Class => "bunches");
          if HTML.Param_Is ("categories", "demand") then
@@ -216,7 +215,7 @@ package body Viewer is
          --  Output
          Put_Table_Header;
          Ada.Text_IO.Put_Line ("</tr>");
-         Bunch_List.Iterate (Bunches.Put'Access);
+         Bunches.Put_List;
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "bunches");
       end View_Job_Overview;

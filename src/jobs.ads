@@ -27,6 +27,14 @@ package Jobs is
 
    function End_Time (J : Job) return Time;
    function Remaining_Time (J : Job) return Duration;
+   function Get_Task_Count (J : Job) return Natural;
+   function Get_ID (J : Job) return String;
+   function Get_PE (J : Job) return Unbounded_String;
+   function Get_Slot_List (J : Job) return Ranges.Range_Lists.List;
+   function Get_Slot_Number (J : Job) return Unbounded_String;
+   function Get_Queue (J : Job) return Unbounded_String;
+   function Get_Hard_Resources (J : Job) return Resources.Hashed_List;
+   function Get_Soft_Resources (J : Job) return Resources.Hashed_List;
 
    -------------
    -- New_Job --
@@ -145,6 +153,19 @@ package Jobs is
    procedure Update_Job_From_Qstat_J (J : in out Job);
    procedure Update_Status;
    procedure Put_Details;
+
+   procedure Sort;
+   --  Sort the job list by resources
+   procedure Rewind;
+   --  rewind the job list, i.e. point the memory pointer at the first job
+   function Empty return Boolean;
+   --  is the job list empty?
+   function Next return Job;
+   --  advance the memory pointer and retrieve the current job
+   --  if the memory pointer points at the last element, or is No_Element, then
+   --  a Constraint_Error is propagated
+   function At_End return Boolean;
+   --  is there a next job? If At_End returns False, Next will return a Job
 
 
    Max_Name_Length : constant Positive := 20;
@@ -270,6 +291,7 @@ private
 
 
    List : Job_Lists.List;
+   List_Cursor : Job_Lists.Cursor := Job_Lists.No_Element;
 
    -------------------
    -- Update_Status --
