@@ -616,7 +616,7 @@ package body Jobs is
          elsif Name (C) = "JB_job_args" then
             Extract_Args (J, Child_Nodes (C));
          elsif Name (C) = "tasks" then
-            J.Task_IDs := To_Step_Range (Value (First_Child (C)));
+            J.Task_IDs := To_Step_Range_List (Value (First_Child (C)));
          elsif Name (C) = "granted_pe" then
             null;
          elsif Name (C) = "JB_jid_predecessor_list" then
@@ -1644,7 +1644,7 @@ package body Jobs is
                         Link_Param => "job_id");
       else
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left)
-                                      & "-" & Ada.Strings.Fixed.Trim (J.Task_IDs.Min'Img, Ada.Strings.Left),
+                                      & "-" & Ada.Strings.Fixed.Trim (Min (J.Task_IDs)'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
       end if;
       HTML.Put_Cell (Data => J.Owner, Link_Param => "user");

@@ -15,7 +15,10 @@ package Ranges is
    --  representing a number
 
    function Is_Empty (What : Step_Range) return Boolean;
+   --  An empty range does not represent any number.
+
    function Count (What : Step_Range) return Natural;
+   --  how many different entries does the range represent?
    function Is_Collapsed (What : Step_Range) return Boolean;
    --  return True if the range collapses to a single number
 
@@ -28,6 +31,27 @@ package Ranges is
 
    package Range_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Step_Range);
+
+   subtype Step_Range_List is Range_Lists.List;
+
+   function To_Step_Range_List (From : String) return Step_Range_List;
+   --  Create a Step_Range from a string of the form {SR}(,{SR})* where {SR} is
+   --  a step range (see above)
+
+   function Count (What : Step_Range_List) return Natural;
+   --  How many different entries does the list represent?
+   --  This does not mean the number of Step_Ranges in the list, but rather the
+   --  sum of Count(SR) for each entry SR.
+
+   function Is_Empty (What : Step_Range_List) return Boolean;
+   --  An empty range list does not represent any number. It contains at most
+   --  empty ranges.
+
+   function Is_Collapsed (What : Step_Range_List) return Boolean;
+   --  return True if the list collapses to a single number: it contains
+   --  only a single entry, and that entry is collapsed.
+   --  Degenerate cases are not handled correctly: multiple identical entries,
+   --  or multiple entries, all but one being empty, are not recognized as collapsed.
 
    --------------
    -- Put_Cell --
@@ -58,5 +82,9 @@ package Ranges is
 
    function Hash (List : Range_Lists.List) return String;
    function Hash (S : Step_Range) return Hash_Type;
+
+   function Min (List : Step_Range_List) return Natural;
+   --  return the "Minimum" number represented by the SRL. For now, the list is
+   --  assumed to be ordered, so the Min of the first SR in the list is returned.
 
 end Ranges;

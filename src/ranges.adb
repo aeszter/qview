@@ -65,6 +65,28 @@ package body Ranges is
       return R;
    end To_Step_Range;
 
+   ------------------------
+   -- To_Step_Range_List --
+   ------------------------
+
+   function To_Step_Range_List (From : String) return Step_Range_List is
+      List : Step_Range_List;
+      Comma, Prev : Natural := From'First - 1;
+   begin
+      loop
+         Comma := Index (Source  => From (Prev + 1 .. From'Last),
+                           Pattern => ",");
+         if Comma = 0 then
+            List.Append (New_Item => To_Step_Range (From (Prev + 1 .. From'Last)));
+            return List;
+         else
+            List.Append (New_Item => To_Step_Range (From (Prev + 1 .. Comma - 1)));
+         end if;
+         Prev := Comma;
+      end loop;
+   end To_Step_Range_List;
+
+
    --------------
    -- Is_Empty --
    --------------
@@ -83,6 +105,23 @@ package body Ranges is
 
    end Is_Empty;
 
+   function Is_Empty (What : Step_Range_List) return Boolean is
+      Cursor : Range_Lists.Cursor := What.First;
+   begin
+      if Is_Empty (What) then
+         return True;
+      end if;
+      while Cursor /= No_Element loop
+         if not Is_Empty (Element (Cursor)) then
+            return False;
+         end if;
+         Next (Cursor);
+      end loop;
+      return True;
+   end Is_Empty;
+
+
+
    -----------
    -- Count --
    -----------
@@ -96,7 +135,18 @@ package body Ranges is
       end if;
    end Count;
 
-   ------------------
+   function Count (What : Step_Range_List) return Natural is
+      N : Natural := 0;
+      Cursor : Range_Lists.Cursor := What.First;
+   begin
+      while Cursor /= Range_Lists.No_Element loop
+         N := N + Count (Element (Cursor));
+         Next (Cursor);
+      end loop;
+      return N;
+   end Count;
+
+      ------------------
    -- Is_Collapsed --
    ------------------
 
@@ -111,6 +161,15 @@ package body Ranges is
       end if;
    end Is_Collapsed;
 
+   function Is_Collapsed (What : Step_Range_List) return Boolean is
+   begin
+      if What.Length = 1
+        and then Is_Collapsed (What.First_Element) then
+         return True;
+      else
+         return False;
+      end if;
+   end Is_Collapsed;
 
    ---------
    -- Put --
@@ -189,6 +248,19 @@ package body Ranges is
       HTML.Comment (To_String ("Hash (" & Str & ") =>" & Hash (Str)'Img));
       return Hash (Str);
    end Hash;
+
+   ---------
+   -- Min --
+   ---------
+
+   function Min (List : Step_Range_List) return Natural is
+   begin
+      if List.Is_Empty then
+         raise Program_Error with "Tried to get Min of empty list";
+      else
+         return List.First_Element.Min;
+      end if;
+   end Min;
 
 
 end Ranges;

@@ -174,7 +174,7 @@ private
    type Job is record
       --  basic attributes
       Number               : Integer; -- Job ID
-      Task_IDs             : Ranges.Step_Range;
+      Task_IDs             : Ranges.Step_Range_List;
       Full_Name            : Unbounded_String; -- Job name
       Name                 : Unbounded_String; -- Job name, truncated to Max_J_Name_Length
       Name_Truncated       : Boolean;          -- Whether Full_Name and Name differ
