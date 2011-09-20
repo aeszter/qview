@@ -207,7 +207,12 @@ package body HTML is
             null; -- iow is suppressed in qstat -j without -xml as well
          when submission_time =>
             null; -- ignore for now; note that this is also treated as cumulative
-            --  in Jobs.Extract_Tasks, although it represents a point in time
+                  --  in Jobs.Extract_Tasks, although it represents a point in time
+         when priority =>
+            null;
+            --  ignore for now. It is unclear how one can "use" priority
+            --  Put_Paragraph (Label => "Priority",
+            --               Contents => Amount'Img);
       end case;
    end Put;
 

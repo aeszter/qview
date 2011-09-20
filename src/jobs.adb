@@ -886,6 +886,11 @@ package body Jobs is
             end if;
          end if;
       end loop Over_Usage_Entries;
+   exception
+      when E : Constraint_Error =>
+         HTML.Error ("Unable to parse usage (QF => """
+                     & Value (First_Child (Quantity_Field)) & """): "
+                     & Exception_Message (E));
    end Parse_Usage;
 
    ----------------------------
