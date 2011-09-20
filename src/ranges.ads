@@ -32,7 +32,7 @@ package Ranges is
    package Range_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Step_Range);
 
-   subtype Step_Range_List is Range_Lists.List;
+   type Step_Range_List is new Range_Lists.List with null record;
 
    function To_Step_Range_List (From : String) return Step_Range_List;
    --  Create a Step_Range from a string of the form {SR}(,{SR})* where {SR} is

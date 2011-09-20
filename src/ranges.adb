@@ -105,10 +105,10 @@ package body Ranges is
 
    end Is_Empty;
 
-   function Is_Empty (What : Step_Range_List) return Boolean is
+   overriding function Is_Empty (What : Step_Range_List) return Boolean is
       Cursor : Range_Lists.Cursor := What.First;
    begin
-      if Is_Empty (What) then
+      if Range_Lists.Is_Empty (List (What)) then
          return True;
       end if;
       while Cursor /= No_Element loop
