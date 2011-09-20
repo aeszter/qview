@@ -166,6 +166,8 @@ package Jobs is
    --  a Constraint_Error is propagated
    function At_End return Boolean;
    --  is there a next job? If At_End returns False, Next will return a Job
+   function Current return Job;
+   --  retrieve the current job without changing the memory pointer
 
 
    Max_Name_Length : constant Positive := 20;

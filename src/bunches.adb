@@ -23,14 +23,10 @@ package body Bunches is
       if Jobs.Empty then
          Ada.Text_IO.Put_Line ("<i>No jobs found</i>");
       else
-         J := Jobs.Next;
-         HTML.Comment ("Next");
-
+         J := Jobs.Current;
          --  Create Bunch according to first Job
          B := New_Bunch (J);
          while not Jobs.At_End loop
-            J := Jobs.Next;
-            HTML.Comment ("Next");
             --  New Bunch?
             if B /= J then
                --  Yes. Store previous one.
@@ -40,6 +36,7 @@ package body Bunches is
             end if;
 
             --  Update totals
+
             B.Total := B.Total + Get_Task_Count (J);
             if On_Hold (J) then
                B.On_Hold := B.On_Hold + Get_Task_Count (J);
@@ -49,6 +46,7 @@ package body Bunches is
                B.Waiting := B.Waiting + Get_Task_Count (J);
             end if;
             --  Advance
+            J := Jobs.Next;
          end loop;
          --  That's it. Store final bunch.
          List.Append (B);

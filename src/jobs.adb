@@ -111,6 +111,11 @@ package body Jobs is
       return False;
    end At_End;
 
+   function Current return Job is
+   begin
+      return Job_Lists.Element (List_Cursor);
+   end Current;
+
 
    -----------------
    -- Get_Summary --
