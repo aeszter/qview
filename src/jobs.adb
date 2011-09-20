@@ -774,8 +774,8 @@ package body Jobs is
    -- Extract_Predecessor_List --
    ------------------------------
 
-   procedure Extract_Hold_ID_List (ID_List   : in out String_List;
-                                   Sub_Nodes : Node_List) is
+   procedure Extract_Hold_ID_List (ID_List         : in out Utils.ID_List;
+                                   Sub_Nodes       : Node_List) is
       N, ID_Node : Node;
    begin
       for I in 0 .. Length (Sub_Nodes) - 1 loop
@@ -788,7 +788,7 @@ package body Jobs is
                  "Expected ""JRE_job_number"" but found """
                  & Name (ID_Node) & """ instead";
             end if;
-            ID_List.Append (New_Item => To_Unbounded_String (Value (First_Child (ID_Node))));
+            ID_List.Include (New_Item => Natural'Value (Value (First_Child (ID_Node))));
          end if;
       end loop;
    end Extract_Hold_ID_List;
@@ -1425,8 +1425,8 @@ package body Jobs is
    -- Put_Predecessor --
    ---------------------
 
-   procedure Put_Predecessor (Position : Utils.String_Lists.Cursor) is
-      ID : String := To_String (Utils.String_Lists.Element (Position));
+   procedure Put_Predecessor (Position : Utils.ID_Lists.Cursor) is
+      ID : String := Utils.ID_Lists.Element (Position)'Img;
    begin
       HTML.Put_Job_ID (Label    => "Predecessor",
                           ID    => ID);
@@ -1436,8 +1436,8 @@ package body Jobs is
    -- Put_Successor --
    ---------------------
 
-   procedure Put_Successor (Position : Utils.String_Lists.Cursor) is
-      ID : String := To_String (Utils.String_Lists.Element (Position));
+   procedure Put_Successor (Position : Utils.ID_Lists.Cursor) is
+      ID : String := Utils.ID_Lists.Element (Position)'Img;
    begin
       HTML.Put_Job_ID (Label => "Successor",
                        ID    => ID);

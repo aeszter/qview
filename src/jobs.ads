@@ -57,7 +57,7 @@ package Jobs is
                                     Resource_Nodes : Node_List;
                                     Soft           : Boolean := False);
    procedure Extract_Queue_List (J : in out Job; Destin_Nodes : Node_List);
-   procedure Extract_Hold_ID_List (ID_List           : in out String_List;
+   procedure Extract_Hold_ID_List (ID_List         : in out Utils.ID_List;
                                        Sub_Nodes : Node_List);
    procedure Extract_Tasks (J : in out Job; Task_Nodes : Node_List);
    procedure Extract_PE_Range (J : in out Job; Children : Node_List);
@@ -192,8 +192,8 @@ private
       Job_Array            : Unbounded_String;
       Notify               : Tri_State;
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
-      Predecessors         : Utils.String_List;
-      Successors           : Utils.String_List;
+      Predecessors         : Utils.ID_List;
+      Successors           : Utils.ID_List;
 
 
       --  File related stuff
@@ -300,10 +300,10 @@ private
    -------------------
 
    procedure Update_Status (J : in out Job);
-   procedure Put_Predecessor (Position : Utils.String_Lists.Cursor);
+   procedure Put_Predecessor (Position : Utils.ID_Lists.Cursor);
    --  Output the job ID of a predecessor job as a link to the job, together with
    --  a suitable title
-   procedure Put_Successor (Position : Utils.String_Lists.Cursor);
+   procedure Put_Successor (Position : Utils.ID_Lists.Cursor);
    --  Output the job ID of a successor job as a link to the job, together with
    --  a suitable title
 
