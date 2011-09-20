@@ -572,11 +572,9 @@ package body Jobs is
                            Inserted => Inserted);
          elsif Name (C) = "predecessor_jobs" or else
             Name (C) = "predecessor_jobs_req" or else
-          Name (C) = "ad_predecessor_jobs_req" or else
-           Name (C) = "ad_predecessor_jobs" then
-            --  J.Predecessors.
-            --  Add to predecessor "list"
-            null;
+            Name (C) = "ad_predecessor_jobs_req" or else
+            Name (C) = "ad_predecessor_jobs" then
+               J.Predecessors.Include (New_Item => Natural'Value (Value (First_Child (C))));
          elsif Name (C) = "JB_hard_resource_list" then
             Extract_Resource_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_soft_resource_list" then
