@@ -143,7 +143,11 @@ package body Ranges is
          N := N + Count (Element (Cursor));
          Next (Cursor);
       end loop;
-      return N;
+      if N = 0 then
+         return 1;
+      else
+         return N;
+      end if;
    end Count;
 
       ------------------
