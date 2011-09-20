@@ -566,8 +566,12 @@ package body Jobs is
                            Position => Inserted_At,
                            Inserted => Inserted);
          elsif Name (C) = "predecessor_jobs" or else
-            Name (C) = "predecessor_jobs_req" then
-            null; -- ignore
+            Name (C) = "predecessor_jobs_req" or else
+          Name (C) = "ad_predecessor_jobs_req" or else
+           Name (C) = "ad_predecessor_jobs" then
+            --  J.Predecessors.
+            --  Add to predecessor "list"
+            null;
          elsif Name (C) = "JB_hard_resource_list" then
             Extract_Resource_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_soft_resource_list" then
