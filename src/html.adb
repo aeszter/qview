@@ -476,8 +476,15 @@ package body HTML is
 
    procedure Error (Message : String) is
    begin
-      Ada.Text_IO.Put_Line
-        ("<p class=""error""> Error: " & CGI.HTML_Encode (Message) & "</p>");
+      Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
+                      & "<a href=""http://ram/bugzilla/enter_bug.cgi?"
+                      & "component=qview&form_name=enter_bug"
+                      & "&product=Private%20projects"
+                      & "&short_desc=" & CGI.HTML_Encode (Message)
+                      & "&comment=Please describe what you did before the error occurred. "
+                      & "Are there any extraordinary jobs in the queue?"
+                      & """>"
+                      & CGI.HTML_Encode (Message) & "</a></p>");
    end Error;
 
    procedure Put_Heading (Title : String; Level : Positive) is
