@@ -121,31 +121,39 @@ package body Jobs is
    -- Get_Summary --
    -----------------
 
-   procedure Get_Summary (Summary : out State_Count) is
+   procedure Get_Summary (Tasks, Slots : out State_Count) is
 
       procedure Count (Position : Job_Lists.Cursor) is
          State : Job_State := Job_Lists.Element (Position).State;
+         Slot_Number : Natural := Integer'Value (To_String (Job_Lists.Element (Position).Slot_Number));
       begin
-         Summary (State) := Summary (State) + 1;
+         Tasks (State) := Tasks (State) + 1;
+         Slots (State) := Slots (State) + Slot_Number;
       end Count;
 
    begin
-      for S in Summary'Range loop
-         Summary (S) := 0;
+      for S in Tasks'Range loop
+         Tasks (S) := 0;
+         Slots (S) := 0;
       end loop;
       List.Iterate (Process => Count'Access);
    end Get_Summary;
 
    procedure Put_Summary is
-      Summary : State_Count;
+      Task_Summary, Slot_Summary : State_Count;
    begin
-      Jobs.Get_Summary (Summary);
+      Jobs.Get_Summary (Tasks => Task_Summary,
+                        Slots => Slot_Summary);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
-      for State in Summary'Range loop
+      for State in Task_Summary'Range loop
          if State /= unknown then
             Ada.Text_IO.Put ("<li>");
-            Ada.Text_IO.Put (Summary (State)'Img & " ");
+            Ada.Text_IO.Put (Task_Summary (State)'Img);
+            if Slot_Summary (State) > 0 then
+               Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
+            end if;
+            Ada.Text_IO.Put (" ");
             HTML.Put (What => State);
             Ada.Text_IO.Put_Line ("</li>");
          end if;

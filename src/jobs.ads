@@ -241,7 +241,7 @@ private
    -- Get_Summary --
    --  Purpose: Count the number of jobs per state from the List
    -----------------
-   procedure Get_Summary (Summary : out State_Count);
+   procedure Get_Summary (Tasks, Slots : out State_Count);
 
    package Sorting_By_Name is
      new Job_Lists.Generic_Sorting
