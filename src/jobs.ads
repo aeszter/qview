@@ -15,6 +15,7 @@ package Jobs is
    type Usage_Number is delta 0.00001 digits 18;
    type Usage_Integer is range 0 .. 10 ** 12;
    type Usage is array (Usage_Type) of Usage_Number;
+   type Posix_Priority_Type is range -1_023 .. 1_024;
 
    type Job is private;
 
@@ -219,7 +220,7 @@ private
       Waiting_Contrib  : Natural;
 
       --  qstat -pri
-      Posix_Priority   : Natural;
+      Posix_Priority   : Posix_Priority_Type;
 
       --  resources used for Bunching jobs
       Queue            : Unbounded_String;

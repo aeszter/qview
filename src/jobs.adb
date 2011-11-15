@@ -556,7 +556,7 @@ package body Jobs is
          elsif Name (C) = "JB_nurg" then
             J.Urgency := Fixed'Value (Value (First_Child (C)));
          elsif Name (C) = "JB_priority" then
-            J.Posix_Priority := Integer'Value (Value (First_Child (C)));
+            J.Posix_Priority := Posix_Priority_Type'Value (Value (First_Child (C)));
          elsif Name (C) = "hard_req_queue" then
             J.Queue := To_Unbounded_String (Value (First_Child (C)));
          elsif Name (C) = "full_job_name" then
