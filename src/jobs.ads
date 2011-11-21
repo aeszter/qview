@@ -145,14 +145,13 @@ package Jobs is
 
    function Same (Left, Right : Job) return Boolean;
 
-   -----------------------------
-   -- Update_Job_From_Qstat_J --
-   --  Purpose: Get more information on an existing job;
-   --  call qstat -j for the given Job, filling in information for
-   --  previously empty fields
-   -----------------------------
    procedure Update_Job_From_Qstat_J (J : in out Job);
+   --  Purpose: Get more information on an existing job;
    procedure Update_Status;
+   --  Purpose: Update all jobs' status
+   procedure Search_Queues;
+   --  Look for slots occupied by a job
+
    procedure Put_Details;
 
    procedure Sort;
@@ -222,6 +221,9 @@ private
       --  qstat -pri
       Posix_Priority   : Posix_Priority_Type;
 
+      --  qhost -j
+      Detected_Queues  : String_Lists.List;
+
       --  resources used for Bunching jobs
       Queue            : Unbounded_String;
       Hard, Soft       : Resources.Hashed_List;
@@ -237,6 +239,12 @@ private
 
    package Job_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
+
+   function Find_Job (ID : Natural) return Job_Lists.Cursor;
+   --  if the job list contains a job with the given ID, return a cursor
+   --  pointing there;
+   --  otherwise, return No_Element
+
 
    -----------------
    -- Get_Summary --
@@ -296,13 +304,9 @@ private
    List : Job_Lists.List;
    List_Cursor : Job_Lists.Cursor := Job_Lists.No_Element;
 
-   -------------------
-   -- Update_Status --
+   procedure Update_Status (J : in out Job);
    --  Purpose: Read the job's status from an appropriate source
    --  (such as a qstat -u call)
-   -------------------
-
-   procedure Update_Status (J : in out Job);
    procedure Put_Predecessor (Position : Utils.ID_Lists.Cursor);
    --  Output the job ID of a predecessor job as a link to the job, together with
    --  a suitable title

@@ -471,6 +471,7 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          Jobs.Update_Status;
+         Jobs.Search_Queues;
          Jobs.Put_Details;
 
       exception

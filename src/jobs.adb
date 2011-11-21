@@ -81,6 +81,21 @@ package body Jobs is
    ----------------
    --  list-related
    ----------------
+
+   function Find_Job (ID : Natural) return Job_Lists.Cursor is
+      Pos : Job_Lists.Cursor := List.First;
+      The_Job : Job;
+   begin
+      while Pos /= Job_Lists.No_Element loop
+         The_Job := Job_Lists.Element (Pos);
+         if The_Job.Number = ID then
+            return Pos;
+         end if;
+         Next (Pos);
+      end loop;
+      return Job_Lists.No_Element;
+   end Find_Job;
+
    procedure Sort is
    begin
       Sorting_By_Resources.Sort (List);
@@ -465,6 +480,66 @@ package body Jobs is
          => HTML.Error ("Unable to read job status (" & J.Number'Img & "):"
                         & Exception_Message (E));
    end Update_Status;
+
+   -------------------
+   -- Search_Queues --
+   -------------------
+
+   procedure Search_Queues is
+      SGE_Out                : DOM.Core.Document;
+      Job_Nodes, Value_Nodes : Node_List;
+      Job_Node, Value_Node   : Node;
+      A                      : Attr;
+      Pos                    : Job_Lists.Cursor;
+      Number_Found           : Natural;
+      The_Queue              : Unbounded_String;
+
+      procedure Record_Queue (Element : in out Job) is
+      begin
+         Element.Detected_Queues.Append (The_Queue);
+      end Record_Queue;
+
+   begin
+      SGE_Out := Parser.Setup (Command  => "qhost",
+                               Selector => "-j");
+
+      --  Fetch Jobs
+      Job_Nodes := Parser.Get_Elements_By_Tag_Name (SGE_Out, "job");
+      for I in 0 .. Length (Job_Nodes) - 1 loop
+         Job_Node := Item (List  => Job_Nodes,
+                           Index => I);
+         A := Get_Named_Item (Attributes (Job_Node), "name");
+         Number_Found := Integer'Value (Value (A));
+         Pos := Find_Job (ID => Number_Found);
+         --  in theory, this scaling is less than ideal:
+         --  O(number of jobs in Job_List times number of jobs returned by qhost)
+         --  however, in the present implementation, there is only one job in the list,
+         --  so this should not be a problem
+         --  if we ever change the code to produce more than one or two jobs at this
+         --  point, we should change the job list to a map with the ID as a key
+         if Pos /= Job_Lists.No_Element then
+            Value_Nodes := Child_Nodes (Job_Node);
+            for J in 0 .. Length (Value_Nodes) - 1 loop
+               Value_Node := Item (List  => Value_Nodes,
+                                   Index => J);
+               if Name (Value_Node) = "jobvalue" then
+                  A := Get_Named_Item (Attributes (Value_Node), "name");
+                  if Value (A) = "qinstance_name" then
+                     HTML.Comment ("Detected " & The_Queue);
+                     The_Queue := To_Unbounded_String (Value (First_Child (Value_Node)));
+                  elsif Value (A) = "taskid" then
+                     HTML.Comment ("taskid " & Value (First_Child (Value_Node)));
+                  end if;
+               end if;
+            end loop;
+            List.Update_Element (Position => Pos,
+                                 Process  => Record_Queue'Access);
+         end if;
+      end loop;
+   exception
+      when E : others => HTML.Error ("Error while searching for queues: "
+                                       & Exception_Message (E));
+   end Search_Queues;
 
    -------------
    -- New_Job --
@@ -1568,6 +1643,11 @@ package body Jobs is
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);
          Put_List (J.Task_List);
+
+         HTML.Put_Heading (Title => "Detected",
+                           Level => 3);
+         Put_List (J.Detected_Queues);
+
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_queue");
       end Put_Queues;
