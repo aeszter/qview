@@ -1,3 +1,5 @@
+with "../florist/lib/gnat/florist";
+
 project Qview is
 
    type Xmlada_Kind_Type is
