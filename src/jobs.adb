@@ -720,9 +720,13 @@ package body Jobs is
                end if;
             end loop;
             if Res_Bool then
-               if Res_Value = "TRUE" or else Res_Value = "true" then
+               if Res_Value = "TRUE" or else
+                 Res_Value = "true" or else
+                 Res_Value = "1" then
                   Res_State := True;
-               elsif Res_Value = "FALSE" or else Res_Value = "false" then
+               elsif Res_Value = "FALSE" or else
+                 Res_Value = "false" or else
+                  Res_Value = "0" then
                   Res_State := False;
                else
                   raise Constraint_Error
