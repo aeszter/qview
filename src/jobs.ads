@@ -196,6 +196,7 @@ private
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
       Predecessors         : Utils.ID_List;
       Successors           : Utils.ID_List;
+      Predecessor_Request  : Utils.String_List;
 
 
       --  File related stuff
@@ -312,6 +313,9 @@ private
    --  a suitable title
    procedure Put_Successor (Position : Utils.ID_Lists.Cursor);
    --  Output the job ID of a successor job as a link to the job, together with
+   --  a suitable title
+   procedure Put_Request (Position : Utils.String_Lists.Cursor);
+   --  Output the name (or ID) of a successor or predecessor job, together with
    --  a suitable title
 
 end Jobs;

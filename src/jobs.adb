@@ -654,10 +654,11 @@ package body Jobs is
                            Position => Inserted_At,
                            Inserted => Inserted);
          elsif Name (C) = "predecessor_jobs" or else
-            Name (C) = "predecessor_jobs_req" or else
-            Name (C) = "ad_predecessor_jobs_req" or else
             Name (C) = "ad_predecessor_jobs" then
-               J.Predecessors.Include (New_Item => Natural'Value (Value (First_Child (C))));
+            J.Predecessors.Include (New_Item => Natural'Value (Value (First_Child (C))));
+         elsif Name (C) = "predecessor_jobs_req" or else
+           Name (C) = "ad_predecessor_jobs_req" then
+            J.Predecessor_Request.Append (To_Unbounded_String (Value (First_Child (C))));
          elsif Name (C) = "JB_hard_resource_list" then
             Extract_Resource_List (J, Child_Nodes (C));
          elsif Name (C) = "JB_soft_resource_list" then
@@ -795,9 +796,13 @@ package body Jobs is
                end if;
             end loop;
             if Res_Bool then
-               if Res_Value = "TRUE" or else Res_Value = "true" then
+               if Res_Value = "TRUE" or else
+                 Res_Value = "true" or else
+                 Res_Value = "1" then
                   Res_State := True;
-               elsif Res_Value = "FALSE" or else Res_Value = "false" then
+               elsif Res_Value = "FALSE" or else
+                 Res_Value = "false" or else
+                  Res_Value = "0" then
                   Res_State := False;
                else
                   raise Constraint_Error
@@ -1517,7 +1522,8 @@ package body Jobs is
    ---------------------
 
    procedure Put_Predecessor (Position : Utils.ID_Lists.Cursor) is
-      ID : String := Utils.ID_Lists.Element (Position)'Img;
+      ID : String := Ada.Strings.Fixed.Trim (Source => Utils.ID_Lists.Element (Position)'Img,
+                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Job_ID (Label    => "Predecessor",
                           ID    => ID);
@@ -1528,11 +1534,23 @@ package body Jobs is
    ---------------------
 
    procedure Put_Successor (Position : Utils.ID_Lists.Cursor) is
-      ID : String := Utils.ID_Lists.Element (Position)'Img;
+      ID : String := Ada.Strings.Fixed.Trim (Source => Utils.ID_Lists.Element (Position)'Img,
+                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Job_ID (Label => "Successor",
                        ID    => ID);
    end Put_Successor;
+
+   -----------------
+   -- Put_Request --
+   -----------------
+
+   procedure Put_Request (Position : Utils.String_Lists.Cursor) is
+      Verbatim : String := To_String (Utils.String_Lists.Element (Position));
+   begin
+      HTML.Put_Paragraph (Label    => "requested",
+                          Contents => Verbatim);
+   end Put_Request;
 
 
    --------------
@@ -1607,6 +1625,7 @@ package body Jobs is
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => J.Submission_Time);
          J.Predecessors.Iterate (Process => Put_Predecessor'Access);
+         J.Predecessor_Request.Iterate (Process => Put_Request'Access);
          J.Successors.Iterate (Process => Put_Successor'Access);
          HTML.Put_Paragraph ("Array Task", J.Job_Array);
          Ada.Text_IO.Put ("<p>Reserve: ");
