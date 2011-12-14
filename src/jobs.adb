@@ -956,27 +956,42 @@ package body Jobs is
          if Name (Usage_Entry) = "element" or else
          Name (Usage_Entry) = "scaled" then
             Quantity_Nodes := Child_Nodes (Usage_Entry);
-            Over_Quantity_Nodes :
-            for K in 0 .. Length (Quantity_Nodes) - 1 loop
-               Quantity_Field := Item (Quantity_Nodes, K);
-               if Name (Quantity_Field) = "UA_name" then
-                  Usage_Kind := Usage_Type'Value (Value (First_Child (Quantity_Field)));
-               elsif Name (Quantity_Field) = "UA_value" then
-                  Usage_Value := Usage_Number'Value (Value (First_Child (Quantity_Field)));
+            begin
+               Over_Quantity_Nodes :
+               for K in 0 .. Length (Quantity_Nodes) - 1 loop
+                  Quantity_Field := Item (Quantity_Nodes, K);
+                  if Name (Quantity_Field) = "UA_name" then
+                     Usage_Kind := Usage_Type'Value (Value (First_Child (Quantity_Field)));
+                  elsif Name (Quantity_Field) = "UA_value" then
+                     Usage_Value := Usage_Number'Value (Value (First_Child (Quantity_Field)));
+                  end if;
+               end loop Over_Quantity_Nodes;
+               if Cumulative then
+                  Usage_Data (Usage_Kind) := Usage_Data (Usage_Kind) + Usage_Value;
+               else
+                  Usage_Data (Usage_Kind) := Usage_Value;
                end if;
-            end loop Over_Quantity_Nodes;
-            if Cumulative then
-               Usage_Data (Usage_Kind) := Usage_Data (Usage_Kind) + Usage_Value;
-            else
-               Usage_Data (Usage_Kind) := Usage_Value;
-            end if;
+               exception
+               when E : Constraint_Error =>
+                  declare
+                     Quantity : String := Value (First_Child (Quantity_Field));
+                  begin
+                     if Quantity'Length >= 13
+                       and then Quantity (Quantity'First .. Quantity'First + 12) = "binding_inuse" then
+                        null; -- ignore; binding has nothing to do with usage, and
+                              --  the format is utterly insane;
+                              --  there is no way we can handle this crappy xml without
+                              --  writing equally crappy code, and it is not that important
+                     else
+                        HTML.Error ("Unable to parse usage (QF => """
+                        & Quantity & """): "
+                        & Exception_Message (E));
+                     end if;
+                  end;
+            end;
+
          end if;
       end loop Over_Usage_Entries;
-   exception
-      when E : Constraint_Error =>
-         HTML.Error ("Unable to parse usage (QF => """
-                     & Value (First_Child (Quantity_Field)) & """): "
-                     & Exception_Message (E));
    end Parse_Usage;
 
    ----------------------------
