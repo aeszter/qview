@@ -188,6 +188,8 @@ package body Resources is
          return harpertown;
       elsif S = "magny-cours" then
          return magnycours;
+      elsif S = "interlagos" then
+         return interlagos;
       else
          raise Constraint_Error;
       end if;

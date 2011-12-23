@@ -13,7 +13,7 @@ package Resources is
    end record;
 
    type Network is (none, eth, ib);
-   type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours);
+   type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours, interlagos);
 
    Resource_Error : exception;
 
