@@ -270,6 +270,7 @@ package body Viewer is
          Partitions.Put_Summary;
          Ada.Text_IO.Put_Line ("<table>");
          Put_Header;
+         Partitions.Put_List;
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
