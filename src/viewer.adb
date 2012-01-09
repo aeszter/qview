@@ -247,22 +247,7 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("</tr>");
          end Put_Header;
 
-         procedure Put_Summary (Summary : Partitions.State_Count) is
-         begin
-            HTML.Begin_Div (ID => "partition_summary");
-            Ada.Text_IO.Put ("<ul>");
-            for State in Summary'Range loop
-               Ada.Text_IO.Put ("<li>");
-               Ada.Text_IO.Put (Summary (State)'Img & " ");
-               HTML.Put (What => State);
-               Ada.Text_IO.Put ("</li>");
-            end loop;
-            Ada.Text_IO.Put ("</ul>");
-            HTML.End_Div (ID => "partition_summary");
-         end Put_Summary;
-
          SGE_Out        : Parser.Tree;
-         Partition_List : Partitions.Summarized_List;
       begin
          HTML.Begin_Div (Class => "partitions");
          if HTML.Param_Is ("categories", "supply") then
@@ -282,10 +267,9 @@ package body Viewer is
          Partitions.Build_List;
 
          --  Output
-         Put_Summary (Summary => Partition_List.Summary);
+         Partitions.Put_Summary;
          Ada.Text_IO.Put_Line ("<table>");
          Put_Header;
-         Partition_List.Iterate (Partitions.Put'Access);
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;

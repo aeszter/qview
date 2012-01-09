@@ -30,6 +30,8 @@ package Partitions is
    procedure Build_List;
    function New_Partition (Q : Queue) return Partition;
    procedure Put (Partition : Partitions.Partition_Lists.Cursor);
+   procedure Put_List;
+   procedure Put_Summary;
    function Model_As_String (P : Partition) return String;
 
    function "=" (Left : Partition; Right : Queue) return Boolean;

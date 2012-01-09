@@ -110,6 +110,12 @@ package body Partitions is
       return To_String (P.Model);
    end Model_As_String;
 
+   procedure Put_List is
+   begin
+      List.Iterate (Put'Access);
+   end Put_List;
+
+
    procedure Put (Partition : Partitions.Partition_Lists.Cursor) is
       P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
    begin
@@ -141,5 +147,20 @@ package body Partitions is
       HTML.Put_Cell (Data => P.Offline'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
+
+   procedure Put_Summary is
+   begin
+      HTML.Begin_Div (ID => "partition_summary");
+      Ada.Text_IO.Put ("<ul>");
+      for State in List.Summary'Range loop
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put (List.Summary (State)'Img & " ");
+         HTML.Put (What => State);
+         Ada.Text_IO.Put ("</li>");
+      end loop;
+      Ada.Text_IO.Put ("</ul>");
+      HTML.End_Div (ID => "partition_summary");
+   end Put_Summary;
+
 
 end Partitions;
