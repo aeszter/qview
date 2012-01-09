@@ -1,8 +1,113 @@
+with DOM.Core.Nodes; use DOM.Core.Nodes;
+with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Resources; use Resources;
 with HTML;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Queues is
+   use Queue_Lists;
+
+   procedure Sort is
+   begin
+      Sorting_By_Resources.Sort (List);
+   end Sort;
+
+   procedure Rewind is
+   begin
+      List_Cursor := List.First;
+   end Rewind;
+
+   function Empty return Boolean is
+   begin
+      return List.Is_Empty;
+   end Empty;
+
+   function Next return Queue is
+   begin
+      Next (List_Cursor);
+      return Queue_Lists.Element (List_Cursor);
+   end Next;
+
+   function At_End return Boolean is
+   begin
+      if List_Cursor = Queue_Lists.No_Element or else
+        List_Cursor = List.Last then
+         return True;
+      end if;
+      return False;
+   end At_End;
+
+   function Current return Queue is
+   begin
+      return Queue_Lists.Element (List_Cursor);
+   end Current;
+
+   procedure Append_List (Input_Nodes : Node_List) is
+   begin
+      for Index in 1 .. Length (Input_Nodes) loop
+         declare
+            Queue_Nodes : Node_List := Child_Nodes (Item (Input_Nodes, Index - 1));
+            N                     : Node;
+            A                     : Attr;
+            Used, Reserved, Total : Natural := 0;
+            State                 : Unbounded_String;
+            Mem, Runtime          : Unbounded_String;
+            Cores                 : Natural;
+            Network               : Resources.Network := none;
+            Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
+            type small is digits 4 range 0.0 .. 1.0;
+         begin
+            for Index in 1 .. Length (Queue_Nodes) loop
+               N := Item (Queue_Nodes, Index - 1);
+               if Name (N) = "slots_used" then
+                  Used := Integer'Value (Value (First_Child (N)));
+               elsif Name (N) = "slots_resv" then
+                  Reserved := Integer'Value (Value (First_Child (N)));
+               elsif Name (N) = "slots_total" then
+                  Total := Integer'Value (Value (First_Child (N)));
+               elsif Name (N) = "state" then
+                  State := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "resource" then
+                  A := Get_Named_Item (Attributes (N), "name");
+                  if Value (A) = "mem_total" then
+                     Mem := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "num_proc" then
+                     Cores := Integer'Value (Value (First_Child (N)));
+                  elsif Value (A) = "infiniband" and then
+                    small'Value (Value (First_Child (N))) = 1.0 then
+                     Network := ib;
+                  elsif Value (A) = "ethernet" and then
+                    small'Value (Value (First_Child (N))) = 1.0 then
+                     Network := eth;
+                  elsif Value (A) = "h_rt" then
+                     Runtime := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "cpu_model" then
+                     Model := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "qname" then
+                     Queue_Name := To_Unbounded_String (Value (First_Child (N)));
+                  end if;
+               end if;
+            end loop;
+
+            List.Append (New_Queue (Used     => Used,
+                                    Reserved => Reserved,
+                                    Total    => Total,
+                                    Memory   => To_String (Mem),
+                                    Cores    => Cores,
+                                    Network  => Network,
+                                    Model    => To_Model (Model),
+                                    Runtime  => Runtime,
+                                    Name     => Queue_Name,
+                                    State    => To_String (State)
+                                   ));
+         exception
+            when E : others =>
+               HTML.Put_Paragraph (Label    => "Failed to parse queue",
+                                   Contents => Exception_Message (E));
+         end;
+      end loop;
+   end Append_List;
 
    ---------------
    -- New_Queue --

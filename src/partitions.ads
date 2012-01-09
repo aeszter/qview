@@ -24,15 +24,16 @@ package Partitions is
 
    type Summarized_List is new Partition_Lists.List with
    record
-   Summary : State_Count := (others => 0);
+     Summary : State_Count := (others => 0);
    end record;
 
-   procedure Build_List (Q_List : in out Queues.Queue_Lists.List;
-                         Part_List : out Summarized_List);
+   procedure Build_List;
    function New_Partition (Q : Queue) return Partition;
    procedure Put (Partition : Partitions.Partition_Lists.Cursor);
    function Model_As_String (P : Partition) return String;
 
    function "=" (Left : Partition; Right : Queue) return Boolean;
    function "=" (Left : Queue; Right : Partition) return Boolean;
+private
+   List : Summarized_List;
 end Partitions;

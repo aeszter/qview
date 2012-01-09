@@ -227,68 +227,6 @@ package body Viewer is
 
       procedure View_Detailed_Queues is
 
-         Queue_List : Queues.Queue_Lists.List;
-
-         procedure Parse_One_Queue (Nodes : Node_List) is
-            N                     : Node;
-            A                     : Attr;
-            Used, Reserved, Total : Natural := 0;
-            State                 : Unbounded_String;
-            Mem, Runtime          : Unbounded_String;
-            Cores                 : Natural;
-            Network               : Resources.Network := none;
-            Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
-            type small is digits 4 range 0.0 .. 1.0;
-         begin
-            for Index in 1 .. Length (Nodes) loop
-               N := Item (Nodes, Index - 1);
-               if Name (N) = "slots_used" then
-                  Used := Integer'Value (Value (First_Child (N)));
-               elsif Name (N) = "slots_resv" then
-                  Reserved := Integer'Value (Value (First_Child (N)));
-               elsif Name (N) = "slots_total" then
-                  Total := Integer'Value (Value (First_Child (N)));
-               elsif Name (N) = "state" then
-                  State := To_Unbounded_String (Value (First_Child (N)));
-               elsif Name (N) = "resource" then
-                  A := Get_Named_Item (Attributes (N), "name");
-                  if Value (A) = "mem_total" then
-                     Mem := To_Unbounded_String (Value (First_Child (N)));
-                  elsif Value (A) = "num_proc" then
-                     Cores := Integer'Value (Value (First_Child (N)));
-                  elsif Value (A) = "infiniband" and then
-                    small'Value (Value (First_Child (N))) = 1.0 then
-                     Network := ib;
-                  elsif Value (A) = "ethernet" and then
-                    small'Value (Value (First_Child (N))) = 1.0 then
-                     Network := eth;
-                  elsif Value (A) = "h_rt" then
-                     Runtime := To_Unbounded_String (Value (First_Child (N)));
-                  elsif Value (A) = "cpu_model" then
-                     Model := To_Unbounded_String (Value (First_Child (N)));
-                  elsif Value (A) = "qname" then
-                     Queue_Name := To_Unbounded_String (Value (First_Child (N)));
-                  end if;
-               end if;
-            end loop;
-
-            Queue_List.Append (New_Queue (Used => Used,
-                                          Reserved => Reserved,
-                                          Total    => Total,
-                                          Memory   => To_String (Mem),
-                                          Cores    => Cores,
-                                          Network  => Network,
-                                          Model    => To_Model (Model),
-                                          Runtime  => Runtime,
-                                          Name     => Queue_Name,
-                                          State    => To_String (State)
-                                         ));
-         exception
-            when E : others =>
-               HTML.Put_Paragraph (Label    => "Failed to parse queue",
-                                   Contents => Exception_Message (E));
-         end Parse_One_Queue;
-
          procedure Put_Header is
          begin
             Ada.Text_IO.Put ("<tr>");
@@ -324,7 +262,6 @@ package body Viewer is
          end Put_Summary;
 
          SGE_Out        : Parser.Tree;
-         Nodes          : Node_List;
          Partition_List : Partitions.Summarized_List;
       begin
          HTML.Begin_Div (Class => "partitions");
@@ -338,19 +275,11 @@ package body Viewer is
 
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
-         --  Fetch Queues
-         Nodes := Get_Elements_By_Tag_Name (SGE_Out, "Queue-List");
-         if Length (Nodes) = 0 then
-            Ada.Text_IO.Put_Line ("<i>No queues found</i>");
-            return;
-         end if;
+         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
 
-         for Index in 1 .. Length (Nodes) loop
-            Parse_One_Queue (Child_Nodes (Item (Nodes, Index - 1)));
-         end loop;
 
          --  Detect different partitions
-         Partitions.Build_List (Queue_List, Partition_List);
+         Partitions.Build_List;
 
          --  Output
          Put_Summary (Summary => Partition_List.Summary);

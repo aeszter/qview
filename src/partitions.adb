@@ -37,49 +37,46 @@ package body Partitions is
    --  Side Effect: Q_List is sorted by resources.
    -------------------
 
-   procedure Build_List (Q_List : in out Queues.Queue_Lists.List;
-                          Part_List : out Summarized_List) is
+   procedure Build_List is
       P : Partition;
       Q : Queue;
-      Cursor : Queues.Queue_Lists.Cursor;
    begin
-      Sorting_By_Resources.Sort (Q_List);
-      Cursor := Q_List.First;
-      Q := Element (Cursor);
+      Queues.Sort;
+      Queues.Rewind;
 
+      Q := Queues.Current;
       --  Create Partition according to first Queue
       P := New_Partition (Q);
-      while Cursor /= No_Element loop
-         Q := Element (Cursor);
+      while not Queues.At_End loop
          --  New Partition?
          if P /= Q then
             --  Yes. Store previous one.
-            Part_List.Append (P);
+            List.Append (P);
             P := New_Partition (Q);
          end if;
 
          --  Update totals
-            P.Total := P.Total + Q.Total;
-            Part_List.Summary (total) := Part_List.Summary (total) + Q.Total;
+         P.Total := P.Total + Q.Total;
+         List.Summary (total) := List.Summary (total) + Q.Total;
          if Q.Offline then
             P.Offline := P.Offline + Q.Total;
-            Part_List.Summary (offline) := Part_List.Summary (offline) + Q.Total;
+            List.Summary (offline) := List.Summary (offline) + Q.Total;
          elsif Q.Suspended then
             P.Suspended := P.Suspended + Q.Total;
-            Part_List.Summary (suspended) := Part_List.Summary (suspended) + Q.Total;
+            List.Summary (suspended) := List.Summary (suspended) + Q.Total;
          else
             P.Used := P.Used + Q.Used;
-            Part_List.Summary (used) := Part_List.Summary (used) + Q.Used;
+            List.Summary (used) := List.Summary (used) + Q.Used;
             P.Reserved := P.Reserved + Q.Reserved;
-            Part_List.Summary (reserved) := Part_List.Summary (reserved) + Q.Reserved;
+            List.Summary (reserved) := List.Summary (reserved) + Q.Reserved;
             P.Available := P.Available + Q.Total - Q.Reserved - Q.Used;
-            Part_List.Summary (available) := Part_List.Summary (available) + Q.Total - Q.Reserved - Q.Used;
+            List.Summary (available) := List.Summary (available) + Q.Total - Q.Reserved - Q.Used;
          end if;
          --  Advance
-         Cursor := Next (Cursor);
+         Q := Queues.Next;
       end loop;
       --  That's it. Store final partition.
-      Part_List.Append (P);
+      List.Append (P);
    end Build_List;
 
    -------------------
