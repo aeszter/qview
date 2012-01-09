@@ -12,7 +12,7 @@ with Resources; use Resources; use Resources.Resource_Lists;
 with Ranges; use Ranges; use Ranges.Range_Lists;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
-with Queues; use Queues; use Queues.Queue_Lists;
+with Queues; use Queues;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Hosts; use Hosts; use Hosts.Host_Lists;
 with Utils; use Utils; use Utils.String_Lists;

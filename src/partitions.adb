@@ -1,5 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
-with Queues; use Queues.Queue_Lists;
+with Queues;
 with Resources; use Resources;
 with Ada.Text_IO;
 with HTML; use HTML;

@@ -6,17 +6,7 @@ with DOM.Core; use DOM.Core;
 package Queues is
    type Gigs is delta 0.001 digits 7;
 
-
-   type Queue is record
-      Used, Reserved, Total : Natural;
-      Suspended, Offline    : Boolean;
-      Network               : Resources.Network;
-      Model                 : Resources.CPU_Model;
-      Memory                : Gigs;
-      Cores                 : Positive;
-      Runtime               : Unbounded_String;
-      Name                  : Unbounded_String;
-   end record;
+   type Queue is private;
 
    procedure Sort;
    --  Sort the queue list by resources
@@ -48,11 +38,25 @@ package Queues is
    function Precedes_By_Resources (Left, Right : Queue) return Boolean;
 
 
+private
+
+   type Queue is record
+      Used, Reserved, Total : Natural;
+      Suspended, Offline    : Boolean;
+      Network               : Resources.Network;
+      Model                 : Resources.CPU_Model;
+      Memory                : Gigs;
+      Cores                 : Positive;
+      Runtime               : Unbounded_String;
+      Name                  : Unbounded_String;
+   end record;
+
    package Queue_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Queue);
    package Sorting_By_Resources is
      new Queue_Lists.Generic_Sorting ("<" => Precedes_By_Resources);
-private
+
    List : Queue_Lists.List;
    List_Cursor : Queue_Lists.Cursor := Queue_Lists.No_Element;
+
 end Queues;
