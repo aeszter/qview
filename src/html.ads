@@ -48,6 +48,9 @@ package HTML is
    procedure Comment (Data : Unbounded_String);
    procedure Put (Data : Tri_State);
 
+   procedure Put_List (List : String_Lists.List);
+--  output a string list as a <ul>; if List is empty, output a proper icon instead
+
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
    procedure Error (Message : String);

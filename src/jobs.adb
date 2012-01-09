@@ -1676,11 +1676,11 @@ package body Jobs is
 
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);
-         Put_List (J.Task_List);
+         HTML.Put_List (J.Task_List);
 
          HTML.Put_Heading (Title => "Detected",
                            Level => 3);
-         Put_List (J.Detected_Queues);
+         HTML.Put_List (J.Detected_Queues);
 
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_queue");
@@ -1731,7 +1731,7 @@ package body Jobs is
          HTML.Put_Paragraph ("Script", J.Script_File);
          HTML.Put_Heading (Title => "Job Args",
                            Level => 3);
-         Put_List (J.Args);
+         HTML.Put_List (J.Args);
 
          HTML.Put_Paragraph ("Executable", J.Exec_File);
          Ada.Text_IO.Put ("<p>Merge StdErr: ");
@@ -1739,11 +1739,11 @@ package body Jobs is
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Heading (Title => "StdOut",
                            Level => 3);
-         Put_List (J.Std_Out_Paths);
+         HTML.Put_List (J.Std_Out_Paths);
 
          HTML.Put_Heading (Title => "StdErr",
                            Level => 3);
-         Put_List (J.Std_Err_Paths);
+         HTML.Put_List (J.Std_Err_Paths);
          Ada.Text_IO.Put ("<p>Notify: ");
          HTML.Put (J.Notify);
          Ada.Text_IO.Put_Line ("</p>");
