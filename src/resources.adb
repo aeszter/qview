@@ -226,6 +226,23 @@ package body Resources is
       end if;
    end To_Network;
 
+   -------------
+   -- To_Gigs --
+   -------------
+
+   function To_Gigs (Memory : String) return Gigs is
+   begin
+      if Memory (Memory'Last) = 'G' then
+         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
+      elsif Memory (Memory'Last) = 'M' then
+         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
+      else
+         raise Constraint_Error with "unknown memory encountered: " & Memory;
+      end if;
+   end To_Gigs;
+
+
+
    ------------
    -- Insert --
    ------------

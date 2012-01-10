@@ -17,9 +17,13 @@ package body Hosts is
 
    function Precedes_By_Free (Left, Right : Host) return Boolean is
    begin
-      return Left.Properties.Cores - Left.Properties.Used <
-        Right.Properties.Cores - Right.Properties.Used;
+      return Get_Free_Slots (Left) < Get_Free_Slots (Right);
    end Precedes_By_Free;
+
+   function Get_Free_Slots (H : Host) return Natural is
+   begin
+      return Get_Cores (H.Properties) - H.Slots_Used;
+   end Get_Free_Slots;
 
    ----------------------
    -- Precedes_By_Swap --
@@ -54,7 +58,7 @@ package body Hosts is
 
    function Precedes_By_RAM (Left, Right : Host) return Boolean is
    begin
-      return Left.Properties.Memory < Right.Properties.Memory;
+      return Get_Memory (Left.Properties) < Get_Memory (Right.Properties);
    end Precedes_By_RAM;
 
    -----------------------
@@ -63,7 +67,7 @@ package body Hosts is
 
    function Precedes_By_Cores (Left, Right : Host) return Boolean is
    begin
-      return Left.Properties.Cores < Right.Properties.Cores;
+      return Get_Cores (Left.Properties) < Get_Cores (Right.Properties);
    end Precedes_By_Cores;
 
    ---------------------
@@ -72,7 +76,7 @@ package body Hosts is
 
    function Precedes_By_Net (Left, Right : Host) return Boolean is
    begin
-      return Left.Properties.Network < Right.Properties.Network;
+      return Get_Network (Left.Properties) < Get_Network (Right.Properties);
    end Precedes_By_Net;
 
    ----------------------
@@ -192,7 +196,7 @@ package body Hosts is
    begin
       while Pos /= Job_Lists.No_Element loop
          J := Job_Lists.Element (Pos);
-         H.Properties.Used := H.Properties.Used + Positive'Max (1, J.Slaves);
+         H.Slots_Used := H.Slots_Used + Positive'Max (1, J.Slaves);
          --  serial jobs have J.Slaves = 0 (they are only a master process)
          Next (Pos);
       end loop;
@@ -201,7 +205,7 @@ package body Hosts is
          HTML.Error ("Unable to count slots for host "
                      & To_String (H.Name)
                      & ": " & Exception_Message (E));
-         H.Properties.Used := 0;
+         H.Slots_Used := 0;
    end Update_Used_Slots;
 
    -----------------------
@@ -234,40 +238,36 @@ package body Hosts is
       Value_Nodes : Node_List;
       N, V        : Node;
       A           : Attr;
-      H           : Host;
 
    begin
       Hosts :
       for I in 1 .. Length (Host_Nodes) loop
-         N := Item (Host_Nodes, I - 1);
-         H.Properties.Network := none;
-         H.Properties.Model := none;
-         H.Jobs := Job_Lists.Empty_List;
-         H.Queues := Queue_Maps.Empty_Map;
-         H.Properties.Cores := 1;
-         H.Properties.Memory := 0.0;
-         H.Properties.Used := 0;
-         A := Get_Named_Item (Attributes (N), "name");
-         H.Name := To_Unbounded_String (Value (A));
-         if Value (A) /= "global" then
-            Value_Nodes := Child_Nodes (N);
-            Host_Attributes :
-            for J in 1 .. Length (Value_Nodes) loop
-               V := Item (Value_Nodes, J - 1);
-               if Name (V) = "resourcevalue" then
-                  Parse_Resource (H => H, N => V);
-               elsif Name (V) = "hostvalue" then
-                  Parse_Hostvalue (H => H, N => V);
-               elsif Name (V) = "job" then
-                  Parse_Job (H => H, N => V);
-               elsif Name (V) = "queue" then
-                  Parse_Queue (H => H, N => V);
-               end if;
-            end loop Host_Attributes;
-            Compactify (H.Jobs);
-            Update_Used_Slots (H);
-            Host_List.Append (H);
-         end if;
+         declare
+            H : Host;
+         begin
+            N := Item (Host_Nodes, I - 1);
+            A := Get_Named_Item (Attributes (N), "name");
+            H.Name := To_Unbounded_String (Value (A));
+            if Value (A) /= "global" then
+               Value_Nodes := Child_Nodes (N);
+               Host_Attributes :
+               for J in 1 .. Length (Value_Nodes) loop
+                  V := Item (Value_Nodes, J - 1);
+                  if Name (V) = "resourcevalue" then
+                     Parse_Resource (Props => H.Properties, N => V);
+                  elsif Name (V) = "hostvalue" then
+                     Parse_Hostvalue (H => H, N => V);
+                  elsif Name (V) = "job" then
+                     Parse_Job (H => H, N => V);
+                  elsif Name (V) = "queue" then
+                     Parse_Queue (H => H, N => V);
+                  end if;
+               end loop Host_Attributes;
+               Compactify (H.Jobs);
+               Update_Used_Slots (H);
+               Host_List.Append (H);
+            end if;
+         end;
       end loop Hosts;
    exception
       when E :
@@ -291,19 +291,15 @@ package body Hosts is
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
-      Mem       : Gigs;
-      Req_Cores : Positive;
-      Req_Net   : Network;
+      Requirements : Set_Of_Properties;
    begin
-      Req_Net := To_Network (Net);
-      Req_Cores := Positive'Value (Cores);
-      Mem := Gigs'Value (Memory);
+      Init (Props => Requirements, Net => Net,
+            Memory => Memory,
+            Cores => Cores);
       loop
          exit when Pos = Host_Lists.No_Element;
          H := Host_Lists.Element (Pos);
-         if H.Properties.Network = Req_Net and then
-           H.Properties.Memory = Mem and then
-           H.Properties.Cores = Req_Cores and then
+         if H.Properties = Requirements and then
            H.Queues.Contains (To_Unbounded_String (Queue_Name)) then
                Temp.Append (H);
          end if;
@@ -349,41 +345,6 @@ package body Hosts is
          HTML.Error ("Unable to read queue: " & Exception_Message (E));
    end Parse_Queue;
 
-   ---------------------
-   -- Parse_Resources --
-   --  Purpose: Given a Node of an XML DOM tree,
-   --  read in resources of a Host
-   --  Parameter H: The Host to update
-   --  Parameter V: The XML Node to read from
-   ---------------------
-
-   procedure Parse_Resource (H : in out Host; N : Node) is
-      A : Attr;
-   begin
-      A := Get_Named_Item (Attributes (N), "name");
-      if Value (A) = "num_proc" then
-         H.Properties.Cores := Integer (Fixed'Value (Value (First_Child (N))));
-      elsif
-        Value (A) = "ethernet" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
-            H.Properties.Network := eth;
-         end if;
-      elsif
-         Value (A) = "infiniband" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
-            H.Properties.Network := ib;
-         end if;
-      elsif Value (A) = "cpu_model" then
-         H.Properties.Model := To_Model (Value (First_Child (N)));
-      elsif Value (A) = "mem_total" then
-         H.Properties.Memory := To_Gigs (Value (First_Child (N)));
-      else
-         HTML.Put_Paragraph (Value (A), Value (First_Child (N)));
-      end if;
-   exception
-      when E : others =>
-         HTML.Error ("Unable to read resource: " & Exception_Message (E));
-   end Parse_Resource;
 
 
    ---------------------
@@ -468,16 +429,14 @@ package body Hosts is
 
    procedure Put (Cursor : Host_Lists.Cursor) is
       H : Host := Host_Lists.Element (Cursor);
-      Free : Natural;
    begin
       Ada.Text_IO.Put ("<tr>");
-      Free := H.Properties.Cores - H.Properties.Used;
       HTML.Put_Cell (Data => H.Name);
-      HTML.Put_Cell (Data => H.Properties.Network'Img);
-      HTML.Put_Cell (Data => H.Properties.Model'Img);
-      HTML.Put_Cell (Data => H.Properties.Cores'Img, Class => "right");
-      HTML.Put_Cell (Data => Free'Img, Class => "right");
-      HTML.Put_Cell (Data => H.Properties.Memory'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Network (H.Properties)'Img);
+      HTML.Put_Cell (Data => Get_Model (H.Properties)'Img);
+      HTML.Put_Cell (Data => Get_Cores (H.Properties)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Memory (H.Properties)'Img, Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
@@ -539,11 +498,14 @@ package body Hosts is
 
    function Load_Per_Core (H : Host) return Fixed is
    begin
-      if H.Properties.Cores = 0 then
+      return H.Load / Get_Cores (H.Properties);
+   exception
+      when others =>
+      if Get_Cores (H.Properties) = 0 then
          raise Constraint_Error with "host """ & To_String (H.Name)
-           & """ has no cores";
+              & """ has no cores";
       else
-         return H.Load / H.Properties.Cores;
+         raise;
       end if;
    end Load_Per_Core;
 
@@ -556,12 +518,15 @@ package body Hosts is
 
    function Mem_Ratio (H : Host) return Fixed is
    begin
-      if H.Properties.Memory = 0.0 then
-         raise Constraint_Error with "host """ & To_String (H.Name)
-           & """ has no memory";
-      else
-         return H.Mem_Used / H.Properties.Memory;
-      end if;
+      return H.Mem_Used / Get_Memory (H.Properties);
+   exception
+      when others =>
+         if Get_Memory (H.Properties) = 0.0 then
+            raise Constraint_Error with "host """ & To_String (H.Name)
+              & """ has no memory";
+         else
+            raise;
+         end if;
    end Mem_Ratio;
 
    --------------------

@@ -1,6 +1,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with DOM.Core; use DOM.Core;
-with Queues; use Queues;
+with Resources;
+with Host_Properties; use Host_Properties;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
@@ -36,11 +37,12 @@ package Hosts is
    type Host is record
       Name       : Unbounded_String;
       Jobs       : Job_List;
-      Properties : Queue;
+      Properties : Set_Of_Properties;
       Load       : Fixed;
-      Mem_Used   : Gigs;
-      Swap_Total : Gigs;
-      Swap_Used  : Gigs;
+      Slots_Used : Natural;
+      Mem_Used   : Resources.Gigs;
+      Swap_Total : Resources.Gigs;
+      Swap_Used  : Resources.Gigs;
       Queues     : Queue_Map;
    end record;
 
@@ -57,21 +59,15 @@ package Hosts is
 
    procedure Append_Queue (H : out Host; Name, State : String);
 
---   function New_Job (ID : Positive; Master : Boolean) return Job;
+   --   function New_Job (ID : Positive; Master : Boolean) return Job;
+
+   function Get_Free_Slots (H : Host) return Natural;
 
    procedure Set_Master (J : in out Job; PE_Master : String);
 
 
    procedure Append_List (Host_Nodes : Node_List);
    procedure Prune_List (Net, Cores, Memory, Queue_Name : String);
-   procedure Parse_Resource (H : in out Host; N : Node);
-   ---------------------
-   -- Parse_Hostvalue --
-   --  Purpose: Given a Node of an XML DOM tree,
-   --  read host attributes
-   --  Parameter H : The Host record to update
-   --  Parameter V : The Node to read from
-   ---------------------
    procedure Parse_Queue (H : in out Host; N : Node);
    ---------------------
    -- Parse_Queue --

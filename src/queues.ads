@@ -1,10 +1,10 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Resources;
+with Host_Properties; use Host_Properties;
 with DOM.Core; use DOM.Core;
 
 package Queues is
-   type Gigs is delta 0.001 digits 7;
 
    type Queue is private;
 
@@ -33,15 +33,11 @@ package Queues is
                       Name : Unbounded_String)
                        return Queue;
 
-   function To_Gigs (Memory : String) return Gigs;
 
    function Precedes_By_Resources (Left, Right : Queue) return Boolean;
 
-   function Get_Network (Q : Queue) return Resources.Network;
-   function Get_Model (Q : Queue) return Resources.CPU_Model;
-   function Get_Memory (Q : Queue) return Gigs;
-   function Get_Cores (Q : Queue) return Natural;
-   function Get_Runtime (Q : Queue) return Unbounded_String;
+   function Get_Properties (Q : Queue) return Set_Of_Properties;
+   function Get_Name (Q : Queue) return Unbounded_String;
    function Get_Slot_Count (Q : Queue) return Natural;
    function Get_Used_Slots (Q : Queue) return Natural;
    function Get_Reserved_Slots (Q : Queue) return Natural;
@@ -55,12 +51,8 @@ private
    type Queue is record
       Used, Reserved, Total : Natural;
       Suspended, Offline    : Boolean;
-      Network               : Resources.Network;
-      Model                 : Resources.CPU_Model;
-      Memory                : Gigs;
-      Cores                 : Positive;
-      Runtime               : Unbounded_String;
       Name                  : Unbounded_String;
+      Properties            : Set_Of_Properties;
    end record;
 
    package Queue_Lists is

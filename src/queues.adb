@@ -148,41 +148,19 @@ package body Queues is
          Q.Suspended := True;
       end if;
 
-      if Memory /= "" then
-         Q.Memory := To_Gigs (Memory);
-      else
-         Q.Memory := 0.0;
-      end if;
-
-      Q.Network  := Network;
-      Q.Model    := Model;
-      Q.Runtime  := Runtime;
+      Set_Memory (Q.Properties, Memory);
+      Set_Network (Q.Properties, Network);
+      Set_Model (Q.Properties, Model);
+      Set_Runtime (Q.Properties, Runtime);
       Q.Name     := Name;
-      HTML.Comment ("New queue """ & Q.Name & """");
       if Cores = 0 then
-         Q.Cores := Q.Total;
+         Set_Cores (Q.Properties, Q.Total);
       else
-         Q.Cores := Cores;
+         Set_Cores (Q.Properties, Cores);
       end if;
 
       return Q;
    end New_Queue;
-
-   -------------
-   -- To_Gigs --
-   -------------
-
-   function To_Gigs (Memory : String) return Gigs is
-   begin
-      if Memory (Memory'Last) = 'G' then
-         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1));
-      elsif Memory (Memory'Last) = 'M' then
-         return Gigs'Value (Memory (Memory'First .. Memory'Last - 1)) / 1024.0;
-      else
-         raise Constraint_Error with "unknown memory encountered: " & Memory;
-      end if;
-   end To_Gigs;
-
 
    ---------------------------
    -- Precedes_By_Resources --
@@ -190,55 +168,9 @@ package body Queues is
 
    function Precedes_By_Resources (Left, Right : Queue) return Boolean is
    begin
-      if Left.Network < Right.Network then
-         return True;
-      elsif Left.Network > Right.Network then
-         return False;
-      elsif Left.Model < Right.Model then
-         return True;
-      elsif Left.Model > Right.Model then
-         return False;
-      elsif Left.Memory < Right.Memory then
-         return True;
-      elsif Left.Memory > Right.Memory then
-         return False;
-      elsif Left.Cores < Right.Cores then
-         return True;
-      elsif Left.Cores > Right.Cores then
-         return False;
-      elsif Left.Runtime < Right.Runtime then
-         return True;
-      elsif Left.Runtime > Right.Runtime then
-         return False;
-      else
-         return False;
-      end if;
+      return Left.Properties < Right.Properties;
    end Precedes_By_Resources;
 
-   function Get_Network (Q : Queue) return Resources.Network is
-   begin
-      return Network;
-   end Get_Network;
-
-   function Get_Model (Q : Queue) return Resources.CPU_Model is
-   begin
-      return Model;
-   end Get_Model;
-
-   function Get_Memory (Q : Queue) return Gigs is
-   begin
-      return Q.Memory;
-   end Get_Memory;
-
-   function Get_Cores (Q : Queue) return Natural is
-   begin
-      return Q.Cores;
-   end Get_Cores;
-
-   function Get_Runtime (Q : Queue) return Unbounded_String is
-   begin
-      return Q.Runtime;
-   end Get_Runtime;
 
    function Get_Slot_Count (Q : Queue) return Natural is
    begin
@@ -256,7 +188,7 @@ package body Queues is
    end Get_Reserved_Slots;
 
    function Get_Free_Slots (Q : Queue) return Natural is
-      negin
+   begin
       return Q.Total - Q.Used - Q.Reserved;
    end Get_Free_Slots;
 
@@ -270,6 +202,15 @@ package body Queues is
       return Q.Suspended;
    end Is_Suspended;
 
+   function Get_Properties (Q : Queue) return Set_Of_Properties is
+   begin
+      return Q.Properties;
+   end Get_Properties;
+
+   function Get_Name (Q : Queue) return Unbounded_String is
+   begin
+      return Q.Name;
+   end Get_Name;
 
 
 end Queues;

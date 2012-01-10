@@ -1,7 +1,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Resources;
 with Queues; use Queues;
+with Host_Properties; use Host_Properties;
 
 package Partitions is
 
@@ -9,11 +9,8 @@ package Partitions is
       Used, Reserved, Total : Natural;
       Available             : Natural;
       Suspended, Offline    : Natural;
-      Network               : Resources.Network;
-      Model                 : Resources.CPU_Model;
-      Memory                : Gigs;
-      Cores                 : Positive;
-      Runtime, Name         : Unbounded_String;
+      Name                  : Unbounded_String;
+      Properties            : Set_Of_Properties;
    end record;
    type State is (total, available, used, reserved, suspended, offline);
    type State_Count is array (State) of Natural;
@@ -32,7 +29,6 @@ package Partitions is
    procedure Put (Partition : Partitions.Partition_Lists.Cursor);
    procedure Put_List;
    procedure Put_Summary;
-   function Model_As_String (P : Partition) return String;
 
    function "=" (Left : Partition; Right : Queue) return Boolean;
    function "=" (Left : Queue; Right : Partition) return Boolean;

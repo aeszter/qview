@@ -14,11 +14,7 @@ package body Partitions is
 
    function "=" (Left : Partition; Right : Queue) return Boolean is
    begin
-      return Left.Network = Get_Network (Right) and then
-             Left.Model = Get_Model (Right) and then
-             Left.Memory = Get_Memory (Right) and then
-             Left.Cores = Get_Cores (Right) and then
-             Left.Runtime = Get_Runtime (Right);
+      return Left.Properties = Get_Properties (Right);
    end "=";
 
    function "=" (Left : Queue; Right : Partition) return Boolean is
@@ -86,18 +82,14 @@ package body Partitions is
    function New_Partition (Q : Queue) return Partition is
       P : Partition;
    begin
-      P.Network   := Q.Network;
-      P.Memory    := Q.Memory;
-      P.Cores     := Q.Cores;
-      P.Runtime   := Q.Runtime;
-      P.Model     := Q.Model;
+      P.Properties := Get_Properties (Q);
       P.Total     := 0;
       P.Offline   := 0;
       P.Suspended := 0;
       P.Used      := 0;
       P.Reserved  := 0;
       P.Available := 0;
-      P.Name      := Q.Name;
+      P.Name      := Get_Name (Q);
       return P;
    end New_Partition;
 
@@ -105,10 +97,10 @@ package body Partitions is
    -- Model_As_String --
    ---------------------
 
-   function Model_As_String (P : Partition) return String is
+   function Get_Model (P : Partition) return String is
    begin
-      return To_String (P.Model);
-   end Model_As_String;
+      return Get_Model (P.Properties)'Img;
+   end Get_Model;
 
    procedure Put_List is
    begin

@@ -14,6 +14,7 @@ package Resources is
 
    type Network is (none, eth, ib);
    type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours, interlagos);
+   type Gigs is delta 0.001 digits 7;
 
    Resource_Error : exception;
 
@@ -22,6 +23,7 @@ package Resources is
    function To_String (Model : CPU_Model) return String;
    function To_Network (S : String) return Network;
    function Format_Duration (Secs : Natural) return String;
+   function To_Gigs (Memory : String) return Gigs;
 
    function New_Resource (Name  : String;
                           Value : Unbounded_String;
