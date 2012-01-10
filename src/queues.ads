@@ -37,6 +37,18 @@ package Queues is
 
    function Precedes_By_Resources (Left, Right : Queue) return Boolean;
 
+   function Get_Network (Q : Queue) return Resources.Network;
+   function Get_Model (Q : Queue) return Resources.CPU_Model;
+   function Get_Memory (Q : Queue) return Gigs;
+   function Get_Cores (Q : Queue) return Natural;
+   function Get_Runtime (Q : Queue) return Unbounded_String;
+   function Get_Slot_Count (Q : Queue) return Natural;
+   function Get_Used_Slots (Q : Queue) return Natural;
+   function Get_Reserved_Slots (Q : Queue) return Natural;
+   function Get_Free_Slots (Q : Queue) return Natural;
+   function Is_Offline (Q : Queue) return Boolean;
+   function Is_Suspended (Q : Queue) return Boolean;
+
 
 private
 

@@ -215,4 +215,61 @@ package body Queues is
       end if;
    end Precedes_By_Resources;
 
+   function Get_Network (Q : Queue) return Resources.Network is
+   begin
+      return Network;
+   end Get_Network;
+
+   function Get_Model (Q : Queue) return Resources.CPU_Model is
+   begin
+      return Model;
+   end Get_Model;
+
+   function Get_Memory (Q : Queue) return Gigs is
+   begin
+      return Q.Memory;
+   end Get_Memory;
+
+   function Get_Cores (Q : Queue) return Natural is
+   begin
+      return Q.Cores;
+   end Get_Cores;
+
+   function Get_Runtime (Q : Queue) return Unbounded_String is
+   begin
+      return Q.Runtime;
+   end Get_Runtime;
+
+   function Get_Slot_Count (Q : Queue) return Natural is
+   begin
+      return Q.Total;
+   end Get_Slot_Count;
+
+   function Get_Used_Slots (Q : Queue) return Natural is
+   begin
+      return Q.Used;
+   end Get_Used_Slots;
+
+   function Get_Reserved_Slots (Q : Queue) return Natural is
+   begin
+      return Q.Reserved;
+   end Get_Reserved_Slots;
+
+   function Get_Free_Slots (Q : Queue) return Natural is
+      negin
+      return Q.Total - Q.Used - Q.Reserved;
+   end Get_Free_Slots;
+
+   function Is_Offline (Q : Queue) return Boolean is
+   begin
+      return Q.Offline;
+   end Is_Offline;
+
+   function Is_Suspended (Q : Queue) return Boolean is
+   begin
+      return Q.Suspended;
+   end Is_Suspended;
+
+
+
 end Queues;

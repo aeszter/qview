@@ -14,11 +14,11 @@ package body Partitions is
 
    function "=" (Left : Partition; Right : Queue) return Boolean is
    begin
-      return Left.Network = Right.Network and then
-             Left.Model = Right.Model and then
-             Left.Memory = Right.Memory and then
-             Left.Cores = Right.Cores and then
-             Left.Runtime = Right.Runtime;
+      return Left.Network = Get_Network (Right) and then
+             Left.Model = Get_Model (Right) and then
+             Left.Memory = Get_Memory (Right) and then
+             Left.Cores = Get_Cores (Right) and then
+             Left.Runtime = Get_Runtime (Right);
    end "=";
 
    function "=" (Left : Queue; Right : Partition) return Boolean is
@@ -56,21 +56,21 @@ package body Partitions is
          end if;
 
          --  Update totals
-         P.Total := P.Total + Q.Total;
-         List.Summary (total) := List.Summary (total) + Q.Total;
-         if Q.Offline then
-            P.Offline := P.Offline + Q.Total;
-            List.Summary (offline) := List.Summary (offline) + Q.Total;
-         elsif Q.Suspended then
-            P.Suspended := P.Suspended + Q.Total;
-            List.Summary (suspended) := List.Summary (suspended) + Q.Total;
+         P.Total := P.Total + Get_Slot_Count (Q);
+         List.Summary (total) := List.Summary (total) + Get_Slot_Count (Q);
+         if Is_Offline (Q) then
+            P.Offline := P.Offline + Get_Slot_Count (Q);
+            List.Summary (offline) := List.Summary (offline) + Get_Slot_Count (Q);
+         elsif Is_Suspended (Q) then
+            P.Suspended := P.Suspended + Get_Slot_Count (Q);
+            List.Summary (suspended) := List.Summary (suspended) + Get_Slot_Count (Q);
          else
-            P.Used := P.Used + Q.Used;
-            List.Summary (used) := List.Summary (used) + Q.Used;
-            P.Reserved := P.Reserved + Q.Reserved;
-            List.Summary (reserved) := List.Summary (reserved) + Q.Reserved;
-            P.Available := P.Available + Q.Total - Q.Reserved - Q.Used;
-            List.Summary (available) := List.Summary (available) + Q.Total - Q.Reserved - Q.Used;
+            P.Used := P.Used + Get_Used_Slots (Q);
+            List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
+            P.Reserved := P.Reserved + Get_Reserved_Slots (Q);
+            List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
+            P.Available := P.Available + Get_Free_Slots (Q);
+            List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
          end if;
          --  Advance
          Q := Queues.Next;
