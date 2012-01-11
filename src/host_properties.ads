@@ -32,6 +32,7 @@ package Host_Properties is
    --  Parameter V : The Node to read from
    ---------------------
 
+   function To_String (Props : Set_Of_Properties) return String;
 
 private
    type Set_Of_Properties is record

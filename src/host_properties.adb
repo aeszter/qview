@@ -162,7 +162,18 @@ package body Host_Properties is
       end if;
    exception
       when E : others =>
-         HTML.Error ("Unable to read resource: " & Exception_Message (E));
+         HTML.Error ("Unable to read resource: "
+                     & Value (A) & " " & Exception_Message (E));
    end Parse_Resource;
+
+   function To_String (Props : Set_Of_Properties) return String is
+   begin
+      return "(net=>" & Props.Network'Img
+        &",model=>" & Props.Model'Img
+        & ",mem=>" & Props.Memory'Img
+        & ",cores=>" & Props.Cores'Img
+        & "rt=>" & To_String (Props.Runtime)
+      &")";
+   end To_String;
 
 end Host_Properties;
