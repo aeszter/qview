@@ -10,7 +10,6 @@ package Jobs is
 
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq);
    type State_Count is array (Job_State) of Natural;
-   type Fixed is delta 0.0001 digits 5;
    type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem, submission_time, priority);
    type Usage_Number is delta 0.00001 digits 18;
    type Usage_Integer is range 0 .. 10 ** 12;

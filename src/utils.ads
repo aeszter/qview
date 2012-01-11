@@ -7,6 +7,9 @@ package Utils is
    type Tri_State is (False, True, Undecided);
    Assumption_Error : exception;
 
+   type Fixed is delta 0.0001 digits 5;
+   --  a general fixed type, especially useful for SGE resources
+
    function To_Tri_State (Truth : String) return Tri_State;
 
    package String_Lists is
