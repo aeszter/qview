@@ -1,6 +1,6 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Resources; use Resources;
-with DOM.Core;
+with Parser;
 
 package Host_Properties is
    type Set_Of_Properties is private;
@@ -23,7 +23,7 @@ package Host_Properties is
    function "<" (Left, Right : Set_Of_Properties) return Boolean;
 
    procedure Parse_Resource (Props : in out Set_Of_Properties;
-                             N     : DOM.Core.Node);
+                             N     : Parser.Node);
    ---------------------
    -- Parse_Resource --
    --  Purpose: Given a Node of an XML DOM tree,

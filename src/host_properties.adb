@@ -1,9 +1,8 @@
-with DOM.Core; use DOM.Core;
-with DOM.Core.Nodes; use DOM.Core.Nodes;
-with DOM.Core.Attrs; use DOM.Core.Attrs;
+with Parser; use Parser;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Utils; use Utils;
+
 
 package body Host_Properties is
 
@@ -132,10 +131,10 @@ package body Host_Properties is
    ---------------------
 
    procedure Parse_Resource (Props : in out Set_Of_Properties;
-                             N     : DOM.Core.Node) is
-      A : Attr;
+                             N     : Parser.Node) is
+      A : Parser.Attr;
    begin
-      A := Get_Named_Item (Attributes (N), "name");
+      A := Get_Attr (N, "name");
       if Value (A) = "num_proc" then
          Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
             --  Fixed'Value is important here, as SGE interprets numerical

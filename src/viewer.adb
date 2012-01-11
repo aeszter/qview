@@ -1,9 +1,5 @@
 with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Sax.Readers;
-with DOM.Core; use  DOM.Core;
-with DOM.Core.Nodes, DOM.Core.Attrs;
-use  DOM.Core.Nodes, DOM.Core.Attrs;
 with HTML;
 with Parser; use Parser;
 with Command_Tools; use Command_Tools;

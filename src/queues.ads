@@ -2,7 +2,7 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Resources;
 with Host_Properties; use Host_Properties;
-with DOM.Core; use DOM.Core;
+with Parser; use Parser;
 
 package Queues is
 

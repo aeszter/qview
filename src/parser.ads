@@ -1,12 +1,16 @@
 with DOM.Core; with DOM.Core.Documents;
+with DOM.Core.Nodes;
 
 
 package Parser is
    subtype Tree is DOM.Core.Document;
+   subtype Attr is DOM.Core.Attr;
+   subtype Node is DOM.Core.Node;
 
-   sgeroot : constant String := "/cm/shared/apps/sge/current";
-   Resource_Selector : constant String := "-F h_rt,eth,ib,mem_total,num_proc,cm,q";
-
+   function Get_Attr (N : Node; Name : String) return Attr;
+   function Value (N : Node) return String renames DOM.Core.Nodes.Node_Value;
+   function First_Child (N : Node) return Node renames DOM.Core.Nodes.First_Child;
+-- return Get_Named_Item (Attributes (N), Name);
 
    function Setup (Command  : String := "qstat";
                    Selector : String) return DOM.Core.Document;
@@ -19,5 +23,9 @@ package Parser is
                                            return DOM.Core.Node_List;
    function Get_Job_Nodes_From_Qstat_U (Doc : DOM.Core.Document)
                                            return DOM.Core.Node_List;
+
+   private
+   sgeroot : constant String := "/cm/shared/apps/sge/current";
+   Resource_Selector : constant String := "-F h_rt,eth,ib,mem_total,num_proc,cm,q";
 
 end Parser;
