@@ -3,6 +3,7 @@ with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
+with Utils; use Utils;
 
 package body Host_Properties is
 
@@ -136,18 +137,20 @@ package body Host_Properties is
    begin
       A := Get_Named_Item (Attributes (N), "name");
       if Value (A) = "num_proc" then
-         Props.Cores := Integer'Value (Value (First_Child (N)));
-         --  was  Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
+         Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
+            --  Fixed'Value is important here, as SGE interprets numerical
+            --  resources as rational numbers
       elsif
         Value (A) = "ethernet" then
-         if Integer'Value (Value (First_Child (N))) = 1 then
-            --  was Fixed'Value (Value (First_Child (N))) = 1.0
+         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+            --  Fixed'Value is important here, as SGE interprets boolean
+            --  resources as rational numbers (0.000000 or 1.000000)
             Props.Network := eth;
          end if;
       elsif
          Value (A) = "infiniband" then
-         if Integer'Value (Value (First_Child (N))) = 1 then
-            --  was Fixed'Value (Value (First_Child (N))) = 1.0
+         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+            --  see above for Fixed'Value
             Props.Network := ib;
          end if;
       elsif Value (A) = "cpu_model" then
