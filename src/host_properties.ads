@@ -18,7 +18,7 @@ package Host_Properties is
    procedure Set_Runtime (Props : in out Set_Of_Properties; Runtime : Unbounded_String);
 
    procedure Init (Props : out Set_Of_Properties;
-                   Net, Memory, Cores : String);
+                   Net, Memory, Cores, Model : String);
 
    function "<" (Left, Right : Set_Of_Properties) return Boolean;
 

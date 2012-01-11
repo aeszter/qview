@@ -74,12 +74,14 @@ package body Host_Properties is
 
 
    procedure Init (Props : out Set_Of_Properties;
-                   Net, Memory, Cores : String) is
+                   Net, Memory, Cores, Model : String) is
    begin
       Set_Network (Props, Network'Value (Net));
       Set_Memory (Props, Memory);
       Set_Cores (Props => Props,
                  Cores => Positive'Value (Cores));
+      Set_Model (Props => Props,
+                 Model => Model);
    end Init;
 
    procedure Set_Memory (Props : in out Set_Of_Properties;

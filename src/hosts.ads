@@ -67,7 +67,7 @@ package Hosts is
 
 
    procedure Append_List (Host_Nodes : Node_List);
-   procedure Prune_List (Net, Cores, Memory, Queue_Name : String);
+   procedure Prune_List (Net, Cores, Memory, Queue_Name, Model : String);
    procedure Parse_Queue (H : in out Host; N : Node);
    ---------------------
    -- Parse_Queue --

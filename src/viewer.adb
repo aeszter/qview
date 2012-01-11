@@ -518,7 +518,8 @@ package body Viewer is
          Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
          Hosts.Prune_List (Net     => CGI.Value ("net"),
                            Cores   => CGI.Value ("cores"),
-                           Memory  => CGI.Value ("mem"),
+                           Memory  => CGI.Value ("mem") & "G",
+                           Model => CGI.Value ("model"),
                            Queue_Name => CGI.Value ("q"));
 
          --  Can we factor this out?
@@ -538,7 +539,7 @@ package body Viewer is
          HTML.End_Div (Class => "host_list");
       exception
          when E : others =>
-            HTML.Error ("Error while putting host: " & Exception_Message (E));
+            HTML.Error ("Error while viewing host: " & Exception_Message (E));
             Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "host_list");
       end View_Hosts;
