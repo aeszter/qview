@@ -39,7 +39,7 @@ package Hosts is
       Jobs       : Job_List;
       Properties : Set_Of_Properties;
       Load       : Fixed;
-      Slots_Used : Natural;
+      Slots_Used : Natural := 0;
       Mem_Used   : Resources.Gigs;
       Swap_Total : Resources.Gigs;
       Swap_Used  : Resources.Gigs;
