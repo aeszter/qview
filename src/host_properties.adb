@@ -2,9 +2,18 @@ with DOM.Core; use DOM.Core;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Attrs; use DOM.Core.Attrs;
 with HTML;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Host_Properties is
 
+   -----------------
+   -- Get_Runtime --
+   -----------------
+
+   function Get_Runtime (Props : Set_Of_Properties) return String is
+   begin
+      return To_String (Props.Runtime);
+   end Get_Runtime;
 
    ----------------
    -- Get_Memory --
@@ -38,27 +47,27 @@ package body Host_Properties is
       return Props.Model;
    end Get_Model;
 
-   procedure Set_Cores (Props : out Set_Of_Properties; Cores : Positive) is
+   procedure Set_Cores (Props : in out Set_Of_Properties; Cores : Positive) is
    begin
       Props.Cores := Cores;
    end Set_Cores;
 
-   procedure Set_Network (Props : out Set_Of_Properties; Net : Network) is
+   procedure Set_Network (Props : in out Set_Of_Properties; Net : Network) is
    begin
       Props.Network := Net;
    end Set_Network;
 
-   procedure Set_Model (Props : out Set_Of_Properties; Model : String) is
+   procedure Set_Model (Props : in out Set_Of_Properties; Model : String) is
    begin
       Props.Model := CPU_Model'Value (Model);
    end Set_Model;
 
-   procedure Set_Model (Props : out Set_Of_Properties; Model : CPU_Model) is
+   procedure Set_Model (Props : in out Set_Of_Properties; Model : CPU_Model) is
    begin
       Props.Model := Model;
    end Set_Model;
 
-   procedure Set_Runtime (Props : out Set_Of_Properties; Runtime : Unbounded_String) is
+   procedure Set_Runtime (Props : in out Set_Of_Properties; Runtime : Unbounded_String) is
    begin
       Props.Runtime := Runtime;
    end Set_Runtime;
@@ -73,7 +82,7 @@ package body Host_Properties is
                  Cores => Positive'Value (Cores));
    end Init;
 
-   procedure Set_Memory (Props : out Set_Of_Properties;
+   procedure Set_Memory (Props : in out Set_Of_Properties;
                          S     : String) is
    begin
       if S /= "" then
@@ -125,15 +134,18 @@ package body Host_Properties is
    begin
       A := Get_Named_Item (Attributes (N), "name");
       if Value (A) = "num_proc" then
-         Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
+         Props.Cores := Integer'Value (Value (First_Child (N)));
+         --  was  Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
       elsif
         Value (A) = "ethernet" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+         if Integer'Value (Value (First_Child (N))) = 1 then
+            --  was Fixed'Value (Value (First_Child (N))) = 1.0
             Props.Network := eth;
          end if;
       elsif
          Value (A) = "infiniband" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+         if Integer'Value (Value (First_Child (N))) = 1 then
+            --  was Fixed'Value (Value (First_Child (N))) = 1.0
             Props.Network := ib;
          end if;
       elsif Value (A) = "cpu_model" then

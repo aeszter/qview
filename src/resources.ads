@@ -24,6 +24,7 @@ package Resources is
    function To_Network (S : String) return Network;
    function Format_Duration (Secs : Natural) return String;
    function To_Gigs (Memory : String) return Gigs;
+   function To_String (Memory : Gigs) return String;
 
    function New_Resource (Name  : String;
                           Value : Unbounded_String;

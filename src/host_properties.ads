@@ -8,13 +8,14 @@ package Host_Properties is
    function Get_Cores (Props : Set_Of_Properties) return Positive;
    function Get_Network (Props : Set_Of_Properties) return Network;
    function Get_Model (Props : Set_Of_Properties) return CPU_Model;
-   procedure Set_Memory (Props : out Set_Of_Properties;
+   function Get_Runtime (Props : Set_Of_Properties) return String;
+   procedure Set_Memory (Props : in out Set_Of_Properties;
                          S     : String);
-   procedure Set_Cores (Props : out Set_Of_Properties; Cores : Positive);
-   procedure Set_Network (Props : out Set_Of_Properties; Net : Network);
-   procedure Set_Model (Props : out Set_Of_Properties; Model : String);
-   procedure Set_Model (Props : out Set_Of_Properties; Model : CPU_Model);
-   procedure Set_Runtime (Props : out Set_Of_Properties; Runtime : Unbounded_String);
+   procedure Set_Cores (Props : in out Set_Of_Properties; Cores : Positive);
+   procedure Set_Network (Props : in out Set_Of_Properties; Net : Network);
+   procedure Set_Model (Props : in out Set_Of_Properties; Model : String);
+   procedure Set_Model (Props : in out Set_Of_Properties; Model : CPU_Model);
+   procedure Set_Runtime (Props : in out Set_Of_Properties; Runtime : Unbounded_String);
 
    procedure Init (Props : out Set_Of_Properties;
                    Net, Memory, Cores : String);

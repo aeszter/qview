@@ -8,6 +8,7 @@ with Ada.Strings.Unbounded.Hash;
 with Ada.Containers; use Ada.Containers;
 with Resources; use Resources.Resource_Lists;
 with Utils; use Utils; use Utils.Hash_Strings;
+with Ada.Strings.Fixed;
 
 package body Resources is
 
@@ -241,7 +242,11 @@ package body Resources is
       end if;
    end To_Gigs;
 
-
+   function To_String (Memory : Gigs) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (Source => Memory'Img,
+                                     Side   => Ada.Strings.Right);
+   end To_String;
 
    ------------
    -- Insert --
