@@ -222,7 +222,7 @@ private
       Posix_Priority   : Posix_Priority_Type;
 
       --  qhost -j
-      Detected_Queues  : String_Lists.List;
+      Detected_Queues  : String_Sets.Set;
 
       --  resources used for Bunching jobs
       Queue            : Unbounded_String;

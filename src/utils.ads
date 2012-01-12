@@ -15,6 +15,9 @@ package Utils is
    package String_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Unbounded_String);
 
+   package String_Sets is
+     new Ada.Containers.Ordered_Sets (Element_Type => Unbounded_String);
+
    package Hash_Strings is
      new Ada.Strings.Bounded.Generic_Bounded_Length (Max => 10);
 

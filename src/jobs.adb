@@ -493,8 +493,12 @@ package body Jobs is
       The_Queue              : Unbounded_String;
 
       procedure Record_Queue (Element : in out Job) is
+         Success : Boolean;
+         Where : String_Sets.Cursor;
       begin
-         Element.Detected_Queues.Append (The_Queue);
+         Element.Detected_Queues.Insert (New_Item => The_Queue,
+                                         Position => Where,
+                                         Inserted => Success);
       end Record_Queue;
 
    begin

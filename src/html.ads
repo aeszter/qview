@@ -49,7 +49,8 @@ package HTML is
    procedure Put (Data : Tri_State);
 
    procedure Put_List (List : String_Lists.List);
---  output a string list as a <ul>; if List is empty, output a proper icon instead
+   procedure Put_List (List : String_Sets.Set);
+--  output a string list or set as a <ul>; if List is empty, output a proper icon instead
 
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
