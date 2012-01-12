@@ -272,7 +272,7 @@ package body Viewer is
       end View_Detailed_Queues;
 
       procedure View_Jobs (Selector : String) is
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
 
 
          procedure Put_Table_Header is
@@ -385,7 +385,7 @@ package body Viewer is
          Jobs.Put_Details;
 
       exception
-         when Sax.Readers.XML_Fatal_Error =>
+         when Parser_Error =>
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
@@ -394,7 +394,7 @@ package body Viewer is
       -------------------
 
       procedure View_Forecast is
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
 
 
          procedure Put_Table_Header is
@@ -437,7 +437,7 @@ package body Viewer is
       ----------------
 
       procedure View_Hosts (What : String) is
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
 
          procedure Put_Table_Header is
          begin
@@ -545,7 +545,7 @@ package body Viewer is
       ----------------
 
       procedure View_Bunch is
-         SGE_Out     : DOM.Core.Document;
+         SGE_Out     : Parser.Tree;
 
          procedure Put_Table_Header is
          begin

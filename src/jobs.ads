@@ -1,8 +1,8 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with DOM.Core; use DOM.Core;
 with Ada.Calendar; use Ada.Calendar;
 with Resources;
+with Parser; use Parser;
 with Ranges;
 with Utils; use Utils;
 

@@ -1,8 +1,6 @@
 with Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
-with DOM.Core.Nodes; use DOM.Core.Nodes;
-with DOM.Core.Attrs; use DOM.Core.Attrs;
 with HTML;
 with Resources; use Resources;
 with Ada.Strings.Fixed;
@@ -246,7 +244,7 @@ package body Hosts is
             H : Host;
          begin
             N := Item (Host_Nodes, I - 1);
-            A := Get_Named_Item (Attributes (N), "name");
+            A := Get_Attr (N, "name");
             H.Name := To_Unbounded_String (Value (A));
             if Value (A) /= "global" then
                Value_Nodes := Child_Nodes (N);
@@ -318,14 +316,14 @@ package body Hosts is
       Q_Values  : Node_List := Child_Nodes (N);
       Q_Value   : Node;
    begin
-      Q_Name := Get_Named_Item (Attributes (N), "name");
+      Q_Name := Get_Attr (N, "name");
 
       Queue_Values :
       for I in 1 .. Length (Q_Values) loop
          Q_Value := Item (List  => Q_Values,
                           Index => I - 1);
          if Name (Q_Value) = "queuevalue" then
-            A := Get_Named_Item (Attributes (Q_Value), "name");
+            A := Get_Attr (Q_Value, "name");
             if Value (A) = "state_string" then
                if Has_Child_Nodes (Q_Value) then
                   Append_Queue (H     => H,
@@ -355,7 +353,7 @@ package body Hosts is
    procedure Parse_Hostvalue (H : in out Host; N : Node) is
       A : Attr;
    begin
-      A := Get_Named_Item (Attributes (N), "name");
+      A := Get_Attr (N, "name");
       if Value (A) = "load_avg" then
          begin
             H.Load := Fixed'Value (Value (First_Child (N)));
@@ -401,9 +399,9 @@ package body Hosts is
       for K in 1 .. Length (Nodes) loop
          C := Item (Nodes, K - 1);
          if Name (C) = "jobvalue" then
-            A := Get_Named_Item (Attributes (C), "name");
+            A := Get_Attr (C, "name");
             if Value (A) = "pe_master" then
-               J.ID := Integer'Value (Value (Get_Named_Item (Attributes (C), "jobid")));
+               J.ID := Integer'Value (Value (Get_Attr (C, "jobid")));
                Set_Master (J, Value (First_Child (C)));
             elsif Value (A) = "taskid" then
                J.Task_ID := Integer'Value (Value (First_Child (C)));

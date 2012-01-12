@@ -1,10 +1,10 @@
 with Ada.Containers.Doubly_Linked_Lists;
-with DOM.Core; use DOM.Core;
-with Resources;
 with Host_Properties; use Host_Properties;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
+with Resources;
+with Parser; use Parser;
 
 package Hosts is
 

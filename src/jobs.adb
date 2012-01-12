@@ -1,5 +1,3 @@
-with DOM.Core.Nodes; use DOM.Core.Nodes;
-with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 with Ada.Calendar;   use Ada.Calendar;
@@ -404,7 +402,7 @@ package body Jobs is
    -----------------------------
 
    procedure Update_Job_From_Qstat_J (J : in out Job) is
-      SGE_Out : DOM.Core.Document;
+      SGE_Out : Parser.Tree;
       Nodes   : Node_List;
       N       : Node;
    begin
@@ -446,7 +444,7 @@ package body Jobs is
    end Update_Status;
 
    procedure Update_Status (J : in out Job) is
-      SGE_Out     : DOM.Core.Document;
+      SGE_Out     : Tree;
       Nodes       : Node_List;
       Field_Nodes : Node_List;
       Field       : Node;
@@ -486,7 +484,7 @@ package body Jobs is
    -------------------
 
    procedure Search_Queues is
-      SGE_Out                : DOM.Core.Document;
+      SGE_Out                : Tree;
       Job_Nodes, Value_Nodes : Node_List;
       Job_Node, Value_Node   : Node;
       A                      : Attr;
@@ -508,7 +506,7 @@ package body Jobs is
       for I in 0 .. Length (Job_Nodes) - 1 loop
          Job_Node := Item (List  => Job_Nodes,
                            Index => I);
-         A := Get_Named_Item (Attributes (Job_Node), "name");
+         A := Get_Attr (Job_Node, "name");
          Number_Found := Integer'Value (Value (A));
          Pos := Find_Job (ID => Number_Found);
          --  in theory, this scaling is less than ideal:
@@ -523,7 +521,7 @@ package body Jobs is
                Value_Node := Item (List  => Value_Nodes,
                                    Index => J);
                if Name (Value_Node) = "jobvalue" then
-                  A := Get_Named_Item (Attributes (Value_Node), "name");
+                  A := Get_Attr (Value_Node, "name");
                   if Value (A) = "qinstance_name" then
                      HTML.Comment ("Detected " & The_Queue);
                      The_Queue := To_Unbounded_String (Value (First_Child (Value_Node)));
@@ -637,17 +635,17 @@ package body Jobs is
          elsif Name (C) = "full_job_name" then
             null; -- ignore
          elsif Name (C) = "requested_pe" then
-            A := Get_Named_Item (Attributes (C), "name");
+            A := Get_Attr (C, "name");
             J.PE := To_Unbounded_String (Value (A));
          elsif Name (C) = "hard_request" then
-            A := Get_Named_Item (Attributes (C), "name");
+            A := Get_Attr (C, "name");
             J.Hard.Insert (Key      => To_Unbounded_String (Value (A)),
                            New_Item => New_Resource (Name  => Value (A),
                                                      Value => Value (First_Child (C))),
                            Position => Inserted_At,
                            Inserted => Inserted);
          elsif Name (C) = "soft_request" then
-            A := Get_Named_Item (Attributes (C), "name");
+            A := Get_Attr (C, "name");
             J.Soft.Insert (Key      => To_Unbounded_String (Value (A)),
                            New_Item => New_Resource (Name  => Value (A),
                                                      Value => Value (First_Child (C))),

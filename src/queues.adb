@@ -1,7 +1,6 @@
-with DOM.Core.Nodes; use DOM.Core.Nodes;
-with DOM.Core.Attrs; use DOM.Core.Attrs;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Resources; use Resources;
+with Parser; use Parser;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 
@@ -69,7 +68,7 @@ package body Queues is
                elsif Name (N) = "state" then
                   State := To_Unbounded_String (Value (First_Child (N)));
                elsif Name (N) = "resource" then
-                  A := Get_Named_Item (Attributes (N), "name");
+                  A := Get_Attr (N, "name");
                   if Value (A) = "mem_total" then
                      Mem := To_Unbounded_String (Value (First_Child (N)));
                   elsif Value (A) = "num_proc" then

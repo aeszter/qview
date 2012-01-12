@@ -30,8 +30,9 @@ package body Parser is
       SGE_Command.Close;
       Wait_For_Children;
       return Reader.Get_Tree;
-
-
+   exception
+      when Sax.Readers.XML_Fatal_Error =>
+         raise Parser_Error;
    end Setup;
 
    -----------------------------------
@@ -61,4 +62,8 @@ package body Parser is
       return Get_Elements_By_Tag_Name (Doc => Doc, Tag_Name => "job_list");
    end Get_Job_Nodes_From_Qstat_U;
 
+   function Get_Attr (N : Node; Name : String) return Attr is
+   begin
+      return Get_Named_Item (Attributes (N), Name);
+   end Get_Attr;
 end Parser;
