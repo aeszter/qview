@@ -63,6 +63,10 @@ package body Viewer is
          Ada.Text_IO.Put ("Time:");
          Diagnostics.Put_Time;
          Ada.Text_IO.Put ("</li>");
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put ("Generated: ");
+         Diagnostics.Put_Date;
+         Ada.Text_IO.Put ("</li>");
       end Put_Diagnostics;
 
 
