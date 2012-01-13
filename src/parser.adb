@@ -1,10 +1,9 @@
 with DOM.Readers;
 with HTML;
 with Sax.Readers;
-with Pipe_Streams; use Pipe_Streams;
-with Pipe_Commands;
 with DOM.Core; use DOM.Core;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
+with Pipe_Streams; use Pipe_Streams;
 
 package body Parser is
 
@@ -20,15 +19,12 @@ package body Parser is
    begin
       SGE_Command.Set_Public_Id ("qstat");
       HTML.Comment (Command_String);
-      SGE_Command.execute ("SGE_ROOT=" & sgeroot & " " &
-                           Command_String
-                           & ASCII.NUL,
-                           Pipe_Commands.read_file);
+      SGE_Command.Execute ("SGE_ROOT=" & sgeroot & " " &
+                           Command_String);
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
       Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
       Reader.Parse (SGE_Command);
       SGE_Command.Close;
-      Wait_For_Children;
       return Reader.Get_Tree;
    exception
       when Sax.Readers.XML_Fatal_Error =>

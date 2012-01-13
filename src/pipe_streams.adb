@@ -1,21 +1,11 @@
 with Unicode;
 with Ada.Characters;
 with Ada.Characters.Latin_1;
+with POSIX.Process_Primitives; use POSIX.Process_Primitives;
+with POSIX.Process_Identification; use POSIX.Process_Identification;
+with POSIX; use POSIX;
 
 package body Pipe_Streams is
-
-   procedure Buffer_Line (p : in out Pipe_Stream) is
-   begin
-      p.line_buffer := Pipe_Commands.read_next (p.file_stream);
-      p.position := 0;
-   exception
-      when Pipe_Commands.End_Of_File =>
-         if p.inbound_eof then
-            raise;
-            --  caller has ignored or not tested eof, so we raise an exception
-         end if;
-         p.inbound_eof := True;
-   end Buffer_Line;
 
    ---------------
    -- Next_Char --
@@ -26,12 +16,12 @@ package body Pipe_Streams is
       C    : out Unicode.Unicode_Char)
    is
    begin
-      if From.position >= Length (From.line_buffer) then
-         Buffer_Line (From);
+      if From.Position >= Length (From.Line_Buffer) then
+         --  Buffer_Line (From);
          C := Unicode.To_Unicode (Ada.Characters.Latin_1.LF);
       else
-         From.position := From.position + 1;
-         C := Unicode.To_Unicode (Element (From.line_buffer, From.position));
+         From.Position := From.Position + 1;
+         C := Unicode.To_Unicode (Element (From.Line_Buffer, From.Position));
       end if;
    end Next_Char;
 
@@ -41,7 +31,7 @@ package body Pipe_Streams is
 
    overriding function Eof (From : Pipe_Stream) return Boolean is
    begin
-      return From.inbound_eof;
+      return From.Inbound_EOF;
       --  assume that the last line ends with a line feed
       --  otherwise, we would have to return true until the last character
       --  of From.line_buffer has been delivered
@@ -52,43 +42,22 @@ package body Pipe_Streams is
    -- execute --
    -------------
 
-   procedure execute
-     (p       : in out Pipe_Stream;
-      Command : in String;
-      IO_type : in Pipe_Commands.IO_MODE)
+   procedure Execute
+     (P : in out Pipe_Stream;
+      Command : in String)
    is
+      To_QView : POSIX.IO.File_Descriptor;
+      Template : Process_Template;
+      Arg_List : POSIX_String_List;
    begin
-      p.file_stream := Pipe_Commands.execute (Command => Command,
-                                              IO_type => IO_type);
-      Buffer_Line (p);
-   end execute;
-
-   ----------
-   -- wait --
-   --  From Florist
-   ----------
-
-   type int is range -2**31 .. (2**31)-1;
-   for int'Size use 32;
-
-   type pid_t is range -2**31 .. (2**31)-1;
-   for pid_t'Size use 32;
-
-   function wait (stat_loc : access int) return pid_t;
-   pragma Import (C, wait, "wait");
-
-
-   -----------------------
-   -- Wait_For_Children --
-   -----------------------
-
-   procedure Wait_For_Children is
-      pid : pid_t;
-      pragma Unreferenced (pid);
-      stat : aliased int;
-   begin
-      pid := wait (stat'Access);
-   end Wait_For_Children;
-
+      POSIX.IO.Create_Pipe (Read_End  => P.Pipe,
+                            Write_End => To_QView);
+      Set_File_Action_To_Close (Template => Template,
+                                File     => P.Pipe);
+      Start_Process (Child    => P.PID,
+                     Pathname => To_POSIX_String (Command),
+                     Template => Template,
+                     Arg_List => Arg_List);
+   end Execute;
 
 end Pipe_Streams;
