@@ -203,7 +203,7 @@ package body Viewer is
             CGI.Put_HTML_Heading (Title => "Demand",
                                Level => 2);
          end if;
-         SGE_Out := Parser.Setup (Selector => "-u \* -r -s p");
+         SGE_Out := Parser.Setup (Selector => "-u * -r -s p");
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          if Slot_Ranges then
@@ -353,20 +353,20 @@ package body Viewer is
       procedure View_Jobs_In_Queue (Queue : String) is
       begin
          CGI.Put_HTML_Heading (Title => """" & Queue & """ Jobs", Level => 2);
-         View_Jobs ("-u \* -s r -q " & Queue);
+         View_Jobs ("-u * -s r -q " & Queue);
       end View_Jobs_In_Queue;
 
 
       procedure View_Global_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-         View_Jobs ("-u \*");
+         View_Jobs ("-u *");
       end View_Global_Jobs;
 
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         View_Jobs ("-u \* -s p");
+         View_Jobs ("-u * -s p");
       end View_Waiting_Jobs;
 
       procedure View_Jobs_Of_User (User : String) is
@@ -416,7 +416,7 @@ package body Viewer is
          end Put_Table_Header;
 
       begin
-         SGE_Out := Parser.Setup (Selector => "-u \* -s r -r");
+         SGE_Out := Parser.Setup (Selector => "-u * -s r -r");
 
          Put_Table_Header;
 
@@ -570,7 +570,7 @@ package body Viewer is
 
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
-                                  Selector => "-r -s p -u \*");
+                                  Selector => "-r -s p -u *");
          Put_Table_Header;
 
          Jobs.Append_List (
