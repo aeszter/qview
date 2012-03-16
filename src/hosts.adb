@@ -210,11 +210,24 @@ package body Hosts is
    -- Add_Slave_Process --
    --  Purpose: Increment the Slaves number of a given Job by one
    --  Parameter J: The job to update
+   --  Note: Routine is called once for the second and every subsequent
+   --        Job entry with a given ID on the host.
+   --        It works correctly (i.e. J.Slaves quals the number of slave processes)
+   --        if a) there is a master, and it is the first in the list (experience
+   --              shows that it is);
+   --        or b) there is no master, but at least two slaves (this is true for
+   --              our current configuration).
+   --        Serial jobs need special treatment.
    -----------------------
 
    procedure Add_Slave_Process (J : in out Job) is
    begin
-      J.Slaves := J.Slaves + 1;
+      if not J.Master and then J.Slaves = 0 then
+         --  we have not yet counted ourself
+         J.Slaves := 2;
+      else
+         J.Slaves := J.Slaves + 1;
+      end if;
    end Add_Slave_Process;
 
    ------------------
