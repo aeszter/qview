@@ -74,8 +74,12 @@ package body Queues is
                   elsif Value (A) = "num_proc" then
                      Cores := Integer'Value (Value (First_Child (N)));
                   elsif Value (A) = "infiniband" and then
-                    small'Value (Value (First_Child (N))) = 1.0 then
+                    small'Value (Value (First_Child (N))) = 1.0 and then
+                    Network = none then
                      Network := ib;
+                  elsif Value (A) = "ib-switch" and then
+                    small'Value (Value (First_Child (N))) = 1.0 then
+                     Network := ibswitch;
                   elsif Value (A) = "ethernet" and then
                     small'Value (Value (First_Child (N))) = 1.0 then
                      Network := eth;

@@ -12,7 +12,7 @@ package Resources is
       State          : Tri_State;
    end record;
 
-   type Network is (none, eth, ib);
+   type Network is (none, eth, ib, ibswitch);
    type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours, interlagos);
    type Gigs is delta 0.001 digits 7;
 
