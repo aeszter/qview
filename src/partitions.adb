@@ -42,7 +42,7 @@ package body Partitions is
       Q := Queues.Current;
       --  Create Partition according to first Queue
       P := New_Partition (Q);
-      while not Queues.At_End loop
+      loop
          --  New Partition?
          if P /= Q then
             --  Yes. Store previous one.
@@ -67,6 +67,7 @@ package body Partitions is
             P.Available := P.Available + Get_Free_Slots (Q);
             List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
          end if;
+         exit when Queues.At_End;
          --  Advance
          Q := Queues.Next;
       end loop;

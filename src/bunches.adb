@@ -26,7 +26,7 @@ package body Bunches is
          J := Jobs.Current;
          --  Create Bunch according to first Job
          B := New_Bunch (J);
-         while not Jobs.At_End loop
+         loop
             --  New Bunch?
             if B /= J then
                --  Yes. Store previous one.
@@ -45,6 +45,7 @@ package body Bunches is
             else
                B.Waiting := B.Waiting + Get_Task_Count (J);
             end if;
+            exit when Jobs.At_End;
             --  Advance
             J := Jobs.Next;
          end loop;
