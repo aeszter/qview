@@ -148,15 +148,22 @@ package body Host_Properties is
          end if;
       elsif
          Value (A) = "infiniband" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+         if Fixed'Value (Value (First_Child (N))) = 1.0 and then
+            Props.Network = none then
             --  see above for Fixed'Value
             Props.Network := ib;
+         end if;
+      elsif Value (A) = "ib-switch" then
+         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+            --  see above for Fixed'Value
+            Props.Network := ibswitch;
          end if;
       elsif Value (A) = "cpu_model" then
          Props.Model := To_Model (Value (First_Child (N)));
       elsif Value (A) = "mem_total" then
          Props.Memory := To_Gigs (Value (First_Child (N)));
       else
+         HTML.Error ("Unknown Resource encountered while parsing host");
          HTML.Put_Paragraph (Value (A), Value (First_Child (N)));
       end if;
    exception
