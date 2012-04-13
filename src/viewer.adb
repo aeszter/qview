@@ -11,6 +11,7 @@ with Bunches; use Bunches;
 with Queues; use Queues;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Hosts; use Hosts; use Hosts.Host_Lists;
+with Reservations;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
 with Ada.Characters.Handling;
@@ -51,6 +52,8 @@ package body Viewer is
                                    Link_Param => "categories=with_slots");
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
+         HTML.Put_Navigation_Link (Data       => "Reservations",
+                                   Link_Param => "reservation=y");
          HTML.Put_Search_Box;
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
@@ -595,6 +598,14 @@ package body Viewer is
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
 
+      procedure View_Reservations is
+      begin
+         Reservations.Read;
+         Reservations.Put_All;
+
+         HTML.Error ("Not implemented");
+      end View_Reservations;
+
 
    begin
       begin
@@ -693,6 +704,10 @@ package body Viewer is
             Put_Headers (Title => "Finishing Jobs");
             Set_Params ("forecast=y");
             View_Forecast;
+         elsif HTML.Param_Is ("reservation", "y") then
+            Put_Headers (Title => "Reservations");
+            Set_Params ("reservation=y");
+            View_Reservations;
          end if;
       else
          Put_Headers (Title => "");
