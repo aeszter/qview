@@ -27,8 +27,8 @@ package HTML is
    procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Duration_Cell (Span : Duration);
    procedure Put_Header_Cell (Data     : String;
-                              Acronym : String := "";
-                              Params   : Unbounded_String;
+      Acronym  : String  := "";
+      Params   : Unbounded_String := Null_Unbounded_String;
                               Sortable : Boolean := True);
    procedure Put_Search_Box;
    --  Purpose: put a text input element used to search for a job or user

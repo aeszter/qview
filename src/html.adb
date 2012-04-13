@@ -337,7 +337,7 @@ package body HTML is
    procedure Put_Header_Cell
      (Data     : String;
       Acronym  : String  := "";
-      Params   : Unbounded_String;
+      Params   : Unbounded_String := Null_Unbounded_String;
       Sortable : Boolean := True)
    is
       Dir : String := "dec";
