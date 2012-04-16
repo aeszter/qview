@@ -5,6 +5,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Interfaces.C;
 with Ada.Calendar.Conversions;
+with Ada.Strings.Hash;
 
 package body Reservations is
 
@@ -57,12 +58,30 @@ package body Reservations is
          begin
             Read_Line (Data => New_Reservation, Store_Data => Success);
             if Success then
-               List.Append (New_Reservation);
---               Index(New_Reservation.Job_ID).Add (List_ID, Iteration_Number);
+               if Exists_At (What => New_Reservation, Iteration => Iteration_Number - 1) then
+                  New_Reservation.Confirmation := True;
+               end if;
+               if New_Reservation.State = reserving or else
+                 not Catalog.Contains ((Schedule_Run => Iteration_Number,
+                                       Job_ID       => New_Reservation.Job_ID,
+                                        Queue        => New_Reservation.Queue)) then
+                  --  also kill STARTING jobs without reservation
+                  List.Append (New_Reservation);
+                  Catalog.Insert (New_Item  => List.Last_Index,
+                               Key => (Schedule_Run => Iteration_Number,
+                                       Job_ID       => New_Reservation.Job_ID,
+                                       Queue        => New_Reservation.Queue));
+               end if;
             end if;
          exception
             when Buffer_Overrun => HTML.Comment ("Line too long: skipped");
             when Improper_Line => null;
+            when E : Constraint_Error => HTML.Error ("Error while processing "
+                                                     & New_Reservation.State'Img
+                                                 & New_Reservation.Job_ID'Img & "@"
+                                                     & New_Reservation.Queue & "["
+                                                       & Integer'Image (Iteration_Number) & "]: "
+                                                  & Exception_Message (E));
             when others => raise;
          end;
 
@@ -77,9 +96,11 @@ package body Reservations is
 
    procedure Read_Line (Data : out Reservation; Store_Data : out Boolean) is
       Line : String (1 .. 100);
-      Separators : array (1 .. 9) of Natural;
-      Last       : Natural;
-      What : Character;
+      Separators : array (1 .. 9) of Natural; -- position of the colons
+      Queue_Separator : Natural; -- position of the @ in the queue name
+      Last       : Natural; -- length of the line read
+      What            : Character;  -- distinguishes different records in the schedule file
+      --  we are only interested in Q, but there are others like H, L, P
    begin
       Get_Line (Schedule_File, Line, Last);
       if Last = Line'Last then
@@ -114,7 +135,9 @@ package body Reservations is
       Data.Column2 := Natural'Value (Line (Separators (2) + 1 .. Separators (3) - 1));
       Data.Timestamp := Positive'Value (Line (Separators (4) + 1 .. Separators (5) - 1));
       Data.Duration := Positive'Value (Line (Separators (5) + 1 .. Separators (6) - 1));
-      Data.Queue := To_Unbounded_String (Line (Separators (7) + 1 .. Separators (8) - 1));
+      Queue_Separator := Index (Source => Line (Separators (7) .. Separators (8)),
+                                Pattern => "@");
+      Data.Queue := Line (Queue_Separator + 1 .. Queue_Separator + 9);
       Data.Resource_Type := To_Unbounded_String (Line (Separators (8) + 1 .. Separators (9) - 1));
       Data.Resource_Value := Resource_Value_Type'Value (Line (Separators (9) + 1 .. Last));
       Store_Data := True;
@@ -130,8 +153,17 @@ package body Reservations is
 
    procedure Put (Position : Lists.Cursor) is
       Res : Reservation := Lists.Element (Position);
+      Line_Class : String := "res_blank";
    begin
-      Ada.Text_IO.Put ("<tr>");
+      if Res.State = starting then
+         Line_Class := "res_start";
+      elsif Res.Confirmation then
+         Line_Class := "res_cnfrm";
+      else
+         Line_Class := "res_shift";
+      end if;
+
+      Ada.Text_IO.Put ("<tr class=""" & Line_Class & """>");
       HTML.Put_Cell (Res.Job_ID'Img);
       if Res.State = starting then
          HTML.Put_Cell ("starting");
@@ -151,5 +183,37 @@ package body Reservations is
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
+   function Equivalent_Cards (Left, Right : Index_Card) return Boolean is
+   begin
+      if Left.Job_ID = Right.Job_ID and then
+        Left.Schedule_Run = Right.Schedule_Run and then
+        Left.Queue = Right.Queue then
+         return True;
+      else
+         return False;
+      end if;
+   end Equivalent_Cards;
+
+   function Card_Hash (Card : Index_Card) return Ada.Containers.Hash_Type is
+   begin
+      return Ada.Strings.Hash (Card.Job_ID'Img & Card.Schedule_Run'Img & Card.Queue);
+   end Card_Hash;
+
+
+   function Exists_At (What : Reservation; Iteration : Natural) return Boolean is
+      Card : Catalogs.Cursor := Catalogs.Find (Container => Catalog,
+                                               Key       => (Job_ID       => What.Job_ID,
+                                                             Schedule_Run => Iteration,
+                                                            Queue => What.Queue));
+   begin
+      if not Catalogs.Has_Element (Card) then
+         return False;
+      end if;
+      if List.Element (Catalogs.Element (Card)) = What then
+         return True;
+      else
+         return False;
+      end if;
+   end Exists_At;
 
 end Reservations;
