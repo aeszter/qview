@@ -23,16 +23,18 @@ private
       Queue     : Unbounded_String;
       Resource_Type : Unbounded_String;
       Resource_Value : Resource_Value_Type;
+      Confirmation : Boolean := False; -- whether this confirms an earlier reservation
    end record;
 
    package Lists is new Doubly_Linked_Lists (Element_Type => Reservation);
 
    procedure Put (Position : Lists.Cursor);
-   procedure Read_Line (Data : out Reservation);
+   procedure Read_Line (Data : out Reservation; Store_Data : out Boolean);
 
    List : Lists.List;
    Schedule_File : Ada.Text_IO.File_Type;
    Schedule_File_Name : constant String := "/cm/shared/apps/sge/current/"
-                             & "default/common/schedule";
+     & "default/common/schedule";
+   Iteration_Number : Natural := 0;
 
 end Reservations;
