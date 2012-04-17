@@ -17,22 +17,36 @@ private
    type Reservation_State is (reserving, running, starting);
    type Resource_Value_Type is digits 7;
 
+   type Queue is record
+      Name : String (1 .. 9);
+      Slots : Natural;
+   end record;
+
+   function To_String (Source : Queue) return String;
+   function Precedes (Left, Right : Queue) return Boolean;
+
+   package Queue_Lists is new Ordered_Sets (Element_Type => Queue, "<" => Precedes);
+   subtype Queue_List is Queue_Lists.Set;
+
+   function To_String (Source : Queue_List; Start : Queue_Lists.Cursor) return String;
+   function To_String (Source : Queue_List) return String;
+
    type Reservation is record
       Job_ID : Positive;
       Column2 : Natural;
       State   : Reservation_State;
       Timestamp : Positive;
       Duration  : Positive;
-      Queue     : String (1 .. 9);
-      Resource_Type : Unbounded_String;
-      Resource_Value : Resource_Value_Type;
+      Queue     : Queue_List;
+--      Resource_Type : Unbounded_String;
+--      Resource_Value : Resource_Value_Type;
+--  ignored for now, see comment in body of procedure Read_Line
       Confirmation   : Boolean := False; -- whether this confirms an earlier reservation
       Shifted : Boolean := False; -- whether an earlier reservation with different details exists
    end record;
 
    type Index_Card is record
       Schedule_Run : Natural;
-      Queue : String (1 .. 9);
       Job_ID : Positive;
    end record;
 
