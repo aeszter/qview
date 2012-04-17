@@ -602,8 +602,6 @@ package body Viewer is
       begin
          Reservations.Read;
          Reservations.Put_All;
-
-         HTML.Error ("Not implemented");
       end View_Reservations;
 
 

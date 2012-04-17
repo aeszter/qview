@@ -25,7 +25,7 @@ package body Reservations is
             HTML.Put_Header_Cell (Data     => "Start",
                                   Acronym  => "When the reservation will become effective",
                                   Sortable => False);
-            HTML.Put_Header_Cell (Data => "What", Sortable => False);
+            HTML.Put_Header_Cell (Data => "Slots", Sortable => False);
             HTML.Put_Header_Cell (Data => "Where", Sortable => False);
 
             Ada.Text_IO.Put ("</tr>");
@@ -48,24 +48,36 @@ package body Reservations is
    ----------
 
    procedure Read is
-      New_Reservation : Reservation;
       Success : Boolean;
    begin
       Open (File => Schedule_File,
             Mode => In_File,
             Name => Schedule_File_Name);
       while not End_Of_File (Schedule_File) loop
+         declare
+            New_Reservation : Reservation;
          begin
             Read_Line (Data => New_Reservation, Store_Data => Success);
             if Success then
                if Exists_At (What => New_Reservation, Iteration => Iteration_Number - 1) then
                   New_Reservation.Confirmation := True;
+               else
+                  New_Reservation.Confirmation := False;
+                  if Reserving_Jobs.Contains (New_Reservation.Job_ID) then
+                     New_Reservation.Shifted := True;
+                  end if;
                end if;
+               if New_Reservation.State = reserving then
+                  Reserving_Jobs.Include (New_Reservation.Job_ID);
+               end if;
+
                if New_Reservation.State = reserving or else
+                 (New_Reservation.State = starting and then
                  not Catalog.Contains ((Schedule_Run => Iteration_Number,
                                        Job_ID       => New_Reservation.Job_ID,
-                                        Queue        => New_Reservation.Queue)) then
-                  --  also kill STARTING jobs without reservation
+                                         Queue        => New_Reservation.Queue)) and then
+                    Reserving_Jobs.Contains (New_Reservation.Job_ID)) then
+
                   List.Append (New_Reservation);
                   Catalog.Insert (New_Item  => List.Last_Index,
                                Key => (Schedule_Run => Iteration_Number,
@@ -159,8 +171,10 @@ package body Reservations is
          Line_Class := "res_start";
       elsif Res.Confirmation then
          Line_Class := "res_cnfrm";
-      else
+      elsif Res.Shifted then
          Line_Class := "res_shift";
+      else
+         Line_Class := "res_first";
       end if;
 
       Ada.Text_IO.Put ("<tr class=""" & Line_Class & """>");
@@ -169,8 +183,10 @@ package body Reservations is
          HTML.Put_Cell ("starting");
       elsif Res.Confirmation then
          HTML.Put_Cell ("confirmed");
+      elsif Res.Shifted then
+         HTML.Put_Cell ("shifted");
       else
-         HTML.Put_Cell ("new/shifted");
+         HTML.Put_Cell ("new");
       end if;
       HTML.Put_Time_Cell (Ada.Calendar.Conversions.To_Ada_Time
                           (Interfaces.C.long (Res.Timestamp)));
@@ -194,6 +210,19 @@ package body Reservations is
       end if;
    end Equivalent_Cards;
 
+   function Equivalent_Reservations (Left, Right : Reservation) return Boolean is
+   begin
+      if Left.Job_ID = Right.Job_ID and then
+        Left.State = Right.State and then
+        Left.Timestamp = Right.Timestamp and then
+        Left.Duration = Right.Duration and then
+        Left.Queue = Right.Queue then
+         return True;
+      else
+         return False;
+      end if;
+   end Equivalent_Reservations;
+
    function Card_Hash (Card : Index_Card) return Ada.Containers.Hash_Type is
    begin
       return Ada.Strings.Hash (Card.Job_ID'Img & Card.Schedule_Run'Img & Card.Queue);
@@ -209,7 +238,7 @@ package body Reservations is
       if not Catalogs.Has_Element (Card) then
          return False;
       end if;
-      if List.Element (Catalogs.Element (Card)) = What then
+      if Equivalent_Reservations (List.Element (Catalogs.Element (Card)), What) then
          return True;
       else
          return False;
