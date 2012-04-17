@@ -719,7 +719,7 @@ package body Viewer is
          if not Headers_Sent then
             Put_Headers (Title => "Error");
          end if;
-         HTML.Error ("Unhandled Exception occurred.");
+         HTML.Error ("Unhandled Exception " & Exception_Name (E) & " occurred.");
          HTML.Error (Exception_Message (E));
          HTML.Finalize_Divs (Silent => True);
          CGI.Put_HTML_Tail;
