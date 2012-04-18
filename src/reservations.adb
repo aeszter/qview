@@ -10,6 +10,12 @@ with Ada.Strings.Hash;
 package body Reservations is
    use Queue_Lists;
 
+   type Separator_List is array (1 .. 9) of Natural;
+
+   function Check_Line (Line : String; Last : Natural) return Boolean;
+
+   procedure Calculate_Separators (Line : String; Last : Natural; Separators : out Separator_List);
+
    -------------
    -- Put_All --
    -------------
@@ -133,28 +139,13 @@ package body Reservations is
       return Left.Name < Right.Name;
    end Precedes;
 
-   procedure Read_Line (Data : out Reservation; Store_Data : out Boolean) is
-      Line : String (1 .. 100);
-      Separators : array (1 .. 9) of Natural; -- position of the colons
-      Queue_Separator : Natural; -- position of the @ in the queue name
-      Last       : Natural; -- length of the line read
-      What            : Character;  -- distinguishes different records in the schedule file
-      --  we are only interested in Q, but there are others like H, L, P
-   begin
-      Get_Line (Schedule_File, Line, Last);
-      if Last = Line'Last then
-         Skip_Line (Schedule_File);
-         raise Buffer_Overrun;
-      end if;
-      if Line (Line'First) = ':' then
-         Iteration_Number := Iteration_Number + 1;
-         Store_Data := False;
-         return;
-      end if;
-      if not Is_Digit (Line (Line'First)) then
-         raise Improper_Line;
-      end if;
+   --------------------------
+   -- Calculate_Separators --
+   --------------------------
 
+   procedure Calculate_Separators (Line : String; Last : Natural; Separators : out Separator_List)
+   is
+   begin
       Separators (1) := Line'First - 1;
       for Next_Sep in Separators'First + 1 .. Separators'Last loop
          Search :
@@ -164,11 +155,44 @@ package body Reservations is
                exit Search;
             end if;
          end loop Search;
---         Separators (Next_Sep) := Index (Source  => Line (Separators (Next_Sep - 1) + 1 .. Last),
---                                         Pattern => ":");
+         --         Separators (Next_Sep) := Index (Source  => Line (Separators (Next_Sep - 1) + 1 .. Last),
+         --                                         Pattern => ":");
       end loop;
-      What := Line (Separators (6) + 1);
-      if What /= 'Q' then
+   end Calculate_Separators;
+
+   ----------------
+   -- Check_Line --
+   ----------------
+
+   function Check_Line (Line : String; Last : Natural) return Boolean
+   is
+   begin
+      if Last = Line'Last then
+         Skip_Line (Schedule_File);
+         raise Buffer_Overrun;
+      end if;
+      if Line (Line'First) = ':' then
+         Iteration_Number := Iteration_Number + 1;
+         return False;
+      end if;
+      if not Is_Digit (Line (Line'First)) then
+         raise Improper_Line;
+      end if;
+      return True;
+   end Check_Line;
+
+   procedure Read_Line (Data : out Reservation; Store_Data : out Boolean) is
+      Line : String (1 .. 100);
+      Separators : Separator_List; -- position of the colons
+      Queue_Separator : Natural; -- position of the @ in the queue name
+      Last       : Natural; -- length of the line read
+   begin
+      Get_Line (Schedule_File, Line, Last);
+      Store_Data := Check_Line (Line, Last);
+
+      Calculate_Separators (Line, Last, Separators);
+      if Line (Separators (6) + 1) /= 'Q' then -- distinguishes different records in the schedule file
+      --  we are only interested in Q, but there are others like H, L, P
          Store_Data := False;
          return;
       end if;
