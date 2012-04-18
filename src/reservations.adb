@@ -157,8 +157,15 @@ package body Reservations is
 
       Separators (1) := Line'First - 1;
       for Next_Sep in Separators'First + 1 .. Separators'Last loop
-         Separators (Next_Sep) := Index (Source  => Line (Separators (Next_Sep - 1) + 1 .. Last),
-                                         Pattern => ":");
+         Search :
+         for Index in Separators (Next_Sep - 1) + 1 .. Last loop
+            if Line (Index) = ':' then
+               Separators (Next_Sep) := Index;
+               exit Search;
+            end if;
+         end loop Search;
+--         Separators (Next_Sep) := Index (Source  => Line (Separators (Next_Sep - 1) + 1 .. Last),
+--                                         Pattern => ":");
       end loop;
       What := Line (Separators (6) + 1);
       if What /= 'Q' then
