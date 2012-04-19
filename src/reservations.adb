@@ -15,7 +15,10 @@ package body Reservations is
 
    function Check_Line (Line : String; Last : Natural) return Boolean;
 
-   procedure Calculate_Separators (Line : String; Last : Natural; Separators : out Separator_List);
+   procedure Calculate_Separators (Line : String;
+                                   Last       : Natural;
+                                   Separators : out Separator_List;
+                                   Early_Out  : out Boolean);
 
    -------------
    -- Put_All --
@@ -156,7 +159,10 @@ package body Reservations is
    -- Calculate_Separators --
    --------------------------
 
-   procedure Calculate_Separators (Line : String; Last : Natural; Separators : out Separator_List)
+   procedure Calculate_Separators (Line : String;
+                                   Last       : Natural;
+                                   Separators : out Separator_List;
+                                   Early_Out  : out Boolean)
    is
    begin
       Separators (1) := Line'First - 1;
@@ -166,10 +172,16 @@ package body Reservations is
             if Line (Index) = ':' then
                Separators (Next_Sep) := Index;
                exit Search;
+            elsif Next_Sep = 4 and then
+              Index = Separators (3) + 2 and then
+              Line (Index) = 'U' then
+               Early_Out := True;
+               return;
             end if;
          end loop Search;
          --         Separators (Next_Sep) := Index (Source  => Line (Separators (Next_Sep - 1) + 1 .. Last),
          --                                         Pattern => ":");
+         Early_Out := False;
       end loop;
    end Calculate_Separators;
 
@@ -198,12 +210,17 @@ package body Reservations is
       Line : String (1 .. 100);
       Separators : Separator_List; -- position of the colons
       Queue_Separator : Natural; -- position of the @ in the queue name
-      Last       : Natural; -- length of the line read
+      Last            : Natural; -- length of the line read
+      Is_Running_Line : Boolean; -- early termination if this line is RUNNING rather than RESERVING or STARTING
    begin
       Get_Line (Schedule_File, Line, Last);
       Store_Data := Check_Line (Line, Last);
 
-      Calculate_Separators (Line, Last, Separators);
+      Calculate_Separators (Line, Last, Separators, Is_Running_Line);
+      if Is_Running_Line then
+         Store_Data := False;
+         return;
+      end if;
       if Line (Separators (6) + 1) /= 'Q' then -- distinguishes different records in the schedule file
       --  we are only interested in Q, but there are others like H, L, P
          Store_Data := False;
