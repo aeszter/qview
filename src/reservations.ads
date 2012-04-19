@@ -33,6 +33,7 @@ private
 
    type Reservation is record
       Job_ID : Positive;
+      Iteration : Natural;
       Column2 : Natural;
       State   : Reservation_State;
       Timestamp : Positive;
@@ -42,7 +43,8 @@ private
 --      Resource_Value : Resource_Value_Type;
 --  ignored for now, see comment in body of procedure Read_Line
       Confirmation   : Boolean := False; -- whether this confirms an earlier reservation
-      Shifted : Boolean := False; -- whether an earlier reservation with different details exists
+      Shifted        : Boolean := False; -- whether an earlier reservation with different details exists
+      Hidden : Boolean := False; -- whether Put should ignore this reservation
    end record;
 
    type Index_Card is record
@@ -53,7 +55,6 @@ private
    function Card_Hash (Card : Index_Card) return Ada.Containers.Hash_Type;
    function Equivalent_Cards (Left, Right : Index_Card) return Boolean;
    function Equivalent_Reservations (Left, Right : Reservation) return Boolean;
-   function Exists_At (What : Reservation; Iteration : Natural) return Boolean;
 
    package Lists is new Vectors (Element_Type => Reservation, Index_Type => Positive);
    package Catalogs is new Hashed_Maps (Key_Type => Index_Card,
@@ -61,6 +62,8 @@ private
                                         Hash         => Card_Hash,
                                         Equivalent_Keys => Equivalent_Cards);
    package Job_Pool is new Ordered_Sets (Element_Type => Positive);
+
+   function Equivalent_At (What : Reservation; Iteration : Natural) return Lists.Cursor;
 
    procedure Put (Position : Lists.Cursor);
    procedure Read_Line (Data : out Reservation; Store_Data : out Boolean);

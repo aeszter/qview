@@ -9,6 +9,7 @@ with Ada.Strings.Hash;
 
 package body Reservations is
    use Queue_Lists;
+   use Lists;
 
    type Separator_List is array (1 .. 9) of Natural;
 
@@ -21,20 +22,21 @@ package body Reservations is
    -------------
 
    procedure Put_All is
-         procedure Put_Table_Header is
-         begin
-            HTML.Put_Heading (Title => "Reservations",
-                              Level => 2);
-            HTML.Begin_Div (Class => "reservation_list");
-            Ada.Text_IO.Put_Line ("<table><tr>");
-            HTML.Put_Header_Cell (Data     => "Job", Sortable => False);
-            HTML.Put_Header_Cell (Data     => "", Sortable => False);
-            HTML.Put_Header_Cell (Data     => "Start",
-                                  Acronym  => "When the reservation will become effective",
-                                  Sortable => False);
-            HTML.Put_Header_Cell (Data => "Slots", Sortable => False);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
+      procedure Put_Table_Header is
+      begin
+         HTML.Put_Heading (Title => "Reservations",
+                           Level => 2);
+         HTML.Begin_Div (Class => "reservation_list");
+         Ada.Text_IO.Put_Line ("<table><tr>");
+         HTML.Put_Header_Cell (Data     => "Job", Sortable => False);
+         HTML.Put_Header_Cell (Data     => "", Sortable => False);
+         HTML.Put_Header_Cell (Data => "Iteration", Sortable => False);
+         HTML.Put_Header_Cell (Data     => "Start",
+                               Acronym  => "When the reservation will become effective",
+                               Sortable => False);
+         HTML.Put_Header_Cell (Data => "Slots", Sortable => False);
+         Ada.Text_IO.Put ("</tr>");
+      end Put_Table_Header;
    begin
       Put_Table_Header;
       List.Iterate (Put'Access);
@@ -54,6 +56,7 @@ package body Reservations is
 
    procedure Read is
       Success : Boolean;
+      Old_Pos : Lists.Cursor;
    begin
       Open (File => Schedule_File,
             Mode => In_File,
@@ -68,18 +71,28 @@ package body Reservations is
                Element.Queue.Union (Source => New_Reservation.Queue);
             end Update_Queue;
 
+            procedure Try_To_Hide (Element : in out Reservation) is
+            begin
+               if Element.Confirmation then
+                  Element.Hidden := True;
+               end if;
+            end Try_To_Hide;
+
          begin
             Read_Line (Data => New_Reservation, Store_Data => Success);
             if Success then
+               New_Reservation.Iteration := Iteration_Number;
                Card := Catalog.Find (Key => (Job_ID => New_Reservation.Job_ID,
                                              Schedule_Run => Iteration_Number));
                if Catalogs.Has_Element (Card) then
                   List.Update_Element (Index => Catalogs.Element (Card),
                                        Process => Update_Queue'Access);
                else
-                  HTML.Comment ("No card");
-                  if Exists_At (What => New_Reservation, Iteration => Iteration_Number - 1) then
+                  Old_Pos := Equivalent_At (What      => New_Reservation,
+                                            Iteration => Iteration_Number - 1);
+                  if Old_Pos /= Lists.No_Element then
                      New_Reservation.Confirmation := True;
+                     List.Update_Element (Old_Pos, Try_To_Hide'Access);
                   else
                      New_Reservation.Confirmation := False;
                      if Reserving_Jobs.Contains (New_Reservation.Job_ID) then
@@ -234,6 +247,9 @@ package body Reservations is
       Res : Reservation := Lists.Element (Position);
       Line_Class : String := "res_blank";
    begin
+      if Res.Hidden = True then
+         return;
+      end if;
       if Res.State = starting then
          Line_Class := "res_start";
       elsif Res.Confirmation then
@@ -255,6 +271,7 @@ package body Reservations is
       else
          HTML.Put_Cell ("new");
       end if;
+      HTML.Put_Cell (Res.Iteration'Img);
       HTML.Put_Time_Cell (Ada.Calendar.Conversions.To_Ada_Time
                           (Interfaces.C.long (Res.Timestamp)));
       HTML.Put_Cell (To_String (Res.Queue));
@@ -289,20 +306,22 @@ package body Reservations is
    end Card_Hash;
 
 
-   function Exists_At (What : Reservation; Iteration : Natural) return Boolean is
+   function Equivalent_At (What : Reservation; Iteration : Natural) return Lists.Cursor is
       Card : Catalogs.Cursor := Catalogs.Find (Container => Catalog,
                                                Key       => (Job_ID       => What.Job_ID,
                                                              Schedule_Run => Iteration));
+      Found_Index : Positive;
    begin
       if not Catalogs.Has_Element (Card) then
-         return False;
+         return Lists.No_Element;
       end if;
-      if Equivalent_Reservations (List.Element (Catalogs.Element (Card)), What) then
-         return True;
+      Found_Index  := Catalogs.Element (Card);
+      if Equivalent_Reservations (List.Element (Found_Index), What) then
+         return List.To_Cursor (Found_Index);
       else
-         return False;
+         return Lists.No_Element;
       end if;
-   end Exists_At;
+   end Equivalent_At;
 
    function To_String (Source : Queue) return String is
    begin
