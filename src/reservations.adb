@@ -271,7 +271,7 @@ package body Reservations is
       else
          HTML.Put_Cell ("new");
       end if;
-      HTML.Put_Cell (Res.Iteration'Img);
+      HTML.Put_Cell (Data => Res.Iteration'Img, Class => "right");
       HTML.Put_Time_Cell (Ada.Calendar.Conversions.To_Ada_Time
                           (Interfaces.C.long (Res.Timestamp)));
       HTML.Put_Cell (To_String (Res.Queue));
