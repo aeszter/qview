@@ -1093,11 +1093,9 @@ package body Jobs is
          if Name (JA_Tasks) = "ja_tasks"
            or else Name (JA_Tasks) = "ulong_sublist" then
             Children := Child_Nodes (JA_Tasks);
-            HTML.Comment ("JA_Tasks """ & Name (JA_Tasks) & """" & Length (Children)'Img);
             Task_Entries :
             for I in 1 .. Length (Children) loop
                N := Item (Children, I - 1);
-               HTML.Comment (Name (N));
                if Name (N) = "JAT_message_list" then
                   Parse_JAT_Message_List (Message_List => N, J => J);
                elsif Name (N) = "JAT_task_list" then
