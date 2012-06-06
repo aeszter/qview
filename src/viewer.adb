@@ -170,6 +170,7 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "cqueues");
 
+         Parser.Free;
       end View_Cluster_Queues;
 
       -----------------------
@@ -209,6 +210,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-u * -r -s p");
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
+         Parser.Free;
          if Slot_Ranges then
             Jobs.Update_List_From_Qstat_J;
          end if;
@@ -264,6 +266,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
          Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         Parser.Free;
 
 
          --  Detect different partitions
@@ -334,6 +337,7 @@ package body Viewer is
 
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
+         Parser.Free;
          if not HTML.Param_Is ("sort", "") then
             if Length (Sort_Direction) /= 3 then
                --  something wrong -- maybe an attack?
@@ -387,6 +391,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Parser.Free;
          Jobs.Update_Status;
          Jobs.Search_Queues;
          Jobs.Put_Details;
@@ -424,6 +429,7 @@ package body Viewer is
          Put_Table_Header;
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
+         Parser.Free;
          if not HTML.Param_Is ("sort", "") then
             if Length (Sort_Direction) /= 3 then
                --  something wrong -- maybe an attack?
@@ -519,6 +525,7 @@ package body Viewer is
          Put_Table_Header;
 
          Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+         Parser.Free;
          Hosts.Prune_List (Net     => CGI.Value ("net"),
                            Cores   => CGI.Value ("cores"),
                            Memory  => CGI.Value ("mem") & "G",
@@ -585,6 +592,7 @@ package body Viewer is
                            Slot_Ranges   => CGI.Value ("slot_ranges"),
                            Slot_Number   => CGI.Value ("slot_number")
                           );
+         Parser.Free;
          Jobs.Put_Bunch_List;
 
          --  Table Footer

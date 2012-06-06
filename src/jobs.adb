@@ -422,10 +422,12 @@ package body Jobs is
          end if;
          Update_Job (J, Child_Nodes (N));
       end loop;
+      Parser.Free;
    exception
       when E : others
          => HTML.Error ("Unable to read job info (" & J.Number'Img & "):"
                         & Exception_Message (E));
+               Parser.Free;
    end Update_Job_From_Qstat_J;
 
    -------------------
@@ -473,10 +475,14 @@ package body Jobs is
             exit Jobs;
          end if;
       end loop Jobs;
+
+      Parser.Free;
    exception
       when E : others
          => HTML.Error ("Unable to read job status (" & J.Number'Img & "):"
                         & Exception_Message (E));
+
+      Parser.Free;
    end Update_Status;
 
    -------------------
@@ -538,9 +544,11 @@ package body Jobs is
                                  Process  => Record_Queue'Access);
          end if;
       end loop;
+      Parser.Free;
    exception
       when E : others => HTML.Error ("Error while searching for queues: "
                                        & Exception_Message (E));
+      Parser.Free;
    end Search_Queues;
 
    -------------

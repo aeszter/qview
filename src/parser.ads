@@ -21,6 +21,7 @@ package Parser is
 
    function Setup (Command  : String := "qstat";
                    Selector : String) return DOM.Core.Document;
+   procedure Free;
    function Get_Elements_By_Tag_Name
      (Doc : DOM.Core.Document; Tag_Name : DOM.Core.DOM_String := "*")
       return DOM.Core.Node_List

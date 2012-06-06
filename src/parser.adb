@@ -8,12 +8,12 @@ with Ada.Exceptions; use Ada.Exceptions;
 
 package body Parser is
 
+   Reader      : DOM.Readers.Tree_Reader;
    -----------
    -- Setup --
    -----------
    function Setup (Command  : String := "qstat";
                           Selector : String) return Document is
-      Reader      : DOM.Readers.Tree_Reader;
       SGE_Command : Pipe_Stream;
    begin
       SGE_Command.Set_Public_Id (Command);
@@ -39,6 +39,11 @@ package body Parser is
            & Command & " with " & Selector & ": "
            & Exception_Message (E);
    end Setup;
+
+   procedure Free is
+   begin
+      DOM.Readers.Free (Reader);
+   end Free;
 
    -----------------------------------
    -- Get_Job_Elements_From_Qstat_J --
