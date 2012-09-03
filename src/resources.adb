@@ -191,6 +191,10 @@ package body Resources is
          return magnycours;
       elsif S = "interlagos" then
          return interlagos;
+      elsif S = "ivy-bridge" then
+         return ivybridge;
+      elsif S = "sandy-bridge" then
+         return sandybridge;
       else
          raise Constraint_Error;
       end if;

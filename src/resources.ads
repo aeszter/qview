@@ -13,7 +13,7 @@ package Resources is
    end record;
 
    type Network is (none, eth, ib, ibswitch);
-   type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours, interlagos);
+   type CPU_Model is (none, italy, woodcrest, clovertown, harpertown, magnycours, interlagos, sandybridge, ivybridge);
    type Gigs is delta 0.001 digits 7;
 
    Resource_Error : exception;

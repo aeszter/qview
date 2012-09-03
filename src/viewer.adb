@@ -500,6 +500,14 @@ package body Viewer is
                               Expected => "MAGNYCOURS") then
                Selector := Selector & " -l cm=magny-cours";
                Append_Params ("model=MAGNYCOURS");
+            elsif HTML.Param_Is (Param    => "model",
+                                 Expected => "SANDYBRIDGE") then
+               Selector := Selector & " -l cm=sandy-bridge";
+               Append_Params ("model=SANDYBRIDGE");
+            elsif HTML.Param_Is (Param    => "model",
+                                 Expected => "IVYBRIDGE") then
+               Selector := Selector & " -l cm=ivy-bridge";
+               Append_Params ("model=IVYBRIDGE");
             else
                Selector := Selector & " -l cm="
                  & Ada.Characters.Handling.To_Lower (Sanitise (CGI.Value ("model")));
