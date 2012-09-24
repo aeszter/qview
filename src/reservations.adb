@@ -278,7 +278,8 @@ package body Reservations is
       end if;
 
       Ada.Text_IO.Put ("<tr class=""" & Line_Class & """>");
-      HTML.Put_Cell (Res.Job_ID'Img);
+      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Res.Job_ID'Img, Ada.Strings.Left),
+                    Link_Param => "job_id");
       if Res.State = starting then
          HTML.Put_Cell ("starting");
       elsif Res.Confirmation then
