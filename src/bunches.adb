@@ -111,11 +111,15 @@ package body Bunches is
                & "&sr=" & Hash (B.Soft)
                & """><img src=""/icons/arrow_right.png"" /></a>");
 
-      HTML.Put_Cell (Data => B.PE);
+      if B.PE = "" then
+         HTML.Put_Cell ("(none)");
+      else
+         HTML.Put_Cell (Data => B.PE);
+      end if;
       if not B.Slot_List.Is_Empty then
          Ranges.Put_Cell (Data => B.Slot_List, Class => "right");
       else
-         HTML.Put_Cell (Data => B.Slot_Number);
+         HTML.Put_Cell (Data => B.Slot_Number, Class => "right");
       end if;
       HTML.Put_Cell (Data => B.Queue);
       HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
