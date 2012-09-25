@@ -34,4 +34,6 @@ package Partitions is
    function "=" (Left : Queue; Right : Partition) return Boolean;
 private
    List : Summarized_List;
+
+   function To_String (Source : State) return String;
 end Partitions;

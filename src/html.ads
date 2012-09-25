@@ -2,9 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with Utils; use Utils;
-with Jobs;
 with CGI; use CGI;
-with Partitions;
 
 package HTML is
    procedure Put_Cell (Data       : String;
@@ -20,9 +18,6 @@ package HTML is
                        Tag        : String := "td";
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String);
-   procedure Put (What : Jobs.Job_State);
-   procedure Put (Kind : Jobs.Usage_Type; Amount : Jobs.Usage_Number);
-   procedure Put (What : Partitions.State);
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Duration_Cell (Span : Duration);
@@ -66,10 +61,6 @@ package HTML is
    --  Purpose: Compose an <acronym> tag
    --  Returns: A string of the form <acronym title="long">short</acronym>
    --  for use in Ada.Text_IO.Put or other HTML subprograms
-   function Memory (Amount : Jobs.Usage_Integer) return String;
-   --  Purpose: Compose a memory quantity consisting of a number and a unit
-   --  Returns: A string of the form xx MB, where xx is a number not exceeding
-   --           five digits, and MB is a unit (actually kB, MB, or GB)
 
    function Help_Icon (Topic : String) return String;
    --  Purpose: generate a string that contains html tags to display a help

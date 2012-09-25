@@ -21,6 +21,11 @@ package Jobs is
    function State_As_String (J : Job) return String;
    function To_String (State : Job_State) return String;
    function To_State (State : String) return Job_State;
+   function To_Memory (Amount : Usage_Integer) return String;
+   --  Purpose: Compose a memory quantity consisting of a number and a unit
+   --  Returns: A string of the form xx MB, where xx is a number not exceeding
+   --           five digits, and MB is a unit (actually kB, MB, or GB)
+
    function Name_As_HTML (J : Job) return String;
    function On_Hold (J : Job) return Boolean;
    function Has_Error (J : Job) return Boolean;
@@ -316,5 +321,7 @@ private
    procedure Put_Request (Position : Utils.String_Lists.Cursor);
    --  Output the name (or ID) of a successor or predecessor job, together with
    --  a suitable title
+   procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number);
+   --  Output one item in a list of used resources, with type (name) and a number
 
 end Jobs;

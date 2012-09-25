@@ -140,12 +140,29 @@ package body Partitions is
       for State in List.Summary'Range loop
          Ada.Text_IO.Put ("<li>");
          Ada.Text_IO.Put (List.Summary (State)'Img & " ");
-         HTML.Put (What => State);
+         Ada.Text_IO.Put (To_String (State));
          Ada.Text_IO.Put ("</li>");
       end loop;
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID => "partition_summary");
    end Put_Summary;
 
+   function To_String (Source : State) return String is
+   begin
+      case Source is
+         when total =>
+            return "Total";
+         when reserved =>
+            return "Reserved";
+         when used =>
+            return "Used";
+         when offline =>
+            return "Offline";
+         when available =>
+            return "Available";
+         when suspended =>
+            return "Suspended";
+      end case;
+   end To_String;
 
 end Partitions;

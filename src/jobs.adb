@@ -13,11 +13,13 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Real_Time;
 with Interfaces.C;
 with Ada.Containers; use Ada.Containers;
+with Ada.Calendar.Formatting;
 
 package body Jobs is
    use Job_Lists;
 
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
+   procedure Put_State (State : Job_State);
 
    procedure Parse_JAT_Task_List
      (J             : in out Job;
@@ -167,7 +169,7 @@ package body Jobs is
                Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
             end if;
             Ada.Text_IO.Put (" ");
-            HTML.Put (What => State);
+            Put_State (State => State);
             Ada.Text_IO.Put_Line ("</li>");
          end if;
       end loop;
@@ -176,6 +178,37 @@ package body Jobs is
       HTML.End_Div (ID => "job_summary");
    end Put_Summary;
 
+   procedure Put_State (State : Job_State) is
+      S : String := To_String (State);
+   begin
+      Ada.Text_IO.Put ("<img src=""/icons/" & S & ".png"" ");
+      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & ": ");
+      case State is
+         when r =>
+            Ada.Text_IO.Put ("running");
+         when Rr =>
+            Ada.Text_IO.Put ("restarted");
+         when t =>
+            Ada.Text_IO.Put ("in transit");
+         when Rq =>
+            Ada.Text_IO.Put ("requeued");
+         when Eqw =>
+            Ada.Text_IO.Put ("error");
+         when hqw =>
+            Ada.Text_IO.Put ("on hold");
+         when qw =>
+            Ada.Text_IO.Put ("waiting");
+         when dr =>
+            Ada.Text_IO.Put ("running, deletion pending");
+         when dt =>
+            Ada.Text_IO.Put ("in transit, deletion pending");
+         when ERq =>
+            Ada.Text_IO.Put ("requeued, with error");
+         when unknown =>
+            null;
+      end case;
+      Ada.Text_IO.Put (""" />");
+   end Put_State;
 
    ---------------------
    -- State_As_String --
@@ -246,6 +279,18 @@ package body Jobs is
          return unknown;
       end if;
    end To_State;
+
+   function To_Memory (Amount : Usage_Integer) return String is
+   begin
+      if Amount > 2 ** 34 then
+         return Usage_Integer'Image (Amount / 2 ** 30) & " GB";
+      elsif Amount > 2 ** 24 then
+         return Usage_Integer'Image (Amount / 2 ** 20) & " MB";
+      else
+         return Usage_Integer'Image (Amount / 2** 10) & " kB";
+      end if;
+   end To_Memory;
+
 
    -------------
    -- On_Hold --
@@ -1655,7 +1700,7 @@ package body Jobs is
          HTML.Put (J.Reserve);
          Ada.Text_IO.Put_Line ("</p>");
          Ada.Text_IO.Put ("<p>State: ");
-         HTML.Put (J.State);
+         Put_State (J.State);
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");
@@ -1721,16 +1766,15 @@ package body Jobs is
          HTML.Put_Heading (Title => "JAT",
                            Level => 3);
          for T in J.JAT_Usage'Range loop
-            HTML.Put (T, J.JAT_Usage (T));
+            Put_Usage (T, J.JAT_Usage (T));
          end loop;
          HTML.Put_Heading (Title => "PET",
                            Level => 3);
          for T in J.PET_Usage'Range loop
-            HTML.Put (T, J.PET_Usage (T));
+            Put_Usage (T, J.PET_Usage (T));
          end loop;
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
-
 
       procedure Put_Files is
       begin
@@ -1906,5 +1950,60 @@ package body Jobs is
       Ada.Text_IO.Put ("</tr>");
    end Put_Res_Line;
 
+   procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
+   begin
+      case Kind is
+         when cpu =>
+            declare
+               Days : Natural;
+               Dur  : Duration;
+            begin
+               Days := Natural (Amount / 86400.0);
+               Dur  := Ada.Real_Time.To_Duration
+                       (Ada.Real_Time.Seconds (Natural (Amount - Days * 86_400.0)));
+               if Days > 0 then
+                  HTML.Put_Paragraph
+                  (Contents  => Days'Img & "d " & Ada.Calendar.Formatting.Image (Dur),
+                   Label => Kind'Img);
+               elsif Amount >= 1.0 then
+                  HTML.Put_Paragraph (Contents  => Ada.Calendar.Formatting.Image (Dur),
+                                 Label     => Kind'Img);
+               elsif Amount > 0.0 then
+                  HTML.Put_Paragraph (Label => "CPU", Contents => "< 1s");
+               else
+                  HTML.Put_Paragraph (Label    => "CPU",
+                                 Contents => "0");
+               end if;
+            exception
+               when Constraint_Error =>
+                  HTML.Put_Paragraph (Label    => Kind'Img,
+                                 Contents => "<i>out of range</i>");
+            end;
+         when mem =>
+            HTML.Put_Paragraph (Label    => "Memory",
+                           Contents => Natural (Amount)'Img & " "
+                           & HTML.Acronym (Short => "GBs",
+                                            Long => "Gigabytes times seconds"));
+         when io =>
+            HTML.Put_Paragraph (Label    => "I/O",
+                           Contents => Amount'Img);
+         when vmem =>
+            HTML.Put_Paragraph (Label    => "vMem",
+                           Contents => To_Memory (Usage_Integer (Amount)));
+         when maxvmem =>
+            HTML.Put_Paragraph (Label    => "Maximum vMem",
+                           Contents => To_Memory (Usage_Integer (Amount)));
+         when iow =>
+            null; -- iow is suppressed in qstat -j without -xml as well
+         when submission_time =>
+            null; -- ignore for now; note that this is also treated as cumulative
+                  --  in Jobs.Extract_Tasks, although it represents a point in time
+         when priority =>
+            null;
+            --  ignore for now. It is unclear how one can "use" priority
+            --  Put_Paragraph (Label => "Priority",
+            --               Contents => Amount'Img);
+      end case;
+   end Put_Usage;
 
 end Jobs;
