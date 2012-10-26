@@ -18,7 +18,7 @@ package body Parser is
    begin
       SGE_Command.Set_Public_Id (Command);
       HTML.Comment (Command & " " & Selector);
-      SGE_Command.Execute (Command => sgeroot & "/bin/lx26-amd64/" & Command,
+      SGE_Command.Execute (Command => sgeroot & "/bin/linux-x64/" & Command,
                            Arguments => Selector & " -xml",
                            Environment => "SGE_ROOT=" & sgeroot);
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
