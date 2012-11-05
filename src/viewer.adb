@@ -84,7 +84,7 @@ package body Viewer is
                                & "alt=""Stats by Webalizer""></a></li>");
          Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
-                               & "&product=Private%20projects"">"
+                               & "&product=Projects"">"
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
          Ada.Text_IO.Put ("</ul>");
