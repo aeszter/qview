@@ -120,6 +120,14 @@ package body Partitions is
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => Get_Network (Props)'Img);
+      Ada.Text_IO.Put ("<td>");
+      if Has_GPU (Props) then
+         Ada.Text_IO.Put (HTML.Img_Tag ("GPU"));
+      end if;
+      if Has_SSD (Props) then
+         Ada.Text_IO.Put (HTML.Img_Tag ("SSD"));
+      end if;
+      Ada.Text_IO.Put ("</td>");
       HTML.Put_Cell (Data => Get_Model (Props)'Img);
       HTML.Put_Cell (Data => Get_Cores (Props)'Img, Class => "right");
       HTML.Put_Cell (Data => To_String (Get_Memory (Props)) & "G", Class => "right");

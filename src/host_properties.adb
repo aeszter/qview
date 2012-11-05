@@ -6,6 +6,18 @@ with Utils; use Utils;
 
 package body Host_Properties is
 
+
+   function Has_SSD (Props : Set_Of_Properties) return Boolean is
+   begin
+      return Props.SSD;
+   end Has_SSD;
+
+   function Has_GPU (Props : Set_Of_Properties) return Boolean is
+   begin
+      return Props.GPU;
+   end Has_GPU;
+
+
    -----------------
    -- Get_Runtime --
    -----------------
@@ -71,6 +83,16 @@ package body Host_Properties is
    begin
       Props.Runtime := Runtime;
    end Set_Runtime;
+
+   procedure Set_SSD (Props : in out Set_Of_Properties) is
+   begin
+      Props.SSD := True;
+   end Set_SSD;
+
+   procedure Set_GPU (Props : in out Set_Of_Properties) is
+   begin
+      Props.GPU := True;
+   end Set_GPU;
 
 
    procedure Init (Props : out Set_Of_Properties;

@@ -28,6 +28,8 @@ package Queues is
                        Memory                : String;
                        Cores                 : Natural;
                        Network               : Resources.Network;
+                       SSD                   : Boolean;
+                       GPU                   : Boolean;
                        Model                 : Resources.CPU_Model;
                        Runtime               : Unbounded_String;
                       Name : Unbounded_String)

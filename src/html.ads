@@ -18,6 +18,7 @@ package HTML is
                        Tag        : String := "td";
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String);
+   function Img_Tag (Image : String) return String;
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Duration_Cell (Span : Duration);

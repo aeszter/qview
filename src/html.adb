@@ -131,6 +131,11 @@ package body HTML is
    ------------------
 
    procedure Put_Img_Cell (Image : String) is
+   begin
+      Put_Cell (Data => Img_Tag (Image));
+   end Put_Img_Cell;
+
+   function Img_Tag (Image : String) return String is
       Data : String :=
          "<img src=""/icons/" &
          Image &
@@ -140,8 +145,8 @@ package body HTML is
          Image &
          """ />";
    begin
-      Put_Cell (Data => Data);
-   end Put_Img_Cell;
+      return Data;
+   end Img_Tag;
 
 
 

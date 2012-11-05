@@ -53,6 +53,7 @@ package body Queues is
             State                 : Unbounded_String;
             Mem, Runtime          : Unbounded_String;
             Cores                 : Natural;
+            SSD, GPU : Boolean := False;
             Network               : Resources.Network := none;
             Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
             type small is digits 4 range 0.0 .. 1.0;
@@ -89,6 +90,10 @@ package body Queues is
                      Model := To_Unbounded_String (Value (First_Child (N)));
                   elsif Value (A) = "qname" then
                      Queue_Name := To_Unbounded_String (Value (First_Child (N)));
+                  elsif Value (A) = "ssd" then
+                     SSD := True;
+                  elsif Value (A) = "gpu" then
+                     GPU := True;
                   end if;
                end if;
             end loop;
@@ -100,6 +105,8 @@ package body Queues is
                                     Cores    => Cores,
                                     Network  => Network,
                                     Model    => To_Model (Model),
+                                    SSD      => SSD,
+                                    GPU => GPU,
                                     Runtime  => Runtime,
                                     Name     => Queue_Name,
                                     State    => To_String (State)
@@ -131,6 +138,8 @@ package body Queues is
                        Memory                : String;
                        Cores                 : Natural;
                        Network               : Resources.Network;
+                       SSD                   : Boolean;
+                       GPU                   : Boolean;
                        Model                 : Resources.CPU_Model;
                        Runtime               : Unbounded_String;
                       Name : Unbounded_String)
@@ -160,6 +169,12 @@ package body Queues is
          Set_Cores (Q.Properties, Q.Total);
       else
          Set_Cores (Q.Properties, Cores);
+      end if;
+      if SSD then
+         Set_SSD (Q.Properties);
+      end if;
+      if GPU then
+         Set_GPU (Q.Properties);
       end if;
 
       return Q;

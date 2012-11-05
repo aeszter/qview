@@ -238,6 +238,8 @@ package body Viewer is
             HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
                         & "Detail</acronym>", Tag => "th");
             HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+            HTML.Put_Cell (Data       => "Resources",
+                           Tag        => "th");
             HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                         Tag => "th");
             HTML.Put_Cell (Data => "Cores", Tag => "th");

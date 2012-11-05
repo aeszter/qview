@@ -9,6 +9,8 @@ package Host_Properties is
    function Get_Network (Props : Set_Of_Properties) return Network;
    function Get_Model (Props : Set_Of_Properties) return CPU_Model;
    function Get_Runtime (Props : Set_Of_Properties) return String;
+   function Has_SSD (Props : Set_Of_Properties) return Boolean;
+   function Has_GPU (Props : Set_Of_Properties) return Boolean;
    procedure Set_Memory (Props : in out Set_Of_Properties;
                          S     : String);
    procedure Set_Cores (Props : in out Set_Of_Properties; Cores : Positive);
@@ -16,6 +18,8 @@ package Host_Properties is
    procedure Set_Model (Props : in out Set_Of_Properties; Model : String);
    procedure Set_Model (Props : in out Set_Of_Properties; Model : CPU_Model);
    procedure Set_Runtime (Props : in out Set_Of_Properties; Runtime : Unbounded_String);
+   procedure Set_SSD (Props : in out Set_Of_Properties);
+   procedure Set_GPU (Props : in out Set_Of_Properties);
 
    procedure Init (Props : out Set_Of_Properties;
                    Net, Memory, Cores, Model : String);
@@ -41,5 +45,6 @@ private
       Memory                : Resources.Gigs := 0.0;
       Cores                 : Positive := 1;
       Runtime               : Unbounded_String;
+      SSD, GPU : Boolean := False;
    end record;
 end Host_Properties;
