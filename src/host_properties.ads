@@ -22,7 +22,7 @@ package Host_Properties is
    procedure Set_GPU (Props : in out Set_Of_Properties);
 
    procedure Init (Props : out Set_Of_Properties;
-                   Net, Memory, Cores, Model : String);
+                   Net, Memory, Cores, Model, SSD, GPU : String);
 
    function "<" (Left, Right : Set_Of_Properties) return Boolean;
 

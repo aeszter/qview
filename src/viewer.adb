@@ -540,7 +540,9 @@ package body Viewer is
                            Cores   => CGI.Value ("cores"),
                            Memory  => CGI.Value ("mem") & "G",
                            Model => CGI.Value ("model"),
-                           Queue_Name => CGI.Value ("q"));
+                           Queue_Name => CGI.Value ("q"),
+                           SSD        => CGI.Value ("ssd"),
+                          GPU => CGI.Value ("gpu"));
 
          --  Can we factor this out?
          if not HTML.Param_Is ("sort", "") then

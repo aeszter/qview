@@ -117,6 +117,8 @@ package body Partitions is
                      & "&cores=" & Get_Cores (Props)'Img
                      & "&mem=" & To_String (Get_Memory (Props))
                      & "&q=" & To_String (P.Name)
+                     & "&gpu=" & Has_GPU (Props)'Img
+                     & "&ssd=" & Has_SSD (Props)'Img
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => Get_Network (Props)'Img);

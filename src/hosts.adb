@@ -298,7 +298,8 @@ package body Hosts is
    --  Parameter Runtime: Required Queue h_rt, must be matched exactly
    ----------------
 
-   procedure Prune_List (Net, Cores, Memory, Queue_Name, Model : String) is
+   procedure Prune_List (Net, Cores, Memory, Queue_Name, Model,
+                         SSD, GPU                             : String) is
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
@@ -307,7 +308,9 @@ package body Hosts is
       Init (Props => Requirements, Net => Net,
             Memory => Memory,
             Cores  => Cores,
-            Model => Model);
+            Model  => Model,
+            SSD    => SSD,
+           GPU => GPU);
       loop
          exit when Pos = Host_Lists.No_Element;
          H := Host_Lists.Element (Pos);

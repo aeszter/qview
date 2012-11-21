@@ -96,7 +96,7 @@ package body Host_Properties is
 
 
    procedure Init (Props : out Set_Of_Properties;
-                   Net, Memory, Cores, Model : String) is
+                   Net, Memory, Cores, Model, SSD, GPU : String) is
    begin
       Set_Network (Props, Network'Value (Net));
       Set_Memory (Props, Memory);
@@ -104,6 +104,12 @@ package body Host_Properties is
                  Cores => Positive'Value (Cores));
       Set_Model (Props => Props,
                  Model => Model);
+      if GPU = "TRUE" then
+         Set_GPU (Props => Props);
+      end if;
+      if SSD = "TRUE" then
+         Set_SSD (Props => Props);
+      end if;
    end Init;
 
    procedure Set_Memory (Props : in out Set_Of_Properties;
