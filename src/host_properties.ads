@@ -25,6 +25,7 @@ package Host_Properties is
                    Net, Memory, Cores, Model, SSD, GPU : String);
 
    function "<" (Left, Right : Set_Of_Properties) return Boolean;
+   function Get_Mismatch (Left, Right : Set_Of_Properties) return String;
 
    procedure Parse_Resource (Props : in out Set_Of_Properties;
                              N     : Parser.Node);
