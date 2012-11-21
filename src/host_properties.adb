@@ -184,6 +184,14 @@ package body Host_Properties is
          Props.Model := To_Model (Value (First_Child (N)));
       elsif Value (A) = "mem_total" then
          Props.Memory := To_Gigs (Value (First_Child (N)));
+      elsif Value (A) = "gpu" then
+         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+            Props.GPU := True;
+         end if;
+      elsif Value (A) = "ssd" then
+         if Fixed'Value (Value (First_Child (N))) = 1.0 then
+            Props.SSD := True;
+         end if;
       else
          HTML.Error ("Unknown Resource encountered while parsing host");
          HTML.Put_Paragraph (Value (A), Value (First_Child (N)));
