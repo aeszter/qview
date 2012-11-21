@@ -395,7 +395,7 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
                       & "<a href=""http://ram/bugzilla/enter_bug.cgi?"
                       & "component=qview&form_name=enter_bug"
-                      & "&product=Private%20projects"
+                      & "&product=Projects"
                       & "&short_desc=" & CGI.HTML_Encode (Message)
                       & "&comment=Please describe what you did before the error occurred. "
                       & "Are there any extraordinary jobs in the queue?"
