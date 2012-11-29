@@ -6,11 +6,12 @@ with Host_Properties; use Host_Properties;
 package Partitions is
 
    type Partition is record
-      Used, Reserved, Total : Natural;
-      Available             : Natural;
-      Suspended, Offline    : Natural;
-      Name                  : Unbounded_String;
-      Properties            : Set_Of_Properties;
+      Used_Slots, Used_Hosts, Reserved_Slots, Reserved_Hosts,
+      Total_Slots, Total_Hosts         : Natural := 0;
+      Available_Slots, Available_Hosts : Natural := 0;
+      Suspended_Slots, Suspended_Hosts, Offline_Slots, Offline_Hosts  : Natural := 0;
+      Name                             : Unbounded_String;
+      Properties                       : Set_Of_Properties;
    end record;
    type State is (total, available, used, reserved, suspended, offline);
    type State_Count is array (State) of Natural;

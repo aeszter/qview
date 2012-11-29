@@ -246,6 +246,7 @@ package body Viewer is
             HTML.Put_Cell (Data => "RAM", Tag => "th");
             HTML.Put_Cell (Data => "Runtime", Tag => "th");
             HTML.Put_Cell (Data => "Slots", Tag => "th");
+            HTML.Put_Cell (Data => "Hosts", Tag => "th");
             HTML.Put_Cell (Data => "Used", Tag => "th");
             HTML.Put_Cell (Data => "Reserved", Tag => "th");
             HTML.Put_Cell (Data => "Available", Tag => "th");

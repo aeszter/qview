@@ -4,6 +4,8 @@ with Ada.Text_IO;
 with HTML; use HTML;
 with Resources; use Resources;
 with CGI;
+with Ada.Strings.Fixed;
+
 
 package body Partitions is
 
@@ -51,20 +53,32 @@ package body Partitions is
          end if;
 
          --  Update totals
-         P.Total := P.Total + Get_Slot_Count (Q);
+         P.Total_Slots := P.Total_Slots + Get_Slot_Count (Q);
+         P.Total_Hosts := P.Total_Hosts + 1;
          List.Summary (total) := List.Summary (total) + Get_Slot_Count (Q);
          if Is_Offline (Q) then
-            P.Offline := P.Offline + Get_Slot_Count (Q);
+            P.Offline_Slots := P.Offline_Slots + Get_Slot_Count (Q);
+            P.Offline_Hosts := P.Offline_Hosts + 1;
             List.Summary (offline) := List.Summary (offline) + Get_Slot_Count (Q);
          elsif Is_Suspended (Q) then
-            P.Suspended := P.Suspended + Get_Slot_Count (Q);
+            P.Suspended_Slots := P.Suspended_Slots + Get_Slot_Count (Q);
+            P.Suspended_Hosts := P.Suspended_Hosts + 1;
             List.Summary (suspended) := List.Summary (suspended) + Get_Slot_Count (Q);
          else
-            P.Used := P.Used + Get_Used_Slots (Q);
-            List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
-            P.Reserved := P.Reserved + Get_Reserved_Slots (Q);
-            List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
-            P.Available := P.Available + Get_Free_Slots (Q);
+            if Get_Used_Slots (Q) > 0 then
+               P.Used_Hosts := P.Used_Hosts + 1;
+               P.Used_Slots := P.Used_Slots + Get_Used_Slots (Q);
+               List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
+            end if;
+            if Get_Reserved_Slots (Q) > 0 then
+               P.Reserved_Hosts := P.Reserved_Hosts + 1;
+               P.Reserved_Slots := P.Reserved_Slots + Get_Reserved_Slots (Q);
+               List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
+            end if;
+            P.Available_Slots := P.Available_Slots + Get_Free_Slots (Q);
+            if Get_Reserved_Slots (Q) = 0 and then Get_Used_Slots (Q) = 0 then
+               P.Available_Hosts := P.Available_Hosts + 1;
+            end if;
             List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
          end if;
          exit when Queues.At_End;
@@ -83,12 +97,6 @@ package body Partitions is
       P : Partition;
    begin
       P.Properties := Get_Properties (Q);
-      P.Total     := 0;
-      P.Offline   := 0;
-      P.Suspended := 0;
-      P.Used      := 0;
-      P.Reserved  := 0;
-      P.Available := 0;
       P.Name      := Get_Name (Q);
       return P;
    end New_Partition;
@@ -101,12 +109,16 @@ package body Partitions is
 
 
    procedure Put (Partition : Partitions.Partition_Lists.Cursor) is
+      package Str renames Ada.Strings;
+      package Str_F renames Str.Fixed;
       P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
       Props : Set_Of_Properties := P.Properties;
    begin
-      if P.Available > 0 then
+      if P.Available_Hosts > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
-      elsif P.Offline = P.Total then
+      elsif P.Available_Slots > 0 then
+         Ada.Text_IO.Put ("<tr class=""slots_available"">");
+      elsif P.Offline_Slots = P.Total_Slots then
          Ada.Text_IO.Put ("<tr class=""offline"">");
       else
          Ada.Text_IO.Put ("<tr>");
@@ -134,12 +146,13 @@ package body Partitions is
       HTML.Put_Cell (Data => Get_Cores (Props)'Img, Class => "right");
       HTML.Put_Cell (Data => To_String (Get_Memory (Props)) & "G", Class => "right");
       HTML.Put_Cell (Data => Get_Runtime (Props), Class => "right");
-      HTML.Put_Cell (Data => P.Total'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Used'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Reserved'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Available'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Suspended'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Offline'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Total_Slots'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Total_Hosts'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Used_Slots'Img & " (" & Str_F.Trim (P.Used_Hosts'Img, Str.Left) & ")", Class => "right");
+      HTML.Put_Cell (Data => P.Reserved_Slots'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Available_Slots'Img & " (" & Str_F.Trim (P.Available_Hosts'Img, Str.Left) & ")", Class => "right");
+      HTML.Put_Cell (Data => P.Suspended_Slots'Img & " (" & Str_F.Trim (P.Suspended_Hosts'Img, Str.Left) & ")", Class => "right");
+      HTML.Put_Cell (Data => P.Offline_Slots'Img & " (" & Str_F.Trim (P.Offline_Hosts'Img, Str.Left) & ")", Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
