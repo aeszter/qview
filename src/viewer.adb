@@ -15,6 +15,7 @@ with Reservations;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
 with Ada.Characters.Handling;
+with Debug;
 
 package body Viewer is
 
@@ -627,6 +628,7 @@ package body Viewer is
 
 
    begin
+      Debug.Initialize (CGI.Value ("DEBUG"));
       begin
          if not HTML.Param_Is ("sort", "") then
             if HTML.Param_Is ("dir", "") then

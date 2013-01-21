@@ -6,6 +6,7 @@ with Resources; use Resources;
 with Ada.Strings.Fixed;
 with Hosts; use Hosts.Job_Lists; use Hosts.Host_Lists;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
+with Debug;
 
 package body Hosts is
 
@@ -318,7 +319,9 @@ package body Hosts is
            H.Queues.Contains (To_Unbounded_String (Queue_Name)) then
             Temp.Append (H);
          else
-            HTML.Comment (H.Name & ": " & Get_Mismatch (H.Properties, Requirements));
+            Debug.Log (Message  => To_String (H.Name) & ": " & Get_Mismatch (H.Properties, Requirements),
+                       Where    => Debug.Default,
+                       Severity => 1);
          end if;
          Next (Pos);
       end loop;
