@@ -316,7 +316,9 @@ package body Hosts is
          H := Host_Lists.Element (Pos);
          if H.Properties = Requirements and then
            H.Queues.Contains (To_Unbounded_String (Queue_Name)) then
-               Temp.Append (H);
+            Temp.Append (H);
+         else
+            HTML.Comment (H.Name & ": " & Get_Mismatch (H.Properties, Requirements));
          end if;
          Next (Pos);
       end loop;

@@ -149,6 +149,26 @@ package body Host_Properties is
       end if;
    end "<";
 
+   function Get_Mismatch (Left, Right : Set_Of_Properties) return String is
+   begin
+      if Left.Network /= Right.Network then
+         return Left.Network'Img & "/=" & Right.Network'Img;
+      elsif Left.Model /= Right.Model then
+         return Left.Model'Img & "/=" & Right.Model'Img;
+      elsif Left.Memory /= Right.Memory then
+         return Left.Memory'Img & "/=" & Right.Memory'Img;
+      elsif Left.Cores /= Right.Cores then
+         return Left.Cores'Img & "/=" & Right.Cores'Img;
+      elsif Left.Runtime /= Right.Runtime then
+         return To_String (Left.Runtime) & "/=" & To_String (Right.Runtime);
+      elsif Left.SSD /= Right.SSD then
+         return "SSD: " & Left.SSD'Img & "/=" & Right.SSD'Img;
+      elsif Left.GPU /= Right.GPU then
+         return "GPU: " & Left.GPU'Img & "/=" & Right.GPU'Img;
+      else
+         return "matching properties";
+      end if;
+   end Get_Mismatch;
 
    ---------------------
    -- Parse_Resources --
