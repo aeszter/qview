@@ -144,6 +144,15 @@ package body Host_Properties is
          return True;
       elsif Left.Runtime > Right.Runtime then
          return False;
+      elsif Left.SSD < Right.SSD then
+         return True;
+      elsif Left.SSD > Right.SSD then
+         return False;
+      elsif Left.GPU < Right.GPU then
+         return True;
+      elsif Left.GPU > Right.GPU then
+         return False;
+
       else
          return False;
       end if;
@@ -211,13 +220,9 @@ package body Host_Properties is
       elsif Value (A) = "mem_total" then
          Props.Memory := To_Gigs (Value (First_Child (N)));
       elsif Value (A) = "gpu" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
-            Props.GPU := True;
-         end if;
+         Props.GPU := True;
       elsif Value (A) = "ssd" then
-         if Fixed'Value (Value (First_Child (N))) = 1.0 then
-            Props.SSD := True;
-         end if;
+         Props.SSD := True;
       else
          HTML.Error ("Unknown Resource encountered while parsing host");
          HTML.Put_Paragraph (Value (A), Value (First_Child (N)));

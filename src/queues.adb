@@ -90,10 +90,10 @@ package body Queues is
                      Model := To_Unbounded_String (Value (First_Child (N)));
                   elsif Value (A) = "qname" then
                      Queue_Name := To_Unbounded_String (Value (First_Child (N)));
-                  elsif Value (A) = "ssd" then
-                     SSD := True;
-                  elsif Value (A) = "gpu" then
-                     GPU := True;
+                  elsif Value (A) = "ssd"  then
+                     SSD := True; -- consumable, so do not check numerical value
+                  elsif Value (A) = "gpu"  then
+                     GPU := True; -- consumable
                   end if;
                end if;
             end loop;
