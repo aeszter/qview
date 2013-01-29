@@ -216,20 +216,7 @@ package body Jobs is
 
    function State_As_String (J : Job) return String is
    begin
-      case J.State is
-         when dt => return "dt";
-         when dr => return "dr";
-         when Eqw => return "Eqw";
-         when t => return "t";
-         when r => return "r";
-         when Rr => return "Rr";
-         when Rq => return "Rq";
-         when qw => return "qw";
-         when hqw => return "hqw";
-            when ERq => return "ERq";
-         when unknown => return "unknown";
-      end case;
-
+      return To_String (State => J.State);
    end State_As_String;
 
    function To_String (State : Job_State) return String is
