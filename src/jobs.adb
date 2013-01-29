@@ -204,6 +204,8 @@ package body Jobs is
             Ada.Text_IO.Put ("in transit, deletion pending");
          when ERq =>
             Ada.Text_IO.Put ("requeued, with error");
+         when hr =>
+            Ada.Text_IO.Put ("on hold/running");
          when unknown =>
             null;
       end case;
@@ -231,7 +233,8 @@ package body Jobs is
          when Rq => return "Rq";
          when qw => return "qw";
          when hqw => return "hqw";
-            when ERq => return "ERq";
+         when ERq => return "ERq";
+         when hr => return "hr";
          when unknown => return "unknown";
       end case;
    end To_String;

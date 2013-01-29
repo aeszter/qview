@@ -8,7 +8,7 @@ with Utils; use Utils;
 
 package Jobs is
 
-   type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq);
+   type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq, hr);
    type State_Count is array (Job_State) of Natural;
    type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem, submission_time, priority);
    type Usage_Number is delta 0.00001 digits 18;
