@@ -82,4 +82,25 @@ package body Diagnostics is
       Text_IO.Put (" UTC");
    end Put_Date;
 
+   procedure Put_Memory is
+      Status_File : Ada.Text_IO.File_Type;
+      Line        : String (1 .. 256);
+      Last : Natural; -- length of line read
+   begin
+      Open (File     => Status_File,
+            Mode     => In_File,
+            Name     => "/proc/self/status");
+      while not End_Of_File (Status_File) loop
+         Get_Line (Status_File, Line, Last);
+         if Line (Line'First .. Line'First + 6) = "VmPeak:" then
+            Ada.Text_IO.Put (Line (Line'First + 7 .. Last));
+            Ada.Text_IO.Put (" virtual");
+         elsif Line (Line'First .. Line'First + 5) = "VmHWM:" then
+            Ada.Text_IO.Put (Line (Line'First + 6 .. Last));
+            Ada.Text_IO.Put (" RSS");
+         end if;
+      end loop;
+      Close (Status_File);
+   end Put_Memory;
+
 end Diagnostics;
