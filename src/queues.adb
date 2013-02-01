@@ -52,7 +52,7 @@ package body Queues is
             Used, Reserved, Total : Natural := 0;
             State                 : Unbounded_String;
             Mem, Runtime          : Unbounded_String;
-            Cores                 : Natural;
+            Cores                 : Natural := 0;
             SSD, GPU : Boolean := False;
             Network               : Resources.Network := none;
             Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
