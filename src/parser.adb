@@ -33,8 +33,8 @@ package body Parser is
       when Exception_Error =>
          raise Parser_Error with """" & Command
            & """ terminated because of an unhandled exception";
-      when Sax.Readers.XML_Fatal_Error =>
-         raise Parser_Error;
+      when E : Sax.Readers.XML_Fatal_Error =>
+         raise Parser_Error with "Fatal XML error: " & Exception_Message (E);
       when E : others => raise Parser_Error with "Error when calling "
            & Command & " with " & Selector & ": "
            & Exception_Message (E);
