@@ -113,8 +113,8 @@ package body Queues is
                                    ));
          exception
             when E : others =>
-               HTML.Put_Paragraph (Label    => "Failed to parse queue",
-                                   Contents => Exception_Message (E));
+               HTML.Error ("Failed to parse queue: " &
+                                   Exception_Message (E));
          end;
       end loop;
    end Append_List;
