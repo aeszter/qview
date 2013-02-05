@@ -14,7 +14,6 @@ with Hosts; use Hosts; use Hosts.Host_Lists;
 with Reservations;
 with Utils; use Utils; use Utils.String_Lists;
 with Diagnostics;
-with Ada.Characters.Handling;
 with Debug;
 
 package body Viewer is
@@ -410,6 +409,25 @@ package body Viewer is
       -- View_Forecast --
       -------------------
 
+      procedure View_Equivalent_Hosts (Host_Name : String) is
+         SGE_Out : Parser.Tree;
+         Q       : Queue;
+         Props : Set_Of_Properties;
+      begin
+         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & "-q *@" & Host_Name);
+         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         Parser.Free;
+
+         Queues.Rewind;
+         Q := Queues.Current;
+         loop
+            Props := Get_Properties (Q);
+            View_Hosts (Props => Props);
+            exit when Queues.At_End;
+            Q := Queues.Next;
+         end loop;
+      end View_Equivalent_Hosts;
+
       procedure View_Forecast is
          SGE_Out     : Parser.Tree;
 
@@ -587,6 +605,8 @@ package body Viewer is
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
                pragma Unreferenced (ID);
+               Search_String : String := CGI.Value ("search");
+               Start : Natural := Search_String'First;
             begin
                ID := Positive'Value (CGI.Value ("search"));
                Put_Headers (Title => "Job " & CGI.Value ("search"));
@@ -594,9 +614,15 @@ package body Viewer is
                View_Job (Sanitise (CGI.Value ("search")));
             exception
                when Constraint_Error =>
-                  Put_Headers (Title => "User " & CGI.Value ("search"));
-                  Set_Params ("user=" & Sanitise (CGI.Value ("search")));
-                  View_Jobs_Of_User (Sanitise (CGI.Value ("search")));
+                  if Search_String (Start .. Start + 3) = "node" then
+                     Put_Headers (Title => Search_String & " and equivalent");
+                     Set_Params ("" & Sanitise (Search_String));
+                     View_Equivalent_Hosts (Sanitise (Search_String));
+                  else
+                     Put_Headers (Title => "User " & CGI.Value ("search"));
+                     Set_Params ("user=" & Sanitise (CGI.Value ("search")));
+                     View_Jobs_Of_User (Sanitise (CGI.Value ("search")));
+                  end if;
             end;
          elsif HTML.Param_Is ("cqueues", "y") then
             Put_Headers (Title => "Overview");
