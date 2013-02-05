@@ -450,120 +450,6 @@ package body Viewer is
       -- View_Hosts --
       ----------------
 
-      procedure View_Hosts (What : String) is
-         SGE_Out     : Parser.Tree;
-
-         procedure Put_Table_Header is
-         begin
-            HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
-                              Level => 2);
-            HTML.Begin_Div (Class => "host_list");
-            Ada.Text_IO.Put_Line ("<table><tr>");
-            HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Interconnect", Params => My_Params);
-            HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                          Tag => "th");
-            HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Load", Params => My_Params,
-                                 Acronym => "per core");
-            HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
-                                  Acronym => "% used");
-            HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
-                                  Acronym => "% used");
-            HTML.Put_Header_Cell (Data     => "Queues",
-                                  Params   => My_Params,
-                                  Sortable => False);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
-
-         Selector : Unbounded_String;
-      begin
-         if What /= "partition" then
-            raise Constraint_Error with "Expected ""partition"" but got """
-              & What & """";
-         end if;
-         if HTML.Param_Is (Param    => "net",
-                           Expected => "ETH") then
-            Selector := To_Unbounded_String (" -l eth");
-            Append_Params ("net=ETH");
-         elsif HTML.Param_Is (Param    => "net",
-                              Expected => "IB") then
-            Selector := To_Unbounded_String (" -l ib");
-            Append_Params ("net=IB");
-         else
-            Append_Params ("net=" & CGI.Value (Key => "net"));
-         end if;
-         if not HTML.Param_Is (Param    => "model",
-                               Expected => "") then
-            if HTML.Param_Is (Param    => "model",
-                              Expected => "MAGNYCOURS") then
-               Selector := Selector & " -l cm=magny-cours";
-               Append_Params ("model=MAGNYCOURS");
-            elsif HTML.Param_Is (Param    => "model",
-                                 Expected => "SANDYBRIDGE") then
-               Selector := Selector & " -l cm=sandy-bridge";
-               Append_Params ("model=SANDYBRIDGE");
-            elsif HTML.Param_Is (Param    => "model",
-                                 Expected => "IVYBRIDGE") then
-               Selector := Selector & " -l cm=ivy-bridge";
-               Append_Params ("model=IVYBRIDGE");
-            else
-               Selector := Selector & " -l cm="
-                 & Ada.Characters.Handling.To_Lower (Sanitise (CGI.Value ("model")));
-               Append_Params ("model=" & CGI.Value ("model"));
-            end if;
-         end if;
-         if not HTML.Param_Is (Param    => "cores",
-                               Expected => "") then
-            Append_Params ("cores=" & CGI.Value ("cores"));
-         end if;
-         if not HTML.Param_Is (Param    => "rt",
-                               Expected => "rt") then
-            Append_Params ("rt=" & CGI.Value ("rt"));
-         end if;
-         if not HTML.Param_Is (Param    => "mem",
-                               Expected => "") then
-            Append_Params ("mem=" & CGI.Value ("mem"));
-         end if;
-
-         SGE_Out := Parser.Setup (Command  => "qhost",
-                                  Selector => "-q -j " & Parser.Resource_Selector
-                                  & To_String (Selector));
-         Put_Table_Header;
-
-         Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
-         Parser.Free;
-         Hosts.Prune_List (Net     => CGI.Value ("net"),
-                           Cores   => CGI.Value ("cores"),
-                           Memory  => CGI.Value ("mem") & "G",
-                           Model => CGI.Value ("model"),
-                           Queue_Name => CGI.Value ("q"),
-                           SSD        => CGI.Value ("ssd"),
-                          GPU => CGI.Value ("gpu"));
-
-         --  Can we factor this out?
-         if not HTML.Param_Is ("sort", "") then
-            if Length (Sort_Direction) /= 3 then
-               --  something wrong -- maybe an attack?
-               Sort_Direction := To_Unbounded_String ("inc");
-            end if;
-            Hosts.Sort_By (Field     => CGI.Value ("sort"),
-                          Direction => To_String (Sort_Direction));
-         end if;
-
-         Host_List.Iterate (Hosts.Put'Access);
-
-         --  Table Footer
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "host_list");
-      exception
-         when E : others =>
-            HTML.Error ("Error while viewing host: " & Exception_Message (E));
-            Ada.Text_IO.Put_Line ("</table>");
-            HTML.End_Div (Class => "host_list");
-      end View_Hosts;
 
       ----------------
       -- View_Bunch --
@@ -616,6 +502,38 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
+
+      procedure View_Partition is
+         Props : Set_Of_Properties;
+      begin
+         if HTML.Param_Is (Param    => "net",
+                         Expected => "ETH") then
+            Set_Network (Props => Props,
+                         Net   => eth);
+         elsif HTML.Param_Is (Param    => "net",
+                           Expected => "IB") then
+            Set_Network (Props => Props,
+                         Net   => ib);
+         else
+            raise Program_Error with "unknown network";
+         end if;
+         if not HTML.Param_Is (Param    => "model",
+                                Expected => "") then
+            Set_Model (Props => Props,
+                       Model => To_Model (String'(CGI.Value ("model"))));
+         end if;
+         if not HTML.Param_Is (Param    => "cores",
+                             Expected => "") then
+            Set_Cores (Props => Props,
+                       Cores => Integer'Value (CGI.Value ("cores")));
+         end if;
+         if not HTML.Param_Is (Param    => "mem",
+                            Expected => "") then
+            Set_Memory (Props => Props,
+                        S     => CGI.Value ("mem"));
+         end if;
+         View_Hosts (Props => Props);
+      end View_Partition;
 
       procedure View_Reservations is
       begin
@@ -701,7 +619,7 @@ package body Viewer is
                         --  & "/" & CGI.Value "rt"
                         --  currently not used, so do not confuse the user
             Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
-            View_Hosts (Sanitise (CGI.Value ("hosts")));
+            View_Partition;
          elsif not HTML.Param_Is ("user", "") then
             Put_Headers (Title => "User " & CGI.Value ("user"));
             Set_Params ("user=" & Sanitise (CGI.Value ("user")));
@@ -744,6 +662,86 @@ package body Viewer is
          HTML.Finalize_Divs (Silent => True);
          CGI.Put_HTML_Tail;
    end View;
+
+   procedure View_Hosts (Props : Set_Of_Properties) is
+      SGE_Out     : Parser.Tree;
+
+      procedure Put_Table_Header is
+      begin
+         HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
+                           Level => 2);
+         HTML.Begin_Div (Class => "host_list");
+         Ada.Text_IO.Put_Line ("<table><tr>");
+         HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
+         HTML.Put_Header_Cell (Data     => "Interconnect", Params => My_Params);
+         HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                       Tag => "th");
+         HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
+         HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
+         HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
+         HTML.Put_Header_Cell (Data     => "Load", Params => My_Params,
+                              Acronym => "per core");
+         HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
+                               Acronym => "% used");
+         HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
+                               Acronym => "% used");
+         HTML.Put_Header_Cell (Data     => "Queues",
+                               Params   => My_Params,
+                               Sortable => False);
+         Ada.Text_IO.Put ("</tr>");
+      end Put_Table_Header;
+
+      Selector : Unbounded_String;
+   begin
+      case Get_Network (Props) is
+         when eth =>
+         Selector := To_Unbounded_String (" -l eth");
+            Append_Params ("net=ETH");
+      when ib =>
+         Selector := To_Unbounded_String (" -l ib");
+            Append_Params ("net=IB");
+         when ibswitch =>
+            Append_Params ("net=IB");
+         when none =>
+            Append_Params ("net=none");
+      end case;
+      Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
+      Append_Params (To_String (Get_Model (Props)));
+      Append_Params ("cores=" & Get_Cores (Props)'Img);
+      Append_Params ("mem=" & To_String (Get_Memory (Props)));
+
+      SGE_Out := Parser.Setup (Command  => "qhost",
+                               Selector => "-q -j " & Parser.Resource_Selector
+                               & To_String (Selector));
+      Put_Table_Header;
+
+      Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+      Parser.Free;
+      Hosts.Prune_List (Net     => CGI.Value ("net"),
+                        Cores   => CGI.Value ("cores"),
+                        Memory  => CGI.Value ("mem") & "G",
+                        Model => CGI.Value ("model"),
+                        Queue_Name => CGI.Value ("q"),
+                        SSD        => CGI.Value ("ssd"),
+                       GPU => CGI.Value ("gpu"));
+
+      --  Can we factor this out?
+      if not HTML.Param_Is ("sort", "") then
+         Hosts.Sort_By (Field     => CGI.Value ("sort"),
+                       Direction => Sort_Direction);
+      end if;
+
+      Host_List.Iterate (Hosts.Put'Access);
+
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "host_list");
+   exception
+      when E : others =>
+         HTML.Error ("Error while viewing host: " & Exception_Message (E));
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "host_list");
+   end View_Hosts;
 
 
    ----------------
