@@ -524,32 +524,13 @@ package body Viewer is
       procedure View_Partition is
          Props : Set_Of_Properties;
       begin
-         if HTML.Param_Is (Param    => "net",
-                         Expected => "ETH") then
-            Set_Network (Props => Props,
-                         Net   => eth);
-         elsif HTML.Param_Is (Param    => "net",
-                           Expected => "IB") then
-            Set_Network (Props => Props,
-                         Net   => ib);
-         else
-            raise Program_Error with "unknown network";
-         end if;
-         if not HTML.Param_Is (Param    => "model",
-                                Expected => "") then
-            Set_Model (Props => Props,
-                       Model => To_Model (String'(CGI.Value ("model"))));
-         end if;
-         if not HTML.Param_Is (Param    => "cores",
-                             Expected => "") then
-            Set_Cores (Props => Props,
-                       Cores => Integer'Value (CGI.Value ("cores")));
-         end if;
-         if not HTML.Param_Is (Param    => "mem",
-                            Expected => "") then
-            Set_Memory (Props => Props,
-                        S     => CGI.Value ("mem"));
-         end if;
+         Init (Props  => Props,
+               Net    => CGI.Value ("net"),
+               Memory => CGI.Value ("mem") & "G",
+               Cores  => CGI.Value ("cores"),
+               Model  => CGI.Value ("model"),
+               SSD    => CGI.Value ("ssd"),
+               GPU    => CGI.Value ("gpu"));
          View_Hosts (Props => Props);
       end View_Partition;
 
@@ -743,13 +724,7 @@ package body Viewer is
 
       Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
-      Hosts.Prune_List (Net     => CGI.Value ("net"),
-                        Cores   => CGI.Value ("cores"),
-                        Memory  => CGI.Value ("mem") & "G",
-                        Model => CGI.Value ("model"),
-                        Queue_Name => CGI.Value ("q"),
-                        SSD        => CGI.Value ("ssd"),
-                       GPU => CGI.Value ("gpu"));
+      Hosts.Prune_List (Requirements => Props, Queue_Name => CGI.Value ("q"));
 
       --  Can we factor this out?
       if not HTML.Param_Is ("sort", "") then

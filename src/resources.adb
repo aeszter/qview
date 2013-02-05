@@ -4,11 +4,13 @@ with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
 with Ada.Real_Time;
 with Ada.Text_IO;
 with Ada.Strings; use Ada.Strings;
+with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Containers; use Ada.Containers;
 with Resources; use Resources.Resource_Lists;
 with Utils; use Utils; use Utils.Hash_Strings;
 with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
 
 package body Resources is
 
@@ -179,24 +181,27 @@ package body Resources is
    begin
       if S = "" then
          return none;
-      elsif S = "italy" then
+      elsif Ada.Strings.Equal_Case_Insensitive (S, "italy") then
          return italy;
-      elsif S = "woodcrest" then
+      elsif Equal_Case_Insensitive (S, "woodcrest") then
          return woodcrest;
-      elsif S = "clovertown" then
+      elsif Equal_Case_Insensitive (S, "clovertown") then
          return clovertown;
-      elsif S = "harpertown" then
+      elsif Equal_Case_Insensitive (S, "harpertown") then
          return harpertown;
-      elsif S = "magny-cours" then
+      elsif Equal_Case_Insensitive (S, "magny-cours") or else
+      Equal_Case_Insensitive (S, "magnycours") then
          return magnycours;
-      elsif S = "interlagos" then
+      elsif Equal_Case_Insensitive (S, "interlagos") then
          return interlagos;
-      elsif S = "ivy-bridge" then
+      elsif Equal_Case_Insensitive (S, "ivy-bridge") or else
+      Equal_Case_Insensitive (S, "ivybridge") then
          return ivybridge;
-      elsif S = "sandy-bridge" then
+      elsif S = "sandy-bridge" or else
+      Equal_Case_Insensitive (S, "sandybridge") then
          return sandybridge;
       else
-         raise Constraint_Error;
+         raise Constraint_Error with "Unknown CPU model: " & S;
       end if;
    end To_Model;
 
@@ -207,7 +212,17 @@ package body Resources is
 
    function To_String (Model : CPU_Model) return String is
    begin
-      return Model'Img;
+      case Model is
+         when sandybridge =>
+            return "sandy-bridge";
+         when ivybridge =>
+            return "ivy-bridge";
+            when magnycours =>
+            return "magny-cours";
+         when others =>
+            return Ada.Strings.Fixed.Translate (Source  => Model'Img,
+                                                Mapping => Ada.Strings.Maps.Constants.Lower_Case_Map);
+      end case;
    end To_String;
 
    ----------------

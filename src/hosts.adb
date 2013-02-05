@@ -292,26 +292,13 @@ package body Hosts is
    -- Prune_List --
    --  Purpose: Prune the Host list by removing all entries that do not
    --          fulfill the given requirements
-   --  Parameter Network: Network requirement
-   --  Parameter Cores: Required number of Cores. Note: this is not a minimum
-   --           requirement, but must be matched exactly
-   --  Parameter Memory: Required amount of Memory, must be matched exactly
-   --  Parameter Runtime: Required Queue h_rt, must be matched exactly
    ----------------
 
-   procedure Prune_List (Net, Cores, Memory, Queue_Name, Model,
-                         SSD, GPU                             : String) is
+   procedure Prune_List (Requirements : Set_Of_Properties; Queue_Name : String) is
       Temp      : Host_Lists.List;
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
-      Requirements : Set_Of_Properties;
    begin
-      Init (Props => Requirements, Net => Net,
-            Memory => Memory,
-            Cores  => Cores,
-            Model  => Model,
-            SSD    => SSD,
-           GPU => GPU);
       loop
          exit when Pos = Host_Lists.No_Element;
          H := Host_Lists.Element (Pos);
