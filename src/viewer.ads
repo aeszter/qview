@@ -9,4 +9,5 @@ package Viewer is
    --  Parameter Params: the parameter to add; should be of the form "param=value"
 private
    My_Params : Unbounded_String;
+   Sort_Direction : String := "inc";
 end Viewer;

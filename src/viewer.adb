@@ -99,7 +99,6 @@ package body Viewer is
          HTML.Put_Clearer;
          HTML.End_Div (ID => "page");
       end Put_Footer;
-      Sort_Direction : Unbounded_String := To_Unbounded_String ("inc");
 
       procedure View_Cluster_Queues is
          SGE_Out     : Parser.Tree;
@@ -349,12 +348,8 @@ package body Viewer is
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
          if not HTML.Param_Is ("sort", "") then
-            if Length (Sort_Direction) /= 3 then
-               --  something wrong -- maybe an attack?
-               Sort_Direction := To_Unbounded_String ("inc");
-            end if;
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
-                          Direction => To_String (Sort_Direction));
+                          Direction => Sort_Direction);
          end if;
 
          Put_Table_Header;
@@ -441,12 +436,8 @@ package body Viewer is
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
          if not HTML.Param_Is ("sort", "") then
-            if Length (Sort_Direction) /= 3 then
-               --  something wrong -- maybe an attack?
-               Sort_Direction := To_Unbounded_String ("inc");
-            end if;
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
-                          Direction => To_String (Sort_Direction));
+                          Direction => Sort_Direction);
          end if;
          Jobs.Put_Time_List;
 
@@ -642,7 +633,7 @@ package body Viewer is
             else
                Sort_Direction := CGI.Value ("dir");
                CGI.Set_Cookie (Key   => CGI.Value ("sort") & "sort",
-                               Value => To_String (Sort_Direction));
+                               Value => Sort_Direction);
             end if;
          end if;
       exception
