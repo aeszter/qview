@@ -9,6 +9,9 @@ package body Debug is
       if Input /= "" then
          Set_Level (Level'Value (Input));
          Enable (Default);
+         Enable (Queues);
+         Enable (Trace); -- should be set via a separate variable
+         --  but for now, debug levels are sufficiently fine-grained
       end if;
    exception
       when Constraint_Error =>
@@ -58,5 +61,15 @@ package body Debug is
       end if;
       HTML.Comment (Where'Img & ": " & Message);
    end Log;
+
+   procedure Trace (Entering : String; Params : String) is
+   begin
+      if not Enabled (Trace) then
+         return;
+      end if;
+      Log (Message  => "->" & Entering & " with " & Params,
+           Where    => Trace,
+           Severity => 5);
+   end Trace;
 
 end Debug;

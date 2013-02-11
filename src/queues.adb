@@ -3,6 +3,7 @@ with Resources; use Resources;
 with Parser; use Parser;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
+with Debug;
 
 package body Queues is
    use Queue_Lists;
@@ -167,7 +168,13 @@ package body Queues is
       Q.Name     := Name;
       if Cores = 0 then
          Set_Cores (Q.Properties, Q.Total);
+         Debug.Log (Message  => "Cores: 0" & ", using Total" & Total'Img,
+                    Where    => Debug.Queues,
+                    Severity => 2);
       else
+         Debug.Log (Message  => "Cores:" & Cores'Img & ", ignoring Total" & Total'Img,
+                    Where    => Debug.Queues,
+                    Severity => 2);
          Set_Cores (Q.Properties, Cores);
       end if;
       if SSD then

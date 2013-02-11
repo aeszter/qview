@@ -425,6 +425,7 @@ package body Viewer is
             Set_Runtime (Props   => Props,
                          Runtime => Null_Unbounded_String); -- not used, see Bug #1495
             View_Hosts (Props => Props);
+            HTML.Comment (Queues.Get_Name (Q));
             exit when Queues.At_End;
             Q := Queues.Next;
          end loop;
@@ -627,6 +628,7 @@ package body Viewer is
                         );
                         --  & "/" & CGI.Value "rt"
                         --  currently not used, so do not confuse the user
+                        --  see Bug #1495
             Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
             View_Partition;
          elsif not HTML.Param_Is ("user", "") then

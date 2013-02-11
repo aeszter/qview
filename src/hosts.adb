@@ -299,6 +299,7 @@ package body Hosts is
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
    begin
+      Debug.Trace (Entering => "Prune_List", Params => To_String (Requirements) & ", " & Queue_Name);
       loop
          exit when Pos = Host_Lists.No_Element;
          H := Host_Lists.Element (Pos);
@@ -306,7 +307,8 @@ package body Hosts is
            H.Queues.Contains (To_Unbounded_String (Queue_Name)) then
             Temp.Append (H);
          else
-            Debug.Log (Message  => To_String (H.Name) & ": " & Get_Mismatch (H.Properties, Requirements),
+            Debug.Log (Message  => To_String (H.Name) & " has " & Get_Mismatch (H.Properties, Requirements)
+                       & " required",
                        Where    => Debug.Default,
                        Severity => 1);
          end if;
