@@ -414,7 +414,7 @@ package body Viewer is
          Q       : Queue;
          Props : Set_Of_Properties;
       begin
-         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & "-q *@" & Host_Name);
+         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & " -q *@" & Host_Name);
          Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
          Parser.Free;
 
@@ -422,6 +422,8 @@ package body Viewer is
          Q := Queues.Current;
          loop
             Props := Get_Properties (Q);
+            Set_Runtime (Props   => Props,
+                         Runtime => Null_Unbounded_String); -- not used, see Bug #1495
             View_Hosts (Props => Props);
             exit when Queues.At_End;
             Q := Queues.Next;
@@ -708,7 +710,7 @@ package body Viewer is
          Selector := To_Unbounded_String (" -l ib");
             Append_Params ("net=IB");
          when ibswitch =>
-            Append_Params ("net=IB");
+            Append_Params ("net=IBSWITCH");
          when none =>
             Append_Params ("net=none");
       end case;
