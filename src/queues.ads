@@ -40,6 +40,7 @@ package Queues is
 
    function Get_Properties (Q : Queue) return Set_Of_Properties;
    function Get_Name (Q : Queue) return Unbounded_String;
+   function Get_Name (Q : Queue) return String;
    function Get_Slot_Count (Q : Queue) return Natural;
    function Get_Used_Slots (Q : Queue) return Natural;
    function Get_Reserved_Slots (Q : Queue) return Natural;

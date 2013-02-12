@@ -299,7 +299,7 @@ package body Hosts is
       Pos       : Host_Lists.Cursor := Host_List.First;
       H         : Host;
    begin
-      Debug.Trace (Entering => "Prune_List", Params => To_String (Requirements) & ", " & Queue_Name);
+      Debug.Trace (Entering => "Prune_List", Params => To_String (Requirements) & ", Queue_Name =>" & Queue_Name);
       loop
          exit when Pos = Host_Lists.No_Element;
          H := Host_Lists.Element (Pos);

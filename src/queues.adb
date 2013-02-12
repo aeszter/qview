@@ -237,5 +237,9 @@ package body Queues is
       return Q.Name;
    end Get_Name;
 
+   function Get_Name (Q : Queue) return String is
+   begin
+      return To_String (Q.Name);
+   end Get_Name;
 
-end Queues;
+   end Queues;

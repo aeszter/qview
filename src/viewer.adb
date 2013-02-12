@@ -424,8 +424,8 @@ package body Viewer is
             Props := Get_Properties (Q);
             Set_Runtime (Props   => Props,
                          Runtime => Null_Unbounded_String); -- not used, see Bug #1495
-            View_Hosts (Props => Props);
-            HTML.Comment (Queues.Get_Name (Q));
+            View_Hosts (Props => Props, Queue_Name => Queues.Get_Name (Q));
+            HTML.Comment (String'(Queues.Get_Name (Q)));
             exit when Queues.At_End;
             Q := Queues.Next;
          end loop;
@@ -534,7 +534,7 @@ package body Viewer is
                Model  => CGI.Value ("model"),
                SSD    => CGI.Value ("ssd"),
                GPU    => CGI.Value ("gpu"));
-         View_Hosts (Props => Props);
+         View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
       end View_Partition;
 
       procedure View_Reservations is
@@ -674,7 +674,7 @@ package body Viewer is
          CGI.Put_HTML_Tail;
    end View;
 
-   procedure View_Hosts (Props : Set_Of_Properties) is
+   procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
       SGE_Out     : Parser.Tree;
 
       procedure Put_Table_Header is
@@ -728,7 +728,7 @@ package body Viewer is
 
       Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
-      Hosts.Prune_List (Requirements => Props, Queue_Name => CGI.Value ("q"));
+      Hosts.Prune_List (Requirements => Props, Queue_Name => Queue_Name);
 
       --  Can we factor this out?
       if not HTML.Param_Is ("sort", "") then
