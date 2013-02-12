@@ -11,7 +11,7 @@ with Jobs; use Jobs;
 with Bunches; use Bunches;
 with Queues; use Queues;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
-with Hosts; use Hosts; use Hosts.Host_Lists;
+with Hosts; use Hosts;
 with Reservations;
 with Maintenance;
 with Diagnostics;
@@ -747,7 +747,7 @@ package body Viewer is
                        Direction => Sort_Direction);
       end if;
 
-      Host_List.Iterate (Hosts.Put'Access);
+      Hosts.Put_All;
 
       --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");

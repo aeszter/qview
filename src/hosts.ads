@@ -8,6 +8,29 @@ with Parser; use Parser;
 
 package Hosts is
 
+   type Job is private;
+   type Host is private;
+
+
+   procedure Put_All;
+
+   procedure Append_List (Host_Nodes : Node_List);
+   procedure Prune_List (Requirements : Set_Of_Properties; Queue_Name : String);
+
+   procedure Update_Used_Slots (H : in out Host);
+
+   ------------------
+   -- Sort_By      --
+   --  Purpose:  Sort the host list by any column/field
+   --  Parameter Field: Title of the column to sort by
+   ------------------
+   procedure Sort_By (Field : String; Direction : String);
+
+private
+   type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
+   type Percent is range 0 .. 100;
+
+
    type Job is record
       Master  : Boolean;
       ID      : Positive;
@@ -15,13 +38,27 @@ package Hosts is
       Slaves  : Natural;
    end record;
 
+   -----------------------
+   --
+   --  Jobs
+   --
+   -----------------------
+
    function Equal (Left, Right : Job) return Boolean;
+   procedure Add_Slave_Process (J : in out Job);
+   procedure Set_Master (J : in out Job; PE_Master : String);
 
    package Job_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job,
                                              "="          => Equal);
    subtype Job_List is Job_Lists.List;
 
+
+   -----------------------
+   --
+   --  Queues
+   --
+   -----------------------
    package Queue_States is
       new Generic_Bounded_Length (Max => 5);
    package Queue_Maps is
@@ -30,8 +67,21 @@ package Hosts is
                                      "=" => Queue_States."=");
    subtype Queue_Map is Queue_Maps.Map;
 
-   type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
-   type Percent is range 0 .. 100;
+   ------------------
+   -- Append_Queue --
+   --  Purpose: Store information about one queue associated with this host
+   --  Parameter H: The Host object to store the information
+   --  Parameter Name: The name of the queue
+   --  Parameter State: The state of the queue
+   ------------------
+   procedure Append_Queue (H : out Host; Name, State : String);
+
+   ----------------
+   -- Put_Queue --
+   --  Purpose: Output one queue name and status
+   --  Parameter Cursor: Map Cursor pointing to the queue to output
+   ----------------
+   procedure Put_Queue (Cursor : Queue_Maps.Cursor);
 
 
    type Host is record
@@ -47,62 +97,20 @@ package Hosts is
    end record;
 
 
-   procedure Add_Slave_Process (J : in out Job);
-
-   ------------------
-   -- Append_Queue --
-   --  Purpose: Store information about one queue associated with this host
-   --  Parameter H: The Host object to store the information
-   --  Parameter Name: The name of the queue
-   --  Parameter State: The state of the queue
-   ------------------
-
-   procedure Append_Queue (H : out Host; Name, State : String);
-
-   --   function New_Job (ID : Positive; Master : Boolean) return Job;
-
-   function Get_Free_Slots (H : Host) return Natural;
-
-   procedure Set_Master (J : in out Job; PE_Master : String);
-
-
-   procedure Append_List (Host_Nodes : Node_List);
-   procedure Prune_List (Requirements : Set_Of_Properties; Queue_Name : String);
-   procedure Parse_Queue (H : in out Host; N : Node);
-   ---------------------
-   -- Parse_Queue --
-   --  Purpose: Given a Node of an XML DOM tree,
-   --  read queue attributes
-   --  Parameter H : The Host record to update
-   --  Parameter V : The Node to read from
-   ---------------------
-   procedure Parse_Hostvalue (H : in out Host; N : Node);
-   procedure Parse_Job (H : in out Host; N : Node);
-
-
    package Host_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Host);
 
+   Host_List : Host_Lists.List;
 
    procedure Put (Cursor : Host_Lists.Cursor);
    procedure Put_Jobs (Cursor : Job_Lists.Cursor);
-   ----------------
-   -- Put_Queue --
-   --  Purpose: Output one queue name and status
-   --  Parameter Cursor: Map Cursor pointing to the queue to output
-   ----------------
-   procedure Put_Queue (Cursor : Queue_Maps.Cursor);
    procedure Compactify (List : in out Job_List);
-   procedure Update_Used_Slots (H : in out Host);
 
-   function Load_Per_Core (H : Host) return Fixed;
-   function Mem_Ratio (H : Host) return Fixed;
-   function Mem_Percentage (H : Host) return Percent;
-   function Swap_Ratio (H : Host) return Fixed;
-   function Swap_Percentage (H : Host) return Percent;
-   function Color_Class (P : Percent) return String;
-   function Color_Class (Load : Fixed) return String;
-
+   ------------------------------------
+   --
+   --  Sorting
+   --
+   ------------------------------------
    function Precedes_By_Free (Left, Right : Host) return Boolean;
    function Precedes_By_Net (Left, Right : Host) return Boolean;
    function Precedes_By_Cores (Left, Right : Host) return Boolean;
@@ -112,12 +120,6 @@ package Hosts is
    function Precedes_By_Swap (Left, Right : Host) return Boolean;
    function Precedes_By_Name (Left, Right : Host) return Boolean;
 
-   ------------------
-   -- Sort_By      --
-   --  Purpose:  Sort the host list by any column/field
-   --  Parameter Field: Title of the column to sort by
-   ------------------
-   procedure Sort_By (Field : String; Direction : String);
 
    package By_Free is
      new Host_Lists.Generic_Sorting ("<" => Precedes_By_Free);
@@ -136,7 +138,35 @@ package Hosts is
    package By_Name is
      new Host_Lists.Generic_Sorting ("<" => Precedes_By_Name);
 
-   Host_List : Host_Lists.List;
+   -----------------------
+   --
+   --  Getters
+   --
+   -----------------------
+   function Load_Per_Core (H : Host) return Fixed;
+   function Mem_Ratio (H : Host) return Fixed;
+   function Mem_Percentage (H : Host) return Percent;
+   function Swap_Ratio (H : Host) return Fixed;
+   function Swap_Percentage (H : Host) return Percent;
+   function Color_Class (P : Percent) return String;
+   function Color_Class (Load : Fixed) return String;
+   function Get_Free_Slots (H : Host) return Natural;
 
+
+   -----------------------
+   --
+   --  Parsing
+   --
+   -----------------------
+   procedure Parse_Queue (H : in out Host; N : Node);
+   ---------------------
+   -- Parse_Queue --
+   --  Purpose: Given a Node of an XML DOM tree,
+   --  read queue attributes
+   --  Parameter H : The Host record to update
+   --  Parameter V : The Node to read from
+   ---------------------
+   procedure Parse_Hostvalue (H : in out Host; N : Node);
+   procedure Parse_Job (H : in out Host; N : Node);
 
 end Hosts;
