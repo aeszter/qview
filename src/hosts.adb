@@ -4,11 +4,19 @@ with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with HTML;
 with Resources; use Resources;
 with Ada.Strings.Fixed;
-with Hosts; use Hosts.Job_Lists; use Hosts.Host_Lists;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 with Debug;
+with Hosts;
 
 package body Hosts is
+
+   use Host_Lists;
+   use Job_Lists;
+
+   procedure Put_All is
+   begin
+      Host_List.Iterate (Hosts.Put'Access);
+   end Put_All;
 
    ----------------------
    -- Precedes_By_Free --
