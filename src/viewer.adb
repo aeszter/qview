@@ -4,6 +4,7 @@ with HTML;
 with Parser; use Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
+with Utils; use Utils; use Utils.String_Lists;
 with Resources; use Resources; use Resources.Resource_Lists;
 with Ranges; use Ranges; use Ranges.Range_Lists;
 with Jobs; use Jobs;
@@ -12,7 +13,7 @@ with Queues; use Queues;
 with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Hosts; use Hosts; use Hosts.Host_Lists;
 with Reservations;
-with Utils; use Utils; use Utils.String_Lists;
+with Maintenance;
 with Diagnostics;
 with Debug;
 
@@ -54,6 +55,8 @@ package body Viewer is
                                    Link_Param => "forecast=y");
          HTML.Put_Navigation_Link (Data       => "Reservations",
                                    Link_Param => "reservation=y");
+         HTML.Put_Navigation_Link (Data       => "Maintenance",
+                                   Link_Param => "maintenance=y");
          HTML.Put_Search_Box;
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
@@ -543,6 +546,10 @@ package body Viewer is
          Reservations.Put_All;
       end View_Reservations;
 
+      procedure View_Maintenance_Report is
+      begin
+         Maintenance.Put_All;
+      end View_Maintenance_Report;
 
    begin
       Debug.Initialize (CGI.Value ("DEBUG"));
@@ -655,6 +662,10 @@ package body Viewer is
             Put_Headers (Title => "Reservations");
             Set_Params ("reservation=y");
             View_Reservations;
+         elsif HTML.Param_Is ("maintenance", "y") then
+            Put_Headers (Title => "Maintenance Report");
+            Set_Params ("maintenance=y");
+            View_Maintenance_Report;
          end if;
       else
          Put_Headers (Title => "");
