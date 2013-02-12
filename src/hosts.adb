@@ -18,6 +18,17 @@ package body Hosts is
       Host_List.Iterate (Hosts.Put'Access);
    end Put_All;
 
+   procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
+      Position : Host_Lists.Cursor := Host_List.First;
+   begin
+      while Position /= Host_Lists.No_Element loop
+         if Selector (Element (Position)) then
+            Put (Position);
+         end if;
+         Next (Position);
+      end loop;
+   end Put_Selected;
+
    ----------------------
    -- Precedes_By_Free --
    ----------------------
@@ -286,6 +297,8 @@ package body Hosts is
                Compactify (H.Jobs);
                Update_Used_Slots (H);
                Host_List.Append (H);
+               Debug.Log (Message  => "Appended " & To_String (H.Name),
+                          Severity => 2, Where => Debug.Default);
             end if;
          end;
       end loop Hosts;
