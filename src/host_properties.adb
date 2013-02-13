@@ -1,7 +1,6 @@
 with Parser; use Parser;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
-with Utils; use Utils;
 
 
 package body Host_Properties is
@@ -200,6 +199,8 @@ package body Host_Properties is
          Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
             --  Fixed'Value is important here, as SGE interprets numerical
             --  resources as rational numbers
+            --  Is this code dead? Cf. Bug #1499
+         HTML.Comment ("Not dead -- see Bug #1499");
       elsif Value (A) = "load_short" then
          Props.Load_One := Fixed'Value (Value (First_Child (N)));
       elsif Value (A) = "load_medium" then
