@@ -418,6 +418,7 @@ package body Hosts is
    exception
       when E : others =>
          HTML.Error ("Could not parse host value: " & Exception_Message (E));
+         HTML.Error (To_String (H.Name) & " at " & Value (A));
    end Parse_Hostvalue;
 
    ---------------

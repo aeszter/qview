@@ -87,6 +87,9 @@ package body Maintenance is
    function High_Swap (H : Hosts.Host) return Boolean is
    begin
       return Hosts.Swap_Percentage (H) > 50;
+   exception
+      when Constraint_Error =>
+         return False; -- heuristic: host has no swap
    end High_Swap;
 
 end Maintenance;
