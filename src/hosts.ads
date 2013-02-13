@@ -27,10 +27,27 @@ package Hosts is
    ------------------
    procedure Sort_By (Field : String; Direction : String);
 
-private
    type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
    type Percent is range 0 .. 100;
 
+   -----------------------
+   --
+   --  Getters
+   --
+   -----------------------
+   function Load_Per_Core (H : Host) return Fixed;
+   function Get_Load (H : Host) return Fixed;
+   function Mem_Ratio (H : Host) return Fixed;
+   function Mem_Percentage (H : Host) return Percent;
+   function Swap_Ratio (H : Host) return Fixed;
+   function Swap_Percentage (H : Host) return Percent;
+   function Color_Class (P : Percent) return String;
+   function Color_Class (Load : Fixed) return String;
+   function Get_Free_Slots (H : Host) return Natural;
+   function Get_Used_Slots (H : Host) return Natural;
+
+
+private
 
    type Job is record
       Master  : Boolean;
@@ -105,6 +122,7 @@ private
 
    procedure Put (Cursor : Host_Lists.Cursor);
    procedure Put_Jobs (Cursor : Job_Lists.Cursor);
+   procedure Put_For_Maintenance (Cursor : Host_Lists.Cursor);
    procedure Compactify (List : in out Job_List);
 
    ------------------------------------
@@ -139,19 +157,6 @@ private
    package By_Name is
      new Host_Lists.Generic_Sorting ("<" => Precedes_By_Name);
 
-   -----------------------
-   --
-   --  Getters
-   --
-   -----------------------
-   function Load_Per_Core (H : Host) return Fixed;
-   function Mem_Ratio (H : Host) return Fixed;
-   function Mem_Percentage (H : Host) return Percent;
-   function Swap_Ratio (H : Host) return Fixed;
-   function Swap_Percentage (H : Host) return Percent;
-   function Color_Class (P : Percent) return String;
-   function Color_Class (Load : Fixed) return String;
-   function Get_Free_Slots (H : Host) return Natural;
 
 
    -----------------------

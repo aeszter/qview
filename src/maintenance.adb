@@ -2,6 +2,7 @@ with HTML;
 with Parser;
 with Ada.Text_IO;
 with Hosts;
+use Hosts;
 
 package body Maintenance is
 
@@ -16,14 +17,14 @@ package body Maintenance is
       HTML.Put_Header_Cell ("Slots");
       HTML.Put_Header_Cell ("Occupied");
       HTML.Put_Header_Cell ("Load");
-      HTML.Put_Header_Cell ("%");
+      HTML.Put_Header_Cell ("per Core");
+      HTML.Put_Header_Cell ("Swap");
       Ada.Text_IO.Put ("</tr>");
    end Put_Header;
 
    procedure Put_All is
       SGE_Out : Parser.Tree;
    begin
-      --  Generated stub: replace with real body!
       SGE_Out := Parser.Setup (Command => "qhost", Selector => "-j");
 
       Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
@@ -72,17 +73,17 @@ package body Maintenance is
 
    function High_Load (H : Hosts.Host) return Boolean is
    begin
-      return ;
+      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H) + 0.1;
    end High_Load;
 
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
-      return False;
+      return Hosts.Get_Load (H) < 0.9  * Hosts.Get_Used_Slots (H);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is
    begin
-      return Swap_Percent (H) > 50;
+      return Hosts.Swap_Percentage (H) > 50;
    end High_Swap;
 
 end Maintenance;

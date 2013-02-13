@@ -23,7 +23,7 @@ package body Hosts is
    begin
       while Position /= Host_Lists.No_Element loop
          if Selector (Element (Position)) then
-            Put (Position);
+            Put_For_Maintenance (Position);
          end if;
          Next (Position);
       end loop;
@@ -471,8 +471,8 @@ package body Hosts is
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
                      Class => "right " & Color_Class (Mem_Percentage (H)));
-                     HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
-                                    Class => "right " & Color_Class (Swap_Percentage (H)));
+      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
+                     Class => "right " & Color_Class (Swap_Percentage (H)));
       H.Queues.Iterate (Put_Queue'Access);
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
@@ -482,6 +482,27 @@ package body Hosts is
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
+
+   procedure Put_For_Maintenance (Cursor : Host_Lists.Cursor) is
+      H : Host := Host_Lists.Element (Cursor);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => H.Name);
+      HTML.Put_Cell (Data => Get_Cores (H.Properties)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Used_Slots (H)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Load (H)'Img, Class      => "right");
+      HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
+                     Class => "right " & Color_Class (Load_Per_Core (H)));
+      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
+                     Class => "right " & Color_Class (Swap_Percentage (H)));
+      Ada.Text_IO.Put ("</tr>");
+      H.Jobs.Iterate (Put_Jobs'Access);
+   exception
+      when E : others =>
+         HTML.Error ("Error while putting host "& To_String (H.Name) & ": "
+                     & Exception_Message (E));
+         Ada.Text_IO.Put ("</tr>");
+   end Put_For_Maintenance;
 
    --------------
    -- Put_Jobs --
@@ -538,6 +559,16 @@ package body Hosts is
          raise;
       end if;
    end Load_Per_Core;
+
+   function Get_Load (H : Host) return Fixed is
+   begin
+      return H.Load;
+   end Get_Load;
+
+   function Get_Used_Slots (H : Host) return Natural is
+   begin
+      return H.Slots_Used;
+   end Get_Used_Slots;
 
    ---------------
    -- Mem_Ratio --
