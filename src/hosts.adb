@@ -405,6 +405,15 @@ package body Hosts is
             H.Swap_Used := To_Gigs (Value (First_Child (N)));
             exception when Constraint_Error => H.Swap_Used := 0.0;
          end;
+      elsif Value (A) = "num_proc" then
+         if Value (First_Child (N)) /= "-" then
+            --  nodes that are down are marked in this way,
+            --  but Fixed'Value will raise a Constraint_Error if it encounters
+            --  nothing but a minus sign
+            Set_Cores (H.Properties, Integer (Fixed'Value (Value (First_Child (N)))));
+            --  Fixed'Value is important here, as SGE interprets numerical
+            --  resources as rational numbers
+         end if;
       end if;
    exception
       when E : others =>
