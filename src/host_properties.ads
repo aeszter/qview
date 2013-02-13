@@ -11,6 +11,7 @@ package Host_Properties is
    function Get_Network (Props : Set_Of_Properties) return Network;
    function Get_Model (Props : Set_Of_Properties) return CPU_Model;
    function Get_Runtime (Props : Set_Of_Properties) return String;
+   function Get_Load_One (Props : Set_Of_Properties) return Fixed;
    function Has_SSD (Props : Set_Of_Properties) return Boolean;
    function Has_GPU (Props : Set_Of_Properties) return Boolean;
    procedure Set_Memory (Props : in out Set_Of_Properties;
@@ -48,6 +49,7 @@ private
       Memory                : Resources.Gigs := 0.0;
       Cores                 : Positive := 1;
       Runtime               : Unbounded_String;
-      SSD, GPU : Boolean := False;
+      SSD, GPU              : Boolean := False;
+      Load_One, Load_Five   : Fixed := 0.0;
    end record;
 end Host_Properties;

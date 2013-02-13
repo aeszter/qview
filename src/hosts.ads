@@ -36,6 +36,7 @@ package Hosts is
    -----------------------
    function Load_Per_Core (H : Host) return Fixed;
    function Get_Load (H : Host) return Fixed;
+   function Get_Load_One (H : Host) return Fixed;
    function Mem_Ratio (H : Host) return Fixed;
    function Mem_Percentage (H : Host) return Percent;
    function Swap_Ratio (H : Host) return Fixed;

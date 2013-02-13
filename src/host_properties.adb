@@ -18,6 +18,10 @@ package body Host_Properties is
    end Has_GPU;
 
 
+   function Get_Load_One (Props : Set_Of_Properties) return Fixed is
+   begin
+      return Props.Load_One;
+   end Get_Load_One;
    -----------------
    -- Get_Runtime --
    -----------------
@@ -196,6 +200,10 @@ package body Host_Properties is
          Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
             --  Fixed'Value is important here, as SGE interprets numerical
             --  resources as rational numbers
+      elsif Value (A) = "load_short" then
+         Props.Load_One := Fixed'Value (Value (First_Child (N)));
+      elsif Value (A) = "load_medium" then
+         Props.Load_Five := Fixed'Value (Value (First_Child (N)));
       elsif
         Value (A) = "ethernet" then
          if Fixed'Value (Value (First_Child (N))) = 1.0 then

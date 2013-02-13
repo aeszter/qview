@@ -565,6 +565,11 @@ package body Hosts is
       return H.Load;
    end Get_Load;
 
+   function Get_Load_One (H : Host) return Fixed is
+   begin
+      return Get_Load_One (H.Properties);
+   end Get_Load_One;
+
    function Get_Used_Slots (H : Host) return Natural is
    begin
       return H.Slots_Used;

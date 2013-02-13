@@ -1,8 +1,8 @@
 with HTML;
 with Parser;
 with Ada.Text_IO;
-with Hosts;
-use Hosts;
+with Hosts; use Hosts;
+with Host_Properties; use Host_Properties;
 
 package body Maintenance is
 
@@ -25,7 +25,8 @@ package body Maintenance is
    procedure Put_All is
       SGE_Out : Parser.Tree;
    begin
-      SGE_Out := Parser.Setup (Command => "qhost", Selector => "-j");
+      SGE_Out := Parser.Setup (Command => "qhost",
+                               Selector => "-j -F load_short,load_medium");
 
       Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
@@ -73,12 +74,14 @@ package body Maintenance is
 
    function High_Load (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H) + 0.1;
+      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H) + 0.1
+      and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H);
    end High_Load;
 
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Get_Load (H) < 0.9  * Hosts.Get_Used_Slots (H);
+      return Hosts.Get_Load (H) < 0.9  * Hosts.Get_Used_Slots (H)
+      and then Hosts.Get_Load_One (H) < 0.9 * Hosts.Get_Used_Slots (H);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is
