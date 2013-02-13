@@ -4,6 +4,8 @@ with Parser;
 
 package Host_Properties is
    type Set_Of_Properties is private;
+   type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
+
    function Get_Memory (Props :  Set_Of_Properties) return Gigs;
    function Get_Cores (Props : Set_Of_Properties) return Positive;
    function Get_Network (Props : Set_Of_Properties) return Network;

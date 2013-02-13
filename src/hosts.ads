@@ -27,7 +27,6 @@ package Hosts is
    ------------------
    procedure Sort_By (Field : String; Direction : String);
 
-   type Fixed is delta 0.01 digits 5 range 0.0 .. 100.0;
    type Percent is range 0 .. 100;
 
    -----------------------
