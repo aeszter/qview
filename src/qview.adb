@@ -1,6 +1,12 @@
 with Viewer;
+with HTML;
+with CSS;
 
 procedure Qview is
 begin
-   Viewer.View;
+   if HTML.Param_Is ("css", "y") then
+      CSS.Put;
+   else
+      Viewer.View;
+   end if;
 end Qview;
