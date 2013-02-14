@@ -3,6 +3,7 @@ with Parser;
 with Ada.Text_IO;
 with Hosts; use Hosts;
 with Host_Properties; use Host_Properties;
+with Queues; use Queues;
 
 package body Maintenance is
 
@@ -30,10 +31,18 @@ package body Maintenance is
 
       Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
+      SGE_Out := Parser.Setup (Selector => "-F state");
+      Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, ""));
+      Parser.Free;
+
 
       Put_High_Load_Hosts;
       Put_Low_Load_Hosts;
       Put_Swapping_Hosts;
+      Put_Error_Queues;
+      Put_Unusual_Queues;
+      Put_Disabled_Queues;
+      Put_Unreachable_Queues;
    end Put_All;
 
    procedure Put_High_Load_Hosts is
@@ -71,6 +80,52 @@ package body Maintenance is
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "maintenance");
    end Put_Swapping_Hosts;
+
+   procedure Put_Error_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Queues in Error state",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Ada.Text_IO.Put_Line ("</table>");
+      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Error_Queues;
+
+   procedure Put_Disabled_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Disabled queues",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Ada.Text_IO.Put_Line ("</table>");
+      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Disabled_Queues;
+
+   procedure Put_Unreachable_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Unreachable queues",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Ada.Text_IO.Put_Line ("</table>");
+      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Unreachable_Queues;
+
+   procedure Put_Unusual_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Unusual queues",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Ada.Text_IO.Put_Line ("</table>");
+      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
+      --  should look for qtype /= BIP
+      HTML.End_Div (Class => "maintenance");
+   end Put_Unusual_Queues;
+
 
    function High_Load (H : Hosts.Host) return Boolean is
    begin
