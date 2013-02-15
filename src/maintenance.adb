@@ -23,6 +23,10 @@ package body Maintenance is
       Ada.Text_IO.Put ("</tr>");
    end Put_Header;
 
+   -------------
+   -- Put_All --
+   -------------
+
    procedure Put_All is
       SGE_Out : Parser.Tree;
    begin
@@ -32,7 +36,7 @@ package body Maintenance is
       Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
       SGE_Out := Parser.Setup (Selector => "-F state");
-      Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, ""));
+      Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
       Parser.Free;
 
 
@@ -44,6 +48,10 @@ package body Maintenance is
       Put_Disabled_Queues;
       Put_Unreachable_Queues;
    end Put_All;
+
+   ------------
+   -- Put_*  --
+   ------------
 
    procedure Put_High_Load_Hosts is
    begin
@@ -87,8 +95,8 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Queues in Error state",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (In_Error_State'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
       HTML.End_Div (Class => "maintenance");
    end Put_Error_Queues;
 
@@ -98,8 +106,8 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Disabled queues",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Reachable_Disabled'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
       HTML.End_Div (Class => "maintenance");
    end Put_Disabled_Queues;
 
@@ -109,8 +117,8 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Unreachable queues",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Unreachable_Enabled'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
       HTML.End_Div (Class => "maintenance");
    end Put_Unreachable_Queues;
 
@@ -120,17 +128,23 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Unusual queues",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Unusual_Type'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      Ada.Text_IO.Put_Line ("<em>unimplemented</em>");
-      --  should look for qtype /= BIP
       HTML.End_Div (Class => "maintenance");
    end Put_Unusual_Queues;
 
 
+   ------------------------
+   -- Selector Functions --
+   -- Hosts              --
+   ------------------------
+
    function High_Load (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H) + 0.1
-      and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H);
+      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H)
+        + 0.1 * Hosts.Get_Free_Slots (H)
+        and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H)
+        + 0.15 * Hosts.Get_Free_Slots (H);
    end High_Load;
 
    function Low_Load (H : Hosts.Host) return Boolean is
@@ -146,5 +160,30 @@ package body Maintenance is
       when Constraint_Error =>
          return False; -- heuristic: host has no swap
    end High_Swap;
+
+   ------------------------
+   -- Selector Functions --
+   -- Queues             --
+   ------------------------
+
+   function In_Error_State (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Error (Q);
+   end In_Error_State;
+
+   function Reachable_Disabled (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Disabled (Q) and then not Has_Unreachable (Q);
+   end Reachable_Disabled;
+
+   function Unreachable_Enabled (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Unreachable (Q) and then not Has_Disabled (Q);
+   end Unreachable_Enabled;
+
+   function Unusual_Type (Q : Queues.Queue) return Boolean is
+   begin
+      return not (Is_Batch (Q) and then Is_Interactive (Q) and then Is_Parallel (Q));
+   end Unusual_Type;
 
 end Maintenance;
