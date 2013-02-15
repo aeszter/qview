@@ -24,15 +24,17 @@ package Queues is
    --  retrieve the current queue without changing the memory pointer
    procedure Append_List (Input_Nodes : Node_List);
    function New_Queue (Used, Reserved, Total : Natural;
-                       State                 : String;
-                       Memory                : String;
-                       Cores                 : Natural;
-                       Network               : Resources.Network;
-                       SSD                   : Boolean;
-                       GPU                   : Boolean;
-                       Model                 : Resources.CPU_Model;
-                       Runtime               : Unbounded_String;
-                      Name : Unbounded_String)
+      State, Q_Type         : String;
+      Memory                : String;
+      Cores                 : Natural;
+      Network               : Resources.Network;
+      SSD                   : Boolean;
+      GPU                   : Boolean;
+      Model                 : Resources.CPU_Model;
+      Runtime               : Unbounded_String;
+      Name                  : Unbounded_String;
+      Long_Name             : Unbounded_String
+     )
                        return Queue;
 
 
@@ -48,20 +50,36 @@ package Queues is
    function Is_Offline (Q : Queue) return Boolean;
    function Is_Suspended (Q : Queue) return Boolean;
 
+   function Has_Error (Q : Queue) return Boolean;
+   function Has_Disabled (Q : Queue) return Boolean;
+   function Has_Unreachable (Q : Queue) return Boolean;
+   function Is_Batch (Q : Queue) return Boolean;
+   function Is_Interactive (Q : Queue) return Boolean;
+   function Is_Parallel (Q : Queue) return Boolean;
+
+   procedure Put_Selected (Selector : not null access function (Q : Queue) return Boolean);
 
 private
 
+   type State_Flag is (alarm, disabled, error, unreachable);
+   type Type_Flag is (B, I, P);
+   type State_Array is array (State_Flag) of Boolean;
+   type Type_Array is array (Type_Flag) of Boolean;
+
    type Queue is record
       Used, Reserved, Total : Natural;
-      Suspended, Offline    : Boolean;
-      Name                  : Unbounded_String;
+      Name, Long_Name       : Unbounded_String;
       Properties            : Set_Of_Properties;
+      State                 : State_Array := (others => False);
+      Q_Type                : Type_Array := (others => False);
    end record;
 
    package Queue_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Queue);
    package Sorting_By_Resources is
      new Queue_Lists.Generic_Sorting ("<" => Precedes_By_Resources);
+
+   procedure Put_For_Maintenance (Cursor : Queue_Lists.Cursor);
 
    List : Queue_Lists.List;
    List_Cursor : Queue_Lists.Cursor := Queue_Lists.No_Element;

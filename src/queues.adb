@@ -1,9 +1,9 @@
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Resources; use Resources;
 with Parser; use Parser;
 with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Debug;
+with Ada.Text_IO;
 
 package body Queues is
    use Queue_Lists;
@@ -51,12 +51,13 @@ package body Queues is
             N                     : Node;
             A                     : Attr;
             Used, Reserved, Total : Natural := 0;
-            State                 : Unbounded_String;
+            State, Q_Type         : Unbounded_String;
             Mem, Runtime          : Unbounded_String;
             Cores                 : Natural := 0;
             SSD, GPU : Boolean := False;
             Network               : Resources.Network := none;
             Model, Queue_Name     : Unbounded_String := Null_Unbounded_String;
+            Long_Queue_Name       : Unbounded_String := Null_Unbounded_String;
             type small is digits 4 range 0.0 .. 1.0;
          begin
             for Index in 1 .. Length (Queue_Nodes) loop
@@ -69,6 +70,8 @@ package body Queues is
                   Total := Integer'Value (Value (First_Child (N)));
                elsif Name (N) = "state" then
                   State := To_Unbounded_String (Value (First_Child (N)));
+               elsif Name (N) = "qtype" then
+                  Q_Type := To_Unbounded_String (Value (First_Child (N)));
                elsif Name (N) = "resource" then
                   A := Get_Attr (N, "name");
                   if Value (A) = "mem_total" then
@@ -96,6 +99,8 @@ package body Queues is
                   elsif Value (A) = "gpu"  then
                      GPU := True; -- consumable
                   end if;
+               elsif Name (N) = "name" then
+                  Long_Queue_Name := To_Unbounded_String (Value (First_Child (N)));
                end if;
             end loop;
 
@@ -110,7 +115,9 @@ package body Queues is
                                     GPU => GPU,
                                     Runtime  => Runtime,
                                     Name     => Queue_Name,
-                                    State    => To_String (State)
+                                    Long_Name => Long_Queue_Name,
+                                    State     => To_String (State),
+                                    Q_Type => To_String (Q_Type)
                                    ));
          exception
             when E : others =>
@@ -135,15 +142,17 @@ package body Queues is
 
    function New_Queue
      (Used, Reserved, Total : Natural;
-                       State                 : String;
-                       Memory                : String;
-                       Cores                 : Natural;
-                       Network               : Resources.Network;
-                       SSD                   : Boolean;
-                       GPU                   : Boolean;
-                       Model                 : Resources.CPU_Model;
-                       Runtime               : Unbounded_String;
-                      Name : Unbounded_String)
+      State, Q_Type         : String;
+      Memory                : String;
+      Cores                 : Natural;
+      Network               : Resources.Network;
+      SSD                   : Boolean;
+      GPU                   : Boolean;
+      Model                 : Resources.CPU_Model;
+      Runtime               : Unbounded_String;
+      Name                  : Unbounded_String;
+      Long_Name             : Unbounded_String
+     )
       return Queue
    is
       Q : Queue;
@@ -151,15 +160,26 @@ package body Queues is
       Q.Used     := Used;
       Q.Reserved := Reserved;
       Q.Total    := Total;
-      Q.Offline  := False;
-      Q.Suspended := False;
-      if State /= "" and then
-        Index (Source  => State,
-                Pattern => "u") /= 0 then
-         Q.Offline := True;
-      elsif Index (Source => State, Pattern => "d") /= 0 then
-         Q.Suspended := True;
-      end if;
+      Q.Long_Name := Long_Name;
+      for Pos in State'Range loop
+         case State (Pos) is
+            when 'a' => Q.State (alarm) := True;
+            when 'E' => Q.State (error) := True;
+            when 'd' => Q.State (disabled) := True;
+            when 'u' => Q.State (unreachable) := True;
+            when others => raise Constraint_Error
+                 with "Queue State has an unknown character: " & State (Pos);
+         end case;
+      end loop;
+      for Pos in Q_Type'Range loop
+         case Q_Type (Pos) is
+            when 'B' => Q.Q_Type (B) := True;
+            when 'I' => Q.Q_Type (I) := True;
+            when 'P' => Q.Q_Type (P) := True;
+            when others => raise Constraint_Error
+               with "Queue Type has an unknown character: " & Q_Type (Pos);
+         end case;
+      end loop;
 
       Set_Memory (Q.Properties, Memory);
       Set_Network (Q.Properties, Network);
@@ -219,12 +239,12 @@ package body Queues is
 
    function Is_Offline (Q : Queue) return Boolean is
    begin
-      return Q.Offline;
+      return Has_Unreachable (Q);
    end Is_Offline;
 
    function Is_Suspended (Q : Queue) return Boolean is
    begin
-      return Q.Suspended;
+      return Has_Disabled (Q) and then not Has_Unreachable (Q);
    end Is_Suspended;
 
    function Get_Properties (Q : Queue) return Set_Of_Properties is
@@ -242,4 +262,65 @@ package body Queues is
       return To_String (Q.Name);
    end Get_Name;
 
-   end Queues;
+   function Has_Error (Q : Queue) return Boolean is
+   begin
+      return Q.State (error);
+   end Has_Error;
+
+   function Has_Disabled (Q : Queue) return Boolean is
+   begin
+      return Q.State (disabled);
+   end Has_Disabled;
+
+   function Has_Unreachable (Q : Queue) return Boolean is
+   begin
+      return Q.State (unreachable);
+   end Has_Unreachable;
+
+   function Is_Batch (Q : Queue) return Boolean is
+   begin
+      return Q.Q_Type (B);
+   end Is_Batch;
+
+   function Is_Interactive (Q : Queue) return Boolean is
+   begin
+      return Q.Q_Type (I);
+   end Is_Interactive;
+
+   function Is_Parallel (Q : Queue) return Boolean is
+   begin
+      return Q.Q_Type (P);
+   end Is_Parallel;
+
+   procedure Put_Selected (Selector : not null access function (Q : Queue) return Boolean) is
+      Position : Queue_Lists.Cursor := List.First;
+   begin
+      while Position /= Queue_Lists.No_Element loop
+         if Selector (Element (Position)) then
+            Put_For_Maintenance (Position);
+         end if;
+         Next (Position);
+      end loop;
+   end Put_Selected;
+
+   procedure Put_For_Maintenance (Cursor : Queue_Lists.Cursor) is
+      Q : Queue := Queue_Lists.Element (Cursor);
+      State : String := "   ";
+   begin
+      if Q.Q_Type (B) then
+         State (1) := 'B';
+      end if;
+      if Q.Q_Type (I) then
+         State (2) := 'I';
+      end if;
+      if Q.Q_Type (P) then
+         State (3) := 'P';
+      end if;
+
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Q.Long_Name);
+      HTML.Put_Cell (State);
+      Ada.Text_IO.Put ("</tr>");
+   end Put_For_Maintenance;
+
+end Queues;
