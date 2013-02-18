@@ -34,7 +34,7 @@ package body Viewer is
          Headers_Sent := True;
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
-         HTML.Put_Stylesheet ("/status.css");
+         HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
          Ada.Text_IO.Put_Line ("</head><body>");
          HTML.Begin_Div (ID => "page");
          HTML.Begin_Div (ID => "header");
