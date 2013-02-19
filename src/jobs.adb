@@ -18,6 +18,7 @@ with Ada.Calendar.Formatting;
 package body Jobs is
    use Job_Lists;
 
+
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
    procedure Put_State (State : Job_State);
 
@@ -1615,9 +1616,13 @@ package body Jobs is
    -- Put_List --
    --------------
 
-   procedure Put_List is
+   procedure Put_List (Show_Resources : Boolean) is
    begin
-      List.Iterate (Jobs.Put_Res_Line'Access);
+      if Show_Resources then
+         List.Iterate (Jobs.Put_Res_Line'Access);
+      else
+         List.Iterate (Jobs.Put_Prio_Line'Access);
+      end if;
    end Put_List;
 
    -------------------
@@ -1833,6 +1838,23 @@ package body Jobs is
    end Put_Core_Line;
 
    -------------------
+   -- Put_Prio_Core --
+   -------------------
+
+   procedure Put_Prio_Core (J : Job) is
+   begin
+      HTML.Put_Cell (Data => J.Priority'Img);
+      HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Urgency'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Resource_Contrib'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
+      HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
+   end Put_Prio_Core;
+
+
+   -------------------
    -- Put_Time_Line --
    --  Purpose: Output one Job, including prospective end time, as a table row (tr).
    -------------------
@@ -1888,6 +1910,7 @@ package body Jobs is
          Ada.Text_IO.Put ("</tr>");
    end Put_Bunch_Line;
 
+
    ------------------
    -- Put_Res_Line --
    --  Purpose: Output one Job, including resource usage, as a table row (tr)
@@ -1925,20 +1948,31 @@ package body Jobs is
       else
          HTML.Put_Cell ("");
       end if;
-      HTML.Put_Cell (Data => J.Priority'Img);
-      HTML.Put_Cell (Data => J.Override_Tickets'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Share_Tickets'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Functional_Tickets'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Urgency'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Resource_Contrib'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Waiting_Contrib'Img, Class => "right");
-      HTML.Put_Cell (Data => J.Posix_Priority'Img, Class => "right");
+      Put_Prio_Core (J);
       Ada.Text_IO.Put ("</tr>");
    exception
       when E : others => HTML.Error (Message => "Error while outputting job: "
                                      & Exception_Message (E));
       Ada.Text_IO.Put ("</tr>");
    end Put_Res_Line;
+
+   procedure Put_Prio_Line (Pos : Job_Lists.Cursor) is
+      J : Job := Jobs.Job_Lists.Element (Pos);
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      Put_Core_Line (J);
+
+      HTML.Put_Time_Cell (J.Submission_Time);
+      HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
+      HTML.Put_Img_Cell (State_As_String (J));
+      Put_Prio_Core (J);
+      Ada.Text_IO.Put ("</tr>");
+   exception
+      when E : others => HTML.Error (Message => "Error while outputting job: "
+                                     & Exception_Message (E));
+      Ada.Text_IO.Put ("</tr>");
+   end Put_Prio_Line;
+
 
    procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
    begin

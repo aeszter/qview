@@ -164,16 +164,17 @@ package body HTML is
    -----------------------
 
    procedure Put_Duration_Cell (Secs : Natural) is
-      Days : Natural;
+      Days, Hours : Natural;
       Dur  : Duration;
    begin
       Days := Secs / 86400;
+      Hours := (Secs - Days * 86_400) / 3600;
       Dur  :=
          Ada.Real_Time.To_Duration
            (Ada.Real_Time.Seconds (Secs - Days * 86_400));
       if Days > 0 then
          Put_Cell
-           (Data  => Days'Img & "d " & Ada.Calendar.Formatting.Image (Dur),
+           (Data  => Days'Img & "d" & Hours'Img & "h",
             Class => "right");
       else
          Put_Cell

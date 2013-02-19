@@ -292,7 +292,7 @@ package body Viewer is
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
 
-      procedure View_Jobs (Selector : String) is
+      procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
          SGE_Out     : Parser.Tree;
 
 
@@ -304,10 +304,12 @@ package body Viewer is
                            Tag        => "th",
                            Colspan => 6,
                            Class => "delimited");
-            HTML.Put_Cell (Data => "Resource Usage",
-                           Tag => "th",
-                           Colspan => 3,
-                           Class => "delimited");
+            if not Only_Waiting then
+               HTML.Put_Cell (Data => "Resource Usage",
+                              Tag => "th",
+                              Colspan => 3,
+                              Class   => "delimited");
+            end if;
             HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
                            Tag => "th",
                            Colspan => 8,
@@ -319,13 +321,15 @@ package body Viewer is
             HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
             HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
             HTML.Put_Header_Cell (Data => "State", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Memory",
+            if not Only_Waiting then
+               HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
+               HTML.Put_Header_Cell (Data => "Memory",
                                   Acronym => "Gigabyte-hours",
                                   Params => My_Params);
-            HTML.Put_Header_Cell (Data => "IO",
+               HTML.Put_Header_Cell (Data => "IO",
                                   Acronym => "Gigabytes",
-                                  Params => My_Params);
+                                  Params  => My_Params);
+            end if;
             HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
             HTML.Put_Header_Cell (Data => "O",
                                   Acronym => "Override",
@@ -357,7 +361,7 @@ package body Viewer is
          Put_Table_Header;
          Jobs.Put_Summary;
 
-         Jobs.Put_List;
+         Jobs.Put_List (Show_Resources => not Only_Waiting);
 
          --  Table Footer
          Ada.Text_IO.Put_Line ("</table>");
@@ -380,7 +384,7 @@ package body Viewer is
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         View_Jobs ("-u * -s p");
+         View_Jobs (Selector => "-u * -s p", Only_Waiting => True);
       end View_Waiting_Jobs;
 
       procedure View_Jobs_Of_User (User : String) is

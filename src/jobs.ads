@@ -121,7 +121,7 @@ package Jobs is
    --  outdated. move functionality to Append_List. Does GPS notice this?
 
    procedure Put_Summary;
-   procedure Put_List;
+   procedure Put_List (Show_Resources : Boolean);
    procedure Put_Time_List;
    procedure Put_Bunch_List;
 
@@ -174,7 +174,7 @@ package Jobs is
    --  retrieve the current job without changing the memory pointer
 
 
-   Max_Name_Length : constant Positive := 20;
+   Max_Name_Length : constant Positive := 25;
 
 private
    type Job is record
@@ -265,6 +265,7 @@ private
    procedure Put (Cursor : Job_Lists.Cursor);
    procedure Put_Time_Line (Pos : Job_Lists.Cursor);
    procedure Put_Res_Line (Pos : Job_Lists.Cursor);
+   procedure Put_Prio_Line (Pos : Job_Lists.Cursor);
    procedure Put_Bunch_Line (Pos : Job_Lists.Cursor);
 
    package Sorting_By_Number is
