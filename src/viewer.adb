@@ -568,6 +568,8 @@ package body Viewer is
             end if;
          end if;
       exception
+         when Length_Error =>
+            Sort_Direction := "inc";
          when E : others =>
             Put_Headers (Title => "Error");
             HTML.Error ("Unhandled Exception occurred.");
