@@ -16,6 +16,7 @@ with Reservations;
 with Maintenance;
 with Diagnostics;
 with Debug;
+with Ada.Strings;
 
 package body Viewer is
 
@@ -568,7 +569,7 @@ package body Viewer is
             end if;
          end if;
       exception
-         when Length_Error =>
+         when Ada.Strings.Length_Error =>
             Sort_Direction := "inc";
          when E : others =>
             Put_Headers (Title => "Error");
