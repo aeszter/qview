@@ -541,7 +541,7 @@ package body Hosts is
       end if;
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (J.ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
-      HTML.Put_Time_Cell (J.Start_Time);
+      HTML.Put_Duration_Cell (Ada.Calendar.Clock - J.Start_Time);
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
 
