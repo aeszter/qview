@@ -7,6 +7,8 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 with Debug;
 with Hosts;
+with Calendar.Conversions;
+with Interfaces.C;
 
 package body Hosts is
 
@@ -446,6 +448,9 @@ package body Hosts is
                Set_Master (J, Value (First_Child (C)));
             elsif Value (A) = "taskid" then
                J.Task_ID := Integer'Value (Value (First_Child (C)));
+            elsif Value (A) = "start_time" then
+               J.Start_Time := Ada.Calendar.Conversions.To_Ada_Time
+                 (Interfaces.C.long'Value (Value (First_Child (C))));
             end if;
          end if;
       end loop Job_Attributes;
@@ -536,7 +541,7 @@ package body Hosts is
       end if;
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (J.ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
-
+      HTML.Put_Time_Cell (J.Start_Time);
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
 
