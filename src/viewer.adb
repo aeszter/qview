@@ -571,12 +571,13 @@ package body Viewer is
             end if;
          end if;
       exception
-         when Ada.Strings.Length_Error =>
+         when Constraint_Error =>
             Sort_Direction := "inc";
          when E : others =>
             Put_Headers (Title => "Error");
             HTML.Error ("Unhandled Exception occurred.");
             HTML.Error (Exception_Message (E));
+            HTML.Error (Exception_Name (E));
 
       end;
 
