@@ -94,9 +94,11 @@ package body Viewer is
                                & "alt=""Stats by Webalizer""></a></li>");
          Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
-                               & "&product=Projects"">"
+                               & "&product=Projects&version="
+                               & Utils.Version & """>"
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
+         Ada.Text_IO.Put_Line ("<li>" & Utils.Version & "</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
