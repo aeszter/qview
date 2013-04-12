@@ -16,6 +16,7 @@ with Reservations;
 with Maintenance;
 with Diagnostics;
 with Debug;
+with Ada.Strings;
 
 package body Viewer is
 
@@ -93,9 +94,11 @@ package body Viewer is
                                & "alt=""Stats by Webalizer""></a></li>");
          Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
-                               & "&product=Projects"">"
+                               & "&product=Projects&version="
+                               & Utils.Version & """>"
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
+         Ada.Text_IO.Put_Line ("<li>" & Utils.Version & "</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
@@ -568,12 +571,13 @@ package body Viewer is
             end if;
          end if;
       exception
-         when Length_Error =>
+         when Constraint_Error =>
             Sort_Direction := "inc";
          when E : others =>
             Put_Headers (Title => "Error");
             HTML.Error ("Unhandled Exception occurred.");
             HTML.Error (Exception_Message (E));
+            HTML.Error (Exception_Name (E));
 
       end;
 
