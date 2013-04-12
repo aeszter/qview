@@ -33,6 +33,9 @@ package body Viewer is
       begin
          CGI.Put_CGI_Header;
          Headers_Sent := True;
+         Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
+                    Where    => Debug.Default,
+                    Severity => 1);
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
@@ -98,7 +101,7 @@ package body Viewer is
                                & Utils.Version & """>"
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
-         Ada.Text_IO.Put_Line ("<li>" & Utils.Version & "</li>");
+         Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
