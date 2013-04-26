@@ -2,6 +2,7 @@ with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with HTML;
 with Parser; use Parser;
+with Pipe_Streams; use Pipe_Streams;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Utils; use Utils; use Utils.String_Lists;
@@ -14,9 +15,11 @@ with Partitions; use Partitions; use Partitions.Partition_Lists;
 with Hosts; use Hosts;
 with Reservations;
 with Maintenance;
+with Share_Tree;
 with Diagnostics;
 with Debug;
 with Ada.Strings;
+with Spread_Sheets;
 
 package body Viewer is
 
@@ -61,6 +64,8 @@ package body Viewer is
                                    Link_Param => "reservation=y");
          HTML.Put_Navigation_Link (Data       => "Maintenance",
                                    Link_Param => "maintenance=y");
+         HTML.Put_Navigation_Link (Data       => "Users",
+                                   Link_Param => "sharetree=y");
          HTML.Put_Search_Box;
          HTML.Put_Navigation_End;
          HTML.End_Div (ID => "header");
@@ -561,6 +566,38 @@ package body Viewer is
          Maintenance.Put_All;
       end View_Maintenance_Report;
 
+      procedure View_Share_Tree is
+         procedure Put_Table_Header is
+         begin
+            HTML.Begin_Div (Class => "share_tree");
+            Ada.Text_IO.Put ("<table><tr>");
+            HTML.Put_Header_Cell (Data => "Blub", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Blah", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Fasel", Params => My_Params);
+            Ada.Text_IO.Put ("</tr>");
+         end Put_Table_Header;
+
+         SGE_Out : Spread_Sheets.Cell_List;
+
+      begin
+         SGE_Out := Parser.Setup_No_XML (Command => "sge_share_mon",
+                                         Selector => "-f user_name,usage,cpu,ltcpu -c1 -x");
+         Share_Tree.Append_List (SGE_Out);
+         if not HTML.Param_Is ("sort", "") then
+            Share_Tree.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => Sort_Direction);
+         end if;
+
+         Put_Table_Header;
+         Share_Tree.Put_Summary;
+         Share_Tree.Put_List;
+
+         --  Table Footer
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "share_tree");
+
+      end View_Share_Tree;
+
    begin
       Debug.Initialize (CGI.Value ("DEBUG"));
       begin
@@ -679,6 +716,10 @@ package body Viewer is
             Put_Headers (Title => "Maintenance Report");
             Set_Params ("maintenance=y");
             View_Maintenance_Report;
+         elsif HTML.Param_Is ("sharetree", "y") then
+            Put_Headers (Title => "User List");
+            Set_Params ("sharetree=y");
+            View_Share_Tree;
          end if;
       else
          Put_Headers (Title => "");

@@ -9,6 +9,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 package body Parser is
 
    Reader      : DOM.Readers.Tree_Reader;
+   Table : Spread_Sheets.Cell_List;
    -----------
    -- Setup --
    -----------
@@ -39,6 +40,31 @@ package body Parser is
            & Command & " with " & Selector & ": "
            & Exception_Message (E);
    end Setup;
+
+   function Setup_No_XML (Command  : String;
+                          Selector : String) return Spread_Sheets.Cell_List is
+      SGE_Command : Pipe_Stream;
+   begin
+      SGE_Command.Set_Public_Id (Command);
+      HTML.Comment (Command & " " & Selector);
+      SGE_Command.Execute (Command => sgeroot & "/utilbin/linux-x64/" & Command,
+                           Arguments => Selector,
+                           Environment => "SGE_ROOT=" & sgeroot);
+
+      Table.Parse (SGE_Command);
+      SGE_Command.Close;
+      return Table;
+   exception
+         when Failed_Creation_Error =>
+            raise Parser_Error with "Failed to spawn """ & Command
+              & """ with """ & Selector & """";
+         when Exception_Error =>
+            raise Parser_Error with """" & Command
+              & """ terminated because of an unhandled exception";
+         when E : others => raise Parser_Error with "Error when calling "
+              & Command & " with " & Selector & ": "
+              & Exception_Message (E);
+   end Setup_No_XML;
 
    procedure Free is
    begin
