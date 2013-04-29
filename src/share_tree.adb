@@ -26,7 +26,7 @@ package body Share_Tree is
    -- Append_List --
    -----------------
 
-   procedure Append_List (Cells : Cell_List) is
+   procedure Append_List (Cells : Spread_Sheet) is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Append_List unimplemented");
