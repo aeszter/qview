@@ -2,7 +2,6 @@ with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with HTML;
 with Parser; use Parser;
-with Pipe_Streams; use Pipe_Streams;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Utils; use Utils; use Utils.String_Lists;
@@ -577,7 +576,7 @@ package body Viewer is
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
-         SGE_Out : Spread_Sheets.Cell_List;
+         SGE_Out : Spread_Sheets.Spread_Sheet;
 
       begin
          SGE_Out := Parser.Setup_No_XML (Command => "sge_share_mon",
