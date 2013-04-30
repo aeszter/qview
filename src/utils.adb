@@ -1,4 +1,5 @@
 with Ada.Strings;
+with Ada.Strings.Fixed;
 with Utils; use Utils.String_Lists;
 
 package body Utils is
@@ -34,6 +35,27 @@ package body Utils is
       return Hash_Strings.To_Bounded_String (Source => S (First .. S'Last));
    end To_Hash_String;
 
+   --------------------
+   -- To_String_List --
+   --------------------
+
+   procedure To_String_List
+     (Source  : String;
+      Dest   : out POSIX_String_List)
+   is
+      Next_Index : Natural := 1;
+      Index_List : array (1 .. 256) of Natural;
+   begin
+      Index_List (Next_Index) := Source'First;
+      while Index_List (Next_Index) < Source'Last loop
+         Next_Index := Next_Index + 1;
+         Index_List (Next_Index) := 1 + Ada.Strings.Fixed.Index (Source (Index_List (Next_Index - 1) .. Source'Last), " ");
+         if Index_List (Next_Index) = 1 then
+            Index_List (Next_Index) := Source'Last + 2;
+         end if;
+         POSIX.Append (Dest, To_POSIX_String (Source (Index_List (Next_Index - 1) .. Index_List (Next_Index) - 2)));
+      end loop;
+   end To_String_List;
 
 
 end Utils;
