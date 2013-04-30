@@ -5,12 +5,10 @@ with POSIX; use POSIX;
 with Ada.Strings.Fixed;
 with POSIX.Process_Environment; use POSIX.Process_Environment;
 with Ada.IO_Exceptions;
+with Utils;
 
 package body Pipe_Streams is
 
-   procedure To_String_List
-     (Source  : String;
-      Dest    : out POSIX_String_List);
 
    ---------------
    -- Next_Char --
@@ -62,27 +60,6 @@ package body Pipe_Streams is
       end case;
    end Close;
 
-   --------------------
-   -- To_String_List --
-   --------------------
-
-   procedure To_String_List
-     (Source  : String;
-      Dest   : out POSIX_String_List)
-   is
-      Next_Index : Natural := 1;
-      Index_List : array (1 .. 256) of Natural;
-   begin
-      Index_List (Next_Index) := Source'First;
-      while Index_List (Next_Index) < Source'Last loop
-         Next_Index := Next_Index + 1;
-         Index_List (Next_Index) := 1 + Ada.Strings.Fixed.Index (Source (Index_List (Next_Index - 1) .. Source'Last), " ");
-         if Index_List (Next_Index) = 1 then
-            Index_List (Next_Index) := Source'Last + 2;
-         end if;
-         POSIX.Append (Dest, To_POSIX_String (Source (Index_List (Next_Index - 1) .. Index_List (Next_Index) - 2)));
-      end loop;
-   end To_String_List;
 
 
    -------------
@@ -109,8 +86,8 @@ package body Pipe_Streams is
                                     File      => Standard_Output,
                                     From_File => To_QView);
 
-      To_String_List (Source => Command & " " & Arguments,
-                      Dest   => Arg_List);
+      Utils.To_String_List (Source => Command & " " & Arguments,
+                            Dest   => Arg_List);
       Set_Environment_Variable
         (Name  => To_POSIX_String (Environment (Environment'First .. Separator - 1)),
          Value => To_POSIX_String (Environment (Separator + 1 .. Environment'Last)),

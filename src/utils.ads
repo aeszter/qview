@@ -2,6 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Bounded;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Ordered_Sets;
+with POSIX; use POSIX;
 
 package Utils is
    Version : String := "20130411"; -- Update Bugzilla when you change this
@@ -33,4 +34,7 @@ package Utils is
    subtype Hash_String_Type is Hash_Strings.Bounded_String;
 
    function To_Hash_String (S : String) return Hash_String_Type;
+
+   procedure To_String_List (Source  : String; Dest : out POSIX_String_List);
+
 end Utils;
