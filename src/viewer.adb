@@ -570,9 +570,16 @@ package body Viewer is
          begin
             HTML.Begin_Div (Class => "share_tree");
             Ada.Text_IO.Put ("<table><tr>");
-            HTML.Put_Header_Cell (Data => "Blub", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Blah", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Fasel", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "User", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Usage", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "CPU", Params => My_Params,
+                                  Acronym => "in CPU years");
+            HTML.Put_Header_Cell (Data => "LT CPU", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "Memory", Params => My_Params,
+                                  Acronym => "in TB years");
+            HTML.Put_Header_Cell (Data => "IO", Params => My_Params,
+                                  Acronym => "in TB");
+            HTML.Put_Header_Cell (Data => "Job count", Params => My_Params);
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 
@@ -580,7 +587,7 @@ package body Viewer is
 
       begin
          SGE_Out := Parser.Setup_No_XML (Command => "sge_share_mon",
-                                         Selector => "-f user_name,usage,cpu,ltcpu -c1 -x");
+                                         Selector => "-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x");
          Share_Tree.Append_List (SGE_Out);
          if not HTML.Param_Is ("sort", "") then
             Share_Tree.Sort_By (Field     => CGI.Value ("sort"),
