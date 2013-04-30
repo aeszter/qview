@@ -12,6 +12,10 @@ package Utils is
    type Fixed is delta 0.0001 digits 5;
    --  a general fixed type, especially useful for SGE resources
 
+   type Usage_Number is delta 0.0001 digits 18;
+   type Usage_Integer is range 0 .. 10 ** 12;
+
+
    function To_Tri_State (Truth : String) return Tri_State;
 
    package String_Lists is
