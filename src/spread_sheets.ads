@@ -16,15 +16,25 @@ package Spread_Sheets is
    Line_Separator : Cell := (Contents       => Null_Unbounded_String,
                              Line_Separator => True);
 
-   function New_Cell (Text : Unbounded_String) return Cell;
 
    procedure Parse (Sheet   : out Spread_Sheet;
                     Input   : in out Plain_Pipe_Stream);
 
+   function At_End (Sheet : Spread_Sheet) return Boolean;
+   function At_Separator (Sheet : Spread_Sheet) return Boolean;
+   procedure Rewind (Sheet : in out Spread_Sheet);
+   procedure Next (Sheet : in out Spread_Sheet);
+   function Current (Sheet : Spread_Sheet) return String;
+
+   Output_Error : exception;
+   Input_Error : exception;
+
 private
-   type Spread_Sheet is
-      tagged record
-         Cells : Cell_List;
-      end record;
+   type Spread_Sheet is tagged record
+      Cells    : Cell_List;
+      Position : Cell_Lists.Cursor;
+   end record;
+   function New_Cell (Text : Unbounded_String) return Cell;
+
 
 end Spread_Sheets;
