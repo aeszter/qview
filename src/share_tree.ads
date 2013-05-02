@@ -30,6 +30,7 @@ private
 
    List : Share_Lists.List;
    Total_Usage : Usage_Number;
+   Total_CPU, Total_Mem, Total_IO : Usage_Number;
 
    procedure Put (Item : Share_Lists.Cursor);
 
