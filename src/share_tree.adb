@@ -23,7 +23,18 @@ package body Share_Tree is
    begin
       HTML.Begin_Div (ID => "sharetree_summary");
       Ada.Text_IO.Put ("<ul>");
-      Ada.Text_IO.Put ("blub -- summary not yet implemented");
+      Ada.Text_IO.Put ("<li> CPU:");
+      Ada.Text_IO.Put (Scale_CPU (Total_CPU) & " yr");
+      Ada.Text_IO.Put ("</li>");
+
+      Ada.Text_IO.Put ("<li> Mem:");
+      Ada.Text_IO.Put (Scale_Memory (Total_Mem) & " TB yr");
+      Ada.Text_IO.Put ("</li>");
+
+      Ada.Text_IO.Put ("<li> I/O:");
+      Ada.Text_IO.Put (Scale_IO (Total_IO) & " TB");
+      Ada.Text_IO.Put ("</li>");
+
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID => "sharetree_summary");
    end Put_Summary;
@@ -44,12 +55,15 @@ package body Share_Tree is
             User.Usage := Usage_Number'Value (Cells.Current);
             Cells.Next;
             User.CPU := Usage_Number'Value (Cells.Current);
+            Total_CPU := Total_CPU + User.CPU;
             Cells.Next;
             User.LT_CPU := Usage_Number'Value (Cells.Current);
             Cells.Next;
             User.Mem := Usage_Number'Value (Cells.Current);
+            Total_Mem := Total_Mem + User.Mem;
             Cells.Next;
             User.IO := Usage_Number'Value (Cells.Current);
+            Total_IO := Total_IO + User.IO;
             Cells.Next;
             User.Job_Count := Usage_Integer'Value (Cells.Current);
             Cells.Next;

@@ -135,7 +135,7 @@ package body CSS is
       Put_Line ("color: #00f;");
       Close_Block;
 
-      Open_Block ("#job_summary li, #partition_summary li");
+      Open_Block ("#job_summary li, #partition_summary li, #sharetree_summary li");
       Hide_List;
       Close_Block;
    end Put_Navigation;
