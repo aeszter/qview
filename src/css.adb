@@ -274,7 +274,6 @@ package body CSS is
       Put_Line ("font-size: 0.9em;");
       Close_Block;
       Put_Background ("th.delimited", "#8b8");
-      Close_Block;
       Open_Block ("td.right");
       Put_Line ("text-align: right;");
       Close_Block;
@@ -380,6 +379,7 @@ package body CSS is
       Open_Block (".clearer");
       Put_Line ("display: hidden;");
       Put_Line ("clear: both;");
+      Close_Block;
    end Put_Clearer;
 
    ---------
