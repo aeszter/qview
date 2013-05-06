@@ -145,6 +145,10 @@ package body Maintenance is
         + 0.1 * Hosts.Get_Free_Slots (H)
         and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H)
         + 0.15 * Hosts.Get_Free_Slots (H);
+   exception
+      when Constraint_Error =>
+         HTML.Error (Hosts.Get_Name (H) & " has inconsistent load");
+         return False;
    end High_Load;
 
    function Low_Load (H : Hosts.Host) return Boolean is
