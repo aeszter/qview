@@ -45,6 +45,7 @@ package Hosts is
    function Color_Class (Load : Fixed) return String;
    function Get_Free_Slots (H : Host) return Natural;
    function Get_Used_Slots (H : Host) return Natural;
+   function Get_Name (H : Host) return String;
 
 
 private

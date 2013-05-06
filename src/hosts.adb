@@ -43,6 +43,12 @@ package body Hosts is
       return Get_Cores (H.Properties) - H.Slots_Used;
    end Get_Free_Slots;
 
+   function Get_Name (H : Host) return String is
+   begin
+      return To_String (H.Name);
+   end Get_Name;
+
+
    ----------------------
    -- Precedes_By_Swap --
    ----------------------
