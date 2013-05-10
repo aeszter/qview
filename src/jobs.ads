@@ -35,7 +35,7 @@ package Jobs is
    function Get_Task_Count (J : Job) return Natural;
    function Get_ID (J : Job) return String;
    function Get_PE (J : Job) return Unbounded_String;
-   function Get_Slot_List (J : Job) return Ranges.Range_Lists.List;
+   function Get_Slot_List (J : Job) return Ranges.Step_Range_List;
    function Get_Slot_Number (J : Job) return Unbounded_String;
    function Get_Queue (J : Job) return Unbounded_String;
    function Get_Hard_Resources (J : Job) return Resources.Hashed_List;
@@ -233,7 +233,7 @@ private
       Queue            : Unbounded_String;
       Hard, Soft       : Resources.Hashed_List;
 
-      Slot_List        : Ranges.Range_Lists.List;
+      Slot_List        : Ranges.Step_Range_List;
       Queue_List       : String_Lists.List;
       Message_List     : String_Lists.List;
       Task_List        : String_Lists.List;

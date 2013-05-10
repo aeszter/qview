@@ -167,6 +167,7 @@ package body Queues is
             when 'E' => Q.State (error) := True;
             when 'd' => Q.State (disabled) := True;
             when 'u' => Q.State (unreachable) := True;
+            when 'o' => Q.State (old) := True;
             when others => raise Constraint_Error
                  with "Queue State has an unknown character: " & State (Pos);
          end case;

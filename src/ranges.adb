@@ -3,6 +3,7 @@ with Ranges; use Ranges.Range_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Hash;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Utils; use Utils; use Utils.Hash_Strings;
 
 package body Ranges is
 
@@ -190,7 +191,7 @@ package body Ranges is
    -- Put_Cell --
    --------------
 
-   procedure Put_Cell (Data : Range_Lists.List; Class : String) is
+   procedure Put_Cell (Data : Step_Range_List; Class : String) is
       Pos : Range_Lists.Cursor := Data.First;
       S : Unbounded_String;
    begin
@@ -230,16 +231,9 @@ package body Ranges is
    -- Hash --
    ----------
 
-   function Hash (List : Range_Lists.List) return String is
-      Temp : Ada.Containers.Hash_Type := 0;
-      Pos : Range_Lists.Cursor := List.First;
+   function Hash (List : Step_Range_List) return String is
    begin
-      while Pos /= Range_Lists.No_Element loop
-         Temp := Temp xor Hash (Element (Pos));
-         Next (Pos);
-      end loop;
-      HTML.Comment ("Hash (List) => " & Temp'Img);
-      return Temp'Img;
+      return To_String (List.Hash_String);
    end Hash;
 
    ----------
@@ -265,6 +259,30 @@ package body Ranges is
          return List.First_Element.Min;
       end if;
    end Min;
+
+   procedure Rehash (List : in out Step_Range_List) is
+      Temp : Ada.Containers.Hash_Type := 0;
+      Pos : Range_Lists.Cursor := List.First;
+   begin
+      while Pos /= No_Element loop
+         Temp := Temp xor Hash (Element (Pos));
+         Next (Pos);
+      end loop;
+      List.Hash_String := To_Hash_String (Temp'Img);
+      List.Hash_Value := Temp;
+   end Rehash;
+
+   overriding procedure Append (Container : in out Step_Range_List;
+                                New_Item  : Step_Range;
+                                Count     : Count_Type := 1) is
+   begin
+      Range_Lists.Append (Container => List (Container),
+                          New_Item  => New_Item,
+                          Count     => Count);
+      Container.Hash_Value := Container.Hash_Value xor Hash (New_Item);
+      Container.Hash_String := To_Hash_String (Container.Hash_Value'Img);
+   end Append;
+
 
 
 end Ranges;
