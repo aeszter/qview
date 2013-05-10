@@ -54,7 +54,7 @@ package body Jobs is
       return J.PE;
    end Get_PE;
 
-   function Get_Slot_List (J : Job) return Ranges.Range_Lists.List is
+   function Get_Slot_List (J : Job) return Ranges.Step_Range_List is
    begin
       return J.Slot_List;
    end Get_Slot_List;
@@ -1295,6 +1295,10 @@ package body Jobs is
       elsif Resources.Precedes (Left.Soft, Right.Soft) then
          return True;
       elsif Resources.Precedes (Right.Soft, Left.Soft) then
+         return False;
+      elsif Hash (Left.Slot_List) < Hash (Right.Slot_List) then
+         return True;
+      elsif Hash (Left.Slot_List) > Hash (Right.Slot_List) then
          return False;
       else
          return False;
