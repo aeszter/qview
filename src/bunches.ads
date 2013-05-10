@@ -21,7 +21,7 @@ private
    type Bunch is record
       PE, Queue      : Unbounded_String;
       Slot_Number    : Unbounded_String;
-      Slot_List      : Ranges.Range_Lists.List;
+      Slot_List      : Ranges.Step_Range_List;
       Hard, Soft     : Resources.Hashed_List;
       Total, On_Hold : Natural;
       Error, Waiting : Natural;

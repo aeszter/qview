@@ -1,6 +1,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers; use Ada.Containers;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Utils;
 
 package Ranges is
 
@@ -32,7 +33,12 @@ package Ranges is
    package Range_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Step_Range);
 
-   type Step_Range_List is new Range_Lists.List with null record;
+   type Step_Range_List is new Range_Lists.List with private;
+
+   overriding   procedure Append (Container : in out Step_Range_List;
+                                  New_Item  : Step_Range;
+                                  Count     : Count_Type := 1);
+
 
    function To_Step_Range_List (From : String) return Step_Range_List;
    --  Create a Step_Range from a string of the form {SR}(,{SR})* where {SR} is
@@ -59,7 +65,7 @@ package Ranges is
    --  Parameter Data: The list to print
    --  Parameter Class: The CSS class to attach to the cell
    ---------
-   procedure Put_Cell (Data : Range_Lists.List; Class : String);
+   procedure Put_Cell (Data : Step_Range_List; Class : String);
 
    ---------------
    -- To_String --
@@ -80,11 +86,21 @@ package Ranges is
    ---------------
    function To_Unbounded_String (What : Step_Range; Short : Boolean) return Unbounded_String;
 
-   function Hash (List : Range_Lists.List) return String;
+   function Hash (List : Step_Range_List) return String;
    function Hash (S : Step_Range) return Hash_Type;
 
    function Min (List : Step_Range_List) return Natural;
    --  return the "Minimum" number represented by the SRL. For now, the list is
    --  assumed to be ordered, so the Min of the first SR in the list is returned.
+
+private
+   type Step_Range_List is new Range_Lists.List with
+      record
+         Hash_Value : Hash_Type := 0;
+         Hash_String : Utils.Hash_String_Type;
+      end record;
+
+   --  Purpose: unconditionally compute the List's hash value
+   procedure Rehash (List : in out Step_Range_List);
 
 end Ranges;
