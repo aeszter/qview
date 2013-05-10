@@ -61,7 +61,7 @@ package Queues is
 
 private
 
-   type State_Flag is (alarm, disabled, error, unreachable);
+   type State_Flag is (alarm, disabled, error, unreachable, old);
    type Type_Flag is (B, I, P);
    type State_Array is array (State_Flag) of Boolean;
    type Type_Array is array (Type_Flag) of Boolean;
