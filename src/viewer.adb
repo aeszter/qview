@@ -580,6 +580,7 @@ package body Viewer is
             HTML.Put_Header_Cell (Data => "IO", Params => My_Params,
                                   Acronym => "in TB");
             HTML.Put_Header_Cell (Data => "Job count", Params => My_Params);
+            HTML.Put_Header_Cell (Data => "raw CPU", Params => My_Params);
             Ada.Text_IO.Put ("</tr>");
          end Put_Table_Header;
 

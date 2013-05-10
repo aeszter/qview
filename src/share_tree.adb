@@ -132,6 +132,7 @@ package body Share_Tree is
       HTML.Put_Cell (Data    => Scale_Memory (User.Mem), Class => "right");
       HTML.Put_Cell (Data    => Scale_IO (User.IO), Class => "right");
       HTML.Put_Cell (Data => User.Job_Count'Img, Class => "right");
+      HTML.Put_Cell (Data => User.CPU'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
