@@ -794,7 +794,10 @@ package body Jobs is
                Ada.Text_IO.Put_Line ("Unknown Field: " & Name (C));
             end if;
          exception
-               when E : others =>
+            when E : Parser_Error =>
+               HTML.Error ("Job" & J.Number'Img & " information incomplete: "
+                             & Exception_Message (E));
+            when E : others =>
                HTML.Comment ("While parsing job:" & J.Number'Img);
                HTML.Comment (Exception_Message (E));
                HTML.Comment ("Node type: """ & Name (C)
@@ -1038,9 +1041,10 @@ package body Jobs is
                               --  there is no way we can handle this crappy xml without
                               --  writing equally crappy code, and it is not that important
                      else
-                        HTML.Error ("Unable to parse usage (QF => """
+                        HTML.Comment ("Unable to parse usage (QF => """
                         & Quantity & """): "
-                        & Exception_Message (E));
+                                      & Exception_Message (E));
+                        raise;
                      end if;
                   end;
             end;
