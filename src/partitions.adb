@@ -52,35 +52,41 @@ package body Partitions is
             P := New_Partition (Q);
          end if;
 
-         --  Update totals
-         P.Total_Slots := P.Total_Slots + Get_Slot_Count (Q);
-         P.Total_Hosts := P.Total_Hosts + 1;
-         List.Summary (total) := List.Summary (total) + Get_Slot_Count (Q);
-         if Is_Offline (Q) then
-            P.Offline_Slots := P.Offline_Slots + Get_Slot_Count (Q);
-            P.Offline_Hosts := P.Offline_Hosts + 1;
-            List.Summary (offline) := List.Summary (offline) + Get_Slot_Count (Q);
-         elsif Is_Suspended (Q) then
-            P.Suspended_Slots := P.Suspended_Slots + Get_Slot_Count (Q);
-            P.Suspended_Hosts := P.Suspended_Hosts + 1;
-            List.Summary (suspended) := List.Summary (suspended) + Get_Slot_Count (Q);
-         else
-            if Get_Used_Slots (Q) > 0 then
-               P.Used_Hosts := P.Used_Hosts + 1;
-               P.Used_Slots := P.Used_Slots + Get_Used_Slots (Q);
-               List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
+         begin
+            --  Update totals
+            P.Total_Slots := P.Total_Slots + Get_Slot_Count (Q);
+            P.Total_Hosts := P.Total_Hosts + 1;
+            List.Summary (total) := List.Summary (total) + Get_Slot_Count (Q);
+            if Is_Offline (Q) then
+               P.Offline_Slots := P.Offline_Slots + Get_Slot_Count (Q);
+               P.Offline_Hosts := P.Offline_Hosts + 1;
+               List.Summary (offline) := List.Summary (offline) + Get_Slot_Count (Q);
+            elsif Is_Suspended (Q) then
+               P.Suspended_Slots := P.Suspended_Slots + Get_Slot_Count (Q);
+               P.Suspended_Hosts := P.Suspended_Hosts + 1;
+               List.Summary (suspended) := List.Summary (suspended) + Get_Slot_Count (Q);
+            else
+               if Get_Used_Slots (Q) > 0 then
+                  P.Used_Hosts := P.Used_Hosts + 1;
+                  P.Used_Slots := P.Used_Slots + Get_Used_Slots (Q);
+                  List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
+               end if;
+               if Get_Reserved_Slots (Q) > 0 then
+                  P.Reserved_Hosts := P.Reserved_Hosts + 1;
+                  P.Reserved_Slots := P.Reserved_Slots + Get_Reserved_Slots (Q);
+                  List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
+               end if;
+               P.Available_Slots := P.Available_Slots + Get_Free_Slots (Q);
+               if Get_Reserved_Slots (Q) = 0 and then Get_Used_Slots (Q) = 0 then
+                  P.Available_Hosts := P.Available_Hosts + 1;
+               end if;
+               List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
             end if;
-            if Get_Reserved_Slots (Q) > 0 then
-               P.Reserved_Hosts := P.Reserved_Hosts + 1;
-               P.Reserved_Slots := P.Reserved_Slots + Get_Reserved_Slots (Q);
-               List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
-            end if;
-            P.Available_Slots := P.Available_Slots + Get_Free_Slots (Q);
-            if Get_Reserved_Slots (Q) = 0 and then Get_Used_Slots (Q) = 0 then
-               P.Available_Hosts := P.Available_Hosts + 1;
-            end if;
-            List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
-         end if;
+         exception
+            when Constraint_Error =>
+               HTML.Put_Paragraph (Label    => "Warning",
+                                   Contents => String'(Get_Long_Name (Q)) & " inconsistent");
+         end;
          exit when Queues.At_End;
          --  Advance
          Q := Queues.Next;
