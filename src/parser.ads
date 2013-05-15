@@ -1,5 +1,6 @@
 with DOM.Core; with DOM.Core.Documents;
 with DOM.Core.Nodes;
+with Spread_Sheets;
 
 
 package Parser is
@@ -21,6 +22,8 @@ package Parser is
 
    function Setup (Command  : String := "qstat";
                    Selector : String) return DOM.Core.Document;
+   function Setup_No_XML (Command  : String;
+                          Selector : String) return Spread_Sheets.Spread_Sheet;
    procedure Free;
    function Get_Elements_By_Tag_Name
      (Doc : DOM.Core.Document; Tag_Name : DOM.Core.DOM_String := "*")
