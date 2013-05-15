@@ -263,6 +263,11 @@ package body Queues is
       return To_String (Q.Name);
    end Get_Name;
 
+   function Get_Long_Name (Q : Queue) return String is
+   begin
+      return To_String (Q.Long_Name);
+   end Get_Long_Name;
+
    function Has_Error (Q : Queue) return Boolean is
    begin
       return Q.State (error);
