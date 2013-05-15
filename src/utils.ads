@@ -4,7 +4,7 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Ordered_Sets;
 
 package Utils is
-   Version : String := "v1.0b2"; -- Update Bugzilla when you change this
+   Version : String := "v1.0b3"; -- Update Bugzilla when you change this
    type Tri_State is (False, True, Undecided);
    Assumption_Error : exception;
 
