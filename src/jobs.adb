@@ -415,7 +415,8 @@ package body Jobs is
       end loop;
    exception
       when E : others
-         => HTML.Error ("Unable to read job info: " & Exception_Message (E));
+         => HTML.Error ("Unable to read job info (" & J.Number'Img & "): "
+                        & Exception_Message (E));
    end Append_List;
 
    ------------------------------
