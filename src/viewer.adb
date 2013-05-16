@@ -18,7 +18,10 @@ with Share_Tree;
 with Diagnostics;
 with Debug;
 with Ada.Strings;
+<<<<<<< HEAD
 with Spread_Sheets;
+=======
+>>>>>>> feature/job-starttimes-in-maint
 
 package body Viewer is
 

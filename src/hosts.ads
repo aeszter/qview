@@ -5,6 +5,7 @@ with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 with Resources;
 with Parser; use Parser;
+with Ada.Calendar; use Ada.Calendar;
 
 package Hosts is
 
@@ -55,6 +56,7 @@ private
       ID      : Positive;
       Task_ID : Natural;
       Slaves  : Natural;
+      Start_Time : Time;
    end record;
 
    -----------------------
