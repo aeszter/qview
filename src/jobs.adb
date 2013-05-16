@@ -2040,11 +2040,19 @@ package body Jobs is
          when submission_time =>
             null; -- ignore for now; note that this is also treated as cumulative
                   --  in Jobs.Extract_Tasks, although it represents a point in time
+         when start_time =>
+            null; --likewise
          when priority =>
             null;
             --  ignore for now. It is unclear how one can "use" priority
             --  Put_Paragraph (Label => "Priority",
             --               Contents => Amount'Img);
+         when exit_status =>
+            null;
+            --  ignore as well
+         when signal =>
+            null;
+            --  ignore
       end case;
    end Put_Usage;
 
