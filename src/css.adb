@@ -299,6 +299,11 @@ package body CSS is
       Put_Line ("margin: 5px 5px 8px 5px;");
       Put_Line ("font-size: 0.9em;");
       Close_Block;
+      Open_Block ("h4");
+      Put_Line ("font-size: 0.6em;");
+      Put_Line ("font-style: italic;");
+      Put_Line ("color: #888;");
+      Close_Block;
    end Put_Headings;
 
    procedure Put_Job_Lists is
