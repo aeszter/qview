@@ -58,6 +58,9 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Overloaded Nodes",
                          Level => 3);
+      HTML.Put_Heading (Title => "Load_5 > 1.1 * Used_Slots + 0.1 * Free_Slots"
+                        & " and Load_1 > 1.0 * Used_Slots + 0.15 * Free_Slots",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Put_Header;
       Hosts.Put_Selected (High_Load'Access);
@@ -70,6 +73,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Underutilized Nodes",
                          Level => 3);
+      HTML.Put_Heading (Title => "Load_1 and Load_5 < 0.9 * Used_Slots",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Put_Header;
       Hosts.Put_Selected (Low_Load'Access);
@@ -82,6 +87,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Swapping Nodes",
                          Level => 3);
+      HTML.Put_Heading (Title => "Swap_Used > 50%",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Put_Header;
       Hosts.Put_Selected (High_Swap'Access);
@@ -94,6 +101,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Queues in Error state",
                          Level => 3);
+      HTML.Put_Heading (Title => "Queue State contains E",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Queues.Put_Selected (In_Error_State'Access);
       Ada.Text_IO.Put_Line ("</table>");
@@ -105,6 +114,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Disabled queues",
                          Level => 3);
+      HTML.Put_Heading (Title => "Queue_State has d but not u",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Queues.Put_Selected (Reachable_Disabled'Access);
       Ada.Text_IO.Put_Line ("</table>");
@@ -116,6 +127,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Unreachable queues",
                          Level => 3);
+      HTML.Put_Heading (Title => "Queue_State has u but not d",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Queues.Put_Selected (Unreachable_Enabled'Access);
       Ada.Text_IO.Put_Line ("</table>");
@@ -127,6 +140,8 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Unusual queues",
                          Level => 3);
+      HTML.Put_Heading (Title => "Queue_Type is not BIP",
+                        Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Queues.Put_Selected (Unusual_Type'Access);
       Ada.Text_IO.Put_Line ("</table>");

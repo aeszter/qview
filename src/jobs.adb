@@ -363,7 +363,7 @@ package body Jobs is
       end loop;
    exception
       when E : others
-         => HTML.Error ("Unable to read job info: " & Exception_Message (E));
+         => HTML.Error ("Unable to read job info (Append_List): " & Exception_Message (E));
    end Append_List;
 
    -----------------
@@ -393,7 +393,8 @@ package body Jobs is
                              & " /= " & Soft_Requests);
             else -- all equal
                Update_Job_From_Qstat_J (J);
-               if Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
+               if Slot_Ranges = Null_Unbounded_String or else -- Bug #1610
+                 Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
                   --  checking against a string (i.e. " 0") would be too brittle,
                   --  since any change in leading blanks would break this code
                   if J.Slot_Number = Slot_Number then
@@ -415,7 +416,8 @@ package body Jobs is
       end loop;
    exception
       when E : others
-         => HTML.Error ("Unable to read job info: " & Exception_Message (E));
+         => HTML.Error ("Unable to read job info (Append_List [limited]" & J.Number'Img & "): "
+                        & Exception_Message (E));
    end Append_List;
 
    ------------------------------
@@ -461,7 +463,7 @@ package body Jobs is
       Parser.Free;
    exception
       when E : others
-         => HTML.Error ("Unable to read job info (" & J.Number'Img & "):"
+         => HTML.Error ("Unable to read job info (Update_From_Qstat" & J.Number'Img & "):"
                         & Exception_Message (E));
                Parser.Free;
    end Update_Job_From_Qstat_J;
@@ -2039,11 +2041,19 @@ package body Jobs is
          when submission_time =>
             null; -- ignore for now; note that this is also treated as cumulative
                   --  in Jobs.Extract_Tasks, although it represents a point in time
+         when start_time =>
+            null; -- likewise
          when priority =>
             null;
             --  ignore for now. It is unclear how one can "use" priority
             --  Put_Paragraph (Label => "Priority",
             --               Contents => Amount'Img);
+         when exit_status =>
+            null;
+            --  ignore as well
+         when signal =>
+            null;
+            --  ignore
       end case;
    end Put_Usage;
 

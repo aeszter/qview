@@ -2,14 +2,19 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Bounded;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Ordered_Sets;
+with POSIX; use POSIX;
 
 package Utils is
-   Version : String := "v1.0b3"; -- Update Bugzilla when you change this
+   Version : String := "v1.2"; -- Update Bugzilla when you change this
    type Tri_State is (False, True, Undecided);
    Assumption_Error : exception;
 
    type Fixed is delta 0.0001 digits 5;
    --  a general fixed type, especially useful for SGE resources
+
+   type Usage_Number is delta 0.0001 digits 18;
+   type Usage_Integer is range 0 .. 10 ** 12;
+
 
    function To_Tri_State (Truth : String) return Tri_State;
 
@@ -33,4 +38,7 @@ package Utils is
    subtype Hash_String_Type is Hash_Strings.Bounded_String;
 
    function To_Hash_String (S : String) return Hash_String_Type;
+
+   procedure To_String_List (Source  : String; Dest : out POSIX_String_List);
+
 end Utils;

@@ -5,10 +5,12 @@ with DOM.Core; use DOM.Core;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with Pipe_Streams; use Pipe_Streams;
 with Ada.Exceptions; use Ada.Exceptions;
+with Plain_Pipe_Streams; use Plain_Pipe_Streams;
 
 package body Parser is
 
-   Reader      : DOM.Readers.Tree_Reader;
+   Reader : DOM.Readers.Tree_Reader;
+   Table  : Spread_Sheets.Spread_Sheet;
    -----------
    -- Setup --
    -----------
@@ -27,10 +29,10 @@ package body Parser is
       SGE_Command.Close;
       return Reader.Get_Tree;
    exception
-      when Failed_Creation_Error =>
+      when Pipe_Streams.Failed_Creation_Error =>
          raise Parser_Error with "Failed to spawn """ & Command
            & """ with """ & Selector & """";
-      when Exception_Error =>
+      when Pipe_Streams.Exception_Error =>
          raise Parser_Error with """" & Command
            & """ terminated because of an unhandled exception";
       when E : Sax.Readers.XML_Fatal_Error =>
@@ -39,6 +41,30 @@ package body Parser is
            & Command & " with " & Selector & ": "
            & Exception_Message (E);
    end Setup;
+
+   function Setup_No_XML (Command  : String;
+                          Selector : String) return Spread_Sheets.Spread_Sheet is
+      SGE_Command : Plain_Pipe_Stream;
+   begin
+      HTML.Comment (Command & " " & Selector);
+      SGE_Command.Execute (Command => sgeroot & "/utilbin/linux-x64/" & Command,
+                           Arguments => Selector,
+                           Environment => "SGE_ROOT=" & sgeroot);
+
+      Table.Parse (SGE_Command);
+      SGE_Command.Close;
+      return Table;
+   exception
+         when Plain_Pipe_Streams.Failed_Creation_Error =>
+            raise Parser_Error with "Failed to spawn """ & Command
+              & """ with """ & Selector & """";
+         when Plain_Pipe_Streams.Exception_Error =>
+            raise Parser_Error with """" & Command
+              & """ terminated because of an unhandled exception";
+         when E : others => raise Parser_Error with "Error when calling "
+              & Command & " with " & Selector & ": "
+              & Exception_Message (E);
+   end Setup_No_XML;
 
    procedure Free is
    begin
