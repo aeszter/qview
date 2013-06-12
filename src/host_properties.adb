@@ -135,10 +135,6 @@ package body Host_Properties is
          return True;
       elsif Left.Model > Right.Model then
          return False;
-      elsif Left.Memory < Right.Memory then
-         return True;
-      elsif Left.Memory > Right.Memory then
-         return False;
       elsif Left.Cores < Right.Cores then
          return True;
       elsif Left.Cores > Right.Cores then
@@ -155,11 +151,40 @@ package body Host_Properties is
          return True;
       elsif Left.GPU > Right.GPU then
          return False;
+      elsif Left.Memory < Right.Memory then
+         return True;
+      elsif Left.Memory > Right.Memory then
+         return False;
 
       else
          return False;
       end if;
    end "<";
+
+   overriding function "=" (Left, Right : Set_Of_Properties) return Boolean is
+   begin
+      if Left.Network /= Right.Network then
+         return False;
+      elsif Left.Model /= Right.Model then
+         return False;
+      elsif Left.Cores /= Right.Cores then
+         return False;
+      elsif Left.Runtime /= Right.Runtime then
+         return False;
+      elsif Left.SSD /= Right.SSD then
+         return False;
+      elsif Left.GPU /= Right.GPU then
+         return False;
+      elsif Left.Memory < Right.Memory * 0.99 then
+         return False;
+      elsif Left.Memory > Right.Memory * 1.01 then
+         return False;
+
+      else
+         return True;
+      end if;
+   end "=";
+
 
    function Get_Mismatch (Left, Right : Set_Of_Properties) return String is
    begin
