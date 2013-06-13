@@ -9,6 +9,7 @@ with Ada.Strings.Fixed;
 
 package body Partitions is
 
+   use Queues;
    ---------
    -- "=" --
    ---------
@@ -23,6 +24,19 @@ package body Partitions is
       return Right = Left;
    end "=";
 
+
+   function Sum (Over : Countable_Maps.Map) return Natural is
+      Total : Natural := 0;
+
+      procedure Count (Position : Countable_Maps.Cursor) is
+      begin
+         Total := Total + Countable_Maps.Element (Position);
+      end Count;
+
+   begin
+      Over.Iterate (Count'Access);
+      return Total;
+   end Sum;
 
    -------------------
    -- New_Partition --
@@ -54,33 +68,46 @@ package body Partitions is
 
          begin
             --  Update totals
-            P.Total_Slots := P.Total_Slots + Get_Slot_Count (Q);
-            P.Total_Hosts := P.Total_Hosts + 1;
-            List.Summary (total) := List.Summary (total) + Get_Slot_Count (Q);
+            P.Total_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                   New_Item => Get_Slot_Count (Q));
+            pragma Compile_Time_Warning (True, "The last queue found for a host will determine the number of slots");
+            pragma Compile_Time_Warning (True, "Perhaps look for the maximum instead?");
+            P.Total_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
+            List.Summary (total).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                   New_Item => Get_Slot_Count (Q));
             if Is_Offline (Q) then
                P.Offline_Slots := P.Offline_Slots + Get_Slot_Count (Q);
-               P.Offline_Hosts := P.Offline_Hosts + 1;
-               List.Summary (offline) := List.Summary (offline) + Get_Slot_Count (Q);
+               P.Offline_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
+               List.Summary (offline).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                               New_Item => Get_Slot_Count (Q));
             elsif Is_Suspended (Q) then
-               P.Suspended_Slots := P.Suspended_Slots + Get_Slot_Count (Q);
-               P.Suspended_Hosts := P.Suspended_Hosts + 1;
-               List.Summary (suspended) := List.Summary (suspended) + Get_Slot_Count (Q);
+               pragma Compile_Time_Warning (True, "either amend Is_Suspended, or add a new state for (S)uspended queues");
+               P.Suspended_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                               New_Item => Get_Slot_Count (Q));
+               P.Suspended_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
+               List.Summary (suspended).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                                 New_Item => Get_Slot_Count (Q));
             else
                if Get_Used_Slots (Q) > 0 then
-                  P.Used_Hosts := P.Used_Hosts + 1;
+                  P.Used_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
+                  pragma Compile_Time_Warning (True, "store used hosts in a set so we can count them later");
                   P.Used_Slots := P.Used_Slots + Get_Used_Slots (Q);
-                  List.Summary (used) := List.Summary (used) + Get_Used_Slots (Q);
+                  List.Summary (used).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                               New_Item => Get_Used_Slots (Q));
                end if;
                if Get_Reserved_Slots (Q) > 0 then
-                  P.Reserved_Hosts := P.Reserved_Hosts + 1;
+                  P.Reserved_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
                   P.Reserved_Slots := P.Reserved_Slots + Get_Reserved_Slots (Q);
-                  List.Summary (reserved) := List.Summary (reserved) + Get_Reserved_Slots (Q);
+                  List.Summary (reserved).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                                   New_Item => Get_Reserved_Slots (Q));
                end if;
-               P.Available_Slots := P.Available_Slots + Get_Free_Slots (Q);
+               P.Available_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                               New_Item => Get_Free_Slots (Q));
                if Get_Reserved_Slots (Q) = 0 and then Get_Used_Slots (Q) = 0 then
-                  P.Available_Hosts := P.Available_Hosts + 1;
+                  P.Available_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
                end if;
-               List.Summary (available) := List.Summary (available) + Get_Free_Slots (Q);
+               List.Summary (available).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                                 New_Item => Get_Free_Slots (Q));
             end if;
          exception
             when Constraint_Error =>
@@ -124,7 +151,7 @@ package body Partitions is
          Ada.Text_IO.Put ("<tr class=""available"">");
       elsif P.Available_Slots > 0 then
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
-      elsif P.Offline_Slots = P.Total_Slots then
+      elsif P.Offline_Slots = Sum (P.Total_Slots) then
          Ada.Text_IO.Put ("<tr class=""offline"">");
       else
          Ada.Text_IO.Put ("<tr>");
@@ -152,8 +179,8 @@ package body Partitions is
       HTML.Put_Cell (Data => Get_Cores (Props)'Img, Class => "right");
       HTML.Put_Cell (Data => To_String (Get_Memory (Props)) & "G", Class => "right");
       HTML.Put_Cell (Data => Get_Runtime (Props), Class => "right");
-      HTML.Put_Cell (Data => P.Total_Slots'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Total_Hosts'Img, Class => "right");
+      HTML.Put_Cell (Data => Sum (P.Total_Slots)'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Total_Hosts.Length'Img, Class => "right");
       HTML.Put_Cell (Data => P.Used_Slots'Img & " (" & Str_F.Trim (P.Used_Hosts'Img, Str.Left) & ")", Class => "right");
       HTML.Put_Cell (Data => P.Reserved_Slots'Img, Class => "right");
       HTML.Put_Cell (Data => P.Available_Slots'Img & " (" & Str_F.Trim (P.Available_Hosts'Img, Str.Left) & ")", Class => "right");
@@ -168,7 +195,7 @@ package body Partitions is
       Ada.Text_IO.Put ("<ul>");
       for State in List.Summary'Range loop
          Ada.Text_IO.Put ("<li>");
-         Ada.Text_IO.Put (List.Summary (State)'Img & " ");
+         Ada.Text_IO.Put (Sum (List.Summary (State))'Img & " ");
          Ada.Text_IO.Put (To_String (State));
          Ada.Text_IO.Put ("</li>");
       end loop;

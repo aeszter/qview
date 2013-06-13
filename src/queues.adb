@@ -4,6 +4,7 @@ with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Debug;
 with Ada.Text_IO;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 
 package body Queues is
    use Queue_Lists;
@@ -268,6 +269,17 @@ package body Queues is
    begin
       return To_String (Q.Long_Name);
    end Get_Long_Name;
+
+   function Get_Host_Name (Q : Queue) return String is
+      Src : String := To_String (Q.Long_Name);
+      Start : Positive := Index (Source  => Src,
+                                 Pattern => "@");
+      Stop  : Positive := Index (Source  => Src,
+                                    From => Start,
+                                 Pattern => ".");
+   begin
+      return Src (Start .. Stop);
+   end Get_Host_Name;
 
    function Has_Error (Q : Queue) return Boolean is
    begin
