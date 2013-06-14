@@ -44,16 +44,19 @@ package Queues is
    function Get_Name (Q : Queue) return Unbounded_String;
    function Get_Name (Q : Queue) return String;
    function Get_Long_Name (Q : Queue) return String;
+   function Get_Host_Name (Q : Queue) return String;
    function Get_Slot_Count (Q : Queue) return Natural;
    function Get_Used_Slots (Q : Queue) return Natural;
    function Get_Reserved_Slots (Q : Queue) return Natural;
    function Get_Free_Slots (Q : Queue) return Natural;
    function Is_Offline (Q : Queue) return Boolean;
+   function Is_Disabled (Q : Queue) return Boolean;
    function Is_Suspended (Q : Queue) return Boolean;
 
    function Has_Error (Q : Queue) return Boolean;
    function Has_Disabled (Q : Queue) return Boolean;
    function Has_Unreachable (Q : Queue) return Boolean;
+   function Has_Suspended (Q : Queue) return Boolean;
    function Is_Batch (Q : Queue) return Boolean;
    function Is_Interactive (Q : Queue) return Boolean;
    function Is_Parallel (Q : Queue) return Boolean;
