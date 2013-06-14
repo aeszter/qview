@@ -268,7 +268,7 @@ package body Viewer is
             HTML.Put_Cell (Data => "Used", Tag => "th");
             HTML.Put_Cell (Data => "Reserved", Tag => "th");
             HTML.Put_Cell (Data => "Available", Tag => "th");
-            HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Suspended</acronym>", Tag => "th");
+            HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Disabled</acronym>", Tag => "th");
             HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
             Ada.Text_IO.Put_Line ("</tr>");
          end Put_Header;

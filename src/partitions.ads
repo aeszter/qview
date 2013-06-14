@@ -25,13 +25,13 @@ package Partitions is
       Reserved_Slots          : Natural := 0;
       Total_Slots             : Countable_Maps.Map;
       Available_Hosts,
-      Total_Hosts, Offline_Hosts, Reserved_Hosts, Used_Hosts, Suspended_Hosts : Countable_Sets.Set;
+      Total_Hosts, Offline_Hosts, Reserved_Hosts, Used_Hosts, Disabled_Hosts : Countable_Sets.Set;
       Available_Slots,
-      Suspended_Slots, Offline_Slots     : Countable_Maps.Map;
+      Disabled_Slots, Offline_Slots     : Countable_Maps.Map;
       Name                             : Unbounded_String;
       Properties                       : Set_Of_Properties;
    end record;
-   type State is (total, available, used, reserved, suspended, offline);
+   type State is (total, available, used, reserved, disabled, offline);
    type State_Count is array (State) of Countable_Maps.Map;
 
 

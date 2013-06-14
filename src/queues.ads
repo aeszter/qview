@@ -50,7 +50,7 @@ package Queues is
    function Get_Reserved_Slots (Q : Queue) return Natural;
    function Get_Free_Slots (Q : Queue) return Natural;
    function Is_Offline (Q : Queue) return Boolean;
-   function Is_Suspended (Q : Queue) return Boolean;
+   function Is_Disabled (Q : Queue) return Boolean;
 
    function Has_Error (Q : Queue) return Boolean;
    function Has_Disabled (Q : Queue) return Boolean;

@@ -245,10 +245,10 @@ package body Queues is
       return Has_Unreachable (Q);
    end Is_Offline;
 
-   function Is_Suspended (Q : Queue) return Boolean is
+   function Is_Disabled (Q : Queue) return Boolean is
    begin
       return Has_Disabled (Q) and then not Has_Unreachable (Q);
-   end Is_Suspended;
+   end Is_Disabled;
 
    function Get_Properties (Q : Queue) return Set_Of_Properties is
    begin

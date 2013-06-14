@@ -81,12 +81,12 @@ package body Partitions is
                P.Offline_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
                List.Summary (offline).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                                New_Item => Get_Slot_Count (Q));
-            elsif Is_Suspended (Q) then
+            elsif Is_Disabled (Q) then
                pragma Compile_Time_Warning (True, "either amend Is_Suspended, or add a new state for (S)uspended queues");
-               P.Suspended_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+               P.Disabled_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                                New_Item => Get_Slot_Count (Q));
-               P.Suspended_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
-               List.Summary (suspended).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+               P.Disabled_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
+               List.Summary (disabled).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                                  New_Item => Get_Slot_Count (Q));
             else
                if Get_Used_Slots (Q) > 0 then
@@ -190,8 +190,8 @@ package body Partitions is
       HTML.Put_Cell (Data  => Sum (P.Available_Slots)'Img & " ("
                      & Str_F.Trim (P.Available_Hosts.Length'Img, Str.Left) & ")",
                      Class => "right");
-      HTML.Put_Cell (Data  => Sum (P.Suspended_Slots)'Img
-                     & " (" & Str_F.Trim (P.Suspended_Hosts.Length'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data  => Sum (P.Disabled_Slots)'Img
+                     & " (" & Str_F.Trim (P.Disabled_Hosts.Length'Img, Str.Left) & ")",
                      Class => "right");
       HTML.Put_Cell (Data  => Sum (P.Offline_Slots)'Img
                      & " (" & Str_F.Trim (P.Offline_Hosts.Length'Img, Str.Left) & ")",
@@ -226,8 +226,8 @@ package body Partitions is
             return "Offline";
          when available =>
             return "Available";
-         when suspended =>
-            return "Suspended";
+         when disabled =>
+            return "Disabled";
       end case;
    end To_String;
 
