@@ -23,11 +23,11 @@ package Partitions is
    type Partition is record
       Used_Slots,
       Reserved_Slots          : Natural := 0;
-      Total_Slots : Countable_Maps.Map;
+      Total_Slots             : Countable_Maps.Map;
+      Available_Hosts,
       Total_Hosts, Offline_Hosts, Reserved_Hosts, Used_Hosts, Suspended_Hosts : Countable_Sets.Set;
-      Available_Slots, Available_Hosts : Natural := 0;
-      Suspended_Slots,
-      Offline_Slots     : Natural := 0;
+      Available_Slots,
+      Suspended_Slots, Offline_Slots     : Countable_Maps.Map;
       Name                             : Unbounded_String;
       Properties                       : Set_Of_Properties;
    end record;

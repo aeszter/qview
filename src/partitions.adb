@@ -76,7 +76,8 @@ package body Partitions is
             List.Summary (total).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                    New_Item => Get_Slot_Count (Q));
             if Is_Offline (Q) then
-               P.Offline_Slots := P.Offline_Slots + Get_Slot_Count (Q);
+               P.Offline_Slots.Include (Key => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
+                                   New_Item => Get_Slot_Count (Q));
                P.Offline_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
                List.Summary (offline).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                                New_Item => Get_Slot_Count (Q));
@@ -90,7 +91,6 @@ package body Partitions is
             else
                if Get_Used_Slots (Q) > 0 then
                   P.Used_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
-                  pragma Compile_Time_Warning (True, "store used hosts in a set so we can count them later");
                   P.Used_Slots := P.Used_Slots + Get_Used_Slots (Q);
                   List.Summary (used).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                                New_Item => Get_Used_Slots (Q));
@@ -142,16 +142,18 @@ package body Partitions is
 
 
    procedure Put (Partition : Partitions.Partition_Lists.Cursor) is
+      use type Ada.Containers.Count_Type;
+
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
       P : Partitions.Partition := Partitions.Partition_Lists.Element (Partition);
       Props : Set_Of_Properties := P.Properties;
    begin
-      if P.Available_Hosts > 0 then
+      if P.Available_Hosts.Length > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
-      elsif P.Available_Slots > 0 then
+      elsif Sum (P.Available_Slots) > 0 then
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
-      elsif P.Offline_Slots = Sum (P.Total_Slots) then
+      elsif Sum (P.Offline_Slots) = Sum (P.Total_Slots) then
          Ada.Text_IO.Put ("<tr class=""offline"">");
       else
          Ada.Text_IO.Put ("<tr>");
@@ -181,11 +183,19 @@ package body Partitions is
       HTML.Put_Cell (Data => Get_Runtime (Props), Class => "right");
       HTML.Put_Cell (Data => Sum (P.Total_Slots)'Img, Class => "right");
       HTML.Put_Cell (Data => P.Total_Hosts.Length'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Used_Slots'Img & " (" & Str_F.Trim (P.Used_Hosts'Img, Str.Left) & ")", Class => "right");
+      HTML.Put_Cell (Data => P.Used_Slots'Img & " ("
+                     & Str_F.Trim (P.Used_Hosts.Length'Img, Str.Left)
+                     & ")", Class => "right");
       HTML.Put_Cell (Data => P.Reserved_Slots'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Available_Slots'Img & " (" & Str_F.Trim (P.Available_Hosts'Img, Str.Left) & ")", Class => "right");
-      HTML.Put_Cell (Data => P.Suspended_Slots'Img & " (" & Str_F.Trim (P.Suspended_Hosts'Img, Str.Left) & ")", Class => "right");
-      HTML.Put_Cell (Data => P.Offline_Slots'Img & " (" & Str_F.Trim (P.Offline_Hosts'Img, Str.Left) & ")", Class => "right");
+      HTML.Put_Cell (Data  => Sum (P.Available_Slots)'Img & " ("
+                     & Str_F.Trim (P.Available_Hosts.Length'Img, Str.Left) & ")",
+                     Class => "right");
+      HTML.Put_Cell (Data  => Sum (P.Suspended_Slots)'Img
+                     & " (" & Str_F.Trim (P.Suspended_Hosts.Length'Img, Str.Left) & ")",
+                     Class => "right");
+      HTML.Put_Cell (Data  => Sum (P.Offline_Slots)'Img
+                     & " (" & Str_F.Trim (P.Offline_Hosts.Length'Img, Str.Left) & ")",
+                     Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
