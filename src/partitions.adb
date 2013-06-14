@@ -6,7 +6,6 @@ with Resources; use Resources;
 with CGI;
 with Ada.Strings.Fixed;
 
-
 package body Partitions is
 
    use Queues;
@@ -25,7 +24,7 @@ package body Partitions is
    end "=";
 
 
-   function Sum (Over : Countable_Maps.Map) return Natural is
+   function Sum (Over : Countable_Map) return Natural is
       Total : Natural := 0;
 
       procedure Count (Position : Countable_Maps.Cursor) is
@@ -37,6 +36,32 @@ package body Partitions is
       Over.Iterate (Count'Access);
       return Total;
    end Sum;
+
+   overriding procedure Include (Container : in out Countable_Map;
+                                 Key       : Host_Name;
+                                 New_Item  : Natural) is
+      use Countable_Maps;
+      Previous : Cursor := Find (Container => Container,
+                                 Key       => Key);
+      procedure Take_Maximum (Key : Host_Name; Element : in out Natural) is
+         pragma Unreferenced (Key);
+      begin
+         if New_Item > Element then
+            Element := New_Item;
+         end if;
+      end Take_Maximum;
+
+   begin
+      if Previous = No_Element then
+         Insert (Container => Container,
+                 Key       => Key,
+                 New_Item  => New_Item);
+      else
+         Update_Element (Container => Container,
+                         Position  => Previous,
+                         Process   => Take_Maximum'Access);
+      end if;
+   end Include;
 
    -------------------
    -- New_Partition --
@@ -70,8 +95,6 @@ package body Partitions is
             --  Update totals
             P.Total_Slots.Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                    New_Item => Get_Slot_Count (Q));
-            pragma Compile_Time_Warning (True, "The last queue found for a host will determine the number of slots");
-            pragma Compile_Time_Warning (True, "Perhaps look for the maximum instead?");
             P.Total_Hosts.Include (Host_Names.To_Bounded_String (Get_Host_Name (Q)));
             List.Summary (total).Include (Key      => Host_Names.To_Bounded_String (Get_Host_Name (Q)),
                                    New_Item => Get_Slot_Count (Q));

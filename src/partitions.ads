@@ -18,13 +18,15 @@ package Partitions is
                                                               "<"          => Host_Names."<",
                                                               "="          => "=");
 
-   function Sum (Over : Countable_Maps.Map) return Natural;
+   type Countable_Map is new Countable_Maps.Map with null record;
+
+   function Sum (Over : Countable_Map) return Natural;
 
    type Partition is record
       Used_Slots,
       Reserved_Slots,
       Suspended_Slots : Natural := 0;
-      Total_Slots     : Countable_Maps.Map;
+      Total_Slots     : Countable_Map;
       Available_Hosts,
       Total_Hosts,
       Offline_Hosts,
@@ -33,12 +35,17 @@ package Partitions is
       Disabled_Hosts  : Countable_Sets.Set;
       Available_Slots,
       Disabled_Slots,
-      Offline_Slots   : Countable_Maps.Map;
+      Offline_Slots   : Countable_Map;
       Name            : Unbounded_String;
       Properties      : Set_Of_Properties;
    end record;
    type State is (total, available, used, reserved, disabled, offline);
-   type State_Count is array (State) of Countable_Maps.Map;
+   type State_Count is array (State) of Countable_Map;
+
+   overriding procedure Include
+     (Container : in out Countable_Map;
+      Key       : Host_Name;
+      New_Item  : Natural);
 
 
    package Partition_Lists is
