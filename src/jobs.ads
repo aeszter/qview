@@ -195,7 +195,7 @@ private
       Submission_Time      : Time;    -- when submitted
       Project              : Unbounded_String;
       Department           : Unbounded_String;
-      Job_Array            : Unbounded_String;
+      Job_Advance_Reservation            : Unbounded_String;
       Notify               : Tri_State;
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
       Predecessors         : Utils.ID_List;
