@@ -64,6 +64,11 @@ package body Host_Properties is
 
    procedure Set_Cores (Props : in out Set_Of_Properties; Cores : Positive) is
    begin
+      if Props.Cores /= 0 and then Props.Cores /= Cores then
+         HTML.Comment ("Cores changed from" & Props.Cores'Img
+                       & " to" & Cores'Img);
+         HTML.Comment ("See Bug #1499");
+      end if;
       Props.Cores := Cores;
    end Set_Cores;
 
@@ -221,11 +226,9 @@ package body Host_Properties is
    begin
       A := Get_Attr (N, "name");
       if Value (A) = "num_proc" then
-         Props.Cores := Integer (Fixed'Value (Value (First_Child (N))));
+         Set_Cores (Props, Integer (Fixed'Value (Value (First_Child (N)))));
             --  Fixed'Value is important here, as SGE interprets numerical
             --  resources as rational numbers
-            --  Is this code dead? Cf. Bug #1499
-         HTML.Comment ("Not dead -- see Bug #1499");
       elsif Value (A) = "load_short" then
          Props.Load_One := Fixed'Value (Value (First_Child (N)));
       elsif Value (A) = "load_medium" then
