@@ -14,6 +14,7 @@ package body Hosts is
 
    use Host_Lists;
    use Job_Lists;
+   use Queue_Maps;
 
    procedure Put_All is
    begin
@@ -262,12 +263,45 @@ package body Hosts is
    -- Append_Queue --
    ------------------
 
-   procedure Append_Queue (H : out Host; Name, State : String) is
+   procedure Append_Queue (H    : out Host;
+                           Name  : String;
+                           State : String := "";
+                           Slots : Natural := 0) is
    begin
       H.Queues.Insert (Key      => To_Unbounded_String (Name),
-                       New_Item => Queue_States.To_Bounded_String (State));
+                       New_Item => (State => Queue_States.To_Bounded_String (State),
+                       Slots => Slots)
+                      );
    end Append_Queue;
 
+   procedure Update_Or_Append_Queue (H    : out Host;
+                           Name  : String;
+                           State : String := "";
+                                     Slots : Natural := 0) is
+      Pos : Queue_Maps.Cursor := H.Queues.Find (Key => To_Unbounded_String (Name));
+
+      procedure Update (Name : Unbounded_String; Q : in out Queue) is
+         pragma Unreferenced (Name);
+      begin
+         if State /= "" then
+            Q.State := Queue_States.To_Bounded_String (State);
+         end if;
+         if Slots /= 0 then
+            Q.Slots := Slots;
+         end if;
+      end Update;
+
+   begin
+      if Pos /= Queue_Maps.No_Element then
+         H.Queues.Update_Element (Position => Pos,
+                                  Process  => Update'Access);
+      else
+         Append_Queue (H     => H,
+                       Name  => Name,
+                       State => State,
+                       Slots => Slots);
+      end if;
+   end Update_Or_Append_Queue;
 
    -----------------
    -- Append_List --
@@ -365,13 +399,19 @@ package body Hosts is
             A := Get_Attr (Q_Value, "name");
             if Value (A) = "state_string" then
                if Has_Child_Nodes (Q_Value) then
-                  Append_Queue (H     => H,
-                                Name  => Value (Q_Name),
-                                State => Value (First_Child (Q_Value)));
+                  Update_Or_Append_Queue (H     => H,
+                                          Name  => Value (Q_Name),
+                                          State => Value (First_Child (Q_Value)));
                else
-                  Append_Queue (H     => H,
-                                Name  => Value (Q_Name),
-                                State => "");
+                  Update_Or_Append_Queue (H     => H,
+                                          Name  => Value (Q_Name),
+                                          State => "");
+               end if;
+            elsif Value (A) = "slots" then
+               if Has_Child_Nodes (Q_Value) then
+                  Update_Or_Append_Queue (H     => H,
+                                          Name  => Value (Q_Name),
+                                          Slots => Integer'Value (Value (First_Child (Q_Value))));
                end if;
             end if;
          end if;
@@ -556,9 +596,10 @@ package body Hosts is
    ----------------
 
    procedure Put_Queue (Cursor : Queue_Maps.Cursor) is
-      S : String := Queue_States.To_String (Queue_Maps.Element (Cursor));
+      S : String := Queue_States.To_String (Queue_Maps.Element (Cursor).State);
    begin
-      HTML.Put_Cell (Data => Queue_Maps.Key (Cursor));
+      HTML.Put_Cell (Data => Queue_Maps.Key (Cursor) & ':'
+                     & Queue_Maps.Element (Cursor).Slots'Img);
       HTML.Put_Img_Cell (Image => S);
    end Put_Queue;
 

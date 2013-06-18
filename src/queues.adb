@@ -4,6 +4,7 @@ with HTML;
 with Ada.Exceptions; use Ada.Exceptions;
 with Debug;
 with Ada.Text_IO;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 
 package body Queues is
    use Queue_Lists;
@@ -168,6 +169,7 @@ package body Queues is
             when 'd' => Q.State (disabled) := True;
             when 'u' => Q.State (unreachable) := True;
             when 'o' => Q.State (old) := True;
+            when 'S' => Q.State (suspended) := True;
             when others => raise Constraint_Error
                  with "Queue State has an unknown character: " & State (Pos);
          end case;
@@ -243,9 +245,16 @@ package body Queues is
       return Has_Unreachable (Q);
    end Is_Offline;
 
-   function Is_Suspended (Q : Queue) return Boolean is
+   function Is_Disabled (Q : Queue) return Boolean is
    begin
       return Has_Disabled (Q) and then not Has_Unreachable (Q);
+   end Is_Disabled;
+
+   function Is_Suspended (Q : Queue) return Boolean is
+   begin
+      return Has_Suspended (Q)
+        and then not Has_Disabled (Q)
+        and then not Has_Unreachable (Q);
    end Is_Suspended;
 
    function Get_Properties (Q : Queue) return Set_Of_Properties is
@@ -268,6 +277,17 @@ package body Queues is
       return To_String (Q.Long_Name);
    end Get_Long_Name;
 
+   function Get_Host_Name (Q : Queue) return String is
+      Src : String := To_String (Q.Long_Name);
+      Start : Positive := Index (Source  => Src,
+                                 Pattern => "@");
+      Stop  : Positive := Index (Source  => Src,
+                                    From => Start,
+                                 Pattern => ".");
+   begin
+      return Src (Start .. Stop);
+   end Get_Host_Name;
+
    function Has_Error (Q : Queue) return Boolean is
    begin
       return Q.State (error);
@@ -282,6 +302,11 @@ package body Queues is
    begin
       return Q.State (unreachable);
    end Has_Unreachable;
+
+   function Has_Suspended (Q : Queue) return Boolean is
+   begin
+      return Q.State (suspended);
+   end Has_Suspended;
 
    function Is_Batch (Q : Queue) return Boolean is
    begin

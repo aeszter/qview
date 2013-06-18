@@ -81,11 +81,16 @@ private
    --
    -----------------------
    package Queue_States is
-      new Generic_Bounded_Length (Max => 5);
+     new Generic_Bounded_Length (Max => 5);
+
+   type Queue is record
+      State : Queue_States.Bounded_String;
+      Slots : Natural;
+   end record;
+
    package Queue_Maps is
      new Ada.Containers.Ordered_Maps (Key_Type => Unbounded_String,
-                                      Element_Type => Queue_States.Bounded_String,
-                                     "=" => Queue_States."=");
+                                      Element_Type => Queue);
    subtype Queue_Map is Queue_Maps.Map;
 
    ------------------
@@ -95,7 +100,15 @@ private
    --  Parameter Name: The name of the queue
    --  Parameter State: The state of the queue
    ------------------
-   procedure Append_Queue (H : out Host; Name, State : String);
+   procedure Append_Queue (H    : out Host;
+                           Name  : String;
+                           State : String := "";
+                           Slots : Natural := 0);
+
+   procedure Update_Or_Append_Queue (H    : out Host;
+                           Name  : String;
+                           State : String := "";
+                           Slots : Natural := 0);
 
    ----------------
    -- Put_Queue --
