@@ -698,6 +698,21 @@ package body Hosts is
       return Percent (Swap_Ratio (H) * 100.0);
    end Swap_Percentage;
 
+   function Has_Unreachable_Queue (H : Host) return Boolean is
+      Unreachable_Found : Boolean := False;
+
+      procedure Is_Unreachable (Position : Queue_Maps.Cursor) is
+      begin
+         if Queue_States.Count (Source  => Element (Position).State,
+                                Pattern => "u") > 0 then
+            Unreachable_Found := True;
+         end if;
+      end Is_Unreachable;
+   begin
+      H.Queues.Iterate (Is_Unreachable'Access);
+      return Unreachable_Found;
+   end Has_Unreachable_Queue;
+
    -----------------
    -- Color_Class --
    --  Purpose: translate a percentage to a string suitable

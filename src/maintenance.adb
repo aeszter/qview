@@ -31,7 +31,7 @@ package body Maintenance is
       SGE_Out : Parser.Tree;
    begin
       SGE_Out := Parser.Setup (Command => "qhost",
-                               Selector => "-j -F load_short,load_medium");
+                               Selector => "-j -F load_short,load_medium, -q");
 
       Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
@@ -59,7 +59,8 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Overloaded Nodes",
                          Level => 3);
       HTML.Put_Heading (Title => "Load_5 > 1.1 * Used_Slots + 0.1 * Free_Slots"
-                        & " and Load_1 > 1.0 * Used_Slots + 0.15 * Free_Slots",
+                        & " and Load_1 > 1.0 * Used_Slots + 0.15 * Free_Slots"
+                        & " and Queue State does not contain u",
                         Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Put_Header;
@@ -159,7 +160,8 @@ package body Maintenance is
       return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H)
         + 0.1 * Hosts.Get_Free_Slots (H)
         and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H)
-        + 0.15 * Hosts.Get_Free_Slots (H);
+        + 0.15 * Hosts.Get_Free_Slots (H)
+        and then not Has_Unreachable_Queue (H);
    exception
       when Constraint_Error =>
          HTML.Error (Hosts.Get_Name (H) & " has inconsistent load");

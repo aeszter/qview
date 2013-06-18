@@ -47,6 +47,7 @@ package Hosts is
    function Get_Free_Slots (H : Host) return Natural;
    function Get_Used_Slots (H : Host) return Natural;
    function Get_Name (H : Host) return String;
+   function Has_Unreachable_Queue (H : Host) return Boolean;
 
 
 private
