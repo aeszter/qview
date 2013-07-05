@@ -6,6 +6,7 @@ with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Interfaces.C;
 with Ada.Calendar.Conversions;
 with Ada.Strings.Hash;
+with CGI;
 
 package body Reservations is
    use Queue_Lists;
@@ -343,7 +344,9 @@ package body Reservations is
 
    function To_String (Source : Queue) return String is
    begin
-      return Integer'Image (Source.Slots) & '@' & Source.Name;
+      return Integer'Image (Source.Slots) & '@' &
+            "<a href=""" & CGI.My_URL & "?search=" & Source.Name & """>"
+        & Source.Name & "</a>";
    end To_String;
 
    function To_String (Source : Queue_List; Start : Queue_Lists.Cursor) return String is
