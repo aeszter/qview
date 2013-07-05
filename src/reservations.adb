@@ -110,8 +110,7 @@ package body Reservations is
                   if New_Reservation.State = reserving or else
                     (New_Reservation.State = starting and then
                     not Catalog.Contains ((Schedule_Run => Iteration_Number,
-                                          Job_ID       => New_Reservation.Job_ID)) and then
-                       Reserving_Jobs.Contains (New_Reservation.Job_ID)) then
+                                          Job_ID       => New_Reservation.Job_ID))) then
 
                      List.Append (New_Reservation);
                      Catalog.Insert (New_Item  => List.Last_Index,
@@ -282,7 +281,11 @@ package body Reservations is
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Res.Job_ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       if Res.State = starting then
-         HTML.Put_Cell ("starting");
+         if Reserving_Jobs.Contains (Res.Job_ID) then
+            HTML.Put_Cell ("starting (R)");
+         else
+            HTML.Put_Cell ("starting");
+         end if;
       elsif Res.Confirmation then
          HTML.Put_Cell ("confirmed");
       elsif Res.Shifted then
