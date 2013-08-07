@@ -6,6 +6,7 @@ with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Interfaces.C;
 with Ada.Calendar.Conversions;
 with Ada.Strings.Hash;
+with CGI;
 
 package body Reservations is
    use Queue_Lists;
@@ -109,8 +110,7 @@ package body Reservations is
                   if New_Reservation.State = reserving or else
                     (New_Reservation.State = starting and then
                     not Catalog.Contains ((Schedule_Run => Iteration_Number,
-                                          Job_ID       => New_Reservation.Job_ID)) and then
-                       Reserving_Jobs.Contains (New_Reservation.Job_ID)) then
+                                          Job_ID       => New_Reservation.Job_ID))) then
 
                      List.Append (New_Reservation);
                      Catalog.Insert (New_Item  => List.Last_Index,
@@ -281,7 +281,11 @@ package body Reservations is
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Res.Job_ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       if Res.State = starting then
-         HTML.Put_Cell ("starting");
+         if Reserving_Jobs.Contains (Res.Job_ID) then
+            HTML.Put_Cell ("starting (R)");
+         else
+            HTML.Put_Cell ("starting");
+         end if;
       elsif Res.Confirmation then
          HTML.Put_Cell ("confirmed");
       elsif Res.Shifted then
@@ -343,7 +347,9 @@ package body Reservations is
 
    function To_String (Source : Queue) return String is
    begin
-      return Integer'Image (Source.Slots) & '@' & Source.Name;
+      return Integer'Image (Source.Slots) & '@' &
+            "<a href=""" & CGI.My_URL & "?search=" & Source.Name & """>"
+        & Source.Name & "</a>";
    end To_String;
 
    function To_String (Source : Queue_List; Start : Queue_Lists.Cursor) return String is

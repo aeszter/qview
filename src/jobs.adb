@@ -728,7 +728,7 @@ package body Jobs is
                   J.Project := To_Unbounded_String ("none");
                end if;
             elsif Name (C) = "JB_ar" then
-               J.Job_Array := To_Unbounded_String (Value (First_Child (C)));
+               J.Job_Advance_Reservation := To_Unbounded_String (Value (First_Child (C)));
             elsif            Name (C) = "JB_ja_structure" then
                null;  -- to array
             elsif Name (C) = "JB_exec_file" then
@@ -1709,7 +1709,7 @@ package body Jobs is
          J.Predecessors.Iterate (Process => Put_Predecessor'Access);
          J.Predecessor_Request.Iterate (Process => Put_Request'Access);
          J.Successors.Iterate (Process => Put_Successor'Access);
-         HTML.Put_Paragraph ("Array Task", J.Job_Array);
+         HTML.Put_Paragraph ("Advance Reservation", J.Job_Advance_Reservation);
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (J.Reserve);
          Ada.Text_IO.Put_Line ("</p>");
