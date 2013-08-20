@@ -517,6 +517,12 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -u *");
+         Append_Params ("pe="&CGI.Value ("pe"));
+         Append_Params ("queue="&CGI.Value ("queue"));
+         Append_Params ("hr="&CGI.Value ("hr"));
+         Append_Params ("sr="&CGI.Value ("sr"));
+         Append_Params ("slot_ranges="&CGI.Value ("slot_ranges"));
+         Append_Params ("slot_number="&CGI.Value ("slot_number"));
          Put_Table_Header;
 
          Jobs.Append_List (
@@ -529,6 +535,11 @@ package body Viewer is
                            Slot_Number   => CGI.Value ("slot_number")
                           );
          Parser.Free;
+         if not HTML.Param_Is ("sort", "") then
+            Jobs.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => Sort_Direction);
+         end if;
+
          Jobs.Put_Bunch_List;
 
          --  Table Footer

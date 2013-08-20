@@ -1230,7 +1230,7 @@ package body Jobs is
 
    procedure Sort_By (Field : String; Direction : String) is
    begin
-      if Field = "Number" then
+      if Field = "Number" or else Field = "ID" then
          Sorting_By_Number.Sort (List);
       elsif Field = "Name" then
          Sorting_By_Name.Sort (List);
