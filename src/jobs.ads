@@ -79,6 +79,21 @@ package Jobs is
 
    procedure Append_List (Nodes : Node_List);
 
+   --------------------
+   -- Create_Overlay --
+   --  Purpose: Create a Set with values read from qstat -j
+   --------------------
+
+   procedure Create_Overlay (Nodes : Node_List);
+
+   -------------------
+   -- Apply_Overlay --
+   --  Purpose: For each job in the global List, update its field from the
+   --  Set created with Create_Overlay
+   -------------------
+
+   procedure Apply_Overlay;
+
    -----------------
    -- Append_List --
    --  Purpose: Read Jobs from a given list of (DOM) Nodes and populate the List
@@ -89,15 +104,6 @@ package Jobs is
                           Soft_Requests,
                           Slot_Number, Slot_Ranges : Unbounded_String);
 
-   ------------------------------
-   -- Update_List_From_Qstat_J --
-   --  Purpose: Get more information on existing jobs;
-   --  call qstat -j for each Job in List, filling in information for
-   --  previously empty fields
-   ------------------------------
-
-   --  Is this still needed?
-   procedure Update_List_From_Qstat_J;
 
    ----------------
    -- Prune_List --
@@ -149,8 +155,6 @@ package Jobs is
 
    function Same (Left, Right : Job) return Boolean;
 
-   procedure Update_Job_From_Qstat_J (J : in out Job);
-   --  Purpose: Get more information on an existing job;
    procedure Update_Status;
    --  Purpose: Update all jobs' status
    procedure Search_Queues;

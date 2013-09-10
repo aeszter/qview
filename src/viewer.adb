@@ -229,8 +229,13 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+
          if Slot_Ranges then
-            Jobs.Update_List_From_Qstat_J;
+            SGE_Out := Parser.Setup (Selector => "-j *");
+
+            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+            Parser.Free;
+            Jobs.Apply_Overlay;
          end if;
 
          --  Detect different bunches

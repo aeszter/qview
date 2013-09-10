@@ -392,7 +392,7 @@ package body Jobs is
                HTML.Comment (J.Number'Img & ":" & J.Soft.To_String & "(" & J.Soft.Hash & ")"
                              & " /= " & Soft_Requests);
             else -- all equal
-               Update_Job_From_Qstat_J (J);
+--               Update_Job_From_Qstat_J (J); removed while implementing Bug #1750
                if Slot_Ranges = Null_Unbounded_String or else -- Bug #1610
                  Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
                   --  checking against a string (i.e. " 0") would be too brittle,
@@ -419,54 +419,6 @@ package body Jobs is
          => HTML.Error ("Unable to read job info (Append_List [limited]" & J.Number'Img & "): "
                         & Exception_Message (E));
    end Append_List;
-
-   ------------------------------
-   -- Update_List_From_Qstat_J --
-   ------------------------------
-
-   procedure Update_List_From_Qstat_J is
-      Pos : Job_Lists.Cursor;
-   begin
-      Pos := List.First;
-      while Pos /= Job_Lists.No_Element loop
-         List.Update_Element (Position => Pos,
-                              Process  => Update_Job_From_Qstat_J'Access);
-         Next (Pos);
-      end loop;
-   end Update_List_From_Qstat_J;
-
-   -----------------------------
-   -- Update_Job_From_Qstat_J --
-   -----------------------------
-
-   procedure Update_Job_From_Qstat_J (J : in out Job) is
-      SGE_Out : Parser.Tree;
-      Nodes   : Node_List;
-      N       : Node;
-   begin
-      SGE_Out := Parser.Setup (Selector => "-j " & J.Number'Img);
-
-      --  Fetch Jobs
-      Nodes := Parser.Get_Elements_By_Tag_Name (SGE_Out, "djob_info");
-
-      for Index in 1 .. Length (Nodes) loop
-         N := Item (Nodes, Index - 1);
-         if Name (N) = "djob_info" then
-            N := Item (Child_Nodes (N), 1);
-            if Name (N) /= "element" then
-               raise Assumption_Error with "Expected ""element"" Found """
-                 & Name (N) & """";
-            end if;
-         end if;
-         Update_Job (J, Child_Nodes (N));
-      end loop;
-      Parser.Free;
-   exception
-      when E : others
-         => HTML.Error ("Unable to read job info (Update_From_Qstat" & J.Number'Img & "):"
-                        & Exception_Message (E));
-               Parser.Free;
-   end Update_Job_From_Qstat_J;
 
    -------------------
    -- Update_Status --
