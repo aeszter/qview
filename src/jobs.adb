@@ -1984,6 +1984,9 @@ package body Jobs is
       HTML.Put_Time_Cell (J.Submission_Time);
       HTML.Put_Cell (Data => J.Slot_Number, Tag => "td class=""right""");
       HTML.Put_Img_Cell (State_As_String (J));
+      Ada.Text_IO.Put ("<td>");
+      HTML.Put (J.Reserve);
+      Ada.Text_IO.Put ("</td>");
       Put_Prio_Core (J);
       Ada.Text_IO.Put ("</tr>");
    exception

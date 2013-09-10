@@ -308,12 +308,16 @@ package body Viewer is
 
 
          procedure Put_Table_Header is
+            Span : Integer := 6;
          begin
+            if Only_Waiting then
+               Span := Span + 1;
+            end if;
             HTML.Begin_Div (Class => "job_list");
             Ada.Text_IO.Put ("<table><tr>");
             HTML.Put_Cell (Data       => "",
                            Tag        => "th",
-                           Colspan => 6,
+                           Colspan => Span,
                            Class => "delimited");
             if not Only_Waiting then
                HTML.Put_Cell (Data => "Resource Usage",
@@ -332,7 +336,9 @@ package body Viewer is
             HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
             HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
             HTML.Put_Header_Cell (Data => "State", Params => My_Params);
-            if not Only_Waiting then
+            if Only_Waiting then
+               HTML.Put_Header_Cell (Data => "Res", Params => My_Params);
+            else
                HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
                HTML.Put_Header_Cell (Data => "Memory",
                                   Acronym => "Gigabyte-hours",
