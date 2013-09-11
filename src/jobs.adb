@@ -17,6 +17,7 @@ with Ada.Calendar.Formatting;
 
 package body Jobs is
    use Job_Lists;
+   use Job_Maps;
 
 
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
@@ -34,6 +35,8 @@ package body Jobs is
      (Usage_Data : in out Usage;
       Usage_Tree : Node;
       Cumulative : Boolean);
+
+   procedure Update_Job_From_Overlay (J : in out Job);
 
    -------------
    --  accessors
@@ -370,55 +373,56 @@ package body Jobs is
    -- Append_List --
    -----------------
 
-   procedure Append_List (Nodes                    : Node_List;
-                          PE, Queue, Hard_Requests,
-                          Soft_Requests,
-                          Slot_Number, Slot_Ranges : Unbounded_String) is
-            N : Node;
-            J : Job;
+   procedure Prune_List (PE, Queue, Hard_Requests,
+                         Soft_Requests,
+                         Slot_Number, Slot_Ranges : Unbounded_String) is
+      J : Job;
+      Pruned_List : Job_Lists.List;
    begin
-      for Index in 1 .. Length (Nodes) loop
-         N := Item (Nodes, Index - 1);
-         if Name (N) /= "#text" then
-            J := New_Job (Child_Nodes (N));
-            if J.PE /= PE then
-               HTML.Comment (J.Number'Img & ":" & J.PE & " /= " & PE);
-            elsif J.Queue /= Queue then
-               HTML.Comment (J.Number'Img & ":" & J.Queue & " /= " & Queue);
-            elsif J.Hard.Hash /= Hard_Requests then
-               HTML.Comment (J.Number'Img & ":" & J.Hard.To_String & "(" & J.Hard.Hash & ")"
-                             & " /= " & Hard_Requests);
-            elsif J.Soft.Hash /= Soft_Requests then
-               HTML.Comment (J.Number'Img & ":" & J.Soft.To_String & "(" & J.Soft.Hash & ")"
-                             & " /= " & Soft_Requests);
-            else -- all equal
---               Update_Job_From_Qstat_J (J); removed while implementing Bug #1750
-               if Slot_Ranges = Null_Unbounded_String or else -- Bug #1610
-                 Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
-                  --  checking against a string (i.e. " 0") would be too brittle,
-                  --  since any change in leading blanks would break this code
-                  if J.Slot_Number = Slot_Number then
-                     List.Append (J);
-                  else
-                     HTML.Comment (J.Number'Img & ":" & J.Slot_Number & " /= "
-                                     & Slot_Number);
-                  end if;
+      Rewind;
+      J := Current;
+      loop
+         if J.PE /= PE then
+            HTML.Comment (J.Number'Img & ":" & J.PE & " /= " & PE);
+         elsif J.Queue /= Queue then
+            HTML.Comment (J.Number'Img & ":" & J.Queue & " /= " & Queue);
+         elsif J.Hard.Hash /= Hard_Requests then
+            HTML.Comment (J.Number'Img & ":" & J.Hard.To_String & "(" & J.Hard.Hash & ")"
+                          & " /= " & Hard_Requests);
+         elsif J.Soft.Hash /= Soft_Requests then
+            HTML.Comment (J.Number'Img & ":" & J.Soft.To_String & "(" & J.Soft.Hash & ")"
+                          & " /= " & Soft_Requests);
+         else -- all equal
+            Update_Job_From_Overlay (J);
+            if Slot_Ranges = Null_Unbounded_String or else -- Bug #1610
+              Hash_Type'Value (To_String (Slot_Ranges)) = 0 then
+               --  checking against a string (i.e. " 0") would be too brittle,
+               --  since any change in leading blanks would break this code
+               if J.Slot_Number = Slot_Number then
+                  Pruned_List.Append (J);
                else
-                  if Hash (J.Slot_List) = Slot_Ranges then
-                     List.Append (J);
-                  else
-                     HTML.Comment (J.Number'Img & ":" & Hash (J.Slot_List) & " /= "
-                                     & Slot_Ranges);
-                  end if;
+                  HTML.Comment (J.Number'Img & ":" & J.Slot_Number & " /= "
+                                  & Slot_Number);
+               end if;
+            else
+               if Hash (J.Slot_List) = Slot_Ranges then
+                  Pruned_List.Append (J);
+               else
+                  HTML.Comment (J.Number'Img & ":" & Hash (J.Slot_List) & " /= "
+                                  & Slot_Ranges);
                end if;
             end if;
          end if;
+         exit when At_End;
+         J := Next;
       end loop;
+      List.Clear;
+      List.Splice (Source => Pruned_List, Before => List.First);
    exception
       when E : others
          => HTML.Error ("Unable to read job info (Append_List [limited]" & J.Number'Img & "): "
                         & Exception_Message (E));
-   end Append_List;
+   end Prune_List;
 
    -------------------
    -- Update_Status --
@@ -2011,5 +2015,48 @@ package body Jobs is
             --  ignore
       end case;
    end Put_Usage;
+
+   --------------
+   -- Overlays --
+   --------------
+
+   procedure Create_Overlay (Nodes : Node_List) is
+      N : Node;
+      J : Job;
+   begin
+      for Index in 1 .. Length (Nodes) loop
+         N := Item (Nodes, Index - 1);
+         if Name (N) /= "#text" then
+            J := New_Job (Child_Nodes (N));
+            Overlay.Insert (New_Item => J,
+                            Key      => J.Number);
+         end if;
+      end loop;
+   exception
+      when E : others
+         => HTML.Error ("Unable to read job info (Create_Overlay): " & Exception_Message (E));
+   end Create_Overlay;
+
+   procedure Update_Job_From_Overlay (J : in out Job) is
+      Update : Job := Overlay.Element (J.Number);
+   begin
+      J.Reserve := Update.Reserve;
+      J.Slot_List := Update.Slot_List;
+   exception
+      when E : others =>
+         HTML.Error ("When updating Job: " & Exception_Message (E));
+   end Update_Job_From_Overlay;
+
+   procedure Apply_Overlay_Entry (Position : Job_Lists.Cursor) is
+   begin
+      List.Update_Element (Position => Position,
+                           Process  => Update_Job_From_Overlay'Access);
+   end Apply_Overlay_Entry;
+
+   procedure Apply_Overlay is
+   begin
+      List.Iterate (Apply_Overlay_Entry'Access);
+   end Apply_Overlay;
+
 
 end Jobs;
