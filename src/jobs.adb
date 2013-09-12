@@ -998,6 +998,11 @@ package body Jobs is
                               --  the format is utterly insane;
                               --  there is no way we can handle this crappy xml without
                               --  writing equally crappy code, and it is not that important
+                     elsif Quantity'Length >= 5
+                       and then (Quantity (Quantity'First .. Quantity'First + 2) = "ru_"
+                                 or else Quantity (Quantity'First .. Quantity'First + 4) = "acct_")
+                     then
+                        null; -- Bug #1752
                      else
                         HTML.Comment ("Unable to parse usage (QF => """
                         & Quantity & """): "
@@ -1123,7 +1128,8 @@ package body Jobs is
       end loop Over_Task_Nodes;
    exception
       when E : others =>
-         HTML.Error ("Failed to parse job tasks: " & Exception_Message (E));
+         HTML.Error ("Failed to parse job (" & J.Number'Img & ") tasks: "
+                     & Exception_Message (E));
    end Extract_Tasks;
 
    -------------------
@@ -2002,6 +2008,8 @@ package body Jobs is
                   --  in Jobs.Extract_Tasks, although it represents a point in time
          when start_time =>
             null; -- likewise
+         when end_time =>
+            null; -- likewise
          when priority =>
             null;
             --  ignore for now. It is unclear how one can "use" priority
@@ -2013,6 +2021,16 @@ package body Jobs is
          when signal =>
             null;
             --  ignore
+         when ru_wallclock =>
+            null; -- Bug #1752
+         when ru_utime =>
+            null; -- likewise
+         when ru_stime =>
+            null; -- likewise
+         when ru_maxrss =>
+            null; -- likewise
+         when ru_ixrss =>
+            null; -- likewise
       end case;
    end Put_Usage;
 

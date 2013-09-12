@@ -12,7 +12,8 @@ package Jobs is
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq, hr);
    type State_Count is array (Job_State) of Natural;
    type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem,
-                       submission_time, start_time,
+                       ru_wallclock, ru_utime, ru_stime, ru_maxrss, ru_ixrss,
+                       submission_time, start_time, end_time,
                        priority, exit_status, signal);
    type Usage is array (Usage_Type) of Usage_Number;
    type Posix_Priority_Type is range -1_023 .. 1_024;
