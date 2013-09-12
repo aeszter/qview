@@ -229,8 +229,13 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+
          if Slot_Ranges then
-            Jobs.Update_List_From_Qstat_J;
+            SGE_Out := Parser.Setup (Selector => "-j *");
+
+            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+            Parser.Free;
+            Jobs.Apply_Overlay;
          end if;
 
          --  Detect different bunches
@@ -306,7 +311,6 @@ package body Viewer is
       procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
          SGE_Out     : Parser.Tree;
 
-
          procedure Put_Table_Header is
             Span : Integer := 6;
          begin
@@ -367,9 +371,16 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
-
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+         if Only_Waiting then
+            SGE_Out := Parser.Setup (Selector => "-j *");
+
+            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+            Jobs.Apply_Overlay;
+            Parser.Free;
+         end if;
+
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
@@ -501,7 +512,7 @@ package body Viewer is
       ----------------
 
       procedure View_Bunch is
-         SGE_Out     : Parser.Tree;
+         SGE_Out : Parser.Tree;
 
          procedure Put_Table_Header is
          begin
@@ -523,6 +534,7 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -u *");
+
          Append_Params ("pe="&CGI.Value ("pe"));
          Append_Params ("queue="&CGI.Value ("queue"));
          Append_Params ("hr="&CGI.Value ("hr"));
@@ -531,16 +543,20 @@ package body Viewer is
          Append_Params ("slot_number="&CGI.Value ("slot_number"));
          Put_Table_Header;
 
-         Jobs.Append_List (
-                           Nodes         => Get_Job_Nodes_From_Qstat_U (SGE_Out),
-                           PE            => CGI.Value ("pe"),
-                           Queue         => CGI.Value ("queue"),
-                           Hard_Requests => CGI.Value ("hr"),
-                           Soft_Requests => CGI.Value ("sr"),
-                           Slot_Ranges   => CGI.Value ("slot_ranges"),
-                           Slot_Number   => CGI.Value ("slot_number")
-                          );
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+         SGE_Out := Parser.Setup (Command  => "qstat",
+                                  Selector => "-j *");
+         Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Parser.Free;
+         Jobs.Prune_List (PE            => CGI.Value ("pe"),
+                          Queue         => CGI.Value ("queue"),
+                          Hard_Requests => CGI.Value ("hr"),
+                          Soft_Requests => CGI.Value ("sr"),
+                          Slot_Ranges   => CGI.Value ("slot_ranges"),
+                          Slot_Number   => CGI.Value ("slot_number")
+                         );
+
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
