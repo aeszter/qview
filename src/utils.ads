@@ -5,7 +5,7 @@ with Ada.Containers.Ordered_Sets;
 with POSIX; use POSIX;
 
 package Utils is
-   Version : String := "feature:qstat-j"; -- Update Bugzilla when you change this
+   Version : String := "develop"; -- Update Bugzilla when you change this
    type Tri_State is (False, True, Undecided);
    Assumption_Error : exception;
 
