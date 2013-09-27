@@ -229,8 +229,13 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+
          if Slot_Ranges then
-            Jobs.Update_List_From_Qstat_J;
+            SGE_Out := Parser.Setup (Selector => "-j *");
+
+            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+            Parser.Free;
+            Jobs.Apply_Overlay;
          end if;
 
          --  Detect different bunches
@@ -306,14 +311,17 @@ package body Viewer is
       procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
          SGE_Out     : Parser.Tree;
 
-
          procedure Put_Table_Header is
+            Span : Integer := 6;
          begin
+            if Only_Waiting then
+               Span := Span + 1;
+            end if;
             HTML.Begin_Div (Class => "job_list");
             Ada.Text_IO.Put ("<table><tr>");
             HTML.Put_Cell (Data       => "",
                            Tag        => "th",
-                           Colspan => 6,
+                           Colspan => Span,
                            Class => "delimited");
             if not Only_Waiting then
                HTML.Put_Cell (Data => "Resource Usage",
@@ -332,7 +340,9 @@ package body Viewer is
             HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
             HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
             HTML.Put_Header_Cell (Data => "State", Params => My_Params);
-            if not Only_Waiting then
+            if Only_Waiting then
+               HTML.Put_Header_Cell (Data => "Res", Params => My_Params);
+            else
                HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
                HTML.Put_Header_Cell (Data => "Memory",
                                   Acronym => "Gigabyte-hours",
@@ -361,9 +371,16 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
-
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+         if Only_Waiting then
+            SGE_Out := Parser.Setup (Selector => "-j *");
+
+            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+            Jobs.Apply_Overlay;
+            Parser.Free;
+         end if;
+
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
@@ -495,7 +512,7 @@ package body Viewer is
       ----------------
 
       procedure View_Bunch is
-         SGE_Out     : Parser.Tree;
+         SGE_Out : Parser.Tree;
 
          procedure Put_Table_Header is
          begin
@@ -517,18 +534,34 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -u *");
+
+         Append_Params ("pe="&CGI.Value ("pe"));
+         Append_Params ("queue="&CGI.Value ("queue"));
+         Append_Params ("hr="&CGI.Value ("hr"));
+         Append_Params ("sr="&CGI.Value ("sr"));
+         Append_Params ("slot_ranges="&CGI.Value ("slot_ranges"));
+         Append_Params ("slot_number="&CGI.Value ("slot_number"));
          Put_Table_Header;
 
-         Jobs.Append_List (
-                           Nodes         => Get_Job_Nodes_From_Qstat_U (SGE_Out),
-                           PE            => CGI.Value ("pe"),
-                           Queue         => CGI.Value ("queue"),
-                           Hard_Requests => CGI.Value ("hr"),
-                           Soft_Requests => CGI.Value ("sr"),
-                           Slot_Ranges   => CGI.Value ("slot_ranges"),
-                           Slot_Number   => CGI.Value ("slot_number")
-                          );
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
+         SGE_Out := Parser.Setup (Command  => "qstat",
+                                  Selector => "-j *");
+         Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Parser.Free;
+         Jobs.Prune_List (PE            => CGI.Value ("pe"),
+                          Queue         => CGI.Value ("queue"),
+                          Hard_Requests => CGI.Value ("hr"),
+                          Soft_Requests => CGI.Value ("sr"),
+                          Slot_Ranges   => CGI.Value ("slot_ranges"),
+                          Slot_Number   => CGI.Value ("slot_number")
+                         );
+
+         if not HTML.Param_Is ("sort", "") then
+            Jobs.Sort_By (Field     => CGI.Value ("sort"),
+                          Direction => Sort_Direction);
+         end if;
+
          Jobs.Put_Bunch_List;
 
          --  Table Footer

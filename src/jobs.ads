@@ -1,4 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Calendar; use Ada.Calendar;
 with Resources;
@@ -11,7 +12,8 @@ package Jobs is
    type Job_State is (unknown, dt, dr, Eqw, t, r, Rr, Rq, qw, hqw, ERq, hr);
    type State_Count is array (Job_State) of Natural;
    type Usage_Type is (cpu, mem, io, iow, vmem, maxvmem,
-                       submission_time, start_time,
+                       ru_wallclock, ru_utime, ru_stime, ru_maxrss, ru_ixrss,
+                       submission_time, start_time, end_time,
                        priority, exit_status, signal);
    type Usage is array (Usage_Type) of Usage_Number;
    type Posix_Priority_Type is range -1_023 .. 1_024;
@@ -79,44 +81,29 @@ package Jobs is
 
    procedure Append_List (Nodes : Node_List);
 
+   --------------------
+   -- Create_Overlay --
+   --  Purpose: Create a Set with values read from qstat -j
+   --------------------
+
+   procedure Create_Overlay (Nodes : Node_List);
+
+   -------------------
+   -- Apply_Overlay --
+   --  Purpose: For each job in the global List, update its field from the
+   --  Set created with Create_Overlay
+   -------------------
+
+   procedure Apply_Overlay;
+
    -----------------
-   -- Append_List --
-   --  Purpose: Read Jobs from a given list of (DOM) Nodes and populate the List
-   --  accordingly. Jobs are selected according to certain criteria
+   -- Prune_List --
+   --  Purpose: Remove Jobs not matching certain criteria
    -----------------
-   procedure Append_List (Nodes                    : Node_List;
-                          PE, Queue, Hard_Requests,
-                          Soft_Requests,
-                          Slot_Number, Slot_Ranges : Unbounded_String);
+   procedure Prune_List (PE, Queue, Hard_Requests,
+                         Soft_Requests,
+                         Slot_Number, Slot_Ranges : Unbounded_String);
 
-   ------------------------------
-   -- Update_List_From_Qstat_J --
-   --  Purpose: Get more information on existing jobs;
-   --  call qstat -j for each Job in List, filling in information for
-   --  previously empty fields
-   ------------------------------
-
-   --  Is this still needed?
-   procedure Update_List_From_Qstat_J;
-
-   ----------------
-   -- Prune_List --
-   --  Purpose: Prune the Job_List, keeping only Jobs that fulfill
-   --          the given requirements
-   --  Parameter: PE: Parallel environment required
-   --  Parameter Queue: Queue required
-   --  Parameter Hard_Requests: List of hard resource requests
-   --  Parameter Soft_Requests: List of soft resource requests
-   ----------------
-   --   procedure Prune_List (PE, Queue, Hard_Requests, Soft_Requests : String);
-   --  outdated. move functionality to Append_List
-
-   ----------------
-   -- Prune_List --
-   --  Purpose: Prune the Job_List, keeping only Jobs that fulfill
-   --          the given requirements
-   --  Parameter Slots: Hash of the allowed slot ranges
-   ----------------
    procedure Prune_List_By_Slots (Slots : String);
    --  outdated. move functionality to Append_List. Does GPS notice this?
 
@@ -149,8 +136,6 @@ package Jobs is
 
    function Same (Left, Right : Job) return Boolean;
 
-   procedure Update_Job_From_Qstat_J (J : in out Job);
-   --  Purpose: Get more information on an existing job;
    procedure Update_Status;
    --  Purpose: Update all jobs' status
    procedure Search_Queues;
@@ -245,6 +230,12 @@ private
    package Job_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Element_Type => Job, "=" => Same);
 
+   package Job_Maps is
+     new Ada.Containers.Ordered_Maps (Key_Type     => Integer,
+                                      Element_Type => Job,
+                                      "<"          => "<",
+                                      "="          => Same);
+
    function Find_Job (ID : Natural) return Job_Lists.Cursor;
    --  if the job list contains a job with the given ID, return a cursor
    --  pointing there;
@@ -308,6 +299,7 @@ private
 
 
    List : Job_Lists.List;
+   Overlay : Job_Maps.Map;
    List_Cursor : Job_Lists.Cursor := Job_Lists.No_Element;
 
    procedure Update_Status (J : in out Job);
