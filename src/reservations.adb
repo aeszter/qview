@@ -264,11 +264,15 @@ package body Reservations is
       Res : Reservation := Lists.Element (Position);
       Line_Class : String := "res_blank";
    begin
-      if Res.Hidden = True then
+      if Res.Hidden = True and then Res.State /= starting then
          return;
       end if;
       if Res.State = starting then
-         Line_Class := "res_start";
+         if Res.Confirmation then
+            Line_Class := "res_dupli";
+         else
+            Line_Class := "res_start";
+         end if;
       elsif Res.Confirmation then
          Line_Class := "res_cnfrm";
       elsif Res.Shifted then
@@ -283,6 +287,8 @@ package body Reservations is
       if Res.State = starting then
          if Reserving_Jobs.Contains (Res.Job_ID) then
             HTML.Put_Cell ("starting (R)");
+         elsif Res.Confirmation then
+            HTML.Put_Cell ("starting (DUP)");
          else
             HTML.Put_Cell ("starting");
          end if;
