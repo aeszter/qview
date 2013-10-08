@@ -3,6 +3,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with HTML;
 with Resources; use Resources;
+with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 with Debug;
@@ -556,6 +557,8 @@ package body Hosts is
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                      Class => "right " & Color_Class (Swap_Percentage (H)));
+      HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
@@ -761,5 +764,13 @@ package body Hosts is
       end if;
    end Color_Class;
 
+   procedure Read_Lightsout_Information is
+   begin
+      Lightsout.Clear;
+      Lightsout.Read;
+   exception
+      when E : others => Ada.Text_IO.Put_Line ("<em>Could not process lightsout information.</em>");
+         HTML.Comment (Exception_Message (E));
+   end Read_Lightsout_Information;
 
 end Hosts;
