@@ -19,9 +19,14 @@ package body Lightsout is
 
    function Get_Bug (From : String) return String is
       Name : Host_Name := To_Host_Name (From);
+      Bug_ID : Natural := 0;
    begin
       if List.Contains (Name) then
-         return List.Element (Name).Bug'Img;
+         Bug_ID := List.Element (Name).Bug;
+      end if;
+      if Bug_ID > 0 then
+         return "<a href=""http://ram/bugzilla/show_bug.cgi?id=" & Bug_ID'Img
+         & """>Bug" & Bug_ID'Img & "</a>";
       else
          return "";
       end if;
@@ -29,12 +34,24 @@ package body Lightsout is
 
    function Get_Maintenance (From : String) return String is
       Name : Host_Name := To_Host_Name (From);
+      Maint_Status : Maintenance := none;
    begin
       if List.Contains (Name) then
-         return List.Element (Name).Maintain'Img;
-      else
-         return "";
+         Maint_Status := List.Element (Name).Maintain;
       end if;
+      case Maint_Status is
+         when none =>
+            return "";
+         when ignore =>
+            return "<acronym title=""ignored by lightsout"">"
+              &"<img src=""/icons/ignore.png""></acronym>";
+         when disable =>
+            return "<acronym title=""disable for maintenance"">"
+              & "<img src=""/icons/disable.png""></acronym>";
+         when off =>
+            return "<acronym title=""poweroff for maintenance"">"
+              & "<img src=""/icons/off.png""></acronym>";
+      end case;
    end Get_Maintenance;
 
    procedure Read is
@@ -143,9 +160,12 @@ package body Lightsout is
    end Add_Host;
 
    function To_Host_Name (From : String) return Host_Name is
-      Period : Positive := Ada.Strings.Fixed.Index (Source  => From,
+      Period : Natural := Ada.Strings.Fixed.Index (Source  => From,
                                                     Pattern => ".");
    begin
+      if Period < 1 then
+         Period := From'Last + 1;
+      end if;
       return Host_Names.To_Bounded_String (Source => From (From'First .. Period - 1),
                                            Drop   => Ada.Strings.Error);
    end To_Host_Name;
