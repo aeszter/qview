@@ -4,6 +4,8 @@ with Ada.Text_IO;
 with Hosts; use Hosts;
 with Host_Properties; use Host_Properties;
 with Queues; use Queues;
+with Lightsout;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Maintenance is
 
@@ -38,7 +40,7 @@ package body Maintenance is
       SGE_Out := Parser.Setup (Selector => "-F state");
       Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
       Parser.Free;
-      Hosts.Read_Lightsout_Information;
+      Read_Lightsout_Information;
 
       Put_High_Load_Hosts;
       Put_Low_Load_Hosts;
@@ -48,6 +50,15 @@ package body Maintenance is
       Put_Disabled_Queues;
       Put_Unreachable_Queues;
    end Put_All;
+
+   procedure Read_Lightsout_Information is
+   begin
+      Lightsout.Clear;
+      Lightsout.Read;
+   exception
+      when E : others => Ada.Text_IO.Put_Line ("<em>Could not process lightsout information.</em>");
+         HTML.Comment (Exception_Message (E));
+   end Read_Lightsout_Information;
 
    ------------
    -- Put_*  --

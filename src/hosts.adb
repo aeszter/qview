@@ -764,13 +764,5 @@ package body Hosts is
       end if;
    end Color_Class;
 
-   procedure Read_Lightsout_Information is
-   begin
-      Lightsout.Clear;
-      Lightsout.Read;
-   exception
-      when E : others => Ada.Text_IO.Put_Line ("<em>Could not process lightsout information.</em>");
-         HTML.Comment (Exception_Message (E));
-   end Read_Lightsout_Information;
 
 end Hosts;

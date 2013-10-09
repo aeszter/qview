@@ -21,8 +21,6 @@ package Hosts is
 
    procedure Update_Used_Slots (H : in out Host);
 
-   procedure Read_Lightsout_Information;
-
    ------------------
    -- Sort_By      --
    --  Purpose:  Sort the host list by any column/field
