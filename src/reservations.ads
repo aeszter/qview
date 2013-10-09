@@ -44,7 +44,7 @@ private
 --  ignored for now, see comment in body of procedure Read_Line
       Confirmation   : Boolean := False; -- whether this confirms an earlier reservation
       Shifted        : Boolean := False; -- whether an earlier reservation with different details exists
-      Hidden : Boolean := False; -- whether Put should ignore this reservation
+      Hidden         : Boolean := False; -- whether Put should ignore this reservation
    end record;
 
    type Index_Card is record
