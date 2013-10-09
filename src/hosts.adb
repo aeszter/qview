@@ -19,6 +19,8 @@ package body Hosts is
 
    procedure Put_All is
    begin
+      Lightsout.Clear;
+      Lightsout.Read;
       Host_List.Iterate (Hosts.Put'Access);
    end Put_All;
 
@@ -536,6 +538,8 @@ package body Hosts is
       HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                      Class => "right " & Color_Class (Swap_Percentage (H)));
       H.Queues.Iterate (Put_Queue'Access);
+      HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
       H.Jobs.Iterate (Put_Jobs'Access);
    exception
