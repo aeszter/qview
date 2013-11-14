@@ -4,6 +4,8 @@ with Ada.Text_IO;
 with Hosts; use Hosts;
 with Host_Properties; use Host_Properties;
 with Queues; use Queues;
+with Lightsout;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Maintenance is
 
@@ -38,7 +40,7 @@ package body Maintenance is
       SGE_Out := Parser.Setup (Selector => "-F state");
       Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
       Parser.Free;
-
+      Read_Lightsout_Information;
 
       Put_High_Load_Hosts;
       Put_Low_Load_Hosts;
@@ -47,7 +49,17 @@ package body Maintenance is
       Put_Unusual_Queues;
       Put_Disabled_Queues;
       Put_Unreachable_Queues;
+      Put_Offline_Queues;
    end Put_All;
+
+   procedure Read_Lightsout_Information is
+   begin
+      Lightsout.Clear;
+      Lightsout.Read;
+   exception
+      when E : others => Ada.Text_IO.Put_Line ("<em>Could not process lightsout information.</em>");
+         HTML.Comment (Exception_Message (E));
+   end Read_Lightsout_Information;
 
    ------------
    -- Put_*  --
@@ -149,6 +161,21 @@ package body Maintenance is
       HTML.End_Div (Class => "maintenance");
    end Put_Unusual_Queues;
 
+   procedure Put_Offline_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Offline queues",
+                         Level => 3);
+      HTML.Put_Heading (Title => "Queue_State has both u and d",
+                        Level => 4);
+      HTML.Put_Heading (Title => "This includes nodes switched off by lightsout",
+                        Level => 4);
+      Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Unreachable_Disabled'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Offline_Queues;
+
 
    ------------------------
    -- Selector Functions --
@@ -201,6 +228,11 @@ package body Maintenance is
    begin
       return Has_Unreachable (Q) and then not Has_Disabled (Q);
    end Unreachable_Enabled;
+
+   function Unreachable_Disabled (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Unreachable (Q) and then Has_Disabled (Q);
+   end Unreachable_Disabled;
 
    function Unusual_Type (Q : Queues.Queue) return Boolean is
    begin

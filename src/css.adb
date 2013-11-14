@@ -265,6 +265,7 @@ package body CSS is
       Put_Background ("tr.job-error, tr.res_shift", "#d00");
       Put_Background ("tr.slots_available, tr.res_first", "#dd0");
       Put_Background ("tr.res_start", "#33f");
+      Put_Background ("tr.res_dupli", "#d0d");
 
       Open_Block ("tr.offline, tr.job-held");
       Put_Line ("color: #777;");

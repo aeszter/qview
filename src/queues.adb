@@ -5,6 +5,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with Debug;
 with Ada.Text_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Lightsout;
 
 package body Queues is
    use Queue_Lists;
@@ -337,6 +338,10 @@ package body Queues is
    procedure Put_For_Maintenance (Cursor : Queue_Lists.Cursor) is
       Q : Queue := Queue_Lists.Element (Cursor);
       State : String := "   ";
+      Long_Name : String := To_String (Q.Long_Name);
+      Separator : Positive := Ada.Strings.Fixed.Index (Source => Long_Name,
+                                            Pattern => "@");
+      Host_Name : String := Long_Name (Separator + 1 .. Long_Name'Last);
    begin
       if Q.Q_Type (B) then
          State (1) := 'B';
@@ -351,6 +356,8 @@ package body Queues is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Q.Long_Name);
       HTML.Put_Cell (State);
+      HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Host_Name));
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Host_Name), Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;
 
