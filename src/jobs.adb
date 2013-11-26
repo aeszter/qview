@@ -719,6 +719,8 @@ package body Jobs is
                Extract_Hold_ID_List (J.Predecessors, Child_Nodes (C));
             elsif Name (C) = "JB_jid_successor_list" then
                Extract_Hold_ID_List (J.Successors, Child_Nodes (C));
+            elsif Name (C) = "JB_context" then
+               Extract_Context (J.Context, Child_Nodes (C));
             elsif Name (C) = "JB_urg" or else
               Name (C) = "JB_dlcontr" or else
               Name (C) = "JAT_ntix" or else
@@ -1155,6 +1157,30 @@ package body Jobs is
       end loop;
    end Extract_Paths;
 
+
+   procedure Extract_Context (Context       : in out Utils.String_Pairs.Map;
+                              Context_Nodes : Node_List) is
+      N, Var_Node : Node;
+      Variable_Name, Variable_Value : Unbounded_String;
+   begin
+      for I in 0 .. Length (Context_Nodes) - 1 loop
+         N := Item (Context_Nodes, I);
+         if Name (N) = "context_list" then
+            Var_Node := Item (Child_Nodes (N), 1);
+            if Name (Var_Node) = "VA_variable" then
+               Variable_Name := To_Unbounded_String (Value (First_Child (Var_Node)));
+            elsif Name (Var_Node) = "VA_value" then
+               Variable_Value := To_Unbounded_String (Value (First_Child (Var_Node)));
+            else
+               raise Assumption_Error with
+                 "Unexpected  """
+                 & Name (Var_Node) & """ found inside <context_list>";
+            end if;
+         end if;
+      end loop;
+      Context.Include (Key => Variable_Name,
+                       New_Item => Variable_Value);
+   end Extract_Context;
 
    ----------------
    -- Prune_List --

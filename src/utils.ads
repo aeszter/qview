@@ -1,6 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Bounded;
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Ordered_Sets;
 with POSIX; use POSIX;
 
@@ -23,6 +24,10 @@ package Utils is
 
    package String_Sets is
      new Ada.Containers.Ordered_Sets (Element_Type => Unbounded_String);
+
+   package String_Pairs is
+     new Ada.Containers.Ordered_Maps (Key_Type => Unbounded_String,
+                                      Element_Type => Unbounded_String);
 
    package Hash_Strings is
      new Ada.Strings.Bounded.Generic_Bounded_Length (Max => 10);
