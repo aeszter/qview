@@ -82,6 +82,16 @@ package body Jobs is
       return J.Soft;
    end Get_Soft_Resources;
 
+   function Supports_Balancer (J : Job) return Boolean is
+   begin
+      if J.Context.Contains (To_Unbounded_String ("SLOTSCPU"))
+        and then J.Context.Contains (To_Unbounded_String ("SLOTSGPU")) then
+         return True;
+      else
+         return False;
+      end if;
+   end Supports_Balancer;
+
    ----------------
    --  list-related
    ----------------
@@ -1868,6 +1878,11 @@ package body Jobs is
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left)
                                       & "-" & Ada.Strings.Fixed.Trim (Min (J.Task_IDs)'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
+      end if;
+      if Supports_Balancer (J) then
+         HTML.Put_Img_Cell ("balance");
+      else
+         HTML.Put_Cell (Data => "");
       end if;
       HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
       if J.Name_Truncated then

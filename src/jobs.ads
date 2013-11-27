@@ -42,6 +42,7 @@ package Jobs is
    function Get_Queue (J : Job) return Unbounded_String;
    function Get_Hard_Resources (J : Job) return Resources.Hashed_List;
    function Get_Soft_Resources (J : Job) return Resources.Hashed_List;
+   function Supports_Balancer (J : Job) return Boolean;
 
    -------------
    -- New_Job --
