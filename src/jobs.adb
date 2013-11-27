@@ -5,7 +5,7 @@ with GNAT.Calendar.Time_IO;
 with Ada.Calendar.Conversions;
 with Resources;      use Resources; use Resources.Resource_Lists;
 with Ranges;          use Ranges; use Ranges.Range_Lists;
-with Utils;          use Utils; use Utils.String_Lists;
+with Utils;          use Utils; use Utils.String_Lists; use Utils.String_Pairs;
 with Jobs;
 with HTML;
 with Parser;
@@ -1804,13 +1804,47 @@ package body Jobs is
          HTML.End_Div (Class => "job_files");
       end Put_Files;
 
+      procedure Put_Context is
+         Item : Utils.String_Pairs.Cursor;
+      begin
+         HTML.Begin_Div (Class => "job_context");
+         HTML.Put_Heading (Title => "Balancer",
+                           Level => 3);
+         Item := J.Context.Find (To_Unbounded_String ("SLOTSCPU"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Cores without GPU",
+                                Contents => Element (Item));
+         end if;
+         Item := J.Context.Find (To_Unbounded_String ("SLOTSGPU"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Cores with GPU",
+                                Contents => Element (Item));
+         end if;
+         Item := J.Context.Find (To_Unbounded_String ("LASTMIG"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Last migration",
+                                Contents => Element (Item));
+         else
+            HTML.Put_Paragraph (Label => "Last migration",
+                                Contents => "None");
+         end if;
+
+         HTML.Put_Heading (Title => "Other context",
+                           Level => 3);
+         HTML.Put_List (J.Context);
+         HTML.End_Div (Class => "job_context");
+      end Put_Context;
+
    begin
       HTML.Begin_Div (Class => "job_info");
 
       Put_Name;
       Put_Meta;
       Put_Queues;
+      HTML.Begin_Div (Class => "res_and_context");
       Put_Resources;
+      Put_Context;
+      HTML.End_Div (Class => "res_and_context");
       Put_Usage;
       Put_Files;
 
