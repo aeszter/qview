@@ -1910,7 +1910,8 @@ package body Jobs is
          Item := J.Context.Find (To_Unbounded_String ("LASTMIG"));
          if Item /= Utils.String_Pairs.No_Element then
             HTML.Put_Paragraph (Label => "Last migration",
-                                Contents => Element (Item));
+                                Contents => Ada.Calendar.Conversions.To_Ada_Time
+                                      (Interfaces.C.long'Value (To_String (Element (Item)))));
          else
             HTML.Put_Paragraph (Label => "Last migration",
                                 Contents => "None");
@@ -2220,6 +2221,7 @@ package body Jobs is
    begin
       J.Reserve := Update.Reserve;
       J.Slot_List := Update.Slot_List;
+      J.Context := Update.Context;
    exception
       when E : others =>
          HTML.Error ("When updating Job: " & Exception_Message (E));
