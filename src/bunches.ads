@@ -25,6 +25,7 @@ private
       Hard, Soft     : Resources.Hashed_List;
       Total, On_Hold : Natural;
       Error, Waiting : Natural;
+      Balancer       : Boolean;
    end record;
 
    package Bunch_Lists is
