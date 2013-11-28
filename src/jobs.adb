@@ -1172,25 +1172,29 @@ package body Jobs is
    procedure Extract_Context (Context       : in out Utils.String_Pairs.Map;
                               Context_Nodes : Node_List) is
       N, Var_Node : Node;
+      Context_Entries : Node_List;
       Variable_Name, Variable_Value : Unbounded_String;
    begin
       for I in 0 .. Length (Context_Nodes) - 1 loop
          N := Item (Context_Nodes, I);
          if Name (N) = "context_list" then
-            Var_Node := Item (Child_Nodes (N), 1);
-            if Name (Var_Node) = "VA_variable" then
-               Variable_Name := To_Unbounded_String (Value (First_Child (Var_Node)));
-            elsif Name (Var_Node) = "VA_value" then
-               Variable_Value := To_Unbounded_String (Value (First_Child (Var_Node)));
-            else
-               raise Assumption_Error with
-                 "Unexpected  """
-                 & Name (Var_Node) & """ found inside <context_list>";
-            end if;
+            Context_Entries := Child_Nodes (N);
+            for J in 0 .. Length (Context_Entries) - 1 loop
+               Var_Node := Item (Context_Entries, J);
+               if Name (Var_Node) = "VA_variable" then
+                  Variable_Name := To_Unbounded_String (Value (First_Child (Var_Node)));
+               elsif Name (Var_Node) = "VA_value" then
+                  Variable_Value := To_Unbounded_String (Value (First_Child (Var_Node)));
+               elsif Name (Var_Node) /= "#text" then
+                  raise Assumption_Error with
+                    "Unexpected  """
+                    & Name (Var_Node) & """ found inside <context_list>";
+               end if;
+            end loop;
+            Context.Include (Key => Variable_Name,
+                             New_Item => Variable_Value);
          end if;
       end loop;
-      Context.Include (Key => Variable_Name,
-                       New_Item => Variable_Value);
    end Extract_Context;
 
    ----------------
