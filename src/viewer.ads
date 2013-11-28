@@ -9,6 +9,7 @@ package Viewer is
    --          user selections
    --  Parameter Params: the parameter to add; should be of the form "param=value"
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String);
+   function Params return String;
 private
    My_Params : Unbounded_String;
    Sort_Direction : String := "inc";

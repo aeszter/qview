@@ -22,6 +22,7 @@ package body Jobs is
 
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
    procedure Put_State (State : Job_State);
+   procedure Put_Core_Header;
 
    procedure Parse_JAT_Task_List
      (J             : in out Job;
@@ -1634,7 +1635,53 @@ package body Jobs is
    --------------
 
    procedure Put_List (Show_Resources : Boolean) is
+      Span : Positive := 7;
    begin
+      if not Show_Resources then
+         Span := Span + 1;
+      end if;
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Cell (Data       => "",
+                     Tag        => "th",
+                     Colspan => Span,
+                     Class => "delimited");
+      if Show_Resources then
+         HTML.Put_Cell (Data => "Resource Usage",
+                        Tag => "th",
+                        Colspan => 3,
+                        Class   => "delimited");
+      end if;
+      HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
+                     Tag => "th",
+                     Colspan => 8,
+                     Class => "delimited");
+      Ada.Text_IO.Put ("</tr><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data => "Submitted");
+      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "State");
+      if Show_Resources then
+         HTML.Put_Header_Cell (Data => "CPU");
+         HTML.Put_Header_Cell (Data => "Memory",
+                            Acronym => "Gigabyte-hours");
+         HTML.Put_Header_Cell (Data => "IO",
+                            Acronym => "Gigabytes");
+      else
+         HTML.Put_Header_Cell (Data => "Res");
+      end if;
+      HTML.Put_Header_Cell (Data => "Priority");
+      HTML.Put_Header_Cell (Data => "O",
+                            Acronym => "Override");
+      HTML.Put_Header_Cell (Data => "S",
+                            Acronym => "Share");
+      HTML.Put_Header_Cell (Data => "F",
+                            Acronym => "Functional");
+      HTML.Put_Header_Cell (Data => "Urgency");
+      HTML.Put_Header_Cell (Data => "Resource");
+      HTML.Put_Header_Cell (Data => "Waiting");
+      HTML.Put_Header_Cell (Data => "Custom");
+      Ada.Text_IO.Put ("</tr>");
       if Show_Resources then
          List.Iterate (Jobs.Put_Res_Line'Access);
       else
@@ -1648,7 +1695,18 @@ package body Jobs is
 
    procedure Put_Time_List is
    begin
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put ("<table><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "Ends In");
+      HTML.Put_Header_Cell (Data => "Ends At");
+      HTML.Put_Header_Cell (Data => "State");
+      Ada.Text_IO.Put ("</tr>");
       List.Iterate (Jobs.Put_Time_Line'Access);
+         --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
    end Put_Time_List;
 
    --------------------
@@ -1657,7 +1715,22 @@ package body Jobs is
 
    procedure Put_Bunch_List is
    begin
+      HTML.Put_Heading (Title => "Jobs",
+                        Level => 2);
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data     => "PE");
+      HTML.Put_Header_Cell (Data     => "Slots");
+      HTML.Put_Header_Cell (Data     => "Hard");
+      HTML.Put_Header_Cell (Data     => "Soft");
+      HTML.Put_Header_Cell (Data     => "State");
+      Ada.Text_IO.Put ("</tr>");
       List.Iterate (Jobs.Put_Bunch_Line'Access);
+
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
    end Put_Bunch_List;
 
 
@@ -1868,6 +1941,14 @@ package body Jobs is
    --  Purpose: Output standard data for one job as a number of table cells (td).
    --  This included ID, name, and owner
    -------------------
+
+   procedure Put_Core_Header is
+   begin
+      HTML.Put_Header_Cell (Data => "Number");
+      HTML.Put_Header_Cell (Data => ""); -- Balancer support
+      HTML.Put_Header_Cell (Data => "Owner");
+      HTML.Put_Header_Cell (Data => "Name");
+   end Put_Core_Header;
 
    procedure Put_Core_Line (J : Job) is
    begin

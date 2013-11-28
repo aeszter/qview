@@ -196,25 +196,6 @@ package body Viewer is
       -----------------------
 
       procedure View_Job_Overview (Slot_Ranges : Boolean) is
-
-         procedure Put_Table_Header is
-         begin
-            Ada.Text_IO.Put_Line ("<table><tr>");
-            HTML.Put_Cell (Data => "<acronym title=""click on arrow to view job list"">"
-                           & "Detail</acronym>", Tag => "th");
-            HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
-                           Tag => "th");
-            HTML.Put_Cell (Data => "Slots", Tag => "th");
-            HTML.Put_Cell (Data => "Queue", Tag => "th");
-            HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
-            HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
-            HTML.Put_Cell (Data => "Total", Tag => "th");
-            HTML.Put_Cell (Data => "Waiting", Tag => "th");
-            HTML.Put_Cell (Data => "Held", Tag => "th");
-            HTML.Put_Cell (Data => "Error", Tag => "th");
-            Ada.Text_IO.Put_Line ("</tr>");
-         end Put_Table_Header;
-
          SGE_Out     : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "bunches");
@@ -242,7 +223,6 @@ package body Viewer is
          Bunches.Build_List;
 
          --  Output
-         Put_Table_Header;
          Bunches.Put_List;
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "bunches");
@@ -311,62 +291,6 @@ package body Viewer is
       procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
          SGE_Out     : Parser.Tree;
 
-         procedure Put_Table_Header is
-            Span : Integer := 6;
-         begin
-            if Only_Waiting then
-               Span := Span + 1;
-            end if;
-            HTML.Begin_Div (Class => "job_list");
-            Ada.Text_IO.Put ("<table><tr>");
-            HTML.Put_Cell (Data       => "",
-                           Tag        => "th",
-                           Colspan => Span,
-                           Class => "delimited");
-            if not Only_Waiting then
-               HTML.Put_Cell (Data => "Resource Usage",
-                              Tag => "th",
-                              Colspan => 3,
-                              Class   => "delimited");
-            end if;
-            HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
-                           Tag => "th",
-                           Colspan => 8,
-                           Class => "delimited");
-            Ada.Text_IO.Put ("</tr><tr>");
-            HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Name", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Submitted", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "State", Params => My_Params);
-            if Only_Waiting then
-               HTML.Put_Header_Cell (Data => "Res", Params => My_Params);
-            else
-               HTML.Put_Header_Cell (Data => "CPU", Params => My_Params);
-               HTML.Put_Header_Cell (Data => "Memory",
-                                  Acronym => "Gigabyte-hours",
-                                  Params => My_Params);
-               HTML.Put_Header_Cell (Data => "IO",
-                                  Acronym => "Gigabytes",
-                                  Params  => My_Params);
-            end if;
-            HTML.Put_Header_Cell (Data => "Priority", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "O",
-                                  Acronym => "Override",
-                                  Params => My_Params);
-            HTML.Put_Header_Cell (Data => "S",
-                                  Acronym => "Share",
-                                  Params => My_Params);
-            HTML.Put_Header_Cell (Data => "F",
-                                  Acronym => "Functional",
-                                  Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Urgency", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Resource", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Waiting", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Custom", Params => My_Params);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
 
       begin
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
@@ -386,9 +310,7 @@ package body Viewer is
                           Direction => Sort_Direction);
          end if;
 
-         Put_Table_Header;
          Jobs.Put_Summary;
-
          Jobs.Put_List (Show_Resources => not Only_Waiting);
 
          --  Table Footer
@@ -469,25 +391,9 @@ package body Viewer is
       procedure View_Forecast is
          SGE_Out     : Parser.Tree;
 
-
-         procedure Put_Table_Header is
-         begin
-            HTML.Begin_Div (Class => "job_list");
-            Ada.Text_IO.Put ("<table><tr>");
-            HTML.Put_Header_Cell (Data => "Number", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Owner", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Name", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Slots", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Ends In", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Ends At", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "State", Params => My_Params);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
-
       begin
          SGE_Out := Parser.Setup (Selector => "-u * -s r -r");
 
-         Put_Table_Header;
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
@@ -497,9 +403,6 @@ package body Viewer is
          end if;
          Jobs.Put_Time_List;
 
-         --  Table Footer
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "job_list");
       end View_Forecast;
 
       ----------------
@@ -514,22 +417,6 @@ package body Viewer is
       procedure View_Bunch is
          SGE_Out : Parser.Tree;
 
-         procedure Put_Table_Header is
-         begin
-            HTML.Put_Heading (Title => "Jobs",
-                              Level => 2);
-            HTML.Begin_Div (Class => "job_list");
-            Ada.Text_IO.Put_Line ("<table><tr>");
-            HTML.Put_Header_Cell (Data     => "ID", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Owner", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "PE", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Slots", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Hard", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "Soft", Params => My_Params);
-            HTML.Put_Header_Cell (Data     => "State", Params => My_Params);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
 
       begin
          SGE_Out := Parser.Setup (Command  => "qstat",
@@ -541,7 +428,6 @@ package body Viewer is
          Append_Params ("sr="&CGI.Value ("sr"));
          Append_Params ("slot_ranges="&CGI.Value ("slot_ranges"));
          Append_Params ("slot_number="&CGI.Value ("slot_number"));
-         Put_Table_Header;
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          Parser.Free;
@@ -563,10 +449,6 @@ package body Viewer is
          end if;
 
          Jobs.Put_Bunch_List;
-
-         --  Table Footer
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "job_list");
       exception
          when E : others =>
             HTML.Error ("Error while viewing bunch of jobs: "
@@ -600,24 +482,6 @@ package body Viewer is
       end View_Maintenance_Report;
 
       procedure View_Share_Tree is
-         procedure Put_Table_Header is
-         begin
-            HTML.Begin_Div (Class => "share_tree");
-            Ada.Text_IO.Put ("<table><tr>");
-            HTML.Put_Header_Cell (Data => "User", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Usage", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "CPU", Params => My_Params,
-                                  Acronym => "in CPU years");
-            HTML.Put_Header_Cell (Data => "LT CPU", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "Memory", Params => My_Params,
-                                  Acronym => "in TB years");
-            HTML.Put_Header_Cell (Data => "IO", Params => My_Params,
-                                  Acronym => "in TB");
-            HTML.Put_Header_Cell (Data => "Job count", Params => My_Params);
-            HTML.Put_Header_Cell (Data => "raw CPU", Params => My_Params);
-            Ada.Text_IO.Put ("</tr>");
-         end Put_Table_Header;
-
          SGE_Out : Spread_Sheets.Spread_Sheet;
 
       begin
@@ -629,13 +493,9 @@ package body Viewer is
                           Direction => Sort_Direction);
          end if;
 
-         Put_Table_Header;
          Share_Tree.Put_Summary;
          Share_Tree.Put_List;
 
-         --  Table Footer
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "share_tree");
 
       end View_Share_Tree;
 
@@ -782,32 +642,6 @@ package body Viewer is
 
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
       SGE_Out     : Parser.Tree;
-
-      procedure Put_Table_Header is
-      begin
-         HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
-                           Level => 2);
-         HTML.Begin_Div (Class => "host_list");
-         Ada.Text_IO.Put_Line ("<table><tr>");
-         HTML.Put_Header_Cell (Data     => "Name", Params => My_Params);
-         HTML.Put_Header_Cell (Data     => "Interconnect", Params => My_Params);
-         HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                       Tag => "th");
-         HTML.Put_Header_Cell (Data     => "Cores", Params => My_Params);
-         HTML.Put_Header_Cell (Data     => "Free", Params => My_Params);
-         HTML.Put_Header_Cell (Data     => "RAM", Params => My_Params);
-         HTML.Put_Header_Cell (Data     => "Load", Params => My_Params,
-                              Acronym => "per core");
-         HTML.Put_Header_Cell (Data => "Mem", Params => My_Params,
-                               Acronym => "% used");
-         HTML.Put_Header_Cell (Data => "Swap", Params => My_Params,
-                               Acronym => "% used");
-         HTML.Put_Header_Cell (Data     => "Queues",
-                               Params   => My_Params,
-                               Sortable => False);
-         Ada.Text_IO.Put ("</tr>");
-      end Put_Table_Header;
-
       Selector : Unbounded_String;
    begin
       case Get_Network (Props) is
@@ -830,7 +664,6 @@ package body Viewer is
       SGE_Out := Parser.Setup (Command  => "qhost",
                                Selector => "-q -j " & Parser.Resource_Selector
                                & To_String (Selector));
-      Put_Table_Header;
 
       Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
@@ -844,9 +677,6 @@ package body Viewer is
 
       Hosts.Put_All;
 
-      --  Table Footer
-      Ada.Text_IO.Put_Line ("</table>");
-      HTML.End_Div (Class => "host_list");
    exception
       when E : others =>
          HTML.Error ("Error while viewing host: " & Exception_Message (E));
@@ -872,5 +702,10 @@ package body Viewer is
    begin
       My_Params := My_Params & "&" & Params;
    end Append_Params;
+
+   function Params return String is
+   begin
+      return To_String (My_Params);
+   end Params;
 
 end Viewer;

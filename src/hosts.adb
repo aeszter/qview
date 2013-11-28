@@ -19,9 +19,33 @@ package body Hosts is
 
    procedure Put_All is
    begin
+      HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
+                        Level => 2);
+      HTML.Begin_Div (Class => "host_list");
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Header_Cell (Data     => "Name");
+      HTML.Put_Header_Cell (Data     => "Interconnect");
+      HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                    Tag => "th");
+      HTML.Put_Header_Cell (Data     => "Cores");
+      HTML.Put_Header_Cell (Data     => "Free");
+      HTML.Put_Header_Cell (Data     => "RAM");
+      HTML.Put_Header_Cell (Data     => "Load",
+                           Acronym => "per core");
+      HTML.Put_Header_Cell (Data => "Mem",
+                            Acronym => "% used");
+      HTML.Put_Header_Cell (Data => "Swap",
+                            Acronym => "% used");
+      HTML.Put_Header_Cell (Data     => "Queues",
+                            Sortable => False);
+      Ada.Text_IO.Put ("</tr>");
       Lightsout.Clear;
       Lightsout.Read;
       Host_List.Iterate (Hosts.Put'Access);
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "host_list");
+
    end Put_All;
 
    procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is

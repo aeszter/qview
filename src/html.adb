@@ -7,6 +7,7 @@ with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
 with Utils; use Utils.String_Lists; use Utils.String_Sets; use Utils.String_Pairs;
+with Viewer;
 
 package body HTML is
 
@@ -217,14 +218,13 @@ package body HTML is
    procedure Put_Header_Cell
      (Data     : String;
       Acronym  : String  := "";
-      Params   : Unbounded_String := Null_Unbounded_String;
       Sortable : Boolean := True)
    is
       Dir : String := "dec";
    begin
       if not Sortable then
          Put_Cell (Data => Data, Acronym => Acronym, Tag => "th");
-      elsif Params = "" then
+      elsif Viewer.Params = "" then
          Put_Cell
            (Data       => Data,
             Acronym    => Acronym,
@@ -241,14 +241,14 @@ package body HTML is
          Put_Cell
            (Data       => Data,
             Acronym    => Acronym,
-            Link_Param => To_String (Params & "&dir=" & Dir & "&sort"),
+            Link_Param => Viewer.Params & "&dir=" & Dir & "&sort",
             Tag        => "th",
             Class      => "sorter_active");
       else
          Put_Cell
            (Data       => Data,
             Acronym    => Acronym,
-            Link_Param => To_String (Params & "&sort"),
+            Link_Param => Viewer.Params & "&sort",
             Tag        => "th",
             Class      => "sorter");
       end if;

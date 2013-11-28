@@ -82,6 +82,20 @@ package body Bunches is
 
    procedure Put_List is
    begin
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Cell (Data => "<acronym title=""click on arrow to view job list"">"
+                     & "Detail</acronym>", Tag => "th");
+      HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
+                     Tag => "th");
+      HTML.Put_Cell (Data => "Slots", Tag => "th");
+      HTML.Put_Cell (Data => "Queue", Tag => "th");
+      HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
+      HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
+      HTML.Put_Cell (Data => "Total", Tag => "th");
+      HTML.Put_Cell (Data => "Waiting", Tag => "th");
+      HTML.Put_Cell (Data => "Held", Tag => "th");
+      HTML.Put_Cell (Data => "Error", Tag => "th");
+      Ada.Text_IO.Put_Line ("</tr>");
       List.Iterate (Put'Access);
    end Put_List;
 
