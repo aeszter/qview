@@ -42,6 +42,7 @@ package Jobs is
    function Get_Queue (J : Job) return Unbounded_String;
    function Get_Hard_Resources (J : Job) return Resources.Hashed_List;
    function Get_Soft_Resources (J : Job) return Resources.Hashed_List;
+   function Supports_Balancer (J : Job) return Boolean;
 
    -------------
    -- New_Job --
@@ -72,6 +73,8 @@ package Jobs is
                             List_Nodes  : Node_List);
    procedure Extract_Args (J : in out Job;
                            Arg_Nodes : Node_List);
+   procedure Extract_Context (Context       : in out Utils.String_Pairs.Map;
+                              Context_Nodes : Node_List);
 
    -----------------
    -- Append_List --
@@ -185,7 +188,8 @@ private
       JAT_Usage, PET_Usage : Usage := (others => 0.0);
       Predecessors         : Utils.ID_List;
       Successors           : Utils.ID_List;
-      Predecessor_Request  : Utils.String_List;
+      Predecessor_Request                : Utils.String_List;
+      Context              : Utils.String_Pairs.Map;
 
 
       --  File related stuff

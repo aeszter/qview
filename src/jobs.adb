@@ -5,7 +5,7 @@ with GNAT.Calendar.Time_IO;
 with Ada.Calendar.Conversions;
 with Resources;      use Resources; use Resources.Resource_Lists;
 with Ranges;          use Ranges; use Ranges.Range_Lists;
-with Utils;          use Utils; use Utils.String_Lists;
+with Utils;          use Utils; use Utils.String_Lists; use Utils.String_Pairs;
 with Jobs;
 with HTML;
 with Parser;
@@ -22,6 +22,7 @@ package body Jobs is
 
    procedure Parse_JAT_Message_List (Message_List : Node; J : in out Job);
    procedure Put_State (State : Job_State);
+   procedure Put_Core_Header;
 
    procedure Parse_JAT_Task_List
      (J             : in out Job;
@@ -81,6 +82,16 @@ package body Jobs is
    begin
       return J.Soft;
    end Get_Soft_Resources;
+
+   function Supports_Balancer (J : Job) return Boolean is
+   begin
+      if J.Context.Contains (To_Unbounded_String ("SLOTSCPU"))
+        and then J.Context.Contains (To_Unbounded_String ("SLOTSGPU")) then
+         return True;
+      else
+         return False;
+      end if;
+   end Supports_Balancer;
 
    ----------------
    --  list-related
@@ -719,6 +730,8 @@ package body Jobs is
                Extract_Hold_ID_List (J.Predecessors, Child_Nodes (C));
             elsif Name (C) = "JB_jid_successor_list" then
                Extract_Hold_ID_List (J.Successors, Child_Nodes (C));
+            elsif Name (C) = "JB_context" then
+               Extract_Context (J.Context, Child_Nodes (C));
             elsif Name (C) = "JB_urg" or else
               Name (C) = "JB_dlcontr" or else
               Name (C) = "JAT_ntix" or else
@@ -1155,6 +1168,34 @@ package body Jobs is
       end loop;
    end Extract_Paths;
 
+
+   procedure Extract_Context (Context       : in out Utils.String_Pairs.Map;
+                              Context_Nodes : Node_List) is
+      N, Var_Node : Node;
+      Context_Entries : Node_List;
+      Variable_Name, Variable_Value : Unbounded_String;
+   begin
+      for I in 0 .. Length (Context_Nodes) - 1 loop
+         N := Item (Context_Nodes, I);
+         if Name (N) = "context_list" then
+            Context_Entries := Child_Nodes (N);
+            for J in 0 .. Length (Context_Entries) - 1 loop
+               Var_Node := Item (Context_Entries, J);
+               if Name (Var_Node) = "VA_variable" then
+                  Variable_Name := To_Unbounded_String (Value (First_Child (Var_Node)));
+               elsif Name (Var_Node) = "VA_value" then
+                  Variable_Value := To_Unbounded_String (Value (First_Child (Var_Node)));
+               elsif Name (Var_Node) /= "#text" then
+                  raise Assumption_Error with
+                    "Unexpected  """
+                    & Name (Var_Node) & """ found inside <context_list>";
+               end if;
+            end loop;
+            Context.Include (Key => Variable_Name,
+                             New_Item => Variable_Value);
+         end if;
+      end loop;
+   end Extract_Context;
 
    ----------------
    -- Prune_List --
@@ -1598,7 +1639,53 @@ package body Jobs is
    --------------
 
    procedure Put_List (Show_Resources : Boolean) is
+      Span : Positive := 7;
    begin
+      if not Show_Resources then
+         Span := Span + 1;
+      end if;
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Cell (Data       => "",
+                     Tag        => "th",
+                     Colspan => Span,
+                     Class => "delimited");
+      if Show_Resources then
+         HTML.Put_Cell (Data => "Resource Usage",
+                        Tag => "th",
+                        Colspan => 3,
+                        Class   => "delimited");
+      end if;
+      HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
+                     Tag => "th",
+                     Colspan => 8,
+                     Class => "delimited");
+      Ada.Text_IO.Put ("</tr><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data => "Submitted");
+      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "State");
+      if Show_Resources then
+         HTML.Put_Header_Cell (Data => "CPU");
+         HTML.Put_Header_Cell (Data => "Memory",
+                            Acronym => "Gigabyte-hours");
+         HTML.Put_Header_Cell (Data => "IO",
+                            Acronym => "Gigabytes");
+      else
+         HTML.Put_Header_Cell (Data => "Res");
+      end if;
+      HTML.Put_Header_Cell (Data => "Priority");
+      HTML.Put_Header_Cell (Data => "O",
+                            Acronym => "Override");
+      HTML.Put_Header_Cell (Data => "S",
+                            Acronym => "Share");
+      HTML.Put_Header_Cell (Data => "F",
+                            Acronym => "Functional");
+      HTML.Put_Header_Cell (Data => "Urgency");
+      HTML.Put_Header_Cell (Data => "Resource");
+      HTML.Put_Header_Cell (Data => "Waiting");
+      HTML.Put_Header_Cell (Data => "Custom");
+      Ada.Text_IO.Put ("</tr>");
       if Show_Resources then
          List.Iterate (Jobs.Put_Res_Line'Access);
       else
@@ -1612,7 +1699,18 @@ package body Jobs is
 
    procedure Put_Time_List is
    begin
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put ("<table><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "Ends In");
+      HTML.Put_Header_Cell (Data => "Ends At");
+      HTML.Put_Header_Cell (Data => "State");
+      Ada.Text_IO.Put ("</tr>");
       List.Iterate (Jobs.Put_Time_Line'Access);
+         --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
    end Put_Time_List;
 
    --------------------
@@ -1621,7 +1719,22 @@ package body Jobs is
 
    procedure Put_Bunch_List is
    begin
+      HTML.Put_Heading (Title => "Jobs",
+                        Level => 2);
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data     => "PE");
+      HTML.Put_Header_Cell (Data     => "Slots");
+      HTML.Put_Header_Cell (Data     => "Hard");
+      HTML.Put_Header_Cell (Data     => "Soft");
+      HTML.Put_Header_Cell (Data     => "State");
+      Ada.Text_IO.Put ("</tr>");
       List.Iterate (Jobs.Put_Bunch_Line'Access);
+
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
    end Put_Bunch_List;
 
 
@@ -1778,13 +1891,48 @@ package body Jobs is
          HTML.End_Div (Class => "job_files");
       end Put_Files;
 
+      procedure Put_Context is
+         Item : Utils.String_Pairs.Cursor;
+      begin
+         HTML.Begin_Div (Class => "job_context");
+         HTML.Put_Heading (Title => "Balancer",
+                           Level => 3);
+         Item := J.Context.Find (To_Unbounded_String ("SLOTSCPU"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Cores without GPU",
+                                Contents => Element (Item));
+         end if;
+         Item := J.Context.Find (To_Unbounded_String ("SLOTSGPU"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Cores with GPU",
+                                Contents => Element (Item));
+         end if;
+         Item := J.Context.Find (To_Unbounded_String ("LASTMIG"));
+         if Item /= Utils.String_Pairs.No_Element then
+            HTML.Put_Paragraph (Label => "Last migration",
+                                Contents => Ada.Calendar.Conversions.To_Ada_Time
+                                      (Interfaces.C.long'Value (To_String (Element (Item)))));
+         else
+            HTML.Put_Paragraph (Label => "Last migration",
+                                Contents => "None");
+         end if;
+
+         HTML.Put_Heading (Title => "Other context",
+                           Level => 3);
+         HTML.Put_List (J.Context);
+         HTML.End_Div (Class => "job_context");
+      end Put_Context;
+
    begin
       HTML.Begin_Div (Class => "job_info");
 
       Put_Name;
       Put_Meta;
       Put_Queues;
+      HTML.Begin_Div (Class => "res_and_context");
       Put_Resources;
+      Put_Context;
+      HTML.End_Div (Class => "res_and_context");
       Put_Usage;
       Put_Files;
 
@@ -1799,6 +1947,14 @@ package body Jobs is
    --  This included ID, name, and owner
    -------------------
 
+   procedure Put_Core_Header is
+   begin
+      HTML.Put_Header_Cell (Data => "Number");
+      HTML.Put_Header_Cell (Data => ""); -- Balancer support
+      HTML.Put_Header_Cell (Data => "Owner");
+      HTML.Put_Header_Cell (Data => "Name");
+   end Put_Core_Header;
+
    procedure Put_Core_Line (J : Job) is
    begin
       if Is_Empty (J.Task_IDs) or else not Is_Collapsed (J.Task_IDs) then
@@ -1808,6 +1964,11 @@ package body Jobs is
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (J.Number'Img, Ada.Strings.Left)
                                       & "-" & Ada.Strings.Fixed.Trim (Min (J.Task_IDs)'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
+      end if;
+      if Supports_Balancer (J) then
+         HTML.Put_Img_Cell ("balance");
+      else
+         HTML.Put_Cell (Data => "");
       end if;
       HTML.Put_Cell (Data => J.Owner, Link_Param => "user");
       if J.Name_Truncated then
@@ -2060,6 +2221,7 @@ package body Jobs is
    begin
       J.Reserve := Update.Reserve;
       J.Slot_List := Update.Slot_List;
+      J.Context := Update.Context;
    exception
       when E : others =>
          HTML.Error ("When updating Job: " & Exception_Message (E));

@@ -214,12 +214,14 @@ package body CSS is
 
    procedure Put_Job_Resources is
    begin
-      Open_Block (".job_resources");
+      Open_Block (".job_resources, .job_context");
       Put_Line ("position: relative;");
-      Put_Line ("float: left;");
       Put_Line ("width: 17em;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
+      Close_Block;
+      Open_Block (".res_and_context");
+      Put_Line ("float: left;");
       Close_Block;
    end Put_Job_Resources;
 

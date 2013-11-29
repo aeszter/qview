@@ -24,7 +24,6 @@ package HTML is
    procedure Put_Duration_Cell (Span : Duration);
    procedure Put_Header_Cell (Data     : String;
       Acronym  : String  := "";
-      Params   : Unbounded_String := Null_Unbounded_String;
                               Sortable : Boolean := True);
    procedure Put_Search_Box;
    --  Purpose: put a text input element used to search for a job or user
@@ -46,7 +45,8 @@ package HTML is
 
    procedure Put_List (List : String_Lists.List);
    procedure Put_List (List : String_Sets.Set);
---  output a string list or set as a <ul>; if List is empty, output a proper icon instead
+   procedure Put_List (List : String_Pairs.Map);
+--  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
 
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;

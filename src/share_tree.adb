@@ -12,7 +12,25 @@ package body Share_Tree is
 
    procedure Put_List is
    begin
+      HTML.Begin_Div (Class => "share_tree");
+      Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Header_Cell (Data => "User");
+      HTML.Put_Header_Cell (Data => "Usage");
+      HTML.Put_Header_Cell (Data => "CPU",
+                            Acronym => "in CPU years");
+      HTML.Put_Header_Cell (Data => "LT CPU");
+      HTML.Put_Header_Cell (Data => "Memory",
+                            Acronym => "in TB years");
+      HTML.Put_Header_Cell (Data => "IO",
+                            Acronym => "in TB");
+      HTML.Put_Header_Cell (Data => "Job count");
+      HTML.Put_Header_Cell (Data => "raw CPU");
+      Ada.Text_IO.Put ("</tr>");
+
       List.Iterate (Put'Access);
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "share_tree");
    end Put_List;
 
    -----------------

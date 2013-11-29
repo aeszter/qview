@@ -72,6 +72,7 @@ package body Bunches is
       B.Queue       := Get_Queue (J);
       B.Hard        := Get_Hard_Resources (J);
       B.Soft        := Get_Soft_Resources (J);
+      B.Balancer    := Supports_Balancer (J);
       B.Total       := 0;
       B.On_Hold     := 0;
       B.Waiting     := 0;
@@ -82,6 +83,21 @@ package body Bunches is
 
    procedure Put_List is
    begin
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Cell (Data => "<acronym title=""click on arrow to view job list"">"
+                     & "Detail</acronym>", Tag => "th");
+      HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
+                     Tag => "th");
+      HTML.Put_Cell (Data => "Slots", Tag => "th");
+      HTML.Put_Cell (Data => "", Tag => "th");
+      HTML.Put_Cell (Data => "Queue", Tag => "th");
+      HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
+      HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
+      HTML.Put_Cell (Data => "Total", Tag => "th");
+      HTML.Put_Cell (Data => "Waiting", Tag => "th");
+      HTML.Put_Cell (Data => "Held", Tag => "th");
+      HTML.Put_Cell (Data => "Error", Tag => "th");
+      Ada.Text_IO.Put_Line ("</tr>");
       List.Iterate (Put'Access);
    end Put_List;
 
@@ -121,6 +137,11 @@ package body Bunches is
       else
          HTML.Put_Cell (Data => B.Slot_Number, Class => "right");
       end if;
+      if B.Balancer then
+         HTML.Put_Img_Cell ("balance");
+      else
+         HTML.Put_Cell ("");
+      end if;
       HTML.Put_Cell (Data => B.Queue);
       HTML.Put_Cell (Data => To_Unbounded_String (B.Hard));
       HTML.Put_Cell (Data => To_Unbounded_String (B.Soft));
@@ -147,6 +168,7 @@ package body Bunches is
    function "=" (Left : Bunch; Right : Job) return Boolean is
    begin
       return (Left.PE = Get_PE (Right) and then
+                   Left.Balancer = Supports_Balancer (Right) and then
                    Left.Slot_Number = Get_Slot_Number (Right) and then
                    Left.Slot_List = Get_Slot_List (Right) and then
                    Left.Hard = Get_Hard_Resources (Right) and then
