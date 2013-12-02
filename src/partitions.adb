@@ -161,7 +161,30 @@ package body Partitions is
 
    procedure Put_List is
    begin
+      Ada.Text_IO.Put_Line ("<table>");
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
+                  & "Detail</acronym>", Tag => "th");
+      HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+      HTML.Put_Cell (Data       => "Resources",
+                     Tag        => "th");
+      HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                  Tag => "th");
+      HTML.Put_Cell (Data => "Cores", Tag => "th");
+      HTML.Put_Cell (Data => "RAM", Tag => "th");
+      HTML.Put_Cell (Data => "Runtime", Tag => "th");
+      HTML.Put_Cell (Data => "Slots", Tag => "th");
+      HTML.Put_Cell (Data => "Hosts", Tag => "th");
+      HTML.Put_Cell (Data => "Used", Tag => "th");
+      HTML.Put_Cell (Data => "Reserved", Tag => "th");
+      HTML.Put_Cell (Data => "Available", Tag => "th");
+      HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Disabled</acronym>", Tag => "th");
+      HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
+      HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>", Tag => "th");
+      Ada.Text_IO.Put_Line ("</tr>");
       List.Iterate (Put'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "partitions");
    end Put_List;
 
 

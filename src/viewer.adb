@@ -5,12 +5,11 @@ with Parser; use Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with Utils; use Utils; use Utils.String_Lists;
-with Resources; use Resources; use Resources.Resource_Lists;
+with SGE.Resources; use SGE.Resources; use SGE.Resources.Resource_Lists;
 with Ranges; use Ranges; use Ranges.Range_Lists;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
-with Queues; use Queues;
-with Partitions; use Partitions; use Partitions.Partition_Lists;
+with Partitions; use Partitions;
 with Hosts; use Hosts;
 with Reservations;
 with Maintenance;
@@ -19,6 +18,8 @@ with Diagnostics;
 with Debug;
 with Ada.Strings;
 with Spread_Sheets;
+with SGE.Hosts;
+with SGE.Queues;
 
 package body Viewer is
 
@@ -234,31 +235,6 @@ package body Viewer is
       --------------------------
 
       procedure View_Detailed_Queues is
-
-         procedure Put_Header is
-         begin
-            Ada.Text_IO.Put ("<tr>");
-            HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
-                        & "Detail</acronym>", Tag => "th");
-            HTML.Put_Cell (Data => "Interconnect", Tag => "th");
-            HTML.Put_Cell (Data       => "Resources",
-                           Tag        => "th");
-            HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                        Tag => "th");
-            HTML.Put_Cell (Data => "Cores", Tag => "th");
-            HTML.Put_Cell (Data => "RAM", Tag => "th");
-            HTML.Put_Cell (Data => "Runtime", Tag => "th");
-            HTML.Put_Cell (Data => "Slots", Tag => "th");
-            HTML.Put_Cell (Data => "Hosts", Tag => "th");
-            HTML.Put_Cell (Data => "Used", Tag => "th");
-            HTML.Put_Cell (Data => "Reserved", Tag => "th");
-            HTML.Put_Cell (Data => "Available", Tag => "th");
-            HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker"">Disabled</acronym>", Tag => "th");
-            HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
-            HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>", Tag => "th");
-            Ada.Text_IO.Put_Line ("</tr>");
-         end Put_Header;
-
          SGE_Out        : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "partitions");
@@ -272,7 +248,7 @@ package body Viewer is
 
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
-         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
          Parser.Free;
 
 
@@ -281,11 +257,6 @@ package body Viewer is
 
          --  Output
          Partitions.Put_Summary;
-         Ada.Text_IO.Put_Line ("<table>");
-         Put_Header;
-         Partitions.Put_List;
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
 
       procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
@@ -368,23 +339,22 @@ package body Viewer is
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
          SGE_Out : Parser.Tree;
-         Q       : Queue;
+         Q       : SGE.Queues.Queue;
          Props : Set_Of_Properties;
       begin
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & " -q *@" & Host_Name);
-         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
          Parser.Free;
 
-         Queues.Rewind;
-         Q := Queues.Current;
+         SGE.Queues.Rewind;
+         Q := SGE.Queues.Current;
          loop
-            Props := Get_Properties (Q);
+            Props := SGE.Queues.Get_Properties (Q);
             Set_Runtime (Props   => Props,
                          Runtime => Null_Unbounded_String); -- not used, see Bug #1495
-            View_Hosts (Props => Props, Queue_Name => Queues.Get_Name (Q));
-            HTML.Comment (String'(Queues.Get_Name (Q)));
-            exit when Queues.At_End;
-            Q := Queues.Next;
+            View_Hosts (Props => Props, Queue_Name => SGE.Queues.Get_Name (Q));
+            exit when SGE.Queues.At_End;
+            Q := SGE.Queues.Next;
          end loop;
       end View_Equivalent_Hosts;
 
@@ -665,13 +635,13 @@ package body Viewer is
                                Selector => "-q -j " & Parser.Resource_Selector
                                & To_String (Selector));
 
-      Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+      SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
-      Hosts.Prune_List (Requirements => Props, Queue_Name => Queue_Name);
+      SGE.Hosts.Prune_List (Requirements => Props, Queue_Name => Queue_Name);
 
       --  Can we factor this out?
       if not HTML.Param_Is ("sort", "") then
-         Hosts.Sort_By (Field     => CGI.Value ("sort"),
+         SGE.Hosts.Sort_By (Field     => CGI.Value ("sort"),
                        Direction => Sort_Direction);
       end if;
 

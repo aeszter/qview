@@ -2,7 +2,7 @@ with HTML;
 with Parser;
 with Ada.Text_IO;
 with Hosts; use Hosts;
-with Host_Properties; use Host_Properties;
+--with Host_Properties; use Host_Properties;
 with Queues; use Queues;
 with Lightsout;
 with Ada.Exceptions; use Ada.Exceptions;
