@@ -383,6 +383,12 @@ package body HTML is
       Comment (To_String (Data));
    end Comment;
 
+   procedure Bug_Ref (Bug_ID : Positive; Info : String) is
+   begin
+      Comment ("<a href=""http://ram/bugzilla/show_bug.cgi?id="
+               & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
+               & Info);
+   end Bug_Ref;
 
    ---------
    -- Put --

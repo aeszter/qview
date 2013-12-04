@@ -4,12 +4,13 @@ with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with HTML;
 with Lightsout;
 with Ada.Strings.Fixed;
+with Ada.Calendar; use Ada.Calendar;
 
 package body Hosts is
 
-   use Host_Lists;
-   use Job_Lists;
-   use Queue_Maps;
+--   use Host_Lists;
+--   use Job_Lists;
+--   use Queue_Maps;
 
    procedure Put_All is
    begin
@@ -43,14 +44,9 @@ package body Hosts is
    end Put_All;
 
    procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
-      Position : Host_Lists.Cursor := Host_List.First;
    begin
-      while Position /= Host_Lists.No_Element loop
-         if Selector (Element (Position)) then
-            Put_For_Maintenance (Position);
-         end if;
-         Next (Position);
-      end loop;
+      SGE.Hosts.Iterate (Process  => Put_For_Maintenance'Access,
+                         Selector => Selector);
    end Put_Selected;
 
    ---------
@@ -67,26 +63,26 @@ package body Hosts is
    procedure Put (H : Host) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => H.Name);
-      HTML.Put_Cell (Data => Get_Network (H.Properties)'Img);
-      HTML.Put_Cell (Data => Get_Model (H.Properties)'Img);
-      HTML.Put_Cell (Data => Get_Cores (H.Properties)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Name (H));
+      HTML.Put_Cell (Data => Get_Network (H));
+      HTML.Put_Cell (Data => Get_Model (H));
+      HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Memory (H.Properties)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Memory (H), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
                      Class => "right " & Color_Class (Mem_Percentage (H)));
       HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                      Class => "right " & Color_Class (Swap_Percentage (H)));
-      H.Queues.Iterate (Put_Queue'Access);
+      Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
-      H.Jobs.Iterate (Put_Jobs'Access);
+      Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host "& To_String (H.Name) & ": "
+         HTML.Error ("Error while putting host "& Get_Name (H) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
@@ -94,8 +90,8 @@ package body Hosts is
    procedure Put_For_Maintenance (H : Host) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => H.Name);
-      HTML.Put_Cell (Data => Get_Cores (H.Properties)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Name (H));
+      HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Used_Slots (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Load (H)'Img, Class      => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
@@ -105,10 +101,10 @@ package body Hosts is
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
-      H.Jobs.Iterate (Put_Jobs'Access);
+      Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host "& To_String (H.Name) & ": "
+         HTML.Error ("Error while putting host "& Get_Name (H) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;
@@ -121,20 +117,20 @@ package body Hosts is
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Name
-      if J.Master then
-         if J.Slaves > 0 then -- master
-            HTML.Put_Cell (Data => "<img src=""/icons/master.png"" />" & J.Slaves'Img,
+      if Is_Master (J) then
+         if Has_Slaves (J) then -- master
+            HTML.Put_Cell (Data => "<img src=""/icons/master.png"" />" & Get_Slaves (J)'Img,
                            Class => "right");
          else -- serial
             HTML.Put_Cell (Data => "<img src=""/icons/serial.png"" />" & "1",
                            Class => "right");
          end if;
       else
-         HTML.Put_Cell (Data => J.Slaves'Img, Class => "right");
+         HTML.Put_Cell (Data => Get_Slaves (J)'Img, Class => "right");
       end if;
-      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (J.ID'Img, Ada.Strings.Left),
+      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
-      HTML.Put_Duration_Cell (Ada.Calendar.Clock - J.Start_Time);
+      HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
 
@@ -142,14 +138,11 @@ package body Hosts is
    -- Put_Status --
    ----------------
 
-   procedure Put_Queue (Q : Queue) is
-      S : String := Queue_States.To_String (Queue_Maps.Element (Cursor).State);
+   procedure Put_Queue (Q : Queue_Pointer) is
    begin
-      HTML.Put_Cell (Data => Queue_Maps.Key (Cursor) & ':'
-                     & Queue_Maps.Element (Cursor).Slots'Img);
-      HTML.Put_Img_Cell (Image => S);
+      HTML.Put_Cell (Data => Get_Name (Q) & ':'
+                     & Get_Slots (Q)'Img);
+      HTML.Put_Img_Cell (Image => Get_State (Q));
    end Put_Queue;
-
-
 
 end Hosts;

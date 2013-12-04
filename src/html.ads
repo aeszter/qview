@@ -41,6 +41,7 @@ package HTML is
    procedure Put_Job_ID (Label : String; ID : String);
    procedure Comment (Data : String);
    procedure Comment (Data : Unbounded_String);
+   procedure Bug_Ref (Bug_ID : Positive; Info : String);
    procedure Put (Data : Tri_State);
 
    procedure Put_List (List : String_Lists.List);

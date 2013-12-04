@@ -1,9 +1,11 @@
 with HTML;
 with Parser;
 with Ada.Text_IO;
+with SGE.Hosts; use SGE.Hosts;
+with SGE.Host_Properties; use SGE.Host_Properties;
 with Hosts; use Hosts;
---with Host_Properties; use Host_Properties;
-with Queues; use Queues;
+--  with Host_Properties; use Host_Properties;
+with SGE.Queues; use SGE.Queues;
 with Lightsout;
 with Ada.Exceptions; use Ada.Exceptions;
 
@@ -35,7 +37,7 @@ package body Maintenance is
       SGE_Out := Parser.Setup (Command => "qhost",
                                Selector => "-j -F load_short,load_medium, -q");
 
-      Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
+      SGE.Hosts.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       Parser.Free;
       SGE_Out := Parser.Setup (Selector => "-F state");
       Queues.Append_List (Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
@@ -184,26 +186,26 @@ package body Maintenance is
 
    function High_Load (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Get_Load (H) > 1.1 * Hosts.Get_Used_Slots (H)
-        + 0.1 * Hosts.Get_Free_Slots (H)
-        and then Hosts.Get_Load_One (H) > 1.0 * Hosts.Get_Used_Slots (H)
-        + 0.15 * Hosts.Get_Free_Slots (H)
-        and then not Has_Unreachable_Queue (H);
+      return SGE.Hosts.Get_Load (H) > 1.1 * SGE.Hosts.Get_Used_Slots (H)
+        + 0.1 * SGE.Hosts.Get_Free_Slots (H)
+        and then SGE.Hosts.Get_Load_One (H) > 1.0 * SGE.Hosts.Get_Used_Slots (H)
+        + 0.15 * SGE.Hosts.Get_Free_Slots (H)
+        and then not SGE.Hosts.Has_Unreachable_Queue (H);
    exception
       when Constraint_Error =>
-         HTML.Error (Hosts.Get_Name (H) & " has inconsistent load");
+         HTML.Error (SGE.Hosts.Get_Name (H) & " has inconsistent load");
          return False;
    end High_Load;
 
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Get_Load (H) < 0.9  * Hosts.Get_Used_Slots (H)
-      and then Hosts.Get_Load_One (H) < 0.9 * Hosts.Get_Used_Slots (H);
+      return SGE.Hosts.Get_Load (H) < 0.9  * SGE.Hosts.Get_Used_Slots (H)
+      and then SGE.Hosts.Get_Load_One (H) < 0.9 * SGE.Hosts.Get_Used_Slots (H);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is
    begin
-      return Hosts.Swap_Percentage (H) > 50;
+      return SGE.Hosts.Swap_Percentage (H) > 50;
    exception
       when Constraint_Error =>
          return False; -- heuristic: host has no swap

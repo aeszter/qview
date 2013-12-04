@@ -8,7 +8,7 @@ package Hosts is
    procedure Put_Selected (Selector : not null access function (H : Host) return Boolean);
 private
 
---   procedure Put_Queue (Q : SGE.Hosts.Queue);
+   procedure Put_Queue (Q : Queue_Pointer);
 
    procedure Put (H : SGE.Hosts.Host);
    procedure Put_Jobs (J : SGE.Hosts.Job);
