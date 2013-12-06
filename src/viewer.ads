@@ -1,5 +1,5 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Host_Properties; use Host_Properties;
+with SGE.Host_Properties; use SGE.Host_Properties;
 
 package Viewer is
    procedure View;

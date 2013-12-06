@@ -1,7 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
-with Utils; use Utils;
+with SGE.Utils; use SGE.Utils;
 with CGI; use CGI;
 
 package HTML is
@@ -41,6 +41,7 @@ package HTML is
    procedure Put_Job_ID (Label : String; ID : String);
    procedure Comment (Data : String);
    procedure Comment (Data : Unbounded_String);
+   procedure Bug_Ref (Bug_ID : Positive; Info : String);
    procedure Put (Data : Tri_State);
 
    procedure Put_List (List : String_Lists.List);

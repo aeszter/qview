@@ -91,14 +91,14 @@ package body Share_Tree is
             if Cells.At_Separator then
                Cells.Next;
             else
-               raise Spread_Sheets.Output_Error
+               raise SGE.Spread_Sheets.Output_Error
                with "EOL expected, found """ & Cells.Current & """";
             end if;
             exit when Cells.At_End;
          end;
       end loop;
    exception
-      when E : Spread_Sheets.Output_Error =>
+      when E : SGE.Spread_Sheets.Output_Error =>
          HTML.Error ("Error reading user data: " & Exception_Message (E));
       when Constraint_Error =>
          HTML.Error ("Error converting user data: " & Cells.Current);
