@@ -1,12 +1,13 @@
 with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with HTML;
-with Parser; use Parser;
+with Parser;
+with SGE.Parser; use SGE.Parser;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
-with Utils; use Utils; use Utils.String_Lists;
+with SGE.Utils; use SGE.Utils; use SGE.Utils.String_Lists;
+with Utils;
 with SGE.Resources; use SGE.Resources; use SGE.Resources.Resource_Lists;
-with Ranges; use Ranges; use Ranges.Range_Lists;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
 with Partitions; use Partitions;
@@ -17,7 +18,7 @@ with Share_Tree;
 with Diagnostics;
 with Debug;
 with Ada.Strings;
-with Spread_Sheets;
+with SGE.Spread_Sheets;
 with SGE.Hosts;
 with SGE.Queues;
 
@@ -107,6 +108,7 @@ package body Viewer is
                                &"Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
+         Ada.Text_IO.Put_Line ("<li>SGElib " & SGE.Utils.Version & "</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
@@ -189,7 +191,7 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div (Class => "cqueues");
 
-         Parser.Free;
+         SGE.Parser.Free;
       end View_Cluster_Queues;
 
       -----------------------
@@ -210,13 +212,13 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-u * -r -s p");
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
 
          if Slot_Ranges then
             SGE_Out := Parser.Setup (Selector => "-j *");
 
             Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
-            Parser.Free;
+            SGE.Parser.Free;
             Jobs.Apply_Overlay;
          end if;
 
@@ -249,7 +251,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
          SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
-         Parser.Free;
+         SGE.Parser.Free;
 
 
          --  Detect different partitions
@@ -267,13 +269,13 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
          if Only_Waiting then
             SGE_Out := Parser.Setup (Selector => "-j *");
 
             Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
             Jobs.Apply_Overlay;
-            Parser.Free;
+            SGE.Parser.Free;
          end if;
 
          if not HTML.Param_Is ("sort", "") then
@@ -323,7 +325,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
          Jobs.Update_Status;
          Jobs.Search_Queues;
          Jobs.Put_Details;
@@ -344,7 +346,7 @@ package body Viewer is
       begin
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & " -q *@" & Host_Name);
          SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
-         Parser.Free;
+         SGE.Parser.Free;
 
          SGE.Queues.Rewind;
          Q := SGE.Queues.Current;
@@ -366,7 +368,7 @@ package body Viewer is
 
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
@@ -400,11 +402,11 @@ package body Viewer is
          Append_Params ("slot_number="&CGI.Value ("slot_number"));
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-j *");
          Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
-         Parser.Free;
+         SGE.Parser.Free;
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
                           Queue         => CGI.Value ("queue"),
                           Hard_Requests => CGI.Value ("hr"),
@@ -452,7 +454,7 @@ package body Viewer is
       end View_Maintenance_Report;
 
       procedure View_Share_Tree is
-         SGE_Out : Spread_Sheets.Spread_Sheet;
+         SGE_Out : SGE.Spread_Sheets.Spread_Sheet;
 
       begin
          SGE_Out := Parser.Setup_No_XML (Command => "sge_share_mon",
@@ -636,7 +638,7 @@ package body Viewer is
                                & To_String (Selector));
 
       SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
-      Parser.Free;
+      SGE.Parser.Free;
       SGE.Hosts.Prune_List (Requirements => Props, Queue_Name => Queue_Name);
 
       --  Can we factor this out?

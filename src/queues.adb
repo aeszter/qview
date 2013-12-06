@@ -27,7 +27,7 @@ package body Queues is
 
    procedure Append_List (Input_Nodes : Node_List) is
    begin
-      HTML.Bug_Ref (Bug_ID => 1831,
+      HTML.Bug_Ref (Bug_ID => 1830,
                     Info   => "Queues.Append_List called");
       SGE.Queues.Append_List (Input_Nodes);
    end Append_List;

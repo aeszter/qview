@@ -6,7 +6,8 @@ with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
-with Utils; use Utils.String_Lists; use Utils.String_Sets; use Utils.String_Pairs;
+with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
+use SGE.Utils.String_Pairs;
 with Viewer;
 
 package body HTML is

@@ -1,8 +1,6 @@
-with Ranges; use Ranges; use Ranges.Range_Lists;
 with Ada.Text_IO;
 with CGI;
 with HTML;
-with Resources; use Resources; use Resources.Resource_Lists;
 with SGE.Bunches; use SGE.Bunches;
 
 package body Bunches is

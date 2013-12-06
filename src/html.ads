@@ -1,7 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
-with Utils; use Utils;
+with SGE.Utils; use SGE.Utils;
 with CGI; use CGI;
 
 package HTML is
