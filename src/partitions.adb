@@ -32,7 +32,6 @@ package body Partitions is
       Ada.Text_IO.Put_Line ("</tr>");
       SGE.Partitions.Iterate (Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
-      HTML.End_Div (Class => "partitions");
    end Put_List;
 
 

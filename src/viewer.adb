@@ -259,6 +259,8 @@ package body Viewer is
 
          --  Output
          Partitions.Put_Summary;
+         Partitions.Put_List;
+         HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
 
       procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
