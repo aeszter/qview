@@ -457,12 +457,17 @@ package body Jobs is
          HTML.Put_Heading (Title => "Balancer",
                            Level => 3);
          if Supports_Balancer (J) then
-            HTML.Put_Paragraph (Label => "Cores without GPU",
-                                Contents => Get_Context (J, "SLOTSCPU"));
-            HTML.Put_Paragraph (Label => "Cores with GPU",
-                                Contents => Get_Context (J, "SLOTSGPU"));
-            HTML.Put_Paragraph (Label => "Last migration",
-                                Contents => Get_Last_Migration (J));
+            begin
+               HTML.Put_Paragraph (Label => "Cores without GPU",
+                                   Contents => Get_Context (J, "SLOTSCPU"));
+               HTML.Put_Paragraph (Label => "Cores with GPU",
+                                   Contents => Get_Context (J, "SLOTSGPU"));
+               HTML.Put_Paragraph (Label => "Last migration",
+                                   Contents => Get_Last_Migration (J));
+               exception
+               when Constraint_Error =>
+                  null;
+            end;
          end if;
 
          HTML.Put_Heading (Title => "Other context",
