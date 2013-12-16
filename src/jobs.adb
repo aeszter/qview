@@ -452,6 +452,8 @@ package body Jobs is
       end Put_Files;
 
       procedure Put_Context is
+         Slot_Range : SGE.Ranges.Step_Range_List;
+         pragma Unreferenced (Slot_Range);
       begin
          HTML.Begin_Div (Class => "job_context");
          HTML.Put_Heading (Title => "Balancer",
@@ -459,9 +461,10 @@ package body Jobs is
          if Supports_Balancer (J) then
             begin
                HTML.Put_Paragraph (Label => "Cores without GPU",
-                                   Contents => Get_Context (J, "SLOTSCPU"));
+                                   Contents => Get_CPU_Range (J));
+               Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
                HTML.Put_Paragraph (Label => "Cores with GPU",
-                                   Contents => Get_Context (J, "SLOTSGPU"));
+                                   Contents => Get_GPU_Range (J));
                HTML.Put_Paragraph (Label => "Last migration",
                                    Contents => Get_Last_Migration (J));
                exception
