@@ -18,6 +18,8 @@ package body Jobs is
 
    procedure Put_State (State : Job_State);
    procedure Put_Core_Header;
+   procedure Start_Row (J : Job);
+   procedure Finish_Row (J : Job);
 
 
    procedure Put_Summary is
@@ -332,10 +334,19 @@ package body Jobs is
             Ada.Text_IO.Put_Line ("<p class=""message"">"
                    & Message & "</p>");
          end Put_Message;
+
+         procedure Put_Error (Message : String) is
+         begin
+            HTML.Comment (Message);
+         end Put_Error;
       begin
          HTML.Begin_Div (Class => "job_name");
          HTML.Put_Paragraph ("Name", Get_Name (J));
          Iterate_Messages (J, Put_Message'Access);
+         if Has_Error_Log_Entries (J) then
+            Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
+         end if;
+         Iterate_Error_Log (J, Put_Error'Access);
          HTML.End_Div (Class => "job_name");
       end Put_Name;
 
@@ -555,7 +566,7 @@ package body Jobs is
 
    procedure Put_Time_Line (J : Job) is
    begin
-      Ada.Text_IO.Put ("<tr>");
+      Start_Row (J);
       Put_Core_Line (J);
 
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
@@ -572,12 +583,12 @@ package body Jobs is
             HTML.Put_Cell (Data => "<i>unknown</i>");
       end;
       HTML.Put_Img_Cell (State_As_String (J));
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    exception
       when E :
          others => HTML.Error (Message => "Error while outputting job: "
                                      & Exception_Message (E));
-         Ada.Text_IO.Put ("</tr>");
+         Finish_Row (J);
    end Put_Time_Line;
 
    -------------------
@@ -587,19 +598,19 @@ package body Jobs is
 
    procedure Put_Bunch_Line (J : Job) is
    begin
-      Ada.Text_IO.Put ("<tr>");
+      Start_Row (J);
       Put_Core_Line (J);
       HTML.Put_Cell (Data   => Get_PE (J));
       Ranges.Put_Cell (Data => Get_Slot_List (J), Class => "right");
       HTML.Put_Cell (Data   => Get_Hard_Resources (J));
       HTML.Put_Cell (Data   => Get_Soft_Resources (J));
       HTML.Put_Img_Cell (State_As_String (J));
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    exception
       when E :
          others => HTML.Error (Message => "Error while outputting job: "
                                      & Exception_Message (E));
-         Ada.Text_IO.Put ("</tr>");
+         Finish_Row (J);
    end Put_Bunch_Line;
 
 
@@ -610,7 +621,7 @@ package body Jobs is
 
    procedure Put_Res_Line (J : Job) is
    begin
-      Ada.Text_IO.Put ("<tr>");
+      Start_Row (J);
       Put_Core_Line (J);
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
@@ -640,16 +651,16 @@ package body Jobs is
          HTML.Put_Cell ("");
       end if;
       Put_Prio_Core (J);
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    exception
       when E : others => HTML.Error (Message => "Error while outputting job: "
                                      & Exception_Message (E));
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    end Put_Res_Line;
 
    procedure Put_Prio_Line (J : Job) is
    begin
-      Ada.Text_IO.Put ("<tr>");
+      Start_Row (J);
       Put_Core_Line (J);
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
@@ -659,11 +670,11 @@ package body Jobs is
       HTML.Put (Has_Reserve (J));
       Ada.Text_IO.Put ("</td>");
       Put_Prio_Core (J);
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    exception
       when E : others => HTML.Error (Message => "Error while outputting job: "
                                      & Exception_Message (E));
-      Ada.Text_IO.Put ("</tr>");
+      Finish_Row (J);
    end Put_Prio_Line;
 
 
@@ -742,6 +753,26 @@ package body Jobs is
             null; -- likewise
       end case;
    end Put_Usage;
+
+   procedure Start_Row (J : Job) is
+   begin
+      Ada.Text_IO.Put ("<tr");
+      if Has_Error_Log_Entries (J) then
+         Ada.Text_IO.Put (" class=""program_error""");
+      end if;
+      Ada.Text_IO.Put_Line (">");
+   end Start_Row;
+
+   procedure Finish_Row (J : Job) is
+      procedure Put_Error (Message : String) is
+      begin
+         HTML.Comment (Message);
+      end Put_Error;
+
+   begin
+      Ada.Text_IO.Put_Line ("</tr>");
+      Iterate_Error_Log (J, Put_Error'Access);
+   end Finish_Row;
 
    --------------
    -- Overlays --
