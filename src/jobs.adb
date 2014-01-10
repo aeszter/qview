@@ -491,6 +491,8 @@ package body Jobs is
                                    Contents => Get_Reduced_Slots (J));
                HTML.Put_Paragraph (Label => "Reduce runtime to",
                                    Contents => Get_Reduced_Runtime (J));
+               HTML.Put_Paragraph (Label => "Last slot reduction",
+                                   Contents => Get_Last_Reduction (J));
             exception
                when Constraint_Error =>
                   null;
