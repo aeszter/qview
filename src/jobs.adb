@@ -469,7 +469,7 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_context");
          HTML.Put_Heading (Title => "Balancer",
                            Level => 3);
-         if Supports_Balancer (J) then
+         if Supports_Balancer (J, CPU_GPU) then
             begin
                HTML.Put_Paragraph (Label => "Cores without GPU",
                                    Contents => Get_CPU_Range (J));
@@ -478,7 +478,20 @@ package body Jobs is
                                    Contents => Get_GPU_Range (J));
                HTML.Put_Paragraph (Label => "Last migration",
                                    Contents => Get_Last_Migration (J));
-               exception
+            exception
+               when Constraint_Error =>
+                  null;
+            end;
+         end if;
+         if Supports_Balancer (J, Low_Cores) then
+            begin
+               HTML.Put_Paragraph (Label => "Reduce slots after",
+                                   Contents => Get_Reduce_Wait (J));
+               HTML.Put_Paragraph (Label => "Reduce slots to",
+                                   Contents => Get_Reduced_Slots (J));
+               HTML.Put_Paragraph (Label => "Reduce runtime to",
+                                   Contents => Get_Reduced_Runtime (J));
+            exception
                when Constraint_Error =>
                   null;
             end;

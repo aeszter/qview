@@ -306,6 +306,12 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : String; Contents : Duration) is
+      pragma Unreferenced (Contents);
+   begin
+      Put_Paragraph (Label, "Put_Paragraph (String, Duration) unimplemented");
+   end Put_Paragraph;
+
    ----------------
    -- Put_Job_ID --
    ----------------
