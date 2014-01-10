@@ -3,6 +3,7 @@ with HTML; use HTML;
 with CGI;
 with Ada.Strings.Fixed;
 with SGE.Partitions; use SGE.Partitions;
+with SGE.Utils;
 
 package body Partitions is
 
@@ -38,6 +39,14 @@ package body Partitions is
    procedure Put (P : Partition) is
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
+
+      use SGE.Utils.String_Lists;
+
+      procedure Put_Error (Position : SGE.Utils.String_Lists.Cursor) is
+      begin
+         HTML.Comment (Element (Position));
+      end Put_Error;
+
    begin
       if Get_Available_Hosts (P) > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
@@ -45,6 +54,8 @@ package body Partitions is
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
       elsif Get_Offline_Slots (P) = Get_Total_Slots (P) then
          Ada.Text_IO.Put ("<tr class=""offline"">");
+      elsif not P.Error_Log.Is_Empty then
+         Ada.Text_IO.Put ("<tr class=""program_error"">");
       else
          Ada.Text_IO.Put ("<tr>");
       end if;
@@ -89,6 +100,9 @@ package body Partitions is
       HTML.Put_Cell (Data  => P.Suspended_Slots'Img,
                      Class => "right");
       Ada.Text_IO.Put ("</tr>");
+      if not P.Error_Log.Is_Empty then
+         P.Error_Log.Iterate (Put_Error'Access);
+      end if;
    end Put;
 
    procedure Put_Summary_Item (Item : State) is
