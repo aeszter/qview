@@ -6,7 +6,8 @@ with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
-with Utils; use Utils.String_Lists; use Utils.String_Sets; use Utils.String_Pairs;
+with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
+use SGE.Utils.String_Pairs;
 with Viewer;
 
 package body HTML is
@@ -305,6 +306,12 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : String; Contents : Duration) is
+      pragma Unreferenced (Contents);
+   begin
+      Put_Paragraph (Label, "Put_Paragraph (String, Duration) unimplemented");
+   end Put_Paragraph;
+
    ----------------
    -- Put_Job_ID --
    ----------------
@@ -383,6 +390,12 @@ package body HTML is
       Comment (To_String (Data));
    end Comment;
 
+   procedure Bug_Ref (Bug_ID : Positive; Info : String) is
+   begin
+      Comment ("<a href=""http://ram/bugzilla/show_bug.cgi?id="
+               & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
+               & Info);
+   end Bug_Ref;
 
    ---------
    -- Put --

@@ -1,7 +1,7 @@
-with Spread_Sheets; use Spread_Sheets;
+with SGE.Spread_Sheets; use SGE.Spread_Sheets;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Bounded;
-with Utils; use Utils;
+with SGE.Utils; use SGE.Utils;
 
 package Share_Tree is
    procedure Put_List;
