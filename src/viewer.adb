@@ -3,6 +3,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with HTML;
 with Parser;
 with SGE.Parser; use SGE.Parser;
+with SGE.Quota;
 with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with SGE.Utils; use SGE.Utils; use SGE.Utils.String_Lists;
@@ -21,6 +22,7 @@ with Ada.Strings;
 with SGE.Spread_Sheets;
 with SGE.Hosts;
 with SGE.Queues;
+with SGE.Jobs;
 
 package body Viewer is
 
@@ -268,6 +270,11 @@ package body Viewer is
 
 
       begin
+         SGE_Out := Parser.Setup (Command  => "qquota",
+                                  Selector => "-l slots");
+         SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
+                                                          Tag_Name => "qquota_rule"));
+         SGE.Parser.Free;
          SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
@@ -279,6 +286,7 @@ package body Viewer is
             Jobs.Apply_Overlay;
             SGE.Parser.Free;
          end if;
+         SGE.Jobs.Update_Quota;
 
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
@@ -393,6 +401,11 @@ package body Viewer is
 
 
       begin
+         SGE_Out := Parser.Setup (Command  => "qquota",
+                                  Selector => "-l slots");
+         SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
+                                                          Tag_Name => "qquota_rule"));
+         SGE.Parser.Free;
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -u *");
 
@@ -416,6 +429,7 @@ package body Viewer is
                           Slot_Ranges   => CGI.Value ("slot_ranges"),
                           Slot_Number   => CGI.Value ("slot_number")
                          );
+         SGE.Jobs.Update_Quota;
 
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
