@@ -211,6 +211,12 @@ package body Viewer is
             CGI.Put_HTML_Heading (Title => "Demand",
                                Level => 2);
          end if;
+         SGE_Out := Parser.Setup (Command  => "qquota",
+                                  Selector => "-l slots -u *");
+         SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
+                                                          Tag_Name => "qquota_rule"));
+         SGE.Parser.Free;
+
          SGE_Out := Parser.Setup (Selector => "-u * -r -s p");
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
@@ -223,6 +229,8 @@ package body Viewer is
             SGE.Parser.Free;
             Jobs.Apply_Overlay;
          end if;
+
+         SGE.Jobs.Update_Quota;
 
          --  Detect different bunches
          Bunches.Build_List;
@@ -271,7 +279,7 @@ package body Viewer is
 
       begin
          SGE_Out := Parser.Setup (Command  => "qquota",
-                                  Selector => "-l slots");
+                                  Selector => "-l slots -u *");
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
                                                           Tag_Name => "qquota_rule"));
          SGE.Parser.Free;
@@ -402,7 +410,7 @@ package body Viewer is
 
       begin
          SGE_Out := Parser.Setup (Command  => "qquota",
-                                  Selector => "-l slots");
+                                  Selector => "-l slots -u *");
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
                                                           Tag_Name => "qquota_rule"));
          SGE.Parser.Free;
