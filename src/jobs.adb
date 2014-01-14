@@ -354,7 +354,7 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_meta");
          HTML.Put_Paragraph ("ID", Get_ID (J));
-         HTML.Put_Paragraph ("Owner",  Get_Owner (J));
+         HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", Get_Group (J));
          HTML.Put_Paragraph ("Account", Get_Account (J));
          HTML.Put_Paragraph (Label    => "Submitted",
@@ -553,7 +553,7 @@ package body Jobs is
       else
          HTML.Put_Cell (Data => "");
       end if;
-      HTML.Put_Cell (Data => Get_Owner (J), Link_Param => "user");
+      HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
 
