@@ -11,6 +11,7 @@ with Ada.Calendar.Formatting;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with SGE.Ranges; use SGE.Ranges;
 with Ranges; use Ranges;
+with SGE.Resources;
 
 
 
@@ -486,7 +487,7 @@ package body Jobs is
          if Supports_Balancer (J, Low_Cores) then
             begin
                HTML.Put_Paragraph (Label => "Reduce slots after",
-                                   Contents => Get_Reduce_Wait (J));
+                                   Contents => SGE.Resources.Format_Duration (Get_Reduce_Wait (J)));
                HTML.Put_Paragraph (Label => "Reduce slots to",
                                    Contents => Get_Reduced_Slots (J));
                HTML.Put_Paragraph (Label => "Reduce runtime to",
