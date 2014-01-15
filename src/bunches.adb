@@ -30,6 +30,7 @@ package body Bunches is
       HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
       HTML.Put_Cell (Data => "Total", Tag => "th");
       HTML.Put_Cell (Data => "Waiting", Tag => "th");
+      HTML.Put_Cell (Data => "Quota", Tag => "th");
       HTML.Put_Cell (Data => "Held", Tag => "th");
       HTML.Put_Cell (Data => "Error", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
@@ -77,6 +78,7 @@ package body Bunches is
       HTML.Put_Cell (Data => Get_Soft_Resources (B));
       HTML.Put_Cell (Data => Get_Total_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Waiting_Jobs (B)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Quota_Inhibited_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Jobs_On_Hold (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Errors (B)'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");

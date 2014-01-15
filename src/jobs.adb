@@ -774,8 +774,10 @@ package body Jobs is
       Ada.Text_IO.Put ("<tr");
       if Has_Error_Log_Entries (J) then
          Ada.Text_IO.Put (" class=""program_error""");
+      elsif Quota_Inhibited (J) then
+         Ada.Text_IO.Put (" class=""job-quota""");
+         Ada.Text_IO.Put_Line (">");
       end if;
-      Ada.Text_IO.Put_Line (">");
    end Start_Row;
 
    procedure Finish_Row (J : Job) is
