@@ -215,7 +215,7 @@ package body Jobs is
    --------------
 
    procedure Put_List (Show_Resources : Boolean) is
-      Span : Positive := 7;
+      Span : Positive := 5 + Balancer_Capability'Range_Length;
    begin
       if not Show_Resources then
          Span := Span + 1;
@@ -533,7 +533,12 @@ package body Jobs is
    procedure Put_Core_Header is
    begin
       HTML.Put_Header_Cell (Data => "Number");
-      HTML.Put_Header_Cell (Data => ""); -- Balancer support
+      for Capability in Balancer_Capability'Range loop
+         if Capability /= Any then
+            HTML.Put_Header_Cell (Data => ""); -- Balancer support
+         end if;
+      end loop;
+
       HTML.Put_Header_Cell (Data => "Owner");
       HTML.Put_Header_Cell (Data => "Name");
    end Put_Core_Header;
@@ -549,11 +554,15 @@ package body Jobs is
                                       & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
       end if;
-      if Supports_Balancer (J) then
-         HTML.Put_Img_Cell ("balance");
-      else
-         HTML.Put_Cell (Data => "");
-      end if;
+      for Capability in Balancer_Capability'Range loop
+         if Capability /= Any then
+            if Supports_Balancer (J, Capability) then
+               HTML.Put_Img_Cell ("balance_" & To_String (Capability));
+            else
+               HTML.Put_Cell (Data => "");
+            end if;
+         end if;
+      end loop;
       HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
@@ -777,8 +786,8 @@ package body Jobs is
          Ada.Text_IO.Put (" class=""program_error""");
       elsif Quota_Inhibited (J) then
          Ada.Text_IO.Put (" class=""job-quota""");
-         Ada.Text_IO.Put_Line (">");
       end if;
+      Ada.Text_IO.Put_Line (">");
    end Start_Row;
 
    procedure Finish_Row (J : Job) is
