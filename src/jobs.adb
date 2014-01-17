@@ -23,6 +23,12 @@ package body Jobs is
    procedure Put_Core_Header;
    procedure Start_Row (J : Job);
    procedure Finish_Row (J : Job);
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return String;
+                                J     : Job);
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return Time;
+                                J     : Job);
 
 
    procedure Put_Summary is
@@ -480,33 +486,27 @@ package body Jobs is
          HTML.Put_Heading (Title => "Balancer",
                            Level => 3);
          if Supports_Balancer (J, CPU_GPU) then
-            begin
-               HTML.Put_Paragraph (Label => "Cores without GPU",
-                                   Contents => Get_CPU_Range (J));
-               Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
-               HTML.Put_Paragraph (Label => "Cores with GPU",
-                                   Contents => Get_GPU_Range (J));
-               HTML.Put_Paragraph (Label => "Last migration",
-                                   Contents => Get_Last_Migration (J));
-            exception
-               when Constraint_Error =>
-                  null;
-            end;
+            HTML.Put_Paragraph (Label => "Cores without GPU",
+                                Contents => Get_CPU_Range (J));
+            Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
+            HTML.Put_Paragraph (Label => "Cores with GPU",
+                                Contents => Get_GPU_Range (J));
+            Try_Put_Paragraph (Label => "Last migration",
+                               Getter => Get_Last_Migration'Access,
+                               J => J);
          end if;
          if Supports_Balancer (J, Low_Cores) then
-            begin
-               HTML.Put_Paragraph (Label => "Reduce slots after",
-                                   Contents => SGE.Resources.Format_Duration (Get_Reduce_Wait (J)));
-               HTML.Put_Paragraph (Label => "Reduce slots to",
-                                   Contents => Get_Reduced_Slots (J));
-               HTML.Put_Paragraph (Label => "Reduce runtime to",
-                                   Contents => Get_Reduced_Runtime (J));
-               HTML.Put_Paragraph (Label => "Last slot reduction",
-                                   Contents => Get_Last_Reduction (J));
-            exception
-               when Constraint_Error =>
-                  null;
-            end;
+            HTML.Put_Paragraph (Label => "Reduce slots after",
+                                Contents => SGE.Resources.Format_Duration (Get_Reduce_Wait (J)));
+            HTML.Put_Paragraph (Label => "Reduce slots to",
+                                Contents => Get_Reduced_Slots (J));
+            Try_Put_Paragraph (Label => "Reduce runtime to",
+                               Getter => Get_Reduced_Runtime'Access,
+                              J => J);
+            Try_Put_Paragraph (Label => "Last slot reduction",
+                               Getter => Get_Last_Reduction'Access,
+                               J => J);
+         end if;
          end if;
 
          HTML.Put_Heading (Title => "Other context",
@@ -809,6 +809,34 @@ package body Jobs is
       Ada.Text_IO.Put_Line ("</tr>");
       Iterate_Error_Log (J, Put_Error'Access);
    end Finish_Row;
+
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return String;
+                                J      : Job) is
+   begin
+      HTML.Put_Paragraph (Label    => Label,
+                     Contents => Getter (J));
+   exception
+      when others => null;
+   end Try_Put_Paragraph;
+
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return Time;
+                                J      : Job) is
+      function Wrapper (J : Job) return String is
+      begin
+         return HTML.To_String (Getter (J));
+      end Wrapper;
+
+   begin
+      Try_Put_Paragraph (Label  => Label,
+                         Getter => Wrapper'Access,
+                         J      => J);
+   exception
+      when others =>
+         HTML.Put_Paragraph (Label    => Label,
+                             Contents => "<em>never</em>");
+   end Try_Put_Paragraph;
 
    --------------
    -- Overlays --
