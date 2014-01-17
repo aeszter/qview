@@ -507,6 +507,12 @@ package body Jobs is
                                Getter => Get_Last_Reduction'Access,
                                J => J);
          end if;
+         if Supports_Balancer (J, High_Cores) then
+            HTML.Put_Paragraph (Label    => "Extend slots to",
+                                Contents => Get_Extended_Slots (J));
+            Try_Put_Paragraph (Label => "Last slot extension",
+                               Getter => Get_Last_Extension'Access,
+                               J     => J);
          end if;
 
          HTML.Put_Heading (Title => "Other context",
