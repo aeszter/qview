@@ -789,7 +789,7 @@ package body Jobs is
       Ada.Text_IO.Put ("<tr");
       if Has_Error_Log_Entries (J) then
          Ada.Text_IO.Put (" class=""program_error""");
-      elsif Quota_Inhibited (J) then
+      elsif Quota_Inhibited (J) and then not Is_Running (J) then
          Ada.Text_IO.Put (" class=""job-quota""");
       end if;
       Ada.Text_IO.Put_Line (">");
