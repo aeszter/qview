@@ -642,10 +642,10 @@ package body Viewer is
    begin
       case Get_Network (Props) is
          when eth =>
-         Selector := To_Unbounded_String (" -l eth");
+            Selector := To_Unbounded_String (" -l eth");
             Append_Params ("net=ETH");
-      when ib =>
-         Selector := To_Unbounded_String (" -l ib");
+         when ib =>
+            Selector := To_Unbounded_String (" -l ib");
             Append_Params ("net=IB");
          when ibswitch =>
             Append_Params ("net=IBSWITCH");
