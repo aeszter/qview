@@ -19,7 +19,8 @@ with Utils;
 
 package body Jobs is
 
-   procedure Put_State (State : Job_State);
+   procedure Put_State (Flag : SGE.Jobs.State_Flag);
+   procedure Put_State (J : Job);
    procedure Put_Core_Header;
    procedure Start_Row (J : Job);
    procedure Finish_Row (J : Job);
@@ -39,54 +40,43 @@ package body Jobs is
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Task_Summary'Range loop
-         if State /= unknown then
-            Ada.Text_IO.Put ("<li>");
-            Ada.Text_IO.Put (Task_Summary (State)'Img);
-            if Slot_Summary (State) > 0 then
-               Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
-            end if;
-            Ada.Text_IO.Put (" ");
-            Put_State (State => State);
-            Ada.Text_IO.Put_Line ("</li>");
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put (Task_Summary (State)'Img);
+         if Slot_Summary (State) > 0 then
+            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
          end if;
+         Ada.Text_IO.Put (" ");
+         Put_State (Flag => State);
+         Ada.Text_IO.Put_Line ("</li>");
       end loop;
 
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID => "job_summary");
    end Put_Summary;
 
-   procedure Put_State (State : Job_State) is
-      S : String := To_String (State);
+   procedure Put_State (Flag : SGE.Jobs.State_Flag) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
    begin
-      Ada.Text_IO.Put ("<img src=""/icons/" & S & ".png"" ");
-      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & ": ");
-      case State is
-         when r =>
-            Ada.Text_IO.Put ("running");
-         when Rr =>
-            Ada.Text_IO.Put ("restarted");
-         when t =>
-            Ada.Text_IO.Put ("in transit");
-         when Rq =>
-            Ada.Text_IO.Put ("requeued");
-         when Eqw =>
-            Ada.Text_IO.Put ("error");
-         when hqw =>
-            Ada.Text_IO.Put ("on hold");
-         when qw =>
-            Ada.Text_IO.Put ("waiting");
-         when dr =>
-            Ada.Text_IO.Put ("running, deletion pending");
-         when dt =>
-            Ada.Text_IO.Put ("in transit, deletion pending");
-         when ERq =>
-            Ada.Text_IO.Put ("requeued, with error");
-         when hr =>
-            Ada.Text_IO.Put ("on hold/running");
-         when unknown =>
-            null;
-      end case;
-      Ada.Text_IO.Put (""" />");
+      Put ("<img src=""/icons/" & To_Abbrev (Flag) & ".png"" ");
+      Put ("alt=""" & To_Abbrev (Flag) & """ title=""" & To_Abbrev (Flag) & ": ");
+      Put (To_String (Flag) & """ />");
+   end Put_State;
+
+   procedure Put_State (J : Job) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Get_State (J) & ".png"" ");
+      Put ("alt=""" & Get_State (J) & """ title=""" & Get_State (J) & ": ");
+      if Is_Running (J) then
+         Put ("running");
+      end if;
+      if On_Hold (J) then
+         Put ("on hold");
+      end if;
+      if Has_Error (J) then
+         Put ("Error");
+      end if;
+      Put (""" />");
    end Put_State;
 
    ------------------
@@ -376,7 +366,7 @@ package body Jobs is
          HTML.Put (Has_Reserve (J));
          Ada.Text_IO.Put_Line ("</p>");
          Ada.Text_IO.Put ("<p>State: ");
-         Put_State (Get_State (J));
+         Put_State (J);
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");
@@ -622,7 +612,7 @@ package body Jobs is
          when Resources.Error =>
             HTML.Put_Cell (Data => "<i>unknown</i>");
       end;
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Finish_Row (J);
    exception
       when E :
@@ -644,7 +634,7 @@ package body Jobs is
       Ranges.Put_Cell (Data => Get_Slot_List (J), Class => "right");
       HTML.Put_Cell (Data   => Get_Hard_Resources (J));
       HTML.Put_Cell (Data   => Get_Soft_Resources (J));
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Finish_Row (J);
    exception
       when E :
@@ -666,7 +656,7 @@ package body Jobs is
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       if Get_CPU (J) > 0.1 then
          HTML.Put_Duration_Cell (Integer (Get_CPU (J)));
       else
@@ -705,7 +695,7 @@ package body Jobs is
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Ada.Text_IO.Put ("<td>");
       HTML.Put (Has_Reserve (J));
       Ada.Text_IO.Put ("</td>");
