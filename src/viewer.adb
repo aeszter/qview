@@ -50,17 +50,15 @@ package body Viewer is
          HTML.Begin_Div (ID => "header");
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
-         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "cqueues=y");
-         HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
-         HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
-         HTML.Put_Navigation_Link (Data       => "Detailed Queues",
-                                   Link_Param => "categories=supply");
+         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=supply");
          HTML.Put_Navigation_Link (Data       => "Job Overview",
                                    Link_Param => "categories=demand");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
                                    Link_Param => "categories=both");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("With Slot Ranges"),
                                    Link_Param => "categories=with_slots");
+         HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
+         HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
          HTML.Put_Navigation_Link (Data       => "Reservations",
@@ -116,85 +114,6 @@ package body Viewer is
          HTML.Put_Clearer;
          HTML.End_Div (ID => "page");
       end Put_Footer;
-
-      procedure View_Cluster_Queues is
-         SGE_Out     : Parser.Tree;
-         List        : Node_List;
-         Children    : Node_List;
-         N           : Node;
-         C           : Node;
-
-         Q_Name      : Unbounded_String;
-         Q_Load      : Unbounded_String;
-         Q_Used      : Unbounded_String;
-         Q_Reserved  : Unbounded_String;
-         Q_Available : Unbounded_String;
-         Q_Total     : Unbounded_String;
-         Q_Disabled  : Unbounded_String;
-         Q_Offline   : Unbounded_String;
-         --  Cluster Queue Statistics
-      begin
-         SGE_Out := Parser.Setup (Selector => "-g c");
-
-         HTML.Begin_Div (Class => "cqueues");
-         CGI.Put_HTML_Heading (Title => "Cluster Queues", Level => 2);
-         --  Fetch Cluster Queues
-         List := Get_Elements_By_Tag_Name (SGE_Out, "cluster_queue_summary");
-         --  Table Header
-         Ada.Text_IO.Put ("<table><tr>");
-         HTML.Put_Cell (Data => "Queue", Tag => "th");
-         HTML.Put_Cell ("Load", Tag => "th");
-         HTML.Put_Cell ("Slots", Tag => "th");
-         HTML.Put_Cell ("Used", Tag => "th");
-         HTML.Put_Cell ("Reserved", Tag => "th");
-         HTML.Put_Cell ("Available", Tag => "th");
-         HTML.Put_Cell ("<acronym title=""aoACDS: overloaded or in maintenance window"">Suspended</acronym>",
-                        Tag => "th");
-         HTML.Put_Cell ("<acronym title=""cdsuE: config problem, offline, disabled by admin, or node error"">Offline</acronym>",
-                        Tag => "th");
-         Ada.Text_IO.Put ("</tr>");
-
-         for Index in 1 .. Length (List) loop
-            Ada.Text_IO.Put ("<tr>");
-            N        := Item (List, Index - 1);
-            Children := Child_Nodes (N);
-            for Ch_Index in 0 .. Length (Children) - 1 loop
-               C := Item (Children, Ch_Index);
-               if Name (C) = "name" then
-                  Q_Name := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "load" then
-                  Q_Load := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "used" then
-                  Q_Used := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "resv" then
-                  Q_Reserved := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "available" then
-                  Q_Available := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "total" then
-                  Q_Total := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "temp_disabled" then
-                  Q_Disabled := To_Unbounded_String (Value (First_Child (C)));
-               elsif Name (C) = "manual_intervention" then
-                  Q_Offline := To_Unbounded_String (Value (First_Child (C)));
-               end if;
-            end loop;
-            HTML.Put_Cell (Data => Q_Name, Link_Param => "queue");
-            HTML.Put_Cell (Data => Q_Load);
-            HTML.Put_Cell (Data => Q_Total, Class => "right");
-            HTML.Put_Cell (Data => Q_Used, Class => "right");
-            HTML.Put_Cell (Data => Q_Reserved, Class => "right");
-            HTML.Put_Cell (Data => Q_Available, Class => "right");
-            HTML.Put_Cell (Data => Q_Disabled, Class => "right");
-            HTML.Put_Cell (Data => Q_Offline, Class => "right");
-
-            Ada.Text_IO.Put ("</tr>");
-         end loop;
-         --  Table Footer
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "cqueues");
-
-         SGE.Parser.Free;
-      end View_Cluster_Queues;
 
       -----------------------
       -- View_Job_Overview --
@@ -562,9 +481,6 @@ package body Viewer is
                      View_Jobs_Of_User (Sanitise (CGI.Value ("search")));
                   end if;
             end;
-         elsif HTML.Param_Is ("cqueues", "y") then
-            Put_Headers (Title => "Overview");
-            View_Cluster_Queues;
          elsif HTML.Param_Is ("jobs", "bunch") then
             Put_Headers (Title => "Job Group");
             Set_Params ("jobs=bunch");
