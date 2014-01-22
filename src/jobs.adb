@@ -11,15 +11,25 @@ with Ada.Calendar.Formatting;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with SGE.Ranges; use SGE.Ranges;
 with Ranges; use Ranges;
+with SGE.Resources;
+with SGE.Utils;
+with Utils;
 
 
 
 package body Jobs is
 
-   procedure Put_State (State : Job_State);
+   procedure Put_State (Flag : SGE.Jobs.State_Flag);
+   procedure Put_State (J : Job);
    procedure Put_Core_Header;
    procedure Start_Row (J : Job);
    procedure Finish_Row (J : Job);
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return String;
+                                J     : Job);
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return Time;
+                                J     : Job);
 
 
    procedure Put_Summary is
@@ -30,54 +40,43 @@ package body Jobs is
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Task_Summary'Range loop
-         if State /= unknown then
-            Ada.Text_IO.Put ("<li>");
-            Ada.Text_IO.Put (Task_Summary (State)'Img);
-            if Slot_Summary (State) > 0 then
-               Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
-            end if;
-            Ada.Text_IO.Put (" ");
-            Put_State (State => State);
-            Ada.Text_IO.Put_Line ("</li>");
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put (Task_Summary (State)'Img);
+         if Slot_Summary (State) > 0 then
+            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
          end if;
+         Ada.Text_IO.Put (" ");
+         Put_State (Flag => State);
+         Ada.Text_IO.Put_Line ("</li>");
       end loop;
 
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID => "job_summary");
    end Put_Summary;
 
-   procedure Put_State (State : Job_State) is
-      S : String := To_String (State);
+   procedure Put_State (Flag : SGE.Jobs.State_Flag) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
    begin
-      Ada.Text_IO.Put ("<img src=""/icons/" & S & ".png"" ");
-      Ada.Text_IO.Put ("alt=""" & S & """ title=""" & S & ": ");
-      case State is
-         when r =>
-            Ada.Text_IO.Put ("running");
-         when Rr =>
-            Ada.Text_IO.Put ("restarted");
-         when t =>
-            Ada.Text_IO.Put ("in transit");
-         when Rq =>
-            Ada.Text_IO.Put ("requeued");
-         when Eqw =>
-            Ada.Text_IO.Put ("error");
-         when hqw =>
-            Ada.Text_IO.Put ("on hold");
-         when qw =>
-            Ada.Text_IO.Put ("waiting");
-         when dr =>
-            Ada.Text_IO.Put ("running, deletion pending");
-         when dt =>
-            Ada.Text_IO.Put ("in transit, deletion pending");
-         when ERq =>
-            Ada.Text_IO.Put ("requeued, with error");
-         when hr =>
-            Ada.Text_IO.Put ("on hold/running");
-         when unknown =>
-            null;
-      end case;
-      Ada.Text_IO.Put (""" />");
+      Put ("<img src=""/icons/" & To_Abbrev (Flag) & ".png"" ");
+      Put ("alt=""" & To_Abbrev (Flag) & """ title=""" & To_Abbrev (Flag) & ": ");
+      Put (To_String (Flag) & """ />");
+   end Put_State;
+
+   procedure Put_State (J : Job) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Get_State (J) & ".png"" ");
+      Put ("alt=""" & Get_State (J) & """ title=""" & Get_State (J) & ": ");
+      if Is_Running (J) then
+         Put ("running");
+      end if;
+      if On_Hold (J) then
+         Put ("on hold");
+      end if;
+      if Has_Error (J) then
+         Put ("Error");
+      end if;
+      Put (""" />");
    end Put_State;
 
    ------------------
@@ -214,7 +213,7 @@ package body Jobs is
    --------------
 
    procedure Put_List (Show_Resources : Boolean) is
-      Span : Positive := 7;
+      Span : Positive := 5 + Balancer_Capability'Range_Length;
    begin
       if not Show_Resources then
          Span := Span + 1;
@@ -354,7 +353,7 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_meta");
          HTML.Put_Paragraph ("ID", Get_ID (J));
-         HTML.Put_Paragraph ("Owner",  Get_Owner (J));
+         HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", Get_Group (J));
          HTML.Put_Paragraph ("Account", Get_Account (J));
          HTML.Put_Paragraph (Label    => "Submitted",
@@ -367,13 +366,15 @@ package body Jobs is
          HTML.Put (Has_Reserve (J));
          Ada.Text_IO.Put_Line ("</p>");
          Ada.Text_IO.Put ("<p>State: ");
-         Put_State (Get_State (J));
+         Put_State (J);
          Ada.Text_IO.Put_Line ("</p>");
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");
       end Put_Meta;
 
       procedure Put_Queues is
+
+         Assigned_Queues, Detected_Queues : String_Sets.Set;
 
          procedure Put_Queue (Q : String) is
          begin
@@ -385,6 +386,11 @@ package body Jobs is
          end Put_Slot_Range;
 
       begin
+         Assigned_Queues := Get_Task_List (J);
+         Detected_Queues := Get_Detected_Queues (J);
+         Utils.Mark_Mismatch (Assigned_Queues, Detected_Queues);
+
+
          HTML.Begin_Div (Class => "job_queue");
          HTML.Put_Heading (Title => "Requested",
                            Level => 3);
@@ -395,11 +401,11 @@ package body Jobs is
 
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);
-         HTML.Put_List (Get_Task_List (J));
+         HTML.Put_List (Assigned_Queues);
 
          HTML.Put_Heading (Title => "Detected",
                            Level => 3);
-         HTML.Put_List (Get_Detected_Queues (J));
+         HTML.Put_List (Detected_Queues);
 
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_queue");
@@ -470,33 +476,33 @@ package body Jobs is
          HTML.Put_Heading (Title => "Balancer",
                            Level => 3);
          if Supports_Balancer (J, CPU_GPU) then
-            begin
-               HTML.Put_Paragraph (Label => "Cores without GPU",
-                                   Contents => Get_CPU_Range (J));
-               Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
-               HTML.Put_Paragraph (Label => "Cores with GPU",
-                                   Contents => Get_GPU_Range (J));
-               HTML.Put_Paragraph (Label => "Last migration",
-                                   Contents => Get_Last_Migration (J));
-            exception
-               when Constraint_Error =>
-                  null;
-            end;
+            HTML.Put_Paragraph (Label => "Cores without GPU",
+                                Contents => Get_CPU_Range (J));
+            Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
+            HTML.Put_Paragraph (Label => "Cores with GPU",
+                                Contents => Get_GPU_Range (J));
+            Try_Put_Paragraph (Label => "Last migration",
+                               Getter => Get_Last_Migration'Access,
+                               J => J);
          end if;
          if Supports_Balancer (J, Low_Cores) then
-            begin
-               HTML.Put_Paragraph (Label => "Reduce slots after",
-                                   Contents => Get_Reduce_Wait (J));
-               HTML.Put_Paragraph (Label => "Reduce slots to",
-                                   Contents => Get_Reduced_Slots (J));
-               HTML.Put_Paragraph (Label => "Reduce runtime to",
-                                   Contents => Get_Reduced_Runtime (J));
-               HTML.Put_Paragraph (Label => "Last slot reduction",
-                                   Contents => Get_Last_Reduction (J));
-            exception
-               when Constraint_Error =>
-                  null;
-            end;
+            HTML.Put_Paragraph (Label => "Reduce slots after",
+                                Contents => SGE.Resources.Format_Duration (Get_Reduce_Wait (J)));
+            HTML.Put_Paragraph (Label => "Reduce slots to",
+                                Contents => Get_Reduced_Slots (J));
+            Try_Put_Paragraph (Label => "Reduce runtime to",
+                               Getter => Get_Reduced_Runtime'Access,
+                              J => J);
+            Try_Put_Paragraph (Label => "Last slot reduction",
+                               Getter => Get_Last_Reduction'Access,
+                               J => J);
+         end if;
+         if Supports_Balancer (J, High_Cores) then
+            HTML.Put_Paragraph (Label    => "Extend slots to",
+                                Contents => Get_Extended_Slots (J));
+            Try_Put_Paragraph (Label => "Last slot extension",
+                               Getter => Get_Last_Extension'Access,
+                               J     => J);
          end if;
 
          HTML.Put_Heading (Title => "Other context",
@@ -532,7 +538,12 @@ package body Jobs is
    procedure Put_Core_Header is
    begin
       HTML.Put_Header_Cell (Data => "Number");
-      HTML.Put_Header_Cell (Data => ""); -- Balancer support
+      for Capability in Balancer_Capability'Range loop
+         if Capability /= Any then
+            HTML.Put_Header_Cell (Data => ""); -- Balancer support
+         end if;
+      end loop;
+
       HTML.Put_Header_Cell (Data => "Owner");
       HTML.Put_Header_Cell (Data => "Name");
    end Put_Core_Header;
@@ -548,12 +559,16 @@ package body Jobs is
                                       & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
                         Link_Param => "job_id");
       end if;
-      if Supports_Balancer (J) then
-         HTML.Put_Img_Cell ("balance");
-      else
-         HTML.Put_Cell (Data => "");
-      end if;
-      HTML.Put_Cell (Data => Get_Owner (J), Link_Param => "user");
+      for Capability in Balancer_Capability'Range loop
+         if Capability /= Any then
+            if Supports_Balancer (J, Capability) then
+               HTML.Put_Img_Cell ("balance_" & To_String (Capability));
+            else
+               HTML.Put_Cell (Data => "");
+            end if;
+         end if;
+      end loop;
+      HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
 
@@ -597,7 +612,7 @@ package body Jobs is
          when Resources.Error =>
             HTML.Put_Cell (Data => "<i>unknown</i>");
       end;
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Finish_Row (J);
    exception
       when E :
@@ -619,7 +634,7 @@ package body Jobs is
       Ranges.Put_Cell (Data => Get_Slot_List (J), Class => "right");
       HTML.Put_Cell (Data   => Get_Hard_Resources (J));
       HTML.Put_Cell (Data   => Get_Soft_Resources (J));
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Finish_Row (J);
    exception
       when E :
@@ -641,7 +656,7 @@ package body Jobs is
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       if Get_CPU (J) > 0.1 then
          HTML.Put_Duration_Cell (Integer (Get_CPU (J)));
       else
@@ -680,7 +695,7 @@ package body Jobs is
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      HTML.Put_Img_Cell (State_As_String (J));
+      HTML.Put_Img_Cell (Get_State (J));
       Ada.Text_IO.Put ("<td>");
       HTML.Put (Has_Reserve (J));
       Ada.Text_IO.Put ("</td>");
@@ -774,6 +789,8 @@ package body Jobs is
       Ada.Text_IO.Put ("<tr");
       if Has_Error_Log_Entries (J) then
          Ada.Text_IO.Put (" class=""program_error""");
+      elsif Quota_Inhibited (J) and then not Is_Running (J) then
+         Ada.Text_IO.Put (" class=""job-quota""");
       end if;
       Ada.Text_IO.Put_Line (">");
    end Start_Row;
@@ -788,6 +805,34 @@ package body Jobs is
       Ada.Text_IO.Put_Line ("</tr>");
       Iterate_Error_Log (J, Put_Error'Access);
    end Finish_Row;
+
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return String;
+                                J      : Job) is
+   begin
+      HTML.Put_Paragraph (Label    => Label,
+                     Contents => Getter (J));
+   exception
+      when others => null;
+   end Try_Put_Paragraph;
+
+   procedure Try_Put_Paragraph (Label  : String;
+                                Getter : not null access function (J : Job) return Time;
+                                J      : Job) is
+      function Wrapper (J : Job) return String is
+      begin
+         return HTML.To_String (Getter (J));
+      end Wrapper;
+
+   begin
+      Try_Put_Paragraph (Label  => Label,
+                         Getter => Wrapper'Access,
+                         J      => J);
+   exception
+      when others =>
+         HTML.Put_Paragraph (Label    => Label,
+                             Contents => "<em>never</em>");
+   end Try_Put_Paragraph;
 
    --------------
    -- Overlays --

@@ -270,7 +270,7 @@ package body CSS is
       Put_Background ("tr.res_dupli", "#d0d");
       Put_Background ("tr.program_error", "#d0d");
 
-      Open_Block ("tr.offline, tr.job-held");
+      Open_Block ("tr.offline, tr.job-held, tr.job-quota");
       Put_Line ("color: #777;");
       Put_Line ("font-style: italic;");
       Close_Block;

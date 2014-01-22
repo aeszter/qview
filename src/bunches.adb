@@ -2,6 +2,7 @@ with Ada.Text_IO;
 with CGI;
 with HTML;
 with SGE.Bunches; use SGE.Bunches;
+with SGE.Jobs; use SGE.Jobs;
 
 package body Bunches is
 
@@ -24,12 +25,17 @@ package body Bunches is
       HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
                      Tag => "th");
       HTML.Put_Cell (Data => "Slots", Tag => "th");
-      HTML.Put_Cell (Data => "", Tag => "th");
+      for Capability in Balancer_Capability loop
+         if Capability /= Any then
+            HTML.Put_Cell (Data => "", Tag => "th");
+         end if;
+      end loop;
       HTML.Put_Cell (Data => "Queue", Tag => "th");
       HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
       HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
       HTML.Put_Cell (Data => "Total", Tag => "th");
       HTML.Put_Cell (Data => "Waiting", Tag => "th");
+      HTML.Put_Cell (Data => "Quota", Tag => "th");
       HTML.Put_Cell (Data => "Held", Tag => "th");
       HTML.Put_Cell (Data => "Error", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
@@ -43,6 +49,8 @@ package body Bunches is
    ---------
 
    procedure Put (B : SGE.Bunches.Bunch) is
+      use SGE.Jobs;
+
    begin
       if Has_Error (B) then
          Ada.Text_IO.Put ("<tr class=""job-error"">");
@@ -67,16 +75,21 @@ package body Bunches is
          HTML.Put_Cell (Data => Get_PE (B));
       end if;
       HTML.Put_Cell (Data => Get_Slot_Numbers (B), Class => "right");
-      if Has_Balancer (B) then
-         HTML.Put_Img_Cell ("balance");
-      else
-         HTML.Put_Cell ("");
-      end if;
+      for Capability in Balancer_Capability'Range loop
+         if Capability /= Any then
+            if Has_Balancer (B, Capability) then
+               HTML.Put_Img_Cell ("balance_" & To_String (Capability));
+            else
+               HTML.Put_Cell ("");
+            end if;
+         end if;
+      end loop;
       HTML.Put_Cell (Data => Get_Queue (B));
       HTML.Put_Cell (Data => Get_Hard_Resources (B));
       HTML.Put_Cell (Data => Get_Soft_Resources (B));
       HTML.Put_Cell (Data => Get_Total_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Waiting_Jobs (B)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Quota_Inhibited_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Jobs_On_Hold (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Errors (B)'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
