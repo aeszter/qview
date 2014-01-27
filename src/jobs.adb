@@ -14,6 +14,7 @@ with Ranges; use Ranges;
 with SGE.Resources;
 with SGE.Utils;
 with Utils;
+with SGE.Context;
 
 
 
@@ -478,7 +479,7 @@ package body Jobs is
          if Supports_Balancer (J, CPU_GPU) then
             HTML.Put_Paragraph (Label => "Cores without GPU",
                                 Contents => Get_CPU_Range (J));
-            Slot_Range := To_Step_Range_List (Get_Context (J, "SLOTSCPU"));
+            Slot_Range := To_Step_Range_List (Get_Context (J, SGE.Context.Slots_CPU));
             HTML.Put_Paragraph (Label => "Cores with GPU",
                                 Contents => Get_GPU_Range (J));
             Try_Put_Paragraph (Label => "Last migration",
