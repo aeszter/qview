@@ -508,7 +508,13 @@ package body Jobs is
 
          HTML.Put_Heading (Title => "Other context",
                            Level => 3);
-         HTML.Put_List (Get_Context (J));
+         HTML.Put_List_Head;
+         if Has_Context (J) then
+            Iterate_Context (J, HTML.Put_List_Entry'Access);
+         else
+            HTML.Put_Empty_List;
+         end if;
+         HTML.Put_List_Tail;
          HTML.End_Div (Class => "job_context");
       end Put_Context;
 

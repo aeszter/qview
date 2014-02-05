@@ -321,54 +321,74 @@ package body HTML is
    --------------
    -- Put_List --
    --------------
+   procedure Put_List_Head is
+   begin
+      Ada.Text_IO.Put ("<ul>");
+   end Put_List_Head;
+
+   procedure Put_List_Tail is
+   begin
+      Ada.Text_IO.Put ("</ul>");
+   end Put_List_Tail;
+
+   procedure Put_List_Entry (Key, Element : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<li><b>" & Key & ":</b> " & Element & "</li>");
+   end Put_List_Entry;
+
+   procedure Put_Empty_List is
+   begin
+      Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
+   end Put_Empty_List;
+
 
    procedure Put_List (List : String_Lists.List) is
       Elem : String_Lists.Cursor;
    begin
       Elem := List.First;
-      Ada.Text_IO.Put ("<ul>");
+      Put_List_Head;
       if Elem = String_Lists.No_Element then
-         Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
+         Put_Empty_List;
       else
          while Elem /= String_Lists.No_Element loop
             Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Elem)) & "</li>");
             Next (Elem);
          end loop;
       end if;
-      Ada.Text_IO.Put ("</ul>");
+      Put_List_Tail;
    end Put_List;
 
    procedure Put_List (List : String_Pairs.Map) is
       Elem : String_Pairs.Cursor;
    begin
       Elem := List.First;
-      Ada.Text_IO.Put ("<ul>");
+      Put_List_Head;
       if Elem = String_Pairs.No_Element then
-         Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
+         Put_Empty_List;
       else
          while Elem /= String_Pairs.No_Element loop
-            Ada.Text_IO.Put_Line ("<li><b>" & To_String (String_Pairs.Key (Elem))
-                & ":</b> " & To_String (String_Pairs.Element (Elem)) & "</li>");
+            Put_List_Entry (Key => To_String (String_Pairs.Key (Elem)),
+                            Element => To_String (String_Pairs.Element (Elem)));
             Next (Elem);
          end loop;
       end if;
-      Ada.Text_IO.Put ("</ul>");
+      Put_List_Tail;
    end Put_List;
 
    procedure Put_List (List : String_Sets.Set) is
       Elem : String_Sets.Cursor;
    begin
       Elem := List.First;
-      Ada.Text_IO.Put ("<ul>");
+      Put_List_Head;
       if Elem = String_Sets.No_Element then
-         Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
+         Put_Empty_List;
       else
          while Elem /= String_Sets.No_Element loop
             Ada.Text_IO.Put_Line ("<li>" & To_String (String_Sets.Element (Elem)) & "</li>");
             Next (Elem);
          end loop;
       end if;
-      Ada.Text_IO.Put ("</ul>");
+      Put_List_Tail;
    end Put_List;
 
    -------------
