@@ -47,7 +47,11 @@ package HTML is
    procedure Put_List (List : String_Lists.List);
    procedure Put_List (List : String_Sets.Set);
    procedure Put_List (List : String_Pairs.Map);
---  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
+   --  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
+   procedure Put_List_Head;
+   procedure Put_List_Tail;
+   procedure Put_List_Entry (Key, Element : String);
+   procedure Put_Empty_List;
 
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
