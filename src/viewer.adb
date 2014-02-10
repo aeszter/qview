@@ -566,12 +566,13 @@ package body Viewer is
          when ibswitch =>
             Append_Params ("net=IBSWITCH");
          when none =>
-            Append_Params ("net=none");
+            Append_Params ("net=NONE");
       end case;
       Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
-      Append_Params (To_String (Get_Model (Props)));
+      Append_Params ("model=" & Get_Model (Props)'Img);
       Append_Params ("cores=" & Get_Cores (Props)'Img);
       Append_Params ("mem=" & To_String (Get_Memory (Props)));
+      Append_Params ("q=" & Queue_Name);
 
       SGE_Out := Parser.Setup (Command  => "qhost",
                                Selector => "-q -j " & Parser.Resource_Selector
