@@ -98,6 +98,7 @@ package body Hosts is
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
                      Class => "right " & Color_Class (Swap_Percentage (H)));
+      Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");

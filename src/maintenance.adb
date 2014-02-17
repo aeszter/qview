@@ -53,6 +53,9 @@ package body Maintenance is
       Put_Disabled_Queues;
       Put_Unreachable_Queues;
       Put_Offline_Queues;
+      Put_Multi_Queues;
+      Put_No_Queues;
+      Put_Old_Config;
    end Put_All;
 
    procedure Read_Lightsout_Information is
@@ -179,6 +182,41 @@ package body Maintenance is
       HTML.End_Div (Class => "maintenance");
    end Put_Offline_Queues;
 
+   procedure Put_Old_Config is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Old config",
+                         Level => 3);
+      HTML.Put_Heading (Title => "Queue_State has o",
+                        Level => 4);
+      Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Old_Config'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Old_Config;
+
+   procedure Put_No_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Hosts with no defined queue",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Hosts.Put_Selected (No_Queue'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_No_Queues;
+
+   procedure Put_Multi_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Hosts with more than one queue",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<table>");
+      Hosts.Put_Selected (Multi_Queue'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Multi_Queues;
+
 
    ------------------------
    -- Selector Functions --
@@ -212,10 +250,27 @@ package body Maintenance is
          return False; -- heuristic: host has no swap
    end High_Swap;
 
+   function No_Queue (H : Hosts.Host) return Boolean is
+   begin
+      return Queue_Count (H) = 0;
+   end No_Queue;
+
+   function Multi_Queue (H : Hosts.Host) return Boolean is
+   begin
+      return Queue_Count (H) > 1;
+   end Multi_Queue;
+
+
+
    ------------------------
    -- Selector Functions --
    -- Queues             --
    ------------------------
+
+   function Old_Config (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Old_Config (Q);
+   end Old_Config;
 
    function In_Error_State (Q : Queues.Queue) return Boolean is
    begin
