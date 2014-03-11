@@ -1,5 +1,6 @@
 with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Bounded;
+with Ada.Strings.Unbounded;
 
 package Lightsout is
    package Host_Names is new Ada.Strings.Bounded.Generic_Bounded_Length (Max => 12);
@@ -26,5 +27,6 @@ private
                                                     "<" => Host_Names."<");
 
    List : Lists.Map;
+   Bugzilla_URL : Ada.Strings.Unbounded.Unbounded_String;
 
 end Lightsout;
