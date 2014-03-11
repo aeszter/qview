@@ -701,7 +701,8 @@ package body Jobs is
       Put_Core_Line (J);
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
-      HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
+      HTML.Put_Cell (Data => To_String (Get_Slot_List (J), Short => True),
+                     Tag  => "td class=""right""");
       HTML.Put_Img_Cell (Get_State (J));
       Ada.Text_IO.Put ("<td>");
       HTML.Put (Has_Reserve (J));

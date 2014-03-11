@@ -14,11 +14,17 @@ private
    procedure Put_Unreachable_Queues;
    procedure Put_Unusual_Queues;
    procedure Put_Offline_Queues;
+   procedure Put_Multi_Queues;
+   procedure Put_No_Queues;
+   procedure Put_Old_Config;
 
 
    function High_Load (H : Hosts.Host) return Boolean;
    function Low_Load (H : Hosts.Host) return Boolean;
    function High_Swap (H : Hosts.Host) return Boolean;
+   function No_Queue (H : Hosts.Host) return Boolean;
+   function Multi_Queue (H : Hosts.Host) return Boolean;
+   function Old_Config (Q : Queues.Queue) return Boolean;
    function In_Error_State (Q : Queues.Queue) return Boolean;
    function Reachable_Disabled (Q : Queues.Queue) return Boolean;
    function Unreachable_Enabled (Q : Queues.Queue) return Boolean;
