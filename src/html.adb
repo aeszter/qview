@@ -47,6 +47,7 @@ package body HTML is
         & "/grubmueller/index.php/"
         & Topic & """>"
         & "<img src=""/icons/help.png"" /></a>";
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Help_Icon;
 
    --------------
@@ -410,6 +411,7 @@ package body HTML is
       Comment ("<a href=""http://ram/bugzilla/show_bug.cgi?id="
                & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
                & Info);
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Bug_Ref;
 
    ---------
@@ -448,6 +450,7 @@ package body HTML is
                       & "Are there any extraordinary jobs in the queue?"
                       & """>"
                       & CGI.HTML_Encode (Message) & "</a></p>");
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Error;
 
    procedure Put_Heading (Title : String; Level : Positive) is

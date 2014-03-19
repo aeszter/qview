@@ -74,6 +74,8 @@ private
    Schedule_File : Ada.Text_IO.File_Type;
    Schedule_File_Name : constant String := "/cm/shared/apps/sge/current/"
      & "default/common/schedule";
+      pragma Compile_Time_Warning (True, "hardcoded config");
+
    Iteration_Number : Natural := 1;
 
 end Reservations;

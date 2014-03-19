@@ -106,6 +106,7 @@ package body Viewer is
                                & "&product=Projects&version="
                                & Utils.Version & """>"
                                &"Report Problem/Suggest Enhancement</a></li>");
+            pragma Compile_Time_Warning (True, "hardcoded config");
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>SGElib " & SGE.Utils.Version & "</li>");
