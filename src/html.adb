@@ -43,8 +43,8 @@ package body HTML is
 
    function Help_Icon (Topic : String) return String is
    begin
-      return "<a href=""http://wiki.mpibpc.gwdg.de"
-        & "/grubmueller/index.php/"
+      return "<a href=""" & CGI.Get_Environment ("HELP_URL")
+--        http://wiki.mpibpc.gwdg.de/grubmueller/index.php/
         & Topic & """>"
         & "<img src=""/icons/help.png"" /></a>";
          pragma Compile_Time_Warning (True, "hardcoded config");
@@ -408,7 +408,9 @@ package body HTML is
 
    procedure Bug_Ref (Bug_ID : Positive; Info : String) is
    begin
-      Comment ("<a href=""http://ram/bugzilla/show_bug.cgi?id="
+      Comment ("<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+               --  http://ram/bugzilla
+               & "/show_bug.cgi?id="
                & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
                & Info);
          pragma Compile_Time_Warning (True, "hardcoded config");
@@ -441,7 +443,9 @@ package body HTML is
    procedure Error (Message : String) is
    begin
       Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
-                      & "<a href=""http://ram/bugzilla/enter_bug.cgi?"
+                            & "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+                            --http://ram/bugzilla
+                              & "/enter_bug.cgi?"
                       & "component=qview&form_name=enter_bug"
                             & "&product=Projects"
                               & "&version=" & Version

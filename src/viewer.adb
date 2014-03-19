@@ -101,12 +101,12 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
                                & "<img src=""/usage/webalizer.png"" "
                                & "alt=""Stats by Webalizer""></a></li>");
-         Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
+         Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+                               & "/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
                                & "&product=Projects&version="
                                & Utils.Version & """>"
                                &"Report Problem/Suggest Enhancement</a></li>");
-            pragma Compile_Time_Warning (True, "hardcoded config");
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>SGElib " & SGE.Utils.Version & "</li>");
