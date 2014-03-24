@@ -4,6 +4,7 @@ with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Vectors;
 with Ada.Containers.Ordered_Sets;
 use Ada.Containers;
+with CGI;
 
 package Reservations is
    procedure Put_All;
@@ -72,8 +73,9 @@ private
    Catalog : Catalogs.Map;
    Reserving_Jobs : Job_Pool.Set;
    Schedule_File : Ada.Text_IO.File_Type;
-   Schedule_File_Name : constant String := "/cm/shared/apps/sge/current/"
-     & "default/common/schedule";
+   Schedule_File_Name : constant String := CGI.Get_Environment ("SGE_ROOT")
+     & "/default/common/schedule";
+
    Iteration_Number : Natural := 1;
 
 end Reservations;
