@@ -98,9 +98,6 @@ package body Viewer is
          Ada.Text_IO.Put ("<ul>");
          Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
                                & "aeszter@gwdg.de</a></li>");
-         Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
-                               & "<img src=""/usage/webalizer.png"" "
-                               & "alt=""Stats by Webalizer""></a></li>");
          Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
                                & "/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
