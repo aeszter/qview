@@ -50,11 +50,7 @@ package body Viewer is
          HTML.Begin_Div (ID => "header");
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
-         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=supply");
-         HTML.Put_Navigation_Link (Data       => "Job Overview",
-                                   Link_Param => "categories=demand");
-         HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
-                                   Link_Param => "categories=both");
+         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=both");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("With Slot Ranges"),
                                    Link_Param => "categories=with_slots");
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
@@ -62,6 +58,8 @@ package body Viewer is
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
          HTML.Put_Navigation_Link (Data       => "Reservations",
+                                   Link_Param => "ar=y");
+         HTML.Put_Navigation_Link (Data       => "Scheduler",
                                    Link_Param => "reservation=y");
          HTML.Put_Navigation_Link (Data       => "Maintenance",
                                    Link_Param => "maintenance=y");
