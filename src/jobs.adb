@@ -364,7 +364,7 @@ package body Jobs is
          Iterate_Predecessors (J, Process => Put_Predecessor'Access);
          Iterate_Predecessor_Requests (J, Process => Put_Request'Access);
          Iterate_Successors (J, Process => Put_Successor'Access);
-         HTML.Put_Paragraph ("Advance Reservation", Get_Advance_Reservation (J));
+         HTML.Put_Link ("Advance Reservation", Get_Advance_Reservation (J), "ar_id");
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (Has_Reserve (J));
          Ada.Text_IO.Put_Line ("</p>");

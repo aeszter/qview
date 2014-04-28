@@ -2,6 +2,7 @@ with Ada.Text_IO;
 with SGE.Advance_Reservations;
 with HTML;
 with SGE.Utils; use SGE.Utils;
+with Ada.Strings.Fixed;
 
 
 package body Advance_Reservations is
@@ -72,7 +73,8 @@ package body Advance_Reservations is
    procedure Put_Line (R : Reservation) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Get_ID (R));
+      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (R), Ada.Strings.Left),
+                    Link_Param => "ar_id");
       HTML.Put_Cell (To_String (Get_Owner (R)));
       HTML.Put_Cell (Get_Name (R));
       HTML.Put_Cell (Get_State (R));
