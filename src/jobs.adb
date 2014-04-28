@@ -182,8 +182,9 @@ package body Jobs is
       S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
-      HTML.Put_Job_ID (Label    => "Predecessor",
-                          ID    => S);
+      HTML.Put_Link (Label      => "Predecessor",
+                     ID         => S,
+                     Link_Param => "job_id");
    end Put_Predecessor;
 
    ---------------------
@@ -194,8 +195,9 @@ package body Jobs is
       S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
-      HTML.Put_Job_ID (Label => "Successor",
-                       ID    => S);
+      HTML.Put_Link (Label      => "Successor",
+                     ID         => S,
+                     Link_Param => "job_id");
    end Put_Successor;
 
    -----------------

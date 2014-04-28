@@ -312,12 +312,12 @@ package body HTML is
    -- Put_Job_ID --
    ----------------
 
-   procedure Put_Job_ID (Label : String; ID : String) is
+   procedure Put_Link (Label : String; ID : String; Link_Param : String) is
    begin
       Put_Paragraph (Label    => Label,
                      Contents => "<a href=""" & CGI.My_URL &
-                                 "?job_id=" & ID & """>" & ID & "</a>");
-   end Put_Job_ID;
+                                 "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
+   end Put_Link;
 
    --------------
    -- Put_List --
