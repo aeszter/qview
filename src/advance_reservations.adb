@@ -1,8 +1,12 @@
 with Ada.Text_IO;
 with SGE.Advance_Reservations;
 with HTML;
+with SGE.Utils; use SGE.Utils;
+
 
 package body Advance_Reservations is
+
+   procedure Put_State (R : Reservation);
 
    -----------------
    -- Append_List --
@@ -38,7 +42,7 @@ package body Advance_Reservations is
       begin
          HTML.Begin_Div (Class => "ar_meta");
          HTML.Put_Paragraph ("ID", Get_ID (R));
-         HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (R)));
+         HTML.Put_Paragraph ("Owner",  SGE.Utils.To_String (Get_Owner (R)));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (R);
          Ada.Text_IO.Put_Line ("</p>");
@@ -69,11 +73,11 @@ package body Advance_Reservations is
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Get_ID (R));
-      HTML.Put_Cell (Get_Owner (R));
+      HTML.Put_Cell (To_String (Get_Owner (R)));
       HTML.Put_Cell (Get_Name (R));
       HTML.Put_Cell (Get_State (R));
-      HTML.Put_Cell (Get_Start (R));
-      HTML.Put_Cell (Get_Duration (R));
+      HTML.Put_Time_Cell (Get_Start (R));
+      HTML.Put_Duration_Cell (Get_Duration (R));
       Ada.Text_IO.Put ("</tr>");
    end Put_Line;
 
@@ -101,5 +105,21 @@ package body Advance_Reservations is
       Iterate (Put_Line'Access);
    end Put_List;
 
+   procedure Put_State (R : Reservation) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Get_State (R) & ".png"" ");
+      Put ("alt=""" & Get_State (R) & """ title=""" & Get_State (R) & ": ");
+--      if Is_Running (R) then
+--         Put ("running");
+--      end if;
+--      if On_Hold (R) then
+--         Put ("on hold");
+--      end if;
+--      if Has_Error (R) then
+--         Put ("Error");
+--      end if;
+      Put (""" />");
+   end Put_State;
 
 end Advance_Reservations;

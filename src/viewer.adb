@@ -339,6 +339,8 @@ package body Viewer is
          AR.Append_List (SGE_Out);
          SGE.Parser.Free;
          AR.Put_List;
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "ar_list");
       end View_Advance_Reservations;
 
       ----------------

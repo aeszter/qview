@@ -227,7 +227,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .job_list, .partitions, .bunches");
+      Open_Block (".job_info, .job_list, .ar_list, .partitions, .bunches");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
