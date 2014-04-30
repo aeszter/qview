@@ -25,6 +25,12 @@ package body Advance_Reservations is
 
    procedure Put (R : Reservation) is
       procedure Put_Name is
+         procedure Put_Message (Message : String) is
+         begin
+            Ada.Text_IO.Put_Line ("<p class=""message"">"
+                   & Message & "</p>");
+         end Put_Message;
+
          procedure Put_Error (Message : String) is
          begin
             HTML.Comment (Message);
@@ -33,6 +39,7 @@ package body Advance_Reservations is
       begin
          HTML.Begin_Div (Class => "ar_name");
          HTML.Put_Paragraph ("Name", Get_Name (R));
+         Iterate_Messages (R, Put_Message'Access);
          if Has_Error_Log_Entries (R) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
          end if;
