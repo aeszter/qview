@@ -182,8 +182,9 @@ package body Jobs is
       S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
-      HTML.Put_Job_ID (Label    => "Predecessor",
-                          ID    => S);
+      HTML.Put_Link (Label      => "Predecessor",
+                     ID         => S,
+                     Link_Param => "job_id");
    end Put_Predecessor;
 
    ---------------------
@@ -194,8 +195,9 @@ package body Jobs is
       S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
-      HTML.Put_Job_ID (Label => "Successor",
-                       ID    => S);
+      HTML.Put_Link (Label      => "Successor",
+                     ID         => S,
+                     Link_Param => "job_id");
    end Put_Successor;
 
    -----------------
@@ -362,7 +364,7 @@ package body Jobs is
          Iterate_Predecessors (J, Process => Put_Predecessor'Access);
          Iterate_Predecessor_Requests (J, Process => Put_Request'Access);
          Iterate_Successors (J, Process => Put_Successor'Access);
-         HTML.Put_Paragraph ("Advance Reservation", Get_Advance_Reservation (J));
+         HTML.Put_Link ("Advance Reservation", Get_Advance_Reservation (J), "ar_id");
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (Has_Reserve (J));
          Ada.Text_IO.Put_Line ("</p>");

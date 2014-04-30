@@ -191,25 +191,12 @@ package body HTML is
    -----------------------
 
    procedure Put_Duration_Cell (Span : Duration) is
-      Days    : Natural;
-      Seconds : Duration;
    begin
       if Span < 0.0 then
          Put_Cell (Data => "<i>expired</i>", Class => "right");
       else
-         Days    := Integer (Span / 86_400 + 0.5) - 1;
-         Seconds := Span - Duration (Days * 86_400);
-         if Days > 0 then
-            Put_Cell
-              (Data  => Days'Img &
-                        "d " &
-                        Ada.Calendar.Formatting.Image (Seconds),
-               Class => "right");
-         else
-            Put_Cell
-              (Data  => Ada.Calendar.Formatting.Image (Seconds),
-               Class => "right");
-         end if;
+         Put_Cell (Data => To_String (Span),
+                  Class => "right");
       end if;
    end Put_Duration_Cell;
 
@@ -294,6 +281,12 @@ package body HTML is
       Put_Paragraph (Label => Label, Contents => To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : String; Contents : Duration) is
+   begin
+      Put_Paragraph (Label    => Label,
+                     Contents => To_String (Contents));
+   end Put_Paragraph;
+
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String) is
    begin
       Put_Paragraph (Label, To_String (Contents));
@@ -312,12 +305,12 @@ package body HTML is
    -- Put_Job_ID --
    ----------------
 
-   procedure Put_Job_ID (Label : String; ID : String) is
+   procedure Put_Link (Label : String; ID : String; Link_Param : String) is
    begin
       Put_Paragraph (Label    => Label,
                      Contents => "<a href=""" & CGI.My_URL &
-                                 "?job_id=" & ID & """>" & ID & "</a>");
-   end Put_Job_ID;
+                                 "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
+   end Put_Link;
 
    --------------
    -- Put_List --
@@ -597,5 +590,17 @@ package body HTML is
       end if;
    end To_String;
 
+   function To_String (Span : Duration) return String is
+      Days    : Natural;
+      Seconds : Duration;
+   begin
+      Days    := Integer (Span / 86_400 + 0.5) - 1;
+      Seconds := Span - Duration (Days * 86_400);
+      if Days > 0 then
+         return Days'Img & "d " & Ada.Calendar.Formatting.Image (Seconds);
+      else
+         return Ada.Calendar.Formatting.Image (Seconds);
+      end if;
+   end To_String;
 
 end HTML;
