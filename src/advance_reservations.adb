@@ -3,6 +3,7 @@ with SGE.Advance_Reservations;
 with HTML;
 with SGE.Utils; use SGE.Utils;
 with Ada.Strings.Fixed;
+with Resources;
 
 
 package body Advance_Reservations is
@@ -44,6 +45,16 @@ package body Advance_Reservations is
          HTML.Begin_Div (Class => "ar_meta");
          HTML.Put_Paragraph ("ID", Get_ID (R));
          HTML.Put_Paragraph ("Owner",  SGE.Utils.To_String (Get_Owner (R)));
+         HTML.Put_Paragraph ("Group", Get_Group (R));
+         HTML.Put_Paragraph ("Account", Get_Account (R));
+         HTML.Put_Paragraph (Label    => "Submitted",
+                             Contents => Get_Submission_Time (R));
+         HTML.Put_Paragraph (Label    => "Starts",
+                             Contents => Get_Start_Time (R));
+         HTML.Put_Paragraph (Label    => "Duration",
+                             Contents => Get_Duration (R));
+         HTML.Put_Paragraph (Label    => "Ends",
+                             Contents => Get_End_Time (R));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (R);
          Ada.Text_IO.Put_Line ("</p>");
@@ -52,13 +63,24 @@ package body Advance_Reservations is
       end Put_Meta;
 
       procedure Put_Queues is
+         procedure Put_Queue (Q : Queue) is
+         begin
+            HTML.Put_Paragraph (Label    => Get_Name (Q),
+                                Contents => Get_Slots (Q));
+         end Put_Queue;
+
       begin
-         null;
+         HTML.Begin_Div (Class => "ar_queue");
+         Iterate_Queues (R, Put_Queue'Access);
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "ar_queue");
       end Put_Queues;
 
       procedure Put_Resources is
       begin
-         null;
+         HTML.Begin_Div (Class => "ar_resources");
+         Resources.Put_List (Get_Resources (R));
+         HTML.End_Div (Class => "ar_resources");
       end Put_Resources;
 
    begin
@@ -66,8 +88,12 @@ package body Advance_Reservations is
       Put_Name;
       Put_Meta;
       Put_Queues;
+      HTML.Begin_Div (Class => "res_and_context");
       Put_Resources;
+      HTML.End_Div (Class => "res_and_context");
+      HTML.Put_Clearer;
       HTML.End_Div (Class => "ar_info");
+      HTML.Put_Clearer;
    end Put;
 
    procedure Put_Line (R : Reservation) is
@@ -78,7 +104,7 @@ package body Advance_Reservations is
       HTML.Put_Cell (To_String (Get_Owner (R)));
       HTML.Put_Cell (Get_Name (R));
       HTML.Put_Cell (Get_State (R));
-      HTML.Put_Time_Cell (Get_Start (R));
+      HTML.Put_Time_Cell (Get_Start_Time (R));
       HTML.Put_Duration_Cell (Get_Duration (R));
       Ada.Text_IO.Put ("</tr>");
    end Put_Line;

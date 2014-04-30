@@ -168,7 +168,7 @@ package body CSS is
 
    procedure Put_Job_Name is
    begin
-      Open_Block (".job_name");
+      Open_Block (".job_name, .ar_name");
       Put_Line ("font-weight: bold;");
       Put_Line (Widest_Box_Width);
       Put_Line (Box_Background);
@@ -179,7 +179,7 @@ package body CSS is
 
    procedure Put_Job_Meta is
    begin
-      Open_Block (".job_meta, .job_usage");
+      Open_Block (".job_meta, .ar_meta, .job_usage");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -203,7 +203,7 @@ package body CSS is
 
    procedure Put_Job_Queue is
    begin
-      Open_Block (".job_queue");
+      Open_Block (".job_queue, .ar_queue");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -214,7 +214,7 @@ package body CSS is
 
    procedure Put_Job_Resources is
    begin
-      Open_Block (".job_resources, .job_context");
+      Open_Block (".job_resources, .ar_resources, .job_context");
       Put_Line ("position: relative;");
       Put_Line ("width: 17em;");
       Put_Line (Box_Background);
@@ -227,7 +227,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .job_list, .ar_list, .partitions, .bunches");
+      Open_Block (".job_info, .ar_info, .job_list, .ar_list, .partitions, .bunches");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
@@ -312,7 +312,7 @@ package body CSS is
 
    procedure Put_Job_Lists is
    begin
-      Open_Block (".job_info ul");
+      Open_Block (".job_info ul, .ar_info ul");
       Put_Line ("margin-top: 0;");
       Put_Line ("padding-left: 15px;");
       Put_Line ("list-style-type: none;");
@@ -323,7 +323,7 @@ package body CSS is
 
    procedure Put_Job_Paragraphs is
    begin
-      Open_Block (".job_info p");
+      Open_Block (".job_info p, .ar_info p");
       Put_Line ("margin: 5px;");
       Put_Line ("height: 1.2em;");
       Put_Line ("font-size: 0.85em;");
@@ -331,7 +331,7 @@ package body CSS is
       Put_Line ("line-height: 1em;");
       Close_Block;
 
-      Open_Block (".job_name p");
+      Open_Block (".job_name p, .ar_name p");
       Put_Line ("margin: 10px;");
 --  /*line-height: 10px;*/
       Close_Block;
