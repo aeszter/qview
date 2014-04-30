@@ -36,6 +36,7 @@ package HTML is
 
    procedure Put_Paragraph (Label : String; Contents : String);
    procedure Put_Paragraph (Label : String; Contents : Calendar.Time);
+   procedure Put_Paragraph (Label : String; Contents : Duration);
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Put_Link (Label : String; ID : String; Link_Param : String);
@@ -76,6 +77,7 @@ package HTML is
    --  or the like
 
    function To_String (Time : Calendar.Time) return String;
+   function To_String (Span : Duration) return String;
 private
    type Div is record
       Class : Unbounded_String;
