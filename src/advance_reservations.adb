@@ -108,7 +108,7 @@ package body Advance_Reservations is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (R), Ada.Strings.Left),
                     Link_Param => "ar_id");
-      HTML.Put_Cell (To_String (Get_Owner (R)));
+      HTML.Put_Cell (To_String (Get_Owner (R)), Link_Param => "user");
       HTML.Put_Cell (Get_Name (R));
       HTML.Put_Cell (Get_State (R));
       HTML.Put_Time_Cell (Get_Start_Time (R));
