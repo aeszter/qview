@@ -231,9 +231,18 @@ package body Reservations is
          Store_Data := False;
          return;
       end if;
+      if Line (Separators (1) + 1 .. Separators (2) - 1) = "0" then
+         --  the reason for such lines are unclear, but zero is not a valid job ID
+         --  see Bug #2007
+         Store_Data := False;
+         return;
+      end if;
       if Line (Separators (8) + 1 .. Separators (9) - 1) -- resource type
         /= "slots" then
-         raise Read_Error with "resource type not ""slots"" for 'Q' entry";
+         --  never occurred before, but see Bug #2007
+         --  raise Read_Error with "resource type not ""slots"" for 'Q' entry";
+         Store_Data := False;
+         return;
       end if;
 
       Data.Job_ID := Positive'Value (Line (Separators (1) + 1 .. Separators (2) - 1));
