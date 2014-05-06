@@ -78,6 +78,8 @@ package body Advance_Reservations is
 
       begin
          HTML.Begin_Div (Class => "ar_queue");
+         HTML.Put_Heading (Title => "Queues",
+                           Level => 3);
          Iterate_Queues (R, Put_Queue'Access);
          HTML.Put_Clearer;
          HTML.End_Div (Class => "ar_queue");
@@ -86,6 +88,8 @@ package body Advance_Reservations is
       procedure Put_Resources is
       begin
          HTML.Begin_Div (Class => "ar_resources");
+         HTML.Put_Heading (Title => "Requests",
+                           Level => 3);
          Resources.Put_List (Get_Resources (R));
          HTML.End_Div (Class => "ar_resources");
       end Put_Resources;
