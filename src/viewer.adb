@@ -259,6 +259,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
          Jobs.Update_Status;
          Jobs.Search_Queues;

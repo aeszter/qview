@@ -104,6 +104,14 @@ package body Jobs is
          => HTML.Error ("Unable to read job info (Append_List): " & Exception_Message (E));
    end Append_List;
 
+   procedure Update_Messages (Nodes : Node_List) is
+   begin
+      SGE.Jobs.Update_Messages (Nodes);
+   exception
+      when E : others
+         => HTML.Error ("Unable to update job messages: " & Exception_Message (E));
+   end Update_Messages;
+
    procedure Prune_List is
    begin
       HTML.Bug_Ref (Bug_ID => 1830,

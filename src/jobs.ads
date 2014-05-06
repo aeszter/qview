@@ -19,6 +19,7 @@ package Jobs is
    procedure Put_Summary;
 
    procedure Append_List (Nodes : Node_List);
+   procedure Update_Messages (Nodes : Node_List);
    procedure Create_Overlay (Nodes : Node_List);
    procedure Apply_Overlay;
    procedure Sort_By (Field : String; Direction : String);
