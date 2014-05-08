@@ -32,7 +32,8 @@ package HTML is
    procedure Put_Navigation_Begin;
    procedure Put_Navigation_End;
    procedure Put_Navigation_Link (Data : String; Link_Param : String);
-   --  navigation section
+   procedure Start_Navigation_Section (Name : String);
+   procedure End_Navigation_Section;
 
    procedure Put_Paragraph (Label : String; Contents : String);
    procedure Put_Paragraph (Label : String; Contents : Calendar.Time);
@@ -87,4 +88,5 @@ private
    package Div_Lists is new Doubly_Linked_Lists (Element_Type => Div);
 
    Div_List : Div_Lists.List;
+   Navigation_Level : Natural := 0;
 end HTML;

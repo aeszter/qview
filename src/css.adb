@@ -41,9 +41,8 @@ package body CSS is
 
    procedure Hide_List is
    begin
-      Put_Line ("display: inline;");
-      Put_Line ("list-style-type: none;");
-      Put_Line ("list-style-image: none;");
+      --      Put_Line ("display: inline;");
+      Put_Line ("float: left;");
       Put_Line ("margin: 5px 10px 0 10px;");
       Put_Line ("line-height: 12px;");
    end Hide_List;
@@ -81,7 +80,7 @@ package body CSS is
       Put_Line ("float: center;");
       Put_Line ("margin: 0;");
       Put_Line ("padding: 1px 0 0 0;");
-      Put_Line ("height: 7.5em;");
+      Put_Line ("height: 13em;");
       Put_Line (Full_Width);
       Put_Line ("border-bottom: " & Header_Border & ";");
       Close_Block;
@@ -118,8 +117,18 @@ package body CSS is
       Put_Line ("margin: 15px;");
       Put_Line (Standard_Background);
       Close_Block;
-      Open_Block ("#navigation ul, #navigation li, #navigation form");
+      Open_Block ("#navigation ul.top, #navigation li.top, #navigation form");
       Hide_List;
+      Close_Block;
+      Open_Block ("#navigation ul, #navigation li");
+      Put_Line ("list-style-type: none;");
+      Put_Line ("list-style-image: none;");
+      Put_Line ("margin: 0;");
+      Put_Line ("padding: 0;");
+      Put_Line ("margin-left: 6px;");
+      Put_Line ("font-weight: bold;");
+      Put_Line ("line-height: 1.6em;");
+      Put_Line ("color: #555;");
       Close_Block;
 
       Open_Block ("#navigation a, #navigation a:visited");
