@@ -31,14 +31,10 @@ package body HTML is
 
    procedure Put_Search_Box is
    begin
-      Put ("<li");
-      if Navigation_Level = 0 then
-         Put (" class=""top""");
-      end if;
-      Put ("><a><form>");
+      Put ("<li><form>");
       Put ("<input type=""text"" name=""search"" size=""8"" value=""search"""
            & " onclick=""select()"">");
-      Put ("</form></a></li>");
+      Put ("</form></li>");
    end Put_Search_Box;
 
    ---------------
@@ -250,24 +246,19 @@ package body HTML is
    procedure Put_Navigation_Begin is
    begin
       Begin_Div (ID => "navigation");
-      Ada.Text_IO.Put ("<ul class=""top"">");
+      Ada.Text_IO.Put ("<ul>");
    end Put_Navigation_Begin;
 
    procedure Put_Navigation_End is
    begin
       Ada.Text_IO.Put ("</ul>");
-      Put_Clearer;
       End_Div (ID => "navigation");
    end Put_Navigation_End;
 
    procedure Put_Navigation_Link (Data : String; Link_Param : String) is
    begin
-      Ada.Text_IO.Put ("<li");
-      if Navigation_Level = 0 then
-         Ada.Text_IO.Put (" class=""top""");
-      end if;
       Ada.Text_IO.Put_Line
-        ("><a href=""" &
+        ("<li><a href=""" &
          CGI.My_URL &
          "?" &
          Link_Param &
@@ -275,23 +266,6 @@ package body HTML is
          Data &
          "</a></li>");
    end Put_Navigation_Link;
-
-   procedure Start_Navigation_Section (Name : String) is
-   begin
-      Ada.Text_IO.Put ("<li");
-      if Navigation_Level = 0 then
-         Ada.Text_IO.Put (" class=""top""");
-      end if;
-      Ada.Text_IO.Put_Line ("><a>" & Name & "</a><ul>");
-      Navigation_Level := Navigation_Level + 1;
-   end Start_Navigation_Section;
-
-   procedure End_Navigation_Section is
-   begin
-      Put_Clearer;
-      Navigation_Level := Navigation_Level - 1;
-      Ada.Text_IO.Put_Line ("</ul></li>");
-   end End_Navigation_Section;
 
    -------------------
    -- Put_Paragraph --
