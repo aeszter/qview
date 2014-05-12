@@ -43,10 +43,11 @@ package body HTML is
 
    function Help_Icon (Topic : String) return String is
    begin
-      return "<a href=""http://wiki.mpibpc.gwdg.de"
-        & "/grubmueller/index.php/"
+      return "<a href=""" & CGI.Get_Environment ("HELP_URL")
+--        http://wiki.mpibpc.gwdg.de/grubmueller/index.php/
         & Topic & """>"
         & "<img src=""/icons/help.png"" /></a>";
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Help_Icon;
 
    --------------
@@ -190,25 +191,12 @@ package body HTML is
    -----------------------
 
    procedure Put_Duration_Cell (Span : Duration) is
-      Days    : Natural;
-      Seconds : Duration;
    begin
       if Span < 0.0 then
          Put_Cell (Data => "<i>expired</i>", Class => "right");
       else
-         Days    := Integer (Span / 86_400 + 0.5) - 1;
-         Seconds := Span - Duration (Days * 86_400);
-         if Days > 0 then
-            Put_Cell
-              (Data  => Days'Img &
-                        "d " &
-                        Ada.Calendar.Formatting.Image (Seconds),
-               Class => "right");
-         else
-            Put_Cell
-              (Data  => Ada.Calendar.Formatting.Image (Seconds),
-               Class => "right");
-         end if;
+         Put_Cell (Data => To_String (Span),
+                  Class => "right");
       end if;
    end Put_Duration_Cell;
 
@@ -293,6 +281,12 @@ package body HTML is
       Put_Paragraph (Label => Label, Contents => To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : String; Contents : Duration) is
+   begin
+      Put_Paragraph (Label    => Label,
+                     Contents => To_String (Contents));
+   end Put_Paragraph;
+
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String) is
    begin
       Put_Paragraph (Label, To_String (Contents));
@@ -311,12 +305,12 @@ package body HTML is
    -- Put_Job_ID --
    ----------------
 
-   procedure Put_Job_ID (Label : String; ID : String) is
+   procedure Put_Link (Label : String; ID : String; Link_Param : String) is
    begin
       Put_Paragraph (Label    => Label,
                      Contents => "<a href=""" & CGI.My_URL &
-                                 "?job_id=" & ID & """>" & ID & "</a>");
-   end Put_Job_ID;
+                                 "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
+   end Put_Link;
 
    --------------
    -- Put_List --
@@ -407,9 +401,12 @@ package body HTML is
 
    procedure Bug_Ref (Bug_ID : Positive; Info : String) is
    begin
-      Comment ("<a href=""http://ram/bugzilla/show_bug.cgi?id="
+      Comment ("<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+               --  http://ram/bugzilla
+               & "/show_bug.cgi?id="
                & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
                & Info);
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Bug_Ref;
 
    ---------
@@ -439,7 +436,9 @@ package body HTML is
    procedure Error (Message : String) is
    begin
       Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
-                      & "<a href=""http://ram/bugzilla/enter_bug.cgi?"
+                            & "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+                            --http://ram/bugzilla
+                              & "/enter_bug.cgi?"
                       & "component=qview&form_name=enter_bug"
                             & "&product=Projects"
                               & "&version=" & Version
@@ -448,6 +447,7 @@ package body HTML is
                       & "Are there any extraordinary jobs in the queue?"
                       & """>"
                       & CGI.HTML_Encode (Message) & "</a></p>");
+         pragma Compile_Time_Warning (True, "hardcoded config");
    end Error;
 
    procedure Put_Heading (Title : String; Level : Positive) is
@@ -590,5 +590,17 @@ package body HTML is
       end if;
    end To_String;
 
+   function To_String (Span : Duration) return String is
+      Days    : Natural;
+      Seconds : Duration;
+   begin
+      Days    := Integer (Span / 86_400 + 0.5) - 1;
+      Seconds := Span - Duration (Days * 86_400);
+      if Days > 0 then
+         return Days'Img & "d " & Ada.Calendar.Formatting.Image (Seconds);
+      else
+         return Ada.Calendar.Formatting.Image (Seconds);
+      end if;
+   end To_String;
 
 end HTML;

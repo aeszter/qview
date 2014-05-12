@@ -23,6 +23,7 @@ with SGE.Spread_Sheets;
 with SGE.Hosts;
 with SGE.Queues;
 with SGE.Jobs;
+with Advance_Reservations;
 
 package body Viewer is
 
@@ -50,11 +51,7 @@ package body Viewer is
          HTML.Begin_Div (ID => "header");
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
-         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=supply");
-         HTML.Put_Navigation_Link (Data       => "Job Overview",
-                                   Link_Param => "categories=demand");
-         HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("Supply & Demand"),
-                                   Link_Param => "categories=both");
+         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=both");
          HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("With Slot Ranges"),
                                    Link_Param => "categories=with_slots");
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
@@ -62,6 +59,8 @@ package body Viewer is
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
                                    Link_Param => "forecast=y");
          HTML.Put_Navigation_Link (Data       => "Reservations",
+                                   Link_Param => "ar=y");
+         HTML.Put_Navigation_Link (Data       => "Scheduler",
                                    Link_Param => "reservation=y");
          HTML.Put_Navigation_Link (Data       => "Maintenance",
                                    Link_Param => "maintenance=y");
@@ -98,10 +97,8 @@ package body Viewer is
          Ada.Text_IO.Put ("<ul>");
          Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
                                & "aeszter@gwdg.de</a></li>");
-         Ada.Text_IO.Put_Line ("<li><a href=""/usage"">"
-                               & "<img src=""/usage/webalizer.png"" "
-                               & "alt=""Stats by Webalizer""></a></li>");
-         Ada.Text_IO.Put_Line ("<li><a href=""http://ram/bugzilla/enter_bug.cgi?"
+         Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+                               & "/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
                                & "&product=Projects&version="
                                & Utils.Version & """>"
@@ -262,6 +259,7 @@ package body Viewer is
          SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
          Jobs.Update_Status;
          Jobs.Search_Queues;
@@ -271,6 +269,24 @@ package body Viewer is
          when Parser_Error =>
             Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
+
+      procedure View_Advance_Reservation (AR_ID : String) is
+         package AR renames Advance_Reservations;
+         SGE_Out       : Parser.Tree;
+      begin
+         CGI.Put_HTML_Heading (Title => "Details of Advance Reservation " & AR_ID,
+                               Level => 2);
+         SGE_Out := Parser.Setup (Command  => "qrstat",
+                                  Selector => "-ar " & AR_ID);
+
+         AR.Append_List (SGE_Out);
+         SGE.Parser.Free;
+         AR.Put_Details;
+
+      exception
+         when Parser_Error =>
+            Ada.Text_IO.Put_Line ("<p><it>AR does not exist</it></p>");
+      end View_Advance_Reservation;
 
       -------------------
       -- View_Forecast --
@@ -314,10 +330,19 @@ package body Viewer is
 
       end View_Forecast;
 
-      ----------------
-      -- View_Hosts --
-      ----------------
+      procedure View_Advance_Reservations is
+         package AR renames Advance_Reservations;
+         SGE_Out : Parser.Tree;
 
+      begin
+         SGE_Out := Parser.Setup (Command  => "qrstat",
+                                  Selector => "-u *");
+         AR.Append_List (SGE_Out);
+         SGE.Parser.Free;
+         AR.Put_List;
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "ar_list");
+      end View_Advance_Reservations;
 
       ----------------
       -- View_Bunch --
@@ -517,6 +542,14 @@ package body Viewer is
             Put_Headers (Title => "Waiting Jobs");
             Set_Params ("jobs=waiting");
             View_Waiting_Jobs;
+         elsif HTML.Param_Is ("ar", "y") then
+            Put_Headers (Title => "Advance Reservations");
+            Set_Params ("ar=y");
+            View_Advance_Reservations;
+         elsif not HTML.Param_Is ("ar_id", "") then
+            Put_Headers (Title => "Advance Reservation " & CGI.Value ("ar_id"));
+            Set_Params ("ar_id=" & Sanitise (CGI.Value ("ar_id")));
+            View_Advance_Reservation (Sanitise (CGI.Value ("ar_id")));
          elsif HTML.Param_Is ("forecast", "y") then
             Put_Headers (Title => "Finishing Jobs");
             Set_Params ("forecast=y");
