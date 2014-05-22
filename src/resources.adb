@@ -13,9 +13,9 @@ package body Resources is
    -----------------------
 
    procedure Put (Pos : Resource_Lists.Cursor) is
-      Label : Unbounded_String := Key (Pos);
-      Res   : Resource := Element (Pos);
-      Value : Unbounded_String := Res.Value;
+      Label : constant Unbounded_String := Key (Pos);
+      Res   : constant Resource := Element (Pos);
+      Value : constant Unbounded_String := Res.Value;
 
    begin
       if Label = "h_rt" then

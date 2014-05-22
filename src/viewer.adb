@@ -487,8 +487,8 @@ package body Viewer is
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
                pragma Unreferenced (ID);
-               Search_String : String := CGI.Value ("search");
-               Start : Natural := Search_String'First;
+               Search_String : constant String := CGI.Value ("search");
+               Start         : constant Natural := Search_String'First;
             begin
                ID := Positive'Value (CGI.Value ("search"));
                Put_Headers (Title => "Job " & CGI.Value ("search"));

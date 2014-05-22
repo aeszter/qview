@@ -187,7 +187,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Predecessor (ID : Natural) is
-      S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
+      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Link (Label      => "Predecessor",
@@ -200,7 +200,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Successor (ID : Natural) is
-      S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
+      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Link (Label      => "Successor",
@@ -436,8 +436,8 @@ package body Jobs is
       end Put_Resources;
 
       procedure Put_Usage is
-         JAT : SGE.Jobs.Usage := Get_JAT_Usage (J);
-         PET : SGE.Jobs.Usage := Get_PET_Usage (J);
+         JAT : constant SGE.Jobs.Usage := Get_JAT_Usage (J);
+         PET : constant SGE.Jobs.Usage := Get_PET_Usage (J);
       begin
          HTML.Begin_Div (Class => "job_usage");
          HTML.Put_Heading (Title => "JAT",
@@ -566,7 +566,7 @@ package body Jobs is
    end Put_Core_Header;
 
    procedure Put_Core_Line (J : Job) is
-      Task_IDs : SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
+      Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
    begin
       if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left),

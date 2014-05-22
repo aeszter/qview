@@ -12,10 +12,10 @@ package body Queues is
    end Put_Selected;
 
    procedure Put_For_Maintenance (Q : Queue) is
-      Long_Name : String := Get_Long_Name (Q);
-      Separator : Positive := Ada.Strings.Fixed.Index (Source => Long_Name,
+      Long_Name : constant String := Get_Long_Name (Q);
+      Separator : constant Positive := Ada.Strings.Fixed.Index (Source => Long_Name,
                                             Pattern => "@");
-      Host_Name : String := Long_Name (Separator + 1 .. Long_Name'Last);
+      Host_Name : constant String := Long_Name (Separator + 1 .. Long_Name'Last);
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Long_Name);
