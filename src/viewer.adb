@@ -17,7 +17,7 @@ with Reservations;
 with Maintenance;
 with Share_Tree;
 with Diagnostics;
-with Debug;
+with SGE.Debug;
 with Ada.Strings;
 with SGE.Spread_Sheets;
 with SGE.Hosts;
@@ -40,8 +40,8 @@ package body Viewer is
       begin
          CGI.Put_CGI_Header;
          Headers_Sent := True;
-         Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
-                    Where    => Debug.Default,
+         SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
+                    Where    => SGE.Debug.Default,
                     Severity => 1);
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
@@ -440,7 +440,7 @@ package body Viewer is
       end View_Share_Tree;
 
    begin
-      Debug.Initialize (CGI.Value ("DEBUG"));
+      SGE.Debug.Initialize (CGI.Value ("DEBUG"), HTML.Comment'Access);
       begin
          if not HTML.Param_Is ("sort", "") then
             if HTML.Param_Is ("dir", "") then
