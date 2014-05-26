@@ -322,6 +322,7 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
+         SGE.Jobs.Update_Quota;
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
