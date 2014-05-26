@@ -9,6 +9,7 @@ with Ada.Real_Time;
 with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
 use SGE.Utils.String_Pairs;
 with Viewer;
+with Utils;
 
 package body HTML is
 
@@ -434,6 +435,7 @@ package body HTML is
    -----------
 
    procedure Error (Message : String) is
+      Newline : constant String := "%0D%0A";
    begin
       Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
                             & "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
@@ -441,9 +443,11 @@ package body HTML is
                               & "/enter_bug.cgi?"
                       & "component=qview&form_name=enter_bug"
                             & "&product=Projects"
-                              & "&version=" & Version
+                              & "&version=" & Utils.Version
                       & "&short_desc=" & CGI.HTML_Encode (Message)
-                      & "&comment=Please describe what you did before the error occurred. "
+                            & "&comment=SGElib " & SGE.Utils.Version
+                            & Newline
+                            & "Please describe what you did before the error occurred. "
                       & "Are there any extraordinary jobs in the queue?"
                       & """>"
                       & CGI.HTML_Encode (Message) & "</a></p>");
