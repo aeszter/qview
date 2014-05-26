@@ -326,6 +326,9 @@ package body Viewer is
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
+         else
+            Jobs.Sort_By (Field     => "Ends In",
+                          Direction => "inc");
          end if;
          Jobs.Put_Time_List;
 
