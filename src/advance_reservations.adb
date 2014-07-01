@@ -40,10 +40,10 @@ package body Advance_Reservations is
          HTML.Begin_Div (Class => "ar_name");
          HTML.Put_Paragraph ("Name", Get_Name (R));
          Iterate_Messages (R, Put_Message'Access);
-         if Has_Error_Log_Entries (R) then
+         if Has_Errors (R) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
          end if;
-         Iterate_Error_Log (R, Put_Error'Access);
+         R.Iterate_Errors (Put_Error'Access);
          HTML.End_Div (Class => "ar_name");
       end Put_Name;
 

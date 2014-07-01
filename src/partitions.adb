@@ -42,9 +42,9 @@ package body Partitions is
 
       use SGE.Utils.String_Lists;
 
-      procedure Put_Error (Position : SGE.Utils.String_Lists.Cursor) is
+      procedure Put_Error (Message : String) is
       begin
-         HTML.Comment (Element (Position));
+         HTML.Comment (Message);
       end Put_Error;
 
    begin
@@ -54,7 +54,7 @@ package body Partitions is
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
       elsif Get_Offline_Slots (P) = Get_Total_Slots (P) then
          Ada.Text_IO.Put ("<tr class=""offline"">");
-      elsif not P.Error_Log.Is_Empty then
+      elsif P.Has_Errors then
          Ada.Text_IO.Put ("<tr class=""program_error"">");
       else
          Ada.Text_IO.Put ("<tr>");
@@ -64,7 +64,7 @@ package body Partitions is
                      & "&model=" & Get_Model (P)
                      & "&cores=" & Get_Cores (P)'Img
                      & "&mem=" & Get_Memory (P)
-                     & "&q=" & To_String (P.Name)
+                     & "&q=" & P.Get_Name
                      & "&gpu=" & Has_GPU (P)'Img
                      & "&ssd=" & Has_SSD (P)'Img
                      & """><img src=""/icons/arrow_right.png"" /></a>");
@@ -82,26 +82,26 @@ package body Partitions is
       HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
       HTML.Put_Cell (Data => Get_Runtime (P), Class => "right");
-      HTML.Put_Cell (Data => Sum (P.Total_Slots)'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Total_Hosts.Length'Img, Class => "right");
-      HTML.Put_Cell (Data => P.Used_Slots'Img & " ("
-                     & Str_F.Trim (P.Used_Hosts.Length'Img, Str.Left)
+      HTML.Put_Cell (Data => P.Get_Total_Slots'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Get_Total_Hosts'Img, Class => "right");
+      HTML.Put_Cell (Data => P.Get_Used_Slots'Img & " ("
+                     & Str_F.Trim (P.Get_Used_Hosts'Img, Str.Left)
                      & ")", Class => "right");
-      HTML.Put_Cell (Data => P.Reserved_Slots'Img, Class => "right");
-      HTML.Put_Cell (Data  => Sum (P.Available_Slots)'Img & " ("
-                     & Str_F.Trim (P.Available_Hosts.Length'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data => P.Get_Reserved_Slots'Img, Class => "right");
+      HTML.Put_Cell (Data  => P.Get_Available_Slots'Img & " ("
+                     & Str_F.Trim (P.Get_Available_Hosts'Img, Str.Left) & ")",
                      Class => "right");
-      HTML.Put_Cell (Data  => Sum (P.Disabled_Slots)'Img
-                     & " (" & Str_F.Trim (P.Disabled_Hosts.Length'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data  => P.Get_Disabled_Slots'Img
+                     & " (" & Str_F.Trim (P.Get_Disabled_Hosts'Img, Str.Left) & ")",
                      Class => "right");
-      HTML.Put_Cell (Data  => Sum (P.Offline_Slots)'Img
-                     & " (" & Str_F.Trim (P.Offline_Hosts.Length'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data  => P.Get_Offline_Slots'Img
+                     & " (" & Str_F.Trim (P.Get_Offline_Hosts'Img, Str.Left) & ")",
                      Class => "right");
-      HTML.Put_Cell (Data  => P.Suspended_Slots'Img,
+      HTML.Put_Cell (Data  => P.Get_Suspended_Slots'Img,
                      Class => "right");
       Ada.Text_IO.Put ("</tr>");
-      if not P.Error_Log.Is_Empty then
-         P.Error_Log.Iterate (Put_Error'Access);
+      if Has_Errors (P) then
+         P.Iterate_Errors (Put_Error'Access);
       end if;
    end Put;
 
