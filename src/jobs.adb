@@ -353,10 +353,10 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_name");
          HTML.Put_Paragraph ("Name", Get_Name (J));
          Iterate_Messages (J, Put_Message'Access);
-         if Has_Error_Log_Entries (J) then
+         if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
          end if;
-         Iterate_Error_Log (J, Put_Error'Access);
+         Iterate_Errors (J, Put_Error'Access);
          HTML.End_Div (Class => "job_name");
       end Put_Name;
 
@@ -821,7 +821,7 @@ package body Jobs is
 
    begin
       Ada.Text_IO.Put_Line ("</tr>");
-      Iterate_Error_Log (J, Put_Error'Access);
+      Iterate_Errors (J, Put_Error'Access);
    end Finish_Row;
 
    procedure Try_Put_Paragraph (Label  : String;
