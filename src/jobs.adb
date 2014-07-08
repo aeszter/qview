@@ -391,10 +391,16 @@ package body Jobs is
          begin
             HTML.Put_Paragraph (Label => "Queue", Contents => Q);
          end Put_Queue;
+
          procedure Put_Slot_Range (R : Step_Range) is
          begin
-            Ranges.Put (R);
+            Ranges.Put (R, Label => "Slots");
          end Put_Slot_Range;
+
+         procedure Put_Task_Range (R : Step_Range) is
+         begin
+            Ranges.Put (R, Label => "Tasks");
+         end Put_Task_Range;
 
       begin
          Assigned_Queues := Get_Task_List (J);
@@ -409,6 +415,7 @@ package body Jobs is
 
          HTML.Put_Paragraph ("PE", Get_PE (J));
          Iterate_Slots (J, Put_Slot_Range'Access);
+         Iterate_Tasks (J, Put_Task_Range'Access);
 
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);

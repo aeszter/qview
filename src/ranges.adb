@@ -9,9 +9,9 @@ package body Ranges is
    -- Put --
    ---------
 
-   procedure Put (S : Step_Range) is
+   procedure Put (S : Step_Range; Label : String) is
    begin
-      HTML.Put_Paragraph (Label  => "Slots",
+      HTML.Put_Paragraph (Label  => Label,
                           Contents => To_String (What => S, Short => True));
    end Put;
 
