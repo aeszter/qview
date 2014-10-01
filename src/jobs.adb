@@ -187,7 +187,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Predecessor (ID : Natural) is
-      S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
+      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Link (Label      => "Predecessor",
@@ -200,7 +200,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Successor (ID : Natural) is
-      S : String := Ada.Strings.Fixed.Trim (Source => ID'Img,
+      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
                                             Side   => Ada.Strings.Left);
    begin
       HTML.Put_Link (Label      => "Successor",
@@ -353,10 +353,10 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_name");
          HTML.Put_Paragraph ("Name", Get_Name (J));
          Iterate_Messages (J, Put_Message'Access);
-         if Has_Error_Log_Entries (J) then
+         if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
          end if;
-         Iterate_Error_Log (J, Put_Error'Access);
+         Iterate_Errors (J, Put_Error'Access);
          HTML.End_Div (Class => "job_name");
       end Put_Name;
 
@@ -391,10 +391,16 @@ package body Jobs is
          begin
             HTML.Put_Paragraph (Label => "Queue", Contents => Q);
          end Put_Queue;
+
          procedure Put_Slot_Range (R : Step_Range) is
          begin
-            Ranges.Put (R);
+            Ranges.Put (R, Label => "Slots");
          end Put_Slot_Range;
+
+         procedure Put_Task_Range (R : Step_Range) is
+         begin
+            Ranges.Put (R, Label => "Tasks");
+         end Put_Task_Range;
 
       begin
          Assigned_Queues := Get_Task_List (J);
@@ -409,6 +415,7 @@ package body Jobs is
 
          HTML.Put_Paragraph ("PE", Get_PE (J));
          Iterate_Slots (J, Put_Slot_Range'Access);
+         Iterate_Tasks (J, Put_Task_Range'Access);
 
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);
@@ -436,8 +443,8 @@ package body Jobs is
       end Put_Resources;
 
       procedure Put_Usage is
-         JAT : SGE.Jobs.Usage := Get_JAT_Usage (J);
-         PET : SGE.Jobs.Usage := Get_PET_Usage (J);
+         JAT : constant SGE.Jobs.Usage := Get_JAT_Usage (J);
+         PET : constant SGE.Jobs.Usage := Get_PET_Usage (J);
       begin
          HTML.Begin_Div (Class => "job_usage");
          HTML.Put_Heading (Title => "JAT",
@@ -566,7 +573,7 @@ package body Jobs is
    end Put_Core_Header;
 
    procedure Put_Core_Line (J : Job) is
-      Task_IDs : SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
+      Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
    begin
       if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left),
@@ -821,7 +828,7 @@ package body Jobs is
 
    begin
       Ada.Text_IO.Put_Line ("</tr>");
-      Iterate_Error_Log (J, Put_Error'Access);
+      Iterate_Errors (J, Put_Error'Access);
    end Finish_Row;
 
    procedure Try_Put_Paragraph (Label  : String;

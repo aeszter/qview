@@ -68,7 +68,7 @@ package body HTML is
       Class      : String   := "";
       Colspan    : Positive := 1)
    is
-      Close_Tag : String := "</" & Tag & ">";
+      Close_Tag : constant String := "</" & Tag & ">";
    begin
       --  Start open tag
       Put ("<" & Tag);
@@ -140,7 +140,7 @@ package body HTML is
    end Put_Img_Cell;
 
    function Img_Tag (Image : String) return String is
-      Data : String :=
+      Data : constant String :=
          "<img src=""/icons/" &
          Image &
          ".png"" alt=""" &
@@ -495,7 +495,7 @@ package body HTML is
    end Begin_Div;
 
    procedure End_Div (Class : String := ""; ID : String := "") is
-      Tag : Div := Div_List.Last_Element;
+      Tag : constant Div := Div_List.Last_Element;
    begin
       if Class /= "" and then Class /= Tag.Class then
          HTML.Error

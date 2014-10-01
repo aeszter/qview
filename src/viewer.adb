@@ -17,7 +17,7 @@ with Reservations;
 with Maintenance;
 with Share_Tree;
 with Diagnostics;
-with Debug;
+with SGE.Debug;
 with Ada.Strings;
 with SGE.Spread_Sheets;
 with SGE.Hosts;
@@ -40,8 +40,8 @@ package body Viewer is
       begin
          CGI.Put_CGI_Header;
          Headers_Sent := True;
-         Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
-                    Where    => Debug.Default,
+         SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
+                    Where    => SGE.Debug.Default,
                     Severity => 1);
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
@@ -326,6 +326,9 @@ package body Viewer is
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
+         else
+            Jobs.Sort_By (Field     => "Ends In",
+                          Direction => "inc");
          end if;
          Jobs.Put_Time_List;
 
@@ -441,7 +444,7 @@ package body Viewer is
       end View_Share_Tree;
 
    begin
-      Debug.Initialize (CGI.Value ("DEBUG"));
+      SGE.Debug.Initialize (CGI.Value ("DEBUG"), HTML.Comment'Access);
       begin
          if not HTML.Param_Is ("sort", "") then
             if HTML.Param_Is ("dir", "") then
@@ -488,8 +491,8 @@ package body Viewer is
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
                pragma Unreferenced (ID);
-               Search_String : String := CGI.Value ("search");
-               Start : Natural := Search_String'First;
+               Search_String : constant String := CGI.Value ("search");
+               Start         : constant Natural := Search_String'First;
             begin
                ID := Positive'Value (CGI.Value ("search"));
                Put_Headers (Title => "Job " & CGI.Value ("search"));

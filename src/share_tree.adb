@@ -134,7 +134,7 @@ package body Share_Tree is
 
    procedure Put (Item : Share_Lists.Cursor) is
       package Str renames User_Name_Strings;
-      User : User_Node := Share_Lists.Element (Item);
+      User : constant User_Node := Share_Lists.Element (Item);
    begin
       if 1 > 0 then
          Ada.Text_IO.Put ("<tr class=""hot"">");

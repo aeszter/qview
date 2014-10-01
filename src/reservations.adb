@@ -270,7 +270,7 @@ package body Reservations is
 
 
    procedure Put (Position : Lists.Cursor) is
-      Res : Reservation := Lists.Element (Position);
+      Res : constant Reservation := Lists.Element (Position);
       Line_Class : String := "res_blank";
    begin
       if Res.Hidden = True and then Res.State /= starting then
@@ -344,7 +344,7 @@ package body Reservations is
 
 
    function Equivalent_At (What : Reservation; Iteration : Natural) return Lists.Cursor is
-      Card : Catalogs.Cursor := Catalogs.Find (Container => Catalog,
+      Card : constant Catalogs.Cursor := Catalogs.Find (Container => Catalog,
                                                Key       => (Job_ID       => What.Job_ID,
                                                              Schedule_Run => Iteration));
       Found_Index : Positive;

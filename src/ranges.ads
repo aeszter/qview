@@ -9,7 +9,7 @@ package Ranges is
    --  Purpose: Output one slot range as a paragraph
    --  Parameter S: The slot range to print
    ---------
-   procedure Put (S : Step_Range);
+   procedure Put (S : Step_Range; Label : String);
 
    --------------
    -- Put_Cell --

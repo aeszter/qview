@@ -24,6 +24,7 @@ package body Hosts is
                     Tag => "th");
       HTML.Put_Header_Cell (Data     => "Cores");
       HTML.Put_Header_Cell (Data     => "Free");
+      HTML.Put_Header_Cell (Data     => "Reserved");
       HTML.Put_Header_Cell (Data     => "RAM");
       HTML.Put_Header_Cell (Data     => "Load",
                            Acronym => "per core");
@@ -68,6 +69,7 @@ package body Hosts is
       HTML.Put_Cell (Data => Get_Model (H));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Reserved_Slots (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (H), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (H)));
