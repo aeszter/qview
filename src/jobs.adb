@@ -414,6 +414,7 @@ package body Jobs is
          Iterate_Queues (J, Put_Queue'Access);
 
          HTML.Put_Paragraph ("PE", Get_PE (J));
+         HTML.Put_Paragraph ("Granted", Get_Granted_PE (J));
          Iterate_Slots (J, Put_Slot_Range'Access);
          Iterate_Tasks (J, Put_Task_Range'Access);
 
