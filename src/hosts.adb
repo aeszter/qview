@@ -5,6 +5,7 @@ with HTML;
 with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
+with SGE.Utils;
 
 package body Hosts is
 
@@ -68,7 +69,12 @@ package body Hosts is
       HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell (Data => Get_Model (H));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      begin
+         HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      exception
+         when E : SGE.Utils.Operator_Error =>
+            HTML.Put_Cell (Data => "err", Class => "right", Acronym => Exception_Message (E));
+      end;
       HTML.Put_Cell (Data => Get_Reserved_Slots (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (H), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
