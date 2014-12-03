@@ -17,6 +17,8 @@ package body Partitions is
       HTML.Put_Cell (Data => "Interconnect", Tag => "th");
       HTML.Put_Cell (Data       => "Resources",
                      Tag        => "th");
+      HTML.Put_Cell (Data => "GPU",
+                     Tag  => "th");
       HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                   Tag => "th");
       HTML.Put_Cell (Data => "Cores", Tag => "th");
@@ -61,6 +63,7 @@ package body Partitions is
       end if;
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
                      & "&net=" & Get_Network (P)
+                     & "&gm=" & Get_GPU (P)
                      & "&model=" & Get_Model (P)
                      & "&cores=" & Get_Cores (P)'Img
                      & "&mem=" & Get_Memory (P)
@@ -78,6 +81,7 @@ package body Partitions is
          Ada.Text_IO.Put (HTML.Img_Tag ("SSD"));
       end if;
       Ada.Text_IO.Put ("</td>");
+      HTML.Put_Cell (Data => Get_GPU (P));
       HTML.Put_Cell (Data => Get_Model (P));
       HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
