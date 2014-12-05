@@ -24,6 +24,7 @@ with SGE.Hosts;
 with SGE.Queues;
 with SGE.Jobs;
 with Advance_Reservations;
+with SGE.Loggers;
 
 package body Viewer is
 
@@ -35,6 +36,12 @@ package body Viewer is
    procedure View is
 
       Headers_Sent : Boolean := False;
+
+      procedure Put_Error (Message : String) is
+      begin
+         Ada.Text_IO.Put_Line ("<li>" & Message & "</li>");
+      end Put_Error;
+
 
       procedure Put_Headers (Title : String) is
       begin
@@ -573,6 +580,13 @@ package body Viewer is
          end if;
       else
          Put_Headers (Title => "");
+      end if;
+      if SGE.Loggers.Errors_Exist then
+         HTML.Begin_Div (ID => "internal_errors");
+         HTML.Put_Heading (Title => "Internal errors",
+                           Level => 2);
+         SGE.Loggers.Iterate_Errors (Put_Error'Access);
+         HTML.End_Div (ID => "internal_errors");
       end if;
       HTML.End_Div (ID => "content");
       Put_Footer;
