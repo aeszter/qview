@@ -410,7 +410,7 @@ package body Viewer is
                Cores  => CGI.Value ("cores"),
                Model  => CGI.Value ("model"),
                SSD    => CGI.Value ("ssd"),
-               GPU    => CGI.Value ("gpu"));
+               GPU    => CGI.Value ("gpu_model"));
          View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
       end View_Partition;
 
@@ -591,7 +591,8 @@ package body Viewer is
 
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
       SGE_Out     : Parser.Tree;
-      Selector : Unbounded_String;
+      Selector    : Unbounded_String;
+      GPU : String := To_String (Get_GPU (Props));
    begin
       case Get_Network (Props) is
          when eth =>
@@ -606,6 +607,10 @@ package body Viewer is
             Append_Params ("net=NONE");
       end case;
       Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
+      if GPU /= "" and then GPU /= "none" then
+         Selector := Selector & " -l gm=" & GPU;
+      end if;
+      Append_Params ("gm=" & GPU);
       Append_Params ("model=" & Get_Model (Props)'Img);
       Append_Params ("cores=" & Get_Cores (Props)'Img);
       Append_Params ("mem=" & To_String (Get_Memory (Props)));
