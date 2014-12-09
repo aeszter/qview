@@ -417,7 +417,7 @@ package body Viewer is
                Cores  => CGI.Value ("cores"),
                Model  => CGI.Value ("model"),
                SSD    => CGI.Value ("ssd"),
-               GPU    => CGI.Value ("gpu_model"));
+               GPU    => CGI.Value ("gm"));
          View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
       end View_Partition;
 
