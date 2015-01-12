@@ -5,7 +5,7 @@ with SGE.Parser;
 
 package Parser is
 
-   Resource_Selector : constant String := "-F h_rt,eth,ib,ibs,ssd,gpu,mem_total,num_proc,cm,q,slots";
+   Resource_Selector : constant String := "-F h_rt,eth,ib,ibs,ssd,gpu,mem_total,num_proc,cm,gm,q,slots";
 
    subtype Tree is SGE.Parser.Tree;
    subtype Attr is SGE.Parser.Attr;

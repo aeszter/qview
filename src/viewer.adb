@@ -24,6 +24,8 @@ with SGE.Hosts;
 with SGE.Queues;
 with SGE.Jobs;
 with Advance_Reservations;
+with SGE.Loggers;
+with Ada.Strings.Equal_Case_Insensitive;
 
 package body Viewer is
 
@@ -35,6 +37,12 @@ package body Viewer is
    procedure View is
 
       Headers_Sent : Boolean := False;
+
+      procedure Put_Error (Message : String) is
+      begin
+         Ada.Text_IO.Put_Line ("<li>" & Message & "</li>");
+      end Put_Error;
+
 
       procedure Put_Headers (Title : String) is
       begin
@@ -410,7 +418,7 @@ package body Viewer is
                Cores  => CGI.Value ("cores"),
                Model  => CGI.Value ("model"),
                SSD    => CGI.Value ("ssd"),
-               GPU    => CGI.Value ("gpu"));
+               GPU    => CGI.Value ("gm"));
          View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
       end View_Partition;
 
@@ -574,6 +582,13 @@ package body Viewer is
       else
          Put_Headers (Title => "");
       end if;
+      if SGE.Loggers.Errors_Exist then
+         HTML.Begin_Div (ID => "internal_errors");
+         HTML.Put_Heading (Title => "Internal errors",
+                           Level => 2);
+         SGE.Loggers.Iterate_Errors (Put_Error'Access);
+         HTML.End_Div (ID => "internal_errors");
+      end if;
       HTML.End_Div (ID => "content");
       Put_Footer;
       HTML.Finalize_Divs (Silent => True);
@@ -591,7 +606,8 @@ package body Viewer is
 
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
       SGE_Out     : Parser.Tree;
-      Selector : Unbounded_String;
+      Selector    : Unbounded_String;
+      GPU : String := To_String (Get_GPU (Props));
    begin
       case Get_Network (Props) is
          when eth =>
@@ -606,6 +622,11 @@ package body Viewer is
             Append_Params ("net=NONE");
       end case;
       Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
+      if GPU /= ""
+        and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none") then
+         Selector := Selector & " -l gm=" & GPU;
+      end if;
+      Append_Params ("gm=" & GPU);
       Append_Params ("model=" & Get_Model (Props)'Img);
       Append_Params ("cores=" & Get_Cores (Props)'Img);
       Append_Params ("mem=" & To_String (Get_Memory (Props)));

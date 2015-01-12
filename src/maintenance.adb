@@ -77,7 +77,7 @@ package body Maintenance is
       HTML.Put_Heading  (Title => "Overloaded Nodes",
                          Level => 3);
       HTML.Put_Heading (Title => "Load_5 > 1.1 * Used_Slots + 0.1 * Free_Slots"
-                        & " and Load_1 > 1.0 * Used_Slots + 0.15 * Free_Slots"
+                        & " and Load_1 > 0.9 * Load_5"
                         & " and Queue State does not contain u",
                         Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
@@ -92,7 +92,7 @@ package body Maintenance is
       HTML.Begin_Div (Class => "maintenance");
       HTML.Put_Heading  (Title => "Underutilized Nodes",
                          Level => 3);
-      HTML.Put_Heading (Title => "Load_1 and Load_5 < 0.9 * Used_Slots",
+      HTML.Put_Heading (Title => "Load_5 < 0.9 * Used_Slots and Load_1 < 1.1 * Load_5",
                         Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
       Put_Header;
@@ -227,8 +227,7 @@ package body Maintenance is
    begin
       return SGE.Hosts.Get_Load (H) > 1.1 * SGE.Hosts.Get_Used_Slots (H)
         + 0.1 * SGE.Hosts.Get_Free_Slots (H)
-        and then SGE.Hosts.Get_Load_One (H) > 1.0 * SGE.Hosts.Get_Used_Slots (H)
-        + 0.15 * SGE.Hosts.Get_Free_Slots (H)
+        and then SGE.Hosts.Get_Load_One (H) > 0.9 * SGE.Hosts.Get_Load (H)
         and then not SGE.Hosts.Has_Unreachable_Queue (H);
    exception
       when Constraint_Error =>
@@ -239,7 +238,7 @@ package body Maintenance is
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
       return SGE.Hosts.Get_Load (H) < 0.9  * SGE.Hosts.Get_Used_Slots (H)
-      and then SGE.Hosts.Get_Load_One (H) < 0.9 * SGE.Hosts.Get_Used_Slots (H);
+      and then SGE.Hosts.Get_Load_One (H) < 1.1 * SGE.Hosts.Get_Load (H);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is

@@ -5,6 +5,7 @@ with HTML;
 with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
+with SGE.Utils;
 
 package body Hosts is
 
@@ -20,6 +21,7 @@ package body Hosts is
       Ada.Text_IO.Put_Line ("<table><tr>");
       HTML.Put_Header_Cell (Data     => "Name");
       HTML.Put_Header_Cell (Data     => "Interconnect");
+      HTML.Put_Header_Cell (Data => "GPU");
       HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                     Tag => "th");
       HTML.Put_Header_Cell (Data     => "Cores");
@@ -66,9 +68,15 @@ package body Hosts is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => Get_Name (H));
       HTML.Put_Cell (Data => Get_Network (H));
+      HTML.Put_Cell (Data => Get_GPU (H));
       HTML.Put_Cell (Data => Get_Model (H));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      begin
+         HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
+      exception
+         when E : SGE.Utils.Operator_Error =>
+            HTML.Put_Cell (Data => "err", Class => "right", Acronym => Exception_Message (E));
+      end;
       HTML.Put_Cell (Data => Get_Reserved_Slots (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (H), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,

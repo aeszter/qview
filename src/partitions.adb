@@ -4,6 +4,7 @@ with CGI;
 with Ada.Strings.Fixed;
 with SGE.Partitions; use SGE.Partitions;
 with SGE.Utils;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Partitions is
 
@@ -17,6 +18,8 @@ package body Partitions is
       HTML.Put_Cell (Data => "Interconnect", Tag => "th");
       HTML.Put_Cell (Data       => "Resources",
                      Tag        => "th");
+      HTML.Put_Cell (Data => "GPU",
+                     Tag  => "th");
       HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                   Tag => "th");
       HTML.Put_Cell (Data => "Cores", Tag => "th");
@@ -47,37 +50,48 @@ package body Partitions is
          HTML.Comment (Message);
       end Put_Error;
 
+      GPU_Present : Boolean;
+      Config_Error : Boolean := False;
    begin
+      begin
+         GPU_Present := Has_GPU (P);
+      exception
+         when SGE.Utils.Operator_Error =>
+            Config_Error := True;
+            GPU_Present := False;
+      end;
       if Get_Available_Hosts (P) > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
       elsif Get_Available_Slots (P) > 0 then
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
       elsif Get_Offline_Slots (P) = Get_Total_Slots (P) then
          Ada.Text_IO.Put ("<tr class=""offline"">");
-      elsif P.Has_Errors then
+      elsif P.Has_Errors or else Config_Error then
          Ada.Text_IO.Put ("<tr class=""program_error"">");
       else
          Ada.Text_IO.Put ("<tr>");
       end if;
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
                      & "&net=" & Get_Network (P)
+                     & "&gm=" & Get_GPU (P)
                      & "&model=" & Get_Model (P)
                      & "&cores=" & Get_Cores (P)'Img
                      & "&mem=" & Get_Memory (P)
                      & "&q=" & P.Get_Name
-                     & "&gpu=" & Has_GPU (P)'Img
+                     & "&gpu=" & GPU_Present'Img
                      & "&ssd=" & Has_SSD (P)'Img
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
       HTML.Put_Cell (Data => Get_Network (P));
       Ada.Text_IO.Put ("<td>");
-      if Has_GPU (P) then
+      if GPU_Present then
          Ada.Text_IO.Put (HTML.Img_Tag ("GPU"));
       end if;
       if Has_SSD (P) then
          Ada.Text_IO.Put (HTML.Img_Tag ("SSD"));
       end if;
       Ada.Text_IO.Put ("</td>");
+      HTML.Put_Cell (Data => Get_GPU (P));
       HTML.Put_Cell (Data => Get_Model (P));
       HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
@@ -99,10 +113,18 @@ package body Partitions is
                      Class => "right");
       HTML.Put_Cell (Data  => P.Get_Suspended_Slots'Img,
                      Class => "right");
+      if Config_Error then
+         HTML.Put_Cell ("inconsistent GPU config encountered");
+      end if;
       Ada.Text_IO.Put ("</tr>");
       if Has_Errors (P) then
          P.Iterate_Errors (Put_Error'Access);
       end if;
+   exception
+      when E : SGE.Utils.Operator_Error =>
+         HTML.Put_Paragraph (Label    => "Misconfiguration",
+                             Contents => Exception_Message (E));
+         Ada.Text_IO.Put ("</tr>"); -- close open row
    end Put;
 
    procedure Put_Summary_Item (Item : State) is
