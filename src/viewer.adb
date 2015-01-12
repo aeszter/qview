@@ -25,6 +25,7 @@ with SGE.Queues;
 with SGE.Jobs;
 with Advance_Reservations;
 with SGE.Loggers;
+with Ada.Strings.Equal_Case_Insensitive;
 
 package body Viewer is
 
@@ -621,7 +622,8 @@ package body Viewer is
             Append_Params ("net=NONE");
       end case;
       Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
-      if GPU /= "" and then GPU /= "none" then
+      if GPU /= ""
+        and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none") then
          Selector := Selector & " -l gm=" & GPU;
       end if;
       Append_Params ("gm=" & GPU);
