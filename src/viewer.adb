@@ -60,8 +60,6 @@ package body Viewer is
          CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
          HTML.Put_Navigation_Begin;
          HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=both");
-         HTML.Put_Navigation_Link (Data       => CGI.HTML_Encode ("With Slot Ranges"),
-                                   Link_Param => "categories=with_slots");
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
          HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
          HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
@@ -124,17 +122,12 @@ package body Viewer is
       -- View_Job_Overview --
       -----------------------
 
-      procedure View_Job_Overview (Slot_Ranges : Boolean) is
+      procedure View_Job_Overview is
          SGE_Out     : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "bunches");
-         if HTML.Param_Is ("categories", "demand") then
-            CGI.Put_HTML_Heading (Title => "Job Overview",
-                               Level => 2);
-         else
-            CGI.Put_HTML_Heading (Title => "Demand",
-                               Level => 2);
-         end if;
+         CGI.Put_HTML_Heading (Title => "Demand",
+                            Level => 2);
          SGE_Out := Parser.Setup (Command  => "qquota",
                                   Selector => "-l slots -u *");
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
@@ -146,14 +139,11 @@ package body Viewer is
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
 
-         if Slot_Ranges then
-            SGE_Out := Parser.Setup (Selector => "-j *");
+         SGE_Out := Parser.Setup (Selector => "-j *");
 
-            Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
-            SGE.Parser.Free;
-            Jobs.Apply_Overlay;
-         end if;
-
+         Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         SGE.Parser.Free;
+         Jobs.Apply_Overlay;
          SGE.Jobs.Update_Quota;
 
          --  Detect different bunches
@@ -174,13 +164,8 @@ package body Viewer is
          SGE_Out        : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "partitions");
-         if HTML.Param_Is ("categories", "supply") then
-            CGI.Put_HTML_Heading (Title => "Detailed Queue Information",
+         CGI.Put_HTML_Heading (Title => "Supply",
                                Level => 2);
-         else
-            CGI.Put_HTML_Heading (Title => "Supply",
-                               Level => 2);
-         end if;
 
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
@@ -481,21 +466,9 @@ package body Viewer is
       if CGI.Input_Received then
          if not HTML.Param_Is ("categories", "") then
             Set_Params ("categories=" & CGI.Value ("categories"));
-            if HTML.Param_Is ("categories", "supply") then
-               Put_Headers (Title => "Supply");
-               View_Detailed_Queues;
-            elsif HTML.Param_Is ("categories", "demand") then
-               Put_Headers (Title => "Demand");
-               View_Job_Overview (Slot_Ranges => False);
-            elsif HTML.Param_Is ("categories", "both") then
-               Put_Headers (Title => "Supply & Demand");
-               View_Detailed_Queues;
-               View_Job_Overview (Slot_Ranges => False);
-            elsif HTML.Param_Is ("categories", "with_slots") then
-               Put_Headers (Title => "Supply & Demand (with slot ranges)");
-               View_Detailed_Queues;
-               View_Job_Overview (Slot_Ranges => True);
-            end if;
+            Put_Headers (Title => "Supply & Demand");
+            View_Detailed_Queues;
+            View_Job_Overview;
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
                pragma Unreferenced (ID);

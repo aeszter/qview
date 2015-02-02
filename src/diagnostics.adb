@@ -49,7 +49,7 @@ package body Diagnostics is
          Integer_Text_IO.Put (N, Width => 1);
       end Put_With_Zero;
 
-      Now     : Ada.Calendar.Time := Ada.Calendar.Clock;
+      Now     : constant Ada.Calendar.Time := Ada.Calendar.Clock;
       Year    : Ada.Calendar.Year_Number;
       Month   : Ada.Calendar.Month_Number;
       Day     : Ada.Calendar.Day_Number;

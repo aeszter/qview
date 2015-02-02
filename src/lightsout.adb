@@ -18,7 +18,7 @@ package body Lightsout is
    end Clear;
 
    function Get_Bug (From : String) return String is
-      Name : Host_Name := To_Host_Name (From);
+      Name : constant Host_Name := To_Host_Name (From);
       Bug_ID : Natural := 0;
    begin
       if List.Contains (Name) then
@@ -34,7 +34,7 @@ package body Lightsout is
    end Get_Bug;
 
    function Get_Maintenance (From : String) return String is
-      Name : Host_Name := To_Host_Name (From);
+      Name : constant Host_Name := To_Host_Name (From);
       Maint_Status : Maintenance := none;
    begin
       if List.Contains (Name) then

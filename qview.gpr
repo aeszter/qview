@@ -34,7 +34,7 @@ project Qview is
       case Library_Type is
 
          when "static" =>
-            for Default_Switches ("ada") use ("-gnaty3bBcxtSOnaihelkr", "-gnato", "-fstack-check", "-g", "-gnat05", "-gnatf", "-gnatwum");
+            for Default_Switches ("ada") use ("-gnatVaefimo", "-gnaty3bBcxtSOnaihelkrs", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat05");
 
          when "relocatable" =>
             for Default_Switches ("ada") use ("-gnato", "-fstack-check", "-g", "-gnat05", "-ftest-coverage", "-fprofile-arcs", "-gnatf");

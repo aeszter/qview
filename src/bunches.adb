@@ -24,12 +24,13 @@ package body Bunches is
                      & "Detail</acronym>", Tag => "th");
       HTML.Put_Cell (Data => "<acronym title=""Parallel Environment"">PE</acronym>",
                      Tag => "th");
-      HTML.Put_Cell (Data => "Slots", Tag => "th");
+      HTML.Put_Cell (Data => "CPU Slots", Tag => "th");
       for Capability in Balancer_Capability loop
          if Capability /= Any then
             HTML.Put_Cell (Data => "", Tag => "th");
          end if;
       end loop;
+      HTML.Put_Cell (Data => "GPU Slots", Tag => "th");
       HTML.Put_Cell (Data => "Queue", Tag => "th");
       HTML.Put_Cell (Data => "Hard Requests", Tag => "th");
       HTML.Put_Cell (Data => "Soft Requests", Tag => "th");
@@ -74,7 +75,7 @@ package body Bunches is
       else
          HTML.Put_Cell (Data => Get_PE (B));
       end if;
-      HTML.Put_Cell (Data => Get_Slot_Numbers (B), Class => "right");
+      HTML.Put_Cell (Data => Get_CPU_Slot_Numbers (B), Class => "right");
       for Capability in Balancer_Capability'Range loop
          if Capability /= Any then
             if Has_Balancer (B, Capability) then
@@ -84,6 +85,7 @@ package body Bunches is
             end if;
          end if;
       end loop;
+      HTML.Put_Cell (Data => Get_GPU_Slot_Numbers (B), Class => "right");
       HTML.Put_Cell (Data => Get_Queue (B));
       HTML.Put_Cell (Data => Get_Hard_Resources (B));
       HTML.Put_Cell (Data => Get_Soft_Resources (B));
