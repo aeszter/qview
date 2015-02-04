@@ -7,7 +7,7 @@ with SGE.Utils;
 with Ada.Exceptions; use Ada.Exceptions;
 
 package body Partitions is
-
+   procedure Put_Summary_Item (Item : State);
 
    procedure Put_List is
    begin
@@ -42,8 +42,9 @@ package body Partitions is
    procedure Put (P : Partition) is
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
-
       use SGE.Utils.String_Lists;
+
+      procedure Put_Error (Message : String);
 
       procedure Put_Error (Message : String) is
       begin

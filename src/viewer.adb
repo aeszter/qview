@@ -108,7 +108,7 @@ package body Viewer is
                                & "component=qview&form_name=enter_bug"
                                & "&product=Projects&version="
                                & Utils.Version & """>"
-                               &"Report Problem/Suggest Enhancement</a></li>");
+                               & "Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>SGElib " & SGE.Utils.Version & "</li>");
@@ -358,12 +358,12 @@ package body Viewer is
          SGE_Out := Parser.Setup (Command  => "qstat",
                                   Selector => "-r -s p -u *");
 
-         Append_Params ("pe="&CGI.Value ("pe"));
-         Append_Params ("queue="&CGI.Value ("queue"));
-         Append_Params ("hr="&CGI.Value ("hr"));
-         Append_Params ("sr="&CGI.Value ("sr"));
-         Append_Params ("slot_ranges="&CGI.Value ("slot_ranges"));
-         Append_Params ("slot_number="&CGI.Value ("slot_number"));
+         Append_Params ("pe=" & CGI.Value ("pe"));
+         Append_Params ("queue=" & CGI.Value ("queue"));
+         Append_Params ("hr=" & CGI.Value ("hr"));
+         Append_Params ("sr=" & CGI.Value ("sr"));
+         Append_Params ("slot_ranges=" & CGI.Value ("slot_ranges"));
+         Append_Params ("slot_number=" & CGI.Value ("slot_number"));
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
@@ -580,7 +580,7 @@ package body Viewer is
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
       SGE_Out     : Parser.Tree;
       Selector    : Unbounded_String;
-      GPU : String := To_String (Get_GPU (Props));
+      GPU         : constant String := To_String (Get_GPU (Props));
    begin
       case Get_Network (Props) is
          when eth =>

@@ -92,7 +92,7 @@ package body Hosts is
       Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host "& Get_Name (H) & ": "
+         HTML.Error ("Error while putting host " & Get_Name (H) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
@@ -115,7 +115,7 @@ package body Hosts is
       Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host "& Get_Name (H) & ": "
+         HTML.Error ("Error while putting host " & Get_Name (H) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;
