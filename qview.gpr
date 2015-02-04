@@ -1,4 +1,4 @@
-with "../florist/lib/gnat/florist";
+with "florist";
 with "../sgelib/sgelib.gpr";
 
 project Qview is
