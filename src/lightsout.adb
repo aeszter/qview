@@ -45,7 +45,7 @@ package body Lightsout is
             return "";
          when ignore =>
             return "<acronym title=""ignored by lightsout"">"
-              &"<img src=""/icons/ignore.png""></acronym>";
+              & "<img src=""/icons/ignore.png""></acronym>";
          when disable =>
             return "<acronym title=""disable for maintenance"">"
               & "<img src=""/icons/disable.png""></acronym>";

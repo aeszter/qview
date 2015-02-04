@@ -33,7 +33,7 @@ package Jobs is
 private
 
 
-   procedure Put (J : job);
+   procedure Put (J : Job);
    procedure Put_Time_Line (J : Job);
    procedure Put_Res_Line (J : Job);
    procedure Put_Prio_Line (J : Job);
