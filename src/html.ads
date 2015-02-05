@@ -59,6 +59,8 @@ package HTML is
    procedure Error (Message : String);
    procedure Put_Heading (Title : String; Level : Positive);
 
+   function Param (Name : String; Index : in Positive := 1;
+               Required : in Boolean := False) return String renames CGI.Value;
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure Begin_Div (Class : String := ""; ID : String := "");
    procedure End_Div (Class : String := ""; ID : String := "");

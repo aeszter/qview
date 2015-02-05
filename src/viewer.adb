@@ -29,6 +29,24 @@ with Ada.Strings.Equal_Case_Insensitive;
 
 package body Viewer is
 
+   procedure Put_Error (Message : String) is
+   begin
+      CGI.Put_CGI_Header;
+      Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - Error</title>");
+      Ada.Text_IO.Put_Line ("</head><body>");
+      Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
+      CGI.Put_HTML_Tail;
+   end Put_Error;
+
+   procedure Put_Result (Message : String) is
+   begin
+      CGI.Put_CGI_Header;
+      Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - Result</title>");
+      Ada.Text_IO.Put_Line ("</head><body>");
+      Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
+      CGI.Put_HTML_Tail;
+   end Put_Result;
+
    ----------
    -- View --
    --  Purpose: Main routine, display the entire page
