@@ -22,13 +22,10 @@ package body HTML is
       return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
    end Acronym;
 
-   ------------
-   -- Memory --
-   ------------
-
-   --------------------
-   -- Put_Search_Box --
-   --------------------
+   function Get_Action_URL (Action, Params : String) return String is
+   begin
+      return CGI.My_URL & "priv?act=" & Action & "&" & Params;
+   end Get_Action_URL;
 
    procedure Put_Search_Box is
    begin
@@ -134,9 +131,9 @@ package body HTML is
    -- Put_Img_Cell --
    ------------------
 
-   procedure Put_Img_Cell (Image : String) is
+   procedure Put_Img_Cell (Image : String; Extra_Text : String := "") is
    begin
-      Put_Cell (Data => Img_Tag (Image));
+      Put_Cell (Data => Img_Tag (Image) & Extra_Text);
    end Put_Img_Cell;
 
    function Img_Tag (Image : String) return String is
