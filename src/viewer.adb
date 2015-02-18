@@ -53,6 +53,27 @@ package body Viewer is
    ----------
 
    procedure View is
+      procedure Put_Error (Message : String);
+      procedure Put_Headers (Title : String);
+      procedure Put_Diagnostics;
+      procedure Put_Footer;
+      procedure View_Advance_Reservation (AR_ID : String);
+      procedure View_Advance_Reservations;
+      procedure View_Bunch;
+      procedure View_Detailed_Queues;
+      procedure View_Equivalent_Hosts (Host_Name : String);
+      procedure View_Forecast;
+      procedure View_Global_Jobs;
+      procedure View_Job (Job_ID : String);
+      procedure View_Job_Overview;
+      procedure View_Jobs (Selector : Trusted_String; Only_Waiting : Boolean := False);
+      procedure View_Jobs_Of_User (User : String);
+      procedure View_Jobs_In_Queue (Queue : String);
+      procedure View_Maintenance_Report;
+      procedure View_Partition;
+      procedure View_Reservations;
+      procedure View_Share_Tree;
+      procedure View_Waiting_Jobs;
 
       Headers_Sent : Boolean := False;
 
