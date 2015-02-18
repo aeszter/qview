@@ -4,7 +4,6 @@ with HTML;
 with Parser;
 with SGE.Parser; use SGE.Parser;
 with SGE.Quota;
-with Command_Tools; use Command_Tools;
 with Ada.Exceptions; use Ada.Exceptions;
 with SGE.Utils; use SGE.Utils; use SGE.Utils.String_Lists;
 with Utils;
@@ -26,6 +25,7 @@ with SGE.Jobs;
 with Advance_Reservations;
 with SGE.Loggers;
 with Ada.Strings.Equal_Case_Insensitive;
+with SGE.Taint; use SGE.Taint;
 
 package body Viewer is
 
@@ -146,18 +146,18 @@ package body Viewer is
          HTML.Begin_Div (Class => "bunches");
          CGI.Put_HTML_Heading (Title => "Demand",
                             Level => 2);
-         SGE_Out := Parser.Setup (Command  => "qquota",
-                                  Selector => "-l slots -u *");
+         SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
+                                  Selector => Implicit_Trust ("-l slots -u *"));
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
                                                           Tag_Name => "qquota_rule"));
          SGE.Parser.Free;
 
-         SGE_Out := Parser.Setup (Selector => "-u * -r -s p");
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -r -s p"));
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
 
-         SGE_Out := Parser.Setup (Selector => "-j *");
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
 
          Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
@@ -200,22 +200,22 @@ package body Viewer is
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
 
-      procedure View_Jobs (Selector : String; Only_Waiting : Boolean := False) is
+      procedure View_Jobs (Selector : Trusted_String; Only_Waiting : Boolean := False) is
          SGE_Out     : Parser.Tree;
 
 
       begin
-         SGE_Out := Parser.Setup (Command  => "qquota",
-                                  Selector => "-l slots -u *");
+         SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
+                                  Selector => Implicit_Trust ("-l slots -u *"));
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
                                                           Tag_Name => "qquota_rule"));
          SGE.Parser.Free;
-         SGE_Out := Parser.Setup (Selector => "-urg -pri -ext " & Selector);
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-urg -pri -ext ") & Selector);
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
          if Only_Waiting then
-            SGE_Out := Parser.Setup (Selector => "-j *");
+            SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
 
             Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
             Jobs.Apply_Overlay;
@@ -239,27 +239,27 @@ package body Viewer is
       procedure View_Jobs_In_Queue (Queue : String) is
       begin
          CGI.Put_HTML_Heading (Title => """" & Queue & """ Jobs", Level => 2);
-         View_Jobs ("-u * -s r -q " & Queue);
+         View_Jobs (Implicit_Trust ("-u * -s r -q ") & Sanitise (Queue));
       end View_Jobs_In_Queue;
 
 
       procedure View_Global_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-         View_Jobs ("-u *");
+         View_Jobs (Implicit_Trust ("-u *"));
       end View_Global_Jobs;
 
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         View_Jobs (Selector => "-u * -s p", Only_Waiting => True);
+         View_Jobs (Selector => Implicit_Trust ("-u * -s p"), Only_Waiting => True);
       end View_Waiting_Jobs;
 
       procedure View_Jobs_Of_User (User : String) is
       begin
          CGI.Put_HTML_Heading (Title => "Jobs of " & User,
                                Level => 2);
-         View_Jobs ("-u " & User);
+         View_Jobs (Implicit_Trust ("-u ") & Sanitise (User));
       end View_Jobs_Of_User;
 
       procedure View_Job (Job_ID : String) is
@@ -267,7 +267,7 @@ package body Viewer is
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
-         SGE_Out := Parser.Setup (Selector => "-j " & Job_ID);
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j") & Sanitise (Job_ID));
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
@@ -287,8 +287,8 @@ package body Viewer is
       begin
          CGI.Put_HTML_Heading (Title => "Details of Advance Reservation " & AR_ID,
                                Level => 2);
-         SGE_Out := Parser.Setup (Command  => "qrstat",
-                                  Selector => "-ar " & AR_ID);
+         SGE_Out := Parser.Setup (Command  => Trust_As_Command ("qrstat"),
+                                  Selector => Implicit_Trust ("-ar ") & Sanitise (AR_ID));
 
          AR.Append_List (SGE_Out);
          SGE.Parser.Free;
@@ -308,7 +308,8 @@ package body Viewer is
          Q       : SGE.Queues.Queue;
          Props : Set_Of_Properties;
       begin
-         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector & " -q *@" & Host_Name);
+         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector
+                                  & Implicit_Trust (" -q *@") & Sanitise (Host_Name));
          SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
          SGE.Parser.Free;
 
@@ -328,7 +329,7 @@ package body Viewer is
          SGE_Out     : Parser.Tree;
 
       begin
-         SGE_Out := Parser.Setup (Selector => "-u * -s r -r");
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -s r -r"));
 
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
@@ -350,8 +351,8 @@ package body Viewer is
          SGE_Out : Parser.Tree;
 
       begin
-         SGE_Out := Parser.Setup (Command  => "qrstat",
-                                  Selector => "-u *");
+         SGE_Out := Parser.Setup (Command  => Trust_As_Command ("qrstat"),
+                                  Selector => Implicit_Trust ("-u *"));
          AR.Append_List (SGE_Out);
          SGE.Parser.Free;
          AR.Put_List;
@@ -368,13 +369,13 @@ package body Viewer is
 
 
       begin
-         SGE_Out := Parser.Setup (Command  => "qquota",
-                                  Selector => "-l slots -u *");
+         SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
+                                  Selector => Implicit_Trust ("-l slots -u *"));
          SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
                                                           Tag_Name => "qquota_rule"));
          SGE.Parser.Free;
-         SGE_Out := Parser.Setup (Command  => "qstat",
-                                  Selector => "-r -s p -u *");
+         SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
+                                  Selector => Implicit_Trust ("-r -s p -u *"));
 
          Append_Params ("pe=" & CGI.Value ("pe"));
          Append_Params ("queue=" & CGI.Value ("queue"));
@@ -385,8 +386,8 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
-         SGE_Out := Parser.Setup (Command  => "qstat",
-                                  Selector => "-j *");
+         SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
+                                  Selector => Implicit_Trust ("-j *"));
          Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
          Jobs.Prune_List (PE            => CGI.Value ("pe"),
@@ -440,8 +441,8 @@ package body Viewer is
          SGE_Out : SGE.Spread_Sheets.Spread_Sheet;
 
       begin
-         SGE_Out := Parser.Setup_No_XML (Command => "sge_share_mon",
-                                         Selector => "-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x");
+         SGE_Out := Parser.Setup_No_XML (Command => Trust_As_Command ("sge_share_mon"),
+                                         Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
          Share_Tree.Append_List (SGE_Out);
          if not HTML.Param_Is ("sort", "") then
             Share_Tree.Sort_By (Field     => CGI.Value ("sort"),
@@ -495,18 +496,18 @@ package body Viewer is
             begin
                ID := Positive'Value (CGI.Value ("search"));
                Put_Headers (Title => "Job " & CGI.Value ("search"));
-               Set_Params ("job_id=" & Sanitise (CGI.Value ("search")));
-               View_Job (Sanitise (CGI.Value ("search")));
+               Set_Params ("job_id=" & CGI.Value ("search"));
+               View_Job (CGI.Value ("search"));
             exception
                when Constraint_Error =>
                   if Search_String (Start .. Start + 3) = "node" then
                      Put_Headers (Title => Search_String & " and equivalent");
-                     Set_Params ("" & Sanitise (Search_String));
-                     View_Equivalent_Hosts (Sanitise (Search_String));
+                     Set_Params ("" & Search_String);
+                     View_Equivalent_Hosts (Search_String);
                   else
                      Put_Headers (Title => "User " & CGI.Value ("search"));
-                     Set_Params ("user=" & Sanitise (CGI.Value ("search")));
-                     View_Jobs_Of_User (Sanitise (CGI.Value ("search")));
+                     Set_Params ("user=" & CGI.Value ("search"));
+                     View_Jobs_Of_User (CGI.Value ("search"));
                   end if;
             end;
          elsif HTML.Param_Is ("jobs", "bunch") then
@@ -515,8 +516,8 @@ package body Viewer is
             View_Bunch;
          elsif not HTML.Param_Is ("queue", "") then
             Put_Headers (Title => "Queue " & CGI.Value ("queue"));
-            Set_Params ("queue=" & Sanitise (CGI.Value ("queue")));
-            View_Jobs_In_Queue (Sanitise (CGI.Value ("queue")));
+            Set_Params ("queue=" & CGI.Value ("queue"));
+            View_Jobs_In_Queue (CGI.Value ("queue"));
          elsif not HTML.Param_Is ("hosts", "") then
             Put_Headers (Title => "Hosts: "
                          & CGI.Value ("net") & "/"
@@ -527,16 +528,16 @@ package body Viewer is
                         --  & "/" & CGI.Value "rt"
                         --  currently not used, so do not confuse the user
                         --  see Bug #1495
-            Set_Params ("hosts=" & Sanitise (CGI.Value ("hosts")));
+            Set_Params ("hosts=" & CGI.Value ("hosts"));
             View_Partition;
          elsif not HTML.Param_Is ("user", "") then
             Put_Headers (Title => "User " & CGI.Value ("user"));
-            Set_Params ("user=" & Sanitise (CGI.Value ("user")));
-            View_Jobs_Of_User (Sanitise (CGI.Value ("user")));
+            Set_Params ("user=" & CGI.Value ("user"));
+            View_Jobs_Of_User (CGI.Value ("user"));
          elsif not HTML.Param_Is ("job_id", "") then
             Put_Headers (Title => "Job " & CGI.Value ("job_id"));
-            Set_Params ("job_id=" & Sanitise (CGI.Value ("job_id")));
-            View_Job (Sanitise (CGI.Value ("job_id")));
+            Set_Params ("job_id=" & CGI.Value ("job_id"));
+            View_Job (CGI.Value ("job_id"));
          elsif HTML.Param_Is ("jobs", "all") then
             Put_Headers (Title => "All Jobs");
             Set_Params ("jobs=all");
@@ -551,8 +552,8 @@ package body Viewer is
             View_Advance_Reservations;
          elsif not HTML.Param_Is ("ar_id", "") then
             Put_Headers (Title => "Advance Reservation " & CGI.Value ("ar_id"));
-            Set_Params ("ar_id=" & Sanitise (CGI.Value ("ar_id")));
-            View_Advance_Reservation (Sanitise (CGI.Value ("ar_id")));
+            Set_Params ("ar_id=" & CGI.Value ("ar_id"));
+            View_Advance_Reservation (CGI.Value ("ar_id"));
          elsif HTML.Param_Is ("forecast", "y") then
             Put_Headers (Title => "Finishing Jobs");
             Set_Params ("forecast=y");
@@ -614,7 +615,8 @@ package body Viewer is
       end case;
       Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
       if GPU /= ""
-        and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none") then
+        and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none")
+      then
          Selector := Selector & " -l gm=" & GPU;
       end if;
       Append_Params ("gm=" & GPU);
@@ -623,9 +625,9 @@ package body Viewer is
       Append_Params ("mem=" & To_String (Get_Memory (Props)));
       Append_Params ("q=" & Queue_Name);
 
-      SGE_Out := Parser.Setup (Command  => "qhost",
-                               Selector => "-q -j " & Parser.Resource_Selector
-                               & To_String (Selector));
+      SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
+                               Selector => Implicit_Trust ("-q -j ") & Parser.Resource_Selector
+                               & Sanitise (To_String (Selector)));
 
       SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       SGE.Parser.Free;
