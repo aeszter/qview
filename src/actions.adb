@@ -1,5 +1,4 @@
 with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Text_IO;
 with HTML;
 with Viewer;
 with CGI;
@@ -21,6 +20,15 @@ package body Actions is
          else
             Viewer.Put_Result ("OK");
          end if;
+      elsif What = "cq" then
+         SGE.Actions.Clear_Error (The_Node => HTML.Param ("q"));
+         if Referrer /= "" then
+            CGI.Put_CGI_Header ("Location: " & Referrer);
+         else
+            Viewer.Put_Result ("OK");
+         end if;
+      else
+         Viewer.Put_Error ("Unknown action """ & What & """");
       end if;
    exception
       when Constraint_Error =>
