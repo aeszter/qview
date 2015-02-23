@@ -24,7 +24,15 @@ package body Advance_Reservations is
    ---------
 
    procedure Put (R : Reservation) is
+      procedure Put_Name;
+      procedure Put_Meta;
+      procedure Put_Queues;
+      procedure Put_Resources;
+
       procedure Put_Name is
+         procedure Put_Message (Message : String);
+         procedure Put_Error (Message : String);
+
          procedure Put_Message (Message : String) is
          begin
             Ada.Text_IO.Put_Line ("<p class=""message"">"
@@ -70,6 +78,8 @@ package body Advance_Reservations is
       end Put_Meta;
 
       procedure Put_Queues is
+         procedure Put_Queue (Q : Queue);
+
          procedure Put_Queue (Q : Queue) is
          begin
             HTML.Put_Paragraph (Label    => Get_Name (Q),

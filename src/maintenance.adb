@@ -9,6 +9,7 @@ with SGE.Queues; use SGE.Queues;
 with Lightsout;
 with Ada.Exceptions; use Ada.Exceptions;
 with SGE.Parser;
+with SGE.Taint; use SGE.Taint;
 
 package body Maintenance is
 
@@ -35,12 +36,12 @@ package body Maintenance is
    procedure Put_All is
       SGE_Out : Parser.Tree;
    begin
-      SGE_Out := Parser.Setup (Command => "qhost",
-                               Selector => "-j -F load_short,load_medium, -q");
+      SGE_Out := Parser.Setup (Command => Cmd_Qhost,
+                               Selector => Implicit_Trust ("-j -F load_short,load_medium, -q"));
 
       SGE.Hosts.Append_List (SGE.Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       SGE.Parser.Free;
-      SGE_Out := Parser.Setup (Selector => "-F state");
+      SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-F state"));
       Queues.Append_List (SGE.Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
       SGE.Parser.Free;
       Read_Lightsout_Information;

@@ -5,16 +5,16 @@ package body CSS is
 
    procedure Put_Body;
 
-   Header_Border   : String := "2px solid #444";
-   Standard_Border : String := "2px solid #a0a0a0;";
+   Header_Border       : constant String := "2px solid #444";
+   Standard_Border     : constant String := "2px solid #a0a0a0;";
 
-   Full_Width    : String := "width: 75em;";
-   Content_Width   : String := "width: 70em;";
-   Widest_Box_Width : String := "width: 65em;";
-   Small_Box_Width : String := "width: 13em;";
+   Full_Width          : constant String := "width: 75em;";
+   Content_Width       : constant String := "width: 70em;";
+   Widest_Box_Width    : constant String := "width: 65em;";
+   Small_Box_Width     : constant String := "width: 13em;";
 
-   Standard_Background : String := "background: #e0e0e0;";
-   Box_Background : String := "background: #e8e8e8;";
+   Standard_Background : constant String := "background: #e0e0e0;";
+   Box_Background      : constant String := "background: #e8e8e8;";
 
 
    procedure Put_Line (Item : String) is

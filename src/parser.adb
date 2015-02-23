@@ -3,20 +3,20 @@ with DOM.Core; use DOM.Core;
 with SGE.Parser;
 
 package body Parser is
-   function Setup (Command  : String := "qstat";
-                          Selector : String) return Document is
+   function Setup (Command  : Trusted_Command_Name := Cmd_Qstat;
+                   Selector : Trusted_String) return Document is
    begin
-      HTML.Comment (Command & " " & Selector);
+      HTML.Comment (Value (Command) & " " & Value (Selector));
       return SGE.Parser.Setup (Command  => Command,
                                Selector => Selector);
    end Setup;
 
-   function Setup_No_XML (Command  : String;
-                          Selector : String) return SGE.Spread_Sheets.Spread_Sheet is
+   function Setup_No_XML (Command  : Trusted_Command_Name;
+                          Selector : Trusted_String) return SGE.Spread_Sheets.Spread_Sheet is
       Exit_Status : Natural;
       Output : SGE.Spread_Sheets.Spread_Sheet;
    begin
-      HTML.Comment (Command & " " & Selector);
+      HTML.Comment (Value (Command) & " " & Value (Selector));
       SGE.Parser.Setup_No_XML (Command  => Command,
                                Selector => Selector,
                                Output   => Output,
