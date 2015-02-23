@@ -618,28 +618,43 @@ package body Viewer is
    end View;
 
    procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
-      SGE_Out     : Parser.Tree;
-      Selector    : Unbounded_String;
-      GPU         : constant String := To_String (Get_GPU (Props));
+      function GPU_Selector return Trusted_String;
+      function Net_Selector return Trusted_String;
+
+      SGE_Out      : Parser.Tree;
+      CPU_Selector : constant Trusted_String := Implicit_Trust (" -l cm=") & Sanitise (To_String (Get_Model (Props)));
+      GPU          : constant String := To_String (Get_GPU (Props));
+
+      function GPU_Selector return Trusted_String is
+      begin
+         if GPU /= ""
+           and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none")
+         then
+            return Implicit_Trust (" -l gm=") & Sanitise (GPU);
+         else
+            return Implicit_Trust ("");
+         end if;
+      end GPU_Selector;
+
+      function Net_Selector return Trusted_String is
+      begin
+         case Get_Network (Props) is
+            when eth =>
+               Append_Params ("net=ETH");
+               return Implicit_Trust (" -l eth");
+            when ib =>
+               Append_Params ("net=IB");
+               return Implicit_Trust (" -l ib");
+            when ibswitch =>
+               Append_Params ("net=IBSWITCH");
+               return Implicit_Trust ("");
+            when none =>
+               Append_Params ("net=NONE");
+               return Implicit_Trust ("");
+         end case;
+      end Net_Selector;
+
    begin
-      case Get_Network (Props) is
-         when eth =>
-            Selector := To_Unbounded_String (" -l eth");
-            Append_Params ("net=ETH");
-         when ib =>
-            Selector := To_Unbounded_String (" -l ib");
-            Append_Params ("net=IB");
-         when ibswitch =>
-            Append_Params ("net=IBSWITCH");
-         when none =>
-            Append_Params ("net=NONE");
-      end case;
-      Selector := Selector & " -l cm=" & To_String (Get_Model (Props));
-      if GPU /= ""
-        and then not Ada.Strings.Equal_Case_Insensitive (GPU, "none")
-      then
-         Selector := Selector & " -l gm=" & GPU;
-      end if;
       Append_Params ("gm=" & GPU);
       Append_Params ("model=" & Get_Model (Props)'Img);
       Append_Params ("cores=" & Get_Cores (Props)'Img);
@@ -648,7 +663,7 @@ package body Viewer is
 
       SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
                                Selector => Implicit_Trust ("-q -j ") & Parser.Resource_Selector
-                               & Sanitise (To_String (Selector)));
+                               & Net_Selector & CPU_Selector & GPU_Selector);
 
       SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       SGE.Parser.Free;
