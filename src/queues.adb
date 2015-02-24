@@ -23,6 +23,11 @@ package body Queues is
                         & HTML.Get_Action_URL (Action => "cq",
                                                Params => "q=" & Long_Name)
                         & """>clear error</a>");
+      elsif Has_Disabled (Q) then
+         HTML.Put_Cell (Long_Name & " <a href="""
+                        & HTML.Get_Action_URL (Action => "eq",
+                                               Params => "q=" & Long_Name)
+                        & """>enable</a>");
       else
          HTML.Put_Cell (Long_Name);
       end if;

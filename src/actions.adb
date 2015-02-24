@@ -33,6 +33,9 @@ package body Actions is
       elsif What = "k" then
          SGE.Actions.Kill_Job (The_Job => Integer'Value (HTML.Param ("j")));
          Put_Result;
+      elsif What = "eq" then
+         SGE.Actions.Enable (The_Node => HTML.Param ("q"), Use_Sudo => True);
+         Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
       end if;
