@@ -11,22 +11,28 @@ package body Actions is
    ------------
 
    procedure Invoke (What : String) is
+      procedure Put_Result;
       Referrer : constant String := CGI.Get_Environment ("HTTP_REFERER");
+
+      procedure Put_Result is
+      begin
+         if Referrer /= "" then
+            CGI.Put_CGI_Header ("Location: " & Referrer);
+         else
+            Viewer.Put_Result ("OK");
+         end if;
+      end Put_Result;
+
    begin
       if What = "cj" then
          SGE.Actions.Clear_Error (The_Job => Integer'Value (HTML.Param ("j")));
-         if Referrer /= "" then
-            CGI.Put_CGI_Header ("Location: " & Referrer);
-         else
-            Viewer.Put_Result ("OK");
-         end if;
+         Put_Result;
       elsif What = "cq" then
          SGE.Actions.Clear_Error (The_Node => HTML.Param ("q"));
-         if Referrer /= "" then
-            CGI.Put_CGI_Header ("Location: " & Referrer);
-         else
-            Viewer.Put_Result ("OK");
-         end if;
+         Put_Result;
+      elsif What = "k" then
+         SGE.Actions.Kill_Job (The_Job => Integer'Value (HTML.Param ("j")));
+         Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
       end if;
