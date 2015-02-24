@@ -344,6 +344,16 @@ package body Jobs is
 
    procedure Put (J : Job) is
 
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "job_actions");
+         HTML.Put_Img (Name => "kill",
+                       Text => "Kill job",
+                       Link => HTML.Get_Action_URL (Action => "k",
+                                                    Params => "j=" & Get_ID (J)));
+         HTML.End_Div (ID => "job_actions");
+      end Put_Actions;
+
       procedure Put_Name is
          procedure Put_Message (Message : String) is
          begin
@@ -357,7 +367,14 @@ package body Jobs is
          end Put_Error;
       begin
          HTML.Begin_Div (Class => "job_name");
-         HTML.Put_Paragraph ("Name", Get_Name (J));
+         Ada.Text_IO.Put ("<p>");
+         HTML.Put_Img (Name => "hand.right",
+                       Text => "unlock job manipulation",
+                       Link => "#",
+                       Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
+         --         HTML.Put_Paragraph ("Name", Get_Name (J));
+
+         Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          Iterate_Messages (J, Put_Message'Access);
          if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
@@ -545,7 +562,11 @@ package body Jobs is
    begin
       HTML.Begin_Div (Class => "job_info");
 
+      HTML.Begin_Div (Class => "action_and_name");
+      Put_Actions;
       Put_Name;
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
       Put_Meta;
       Put_Queues;
       HTML.Begin_Div (Class => "res_and_context");

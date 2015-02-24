@@ -166,11 +166,35 @@ package body CSS is
       Close_Block;
    end Put_Cluster_Queues;
 
+   procedure Put_Job_Actions is
+   begin
+      Open_Block ("#job_actions");
+      Put_Line ("width: 16px;");
+      Put_Line (Box_Background);
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
+      Put_Line ("margin: 3px;");
+      Put_Line ("padding: 3px;");
+      Put_Line ("overflow: hidden;");
+      Put_Line ("display: none;");
+      Close_Block;
+      Open_Block ("#job_actions:target");
+      Put_Line ("display: block;");
+      Close_Block;
+      Open_Block (".action_and_name");
+      Put_Line ("display: -webkit-flex;");
+      Put_Line ("display: flex;");
+      Put_Line ("margin-bottom: 10px;");
+      Close_Block;
+   end Put_Job_Actions;
+
    procedure Put_Job_Name is
    begin
       Open_Block (".job_name, .ar_name");
       Put_Line ("font-weight: bold;");
-      Put_Line (Widest_Box_Width);
+      Put_Line ("width: 63em;");
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
       Put_Line ("overflow: hidden;");
@@ -405,6 +429,7 @@ package body CSS is
       Put_Navigation;
       Put_Content;
       Put_Cluster_Queues;
+      Put_Job_Actions;
       Put_Job_Name;
       Put_Job_Meta;
       Put_Job_Files;

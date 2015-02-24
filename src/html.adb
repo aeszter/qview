@@ -136,6 +136,16 @@ package body HTML is
       Put_Cell (Data => Img_Tag (Image) & Extra_Text);
    end Put_Img_Cell;
 
+   procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "") is
+   begin
+      Put ("<a href=""" & Link & """");
+      if Extra_Args /= "" then
+         Put (" " & Extra_Args);
+      end if;
+      Put ("><img src=""/icons/" & Name & ".png"" " &
+            "alt=""" & Text & """ title=""" & Text & """ /></a>");
+   end Put_Img;
+
    function Img_Tag (Image : String) return String is
       Data : constant String :=
          "<img src=""/icons/" &
