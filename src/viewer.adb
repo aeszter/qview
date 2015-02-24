@@ -288,7 +288,7 @@ package body Viewer is
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
-         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j") & Sanitise (Job_ID));
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j ") & Sanitise (Job_ID));
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
