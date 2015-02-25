@@ -6,6 +6,7 @@ with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
+with CGI;
 
 package body Hosts is
 
@@ -45,6 +46,134 @@ package body Hosts is
       HTML.End_Div (Class => "host_list");
 
    end Put_All;
+
+   procedure Put_Details is
+   begin
+      SGE.Hosts.Iterate (Put_Details'Access);
+   end Put_Details;
+
+   procedure Put_Details (H : SGE.Hosts.Host) is
+      procedure Put_Actions;
+      procedure Put_Name;
+      procedure Put_Properties;
+      procedure Put_Queues;
+      procedure Put_Jobs;
+      procedure Put_Queue_Line (Q : Queue_Pointer);
+      procedure Put_Job_Line (J : Job);
+
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "host_actions");
+         HTML.Put_Img (Name => "maint_no",
+                       Text => "Clear maintenance",
+                       Link => HTML.Get_Action_URL (Action => "cm",
+                                                    Params => "h=" & Get_Name (H)));
+         HTML.Put_Img (Name => "maint_ignore",
+                       Text => "Make lightsout ignore node",
+                       Link => HTML.Get_Action_URL (Action => "im",
+                                                    Params => "h=" & Get_Name (H)));
+         HTML.Put_Img (Name => "maint_disable",
+                       Text => "Disable node",
+                       Link => HTML.Get_Action_URL (Action => "dm",
+                                                    Params => "h=" & Get_Name (H)));
+         HTML.Put_Img (Name => "maint_off",
+                       Text => "Mark node for poweroff",
+                       Link => HTML.Get_Action_URL (Action => "om",
+                                                    Params => "h=" & Get_Name (H)));
+         HTML.Put_Paragraph (Label    => "Missing",
+                             Contents => "Enter bug id");
+         HTML.End_Div (ID => "host_actions");
+      end Put_Actions;
+
+      procedure Put_Name is
+      begin
+         HTML.Begin_Div (Class => "host_name");
+         Ada.Text_IO.Put ("<p>");
+         HTML.Put_Img (Name => "hand.right",
+                       Text => "unlock host manipulation",
+                       Link => "#",
+                       Extra_Args => "onclick=""document.getElementById('host_actions').style.display = 'block' """);
+
+         Ada.Text_IO.Put_Line (Get_Name (H) & "</p>");
+         HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
+         HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
+         HTML.End_Div (Class => "host_name");
+      end Put_Name;
+
+      procedure Put_Properties is
+      begin
+         HTML.Begin_Div ("host_properties");
+         HTML.Put_Paragraph ("Load", Get_Load_One (H)'Img & "," & Get_Load (H)'Img);
+         HTML.Put_Paragraph ("Slots used", Get_Used_Slots (H)'Img);
+         HTML.Put_Paragraph ("Memory", Get_Memory (H));
+         HTML.Put_Paragraph ("Network", Get_Network (H));
+         HTML.Put_Paragraph ("CPU", Get_Model (H));
+         HTML.Put_Paragraph ("Cores", Get_Cores (H)'Img);
+         HTML.Put_Paragraph ("GPU", Get_GPU (H));
+         HTML.End_Div ("host_properties");
+      end Put_Properties;
+
+      --  Add table with coloured memory, swap usage cells
+      procedure Put_Queue_Line (Q : Queue_Pointer) is
+      begin
+         Ada.Text_IO.Put ("<li>" & Get_Name (Q) & ':'
+                     & Get_Slots (Q)'Img);
+         Ada.Text_IO.Put_Line (HTML.Img_Tag (Get_State (Q)));
+      end Put_Queue_Line;
+
+      procedure Put_Job_Line (J : Job) is
+         ID : constant String := Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left);
+      begin
+         Ada.Text_IO.Put ("<li>");
+         if Is_Master (J) then
+            if Has_Slaves (J) then -- master
+               Ada.Text_IO.Put_Line (HTML.Img_Tag ("master") & Get_Slaves (J)'Img);
+            else -- serial
+               Ada.Text_IO.Put_Line (HTML.Img_Tag ("serial") & "1");
+            end if;
+         else
+            Ada.Text_IO.Put (Get_Slaves (J)'Img);
+         end if;
+         Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL & "?job_id="
+                               & ID & """>" & ID & "</a>");
+         Ada.Text_IO.Put (HTML.To_String (Ada.Calendar.Clock - Get_Start_Time (J)));
+         Ada.Text_IO.Put ("</li>");
+      end Put_Job_Line;
+
+      procedure Put_Queues is
+      begin
+         HTML.Begin_Div ("host_queues");
+         HTML.Put_List_Head;
+         Iterate_Queues (H, Put_Queue_Line'Access);
+         HTML.Put_List_Tail;
+         HTML.End_Div ("host_queues");
+      end Put_Queues;
+
+      procedure Put_Jobs is
+      begin
+         HTML.Begin_Div ("host_jobs");
+         HTML.Put_List_Head;
+         Iterate_Jobs (H, Put_Job_Line'Access);
+         HTML.Put_List_Tail;
+         HTML.End_Div ("host_jobs");
+      end Put_Jobs;
+
+   begin
+      HTML.Begin_Div (Class => "host_info");
+
+      HTML.Begin_Div (Class => "action_and_name");
+      Put_Actions;
+      Put_Name;
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
+      Put_Properties;
+      Put_Queues;
+      Put_Jobs;
+
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "host_info");
+      HTML.Put_Clearer;
+   end Put_Details;
 
    procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
    begin

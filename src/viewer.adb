@@ -64,6 +64,7 @@ package body Viewer is
       procedure View_Equivalent_Hosts (Host_Name : String);
       procedure View_Forecast;
       procedure View_Global_Jobs;
+      procedure View_Host (Name : String);
       procedure View_Job (Job_ID : String);
       procedure View_Job_Overview;
       procedure View_Jobs (Selector : Trusted_String; Only_Waiting : Boolean := False);
@@ -282,6 +283,22 @@ package body Viewer is
                                Level => 2);
          View_Jobs (Implicit_Trust ("-u ") & Sanitise (User));
       end View_Jobs_Of_User;
+
+      procedure View_Host (Name : String) is
+         SGE_Out       : Parser.Tree;
+      begin
+         CGI.Put_HTML_Heading (Title => "Details of Host " & Name,
+                               Level => 2);
+         SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
+                                  Selector => Implicit_Trust ("-q -j -h ") & Sanitise (Name));
+         SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+         SGE.Parser.Free;
+         Hosts.Put_Details;
+
+      exception
+         when Parser_Error =>
+            Ada.Text_IO.Put_Line ("<p><it>Host does not exist</it></p>");
+      end View_Host;
 
       procedure View_Job (Job_ID : String) is
          SGE_Out       : Parser.Tree;
@@ -559,6 +576,10 @@ package body Viewer is
             Put_Headers (Title => "Job " & CGI.Value ("job_id"));
             Set_Params ("job_id=" & CGI.Value ("job_id"));
             View_Job (CGI.Value ("job_id"));
+         elsif not HTML.Param_Is ("host", "") then
+            Put_Headers (Title => "Host " & CGI.Value ("host"));
+            Set_Params ("host=" & CGI.Value ("host"));
+            View_Host (CGI.Value ("host"));
          elsif HTML.Param_Is ("jobs", "all") then
             Put_Headers (Title => "All Jobs");
             Set_Params ("jobs=all");

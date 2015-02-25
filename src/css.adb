@@ -168,7 +168,7 @@ package body CSS is
 
    procedure Put_Job_Actions is
    begin
-      Open_Block ("#job_actions");
+      Open_Block ("#job_actions, #host_actions");
       Put_Line ("width: 16px;");
       Put_Line (Box_Background);
       Put_Line ("position: relative;");
@@ -178,7 +178,7 @@ package body CSS is
       Put_Line ("overflow: hidden;");
       Put_Line ("display: none;");
       Close_Block;
-      Open_Block ("#job_actions:target");
+      Open_Block ("#job_actions:target, #host_actions:target");
       Put_Line ("display: block;");
       Close_Block;
       Open_Block (".action_and_name");
@@ -190,7 +190,7 @@ package body CSS is
 
    procedure Put_Job_Name is
    begin
-      Open_Block (".job_name, .ar_name");
+      Open_Block (".job_name, .ar_name, .host_name");
       Put_Line ("font-weight: bold;");
       Put_Line ("width: 63em;");
       Put_Line ("position: relative;");
@@ -203,7 +203,7 @@ package body CSS is
 
    procedure Put_Job_Meta is
    begin
-      Open_Block (".job_meta, .ar_meta, .job_usage");
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -227,7 +227,7 @@ package body CSS is
 
    procedure Put_Job_Queue is
    begin
-      Open_Block (".job_queue, .ar_queue");
+      Open_Block (".job_queue, .ar_queue, .host_queues");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -251,7 +251,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .ar_info, .job_list, .ar_list, .partitions, .bunches");
+      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .partitions, .bunches");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
@@ -347,7 +347,7 @@ package body CSS is
 
    procedure Put_Job_Paragraphs is
    begin
-      Open_Block (".job_info p, .ar_info p");
+      Open_Block (".job_info p, .ar_info p, .host_info p");
       Put_Line ("margin: 5px;");
       Put_Line ("height: 1.2em;");
       Put_Line ("font-size: 0.85em;");
