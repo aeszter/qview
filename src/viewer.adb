@@ -287,10 +287,11 @@ package body Viewer is
       procedure View_Host (Name : String) is
          SGE_Out       : Parser.Tree;
       begin
-         CGI.Put_HTML_Heading (Title => "Details of Host " & Name,
+         CGI.Put_HTML_Heading (Title => "Details of " & Name,
                                Level => 2);
          SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
-                                  Selector => Implicit_Trust ("-q -j -h ") & Sanitise (Name));
+                                  Selector => Parser.Resource_Selector
+                                  & Implicit_Trust (",load_short -q -j -h ") & Sanitise (Name));
          SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
          SGE.Parser.Free;
          Hosts.Put_Details;

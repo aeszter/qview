@@ -6,7 +6,6 @@ with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
-with CGI;
 
 package body Hosts is
 
@@ -57,9 +56,10 @@ package body Hosts is
       procedure Put_Name;
       procedure Put_Properties;
       procedure Put_Queues;
+      procedure Put_Resources;
       procedure Put_Jobs;
-      procedure Put_Queue_Line (Q : Queue_Pointer);
-      procedure Put_Job_Line (J : Job);
+      procedure Put_Queue_Row (Q : Queue_Pointer);
+      procedure Put_Job (J : Job);
 
       procedure Put_Actions is
       begin
@@ -114,49 +114,62 @@ package body Hosts is
       end Put_Properties;
 
       --  Add table with coloured memory, swap usage cells
-      procedure Put_Queue_Line (Q : Queue_Pointer) is
-      begin
-         Ada.Text_IO.Put ("<li>" & Get_Name (Q) & ':'
-                     & Get_Slots (Q)'Img);
-         Ada.Text_IO.Put_Line (HTML.Img_Tag (Get_State (Q)));
-      end Put_Queue_Line;
 
-      procedure Put_Job_Line (J : Job) is
-         ID : constant String := Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left);
+      procedure Put_Queue_Row (Q : Queue_Pointer) is
       begin
-         Ada.Text_IO.Put ("<li>");
-         if Is_Master (J) then
-            if Has_Slaves (J) then -- master
-               Ada.Text_IO.Put_Line (HTML.Img_Tag ("master") & Get_Slaves (J)'Img);
-            else -- serial
-               Ada.Text_IO.Put_Line (HTML.Img_Tag ("serial") & "1");
-            end if;
-         else
-            Ada.Text_IO.Put (Get_Slaves (J)'Img);
-         end if;
-         Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL & "?job_id="
-                               & ID & """>" & ID & "</a>");
-         Ada.Text_IO.Put (HTML.To_String (Ada.Calendar.Clock - Get_Start_Time (J)));
-         Ada.Text_IO.Put ("</li>");
-      end Put_Job_Line;
+         Ada.Text_IO. Put ("<tr>");
+         Put_Queue (Q);
+         Ada.Text_IO. Put ("</tr>");
+      end Put_Queue_Row;
+
+      procedure Put_Job (J : Job) is
+      begin
+         Put_Jobs (J);
+      end Put_Job;
 
       procedure Put_Queues is
       begin
          HTML.Begin_Div ("host_queues");
-         HTML.Put_List_Head;
-         Iterate_Queues (H, Put_Queue_Line'Access);
-         HTML.Put_List_Tail;
+         HTML.Put_Heading ("Queues", 3);
+         Ada.Text_IO.Put ("<table>");
+         Iterate_Queues (H, Put_Queue_Row'Access);
+         Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div ("host_queues");
       end Put_Queues;
 
       procedure Put_Jobs is
       begin
          HTML.Begin_Div ("host_jobs");
-         HTML.Put_List_Head;
-         Iterate_Jobs (H, Put_Job_Line'Access);
-         HTML.Put_List_Tail;
+         HTML.Put_Heading ("Jobs", 3);
+         Ada.Text_IO.Put ("<table>");
+         Iterate_Jobs (H, Put_Job'Access);
+         Ada.Text_IO.Put_Line ("</table>");
          HTML.End_Div ("host_jobs");
       end Put_Jobs;
+
+      procedure Put_Resources is
+      begin
+         HTML.Begin_Div ("host_res");
+         Ada.Text_IO.Put ("<table><tr>");
+         HTML.Put_Header_Cell (Data     => "Load",
+                               Acronym  => "per core",
+                               Sortable => False);
+         HTML.Put_Header_Cell (Data     => "Mem",
+                               Acronym  => "% used",
+                               Sortable => False);
+         HTML.Put_Header_Cell (Data     => "Swap",
+                               Acronym  => "% used",
+                               Sortable => False);
+         Ada.Text_IO.Put ("</tr><tr>");
+         HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
+                        Class => "right " & Color_Class (Load_Per_Core (H)));
+         HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
+                        Class => "right " & Color_Class (Mem_Percentage (H)));
+         HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
+                        Class => "right " & Color_Class (Swap_Percentage (H)));
+         Ada.Text_IO.Put ("</tr></table>");
+         HTML.End_Div ("host_res");
+      end Put_Resources;
 
    begin
       HTML.Begin_Div (Class => "host_info");
@@ -169,7 +182,7 @@ package body Hosts is
       Put_Properties;
       Put_Queues;
       Put_Jobs;
-
+      Put_Resources;
       HTML.Put_Clearer;
       HTML.End_Div (Class => "host_info");
       HTML.Put_Clearer;

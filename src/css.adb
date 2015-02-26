@@ -204,17 +204,22 @@ package body CSS is
    procedure Put_Job_Meta is
    begin
       Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs");
-      Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
       Close_Block;
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties");
+      Put_Line (Small_Box_Width);
+      Close_Block;
+      Open_Block (".host_jobs");
+      Put_Line ("width : 16em;");
+      Close_Block;
    end Put_Job_Meta;
 
    procedure Put_Job_Files is
    begin
-      Open_Block (".job_files");
+      Open_Block (".job_files, .host_res");
       Put_Line ("clear: both;");
       Put_Line ("position: relative;");
       Put_Line ("bottom: 0;");
