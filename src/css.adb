@@ -168,7 +168,7 @@ package body CSS is
 
    procedure Put_Job_Actions is
    begin
-      Open_Block ("#job_actions, #host_actions");
+      Open_Block ("#job_actions, #host_actions, #unlocker");
       Put_Line ("width: 16px;");
       Put_Line (Box_Background);
       Put_Line ("position: relative;");
@@ -176,11 +176,16 @@ package body CSS is
       Put_Line ("margin: 3px;");
       Put_Line ("padding: 3px;");
       Put_Line ("overflow: hidden;");
+      Close_Block;
+
+      Open_Block ("#job_actions, #host_actions");
       Put_Line ("display: none;");
       Close_Block;
+
       Open_Block ("#job_actions:target, #host_actions:target");
       Put_Line ("display: block;");
       Close_Block;
+
       Open_Block (".action_and_name");
       Put_Line ("display: -webkit-flex;");
       Put_Line ("display: flex;");

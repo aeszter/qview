@@ -48,6 +48,8 @@ package body Hosts is
 
    procedure Put_Details is
    begin
+      Lightsout.Clear;
+      Lightsout.Read;
       SGE.Hosts.Iterate (Put_Details'Access);
    end Put_Details;
 
@@ -83,20 +85,23 @@ package body Hosts is
          HTML.Put_Paragraph (Label    => "Missing",
                              Contents => "Enter bug id");
          HTML.End_Div (ID => "host_actions");
+         HTML.Begin_Div (ID => "unlocker");
+         HTML.Put_Img (Name => "hand.right",
+                       Text => "unlock host manipulation",
+                       Link => "#",
+                       Extra_Args => "onclick=""document.getElementById('host_actions').style.display = 'block';"
+                                 & "document.getElementById('unlocker').style.display = 'none' """);
+         HTML.End_Div (ID => "unlocker");
       end Put_Actions;
 
       procedure Put_Name is
       begin
          HTML.Begin_Div (Class => "host_name");
          Ada.Text_IO.Put ("<p>");
-         HTML.Put_Img (Name => "hand.right",
-                       Text => "unlock host manipulation",
-                       Link => "#",
-                       Extra_Args => "onclick=""document.getElementById('host_actions').style.display = 'block' """);
 
          Ada.Text_IO.Put_Line (Get_Name (H) & "</p>");
-         HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
-         HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
+         Ada.Text_IO.Put_Line ("<p>" & Lightsout.Get_Maintenance (Get_Name (H)));
+         Ada.Text_IO.Put_Line (Lightsout.Get_Bug (Get_Name (H)) & "</p>");
          HTML.End_Div (Class => "host_name");
       end Put_Name;
 
