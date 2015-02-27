@@ -68,19 +68,19 @@ package body Hosts is
          HTML.Begin_Div (ID => "host_actions");
          HTML.Put_Img (Name => "maint_no",
                        Text => "Clear maintenance",
-                       Link => HTML.Get_Action_URL (Action => "cm",
+                       Link => HTML.Get_Action_URL (Action => "clear_maint",
                                                     Params => "h=" & Get_Name (H)));
          HTML.Put_Img (Name => "maint_ignore",
                        Text => "Make lightsout ignore node",
-                       Link => HTML.Get_Action_URL (Action => "im",
+                       Link => HTML.Get_Action_URL (Action => "maint_ignore",
                                                     Params => "h=" & Get_Name (H)));
          HTML.Put_Img (Name => "maint_disable",
                        Text => "Disable node",
-                       Link => HTML.Get_Action_URL (Action => "dm",
+                       Link => HTML.Get_Action_URL (Action => "maint_disable",
                                                     Params => "h=" & Get_Name (H)));
          HTML.Put_Img (Name => "maint_off",
                        Text => "Mark node for poweroff",
-                       Link => HTML.Get_Action_URL (Action => "om",
+                       Link => HTML.Get_Action_URL (Action => "maint_poweroff",
                                                     Params => "h=" & Get_Name (H)));
          HTML.Put_Paragraph (Label    => "Missing",
                              Contents => "Enter bug id");

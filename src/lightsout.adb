@@ -7,6 +7,11 @@ with Sax.Readers; use Sax.Readers;
 with Input_Sources.File; use Input_Sources.File;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Streams.Stream_IO;
+with DOM.Core.Documents; use DOM.Core.Documents;
+with DOM.Core.Elements;
+with Ada.Characters;
+with Ada.Characters.Handling;
 
 package body Lightsout is
    procedure Add_Host (Name : String; Mode : String; Bug : Natural);
@@ -57,7 +62,6 @@ package body Lightsout is
 
    procedure Read is
       Reader                : DOM.Readers.Tree_Reader;
-      XML_Doc               : Document;
       All_Nodes             : Node_List;
       Config_Node, One_Node : Node;
       File                  : File_Input;
@@ -173,5 +177,50 @@ package body Lightsout is
       return Host_Names.To_Bounded_String (Source => From (From'First .. Period - 1),
                                            Drop   => Ada.Strings.Error);
    end To_Host_Name;
+
+   function To_String (Source : Maintenance) return String is
+   begin
+      return Ada.Characters.Handling.To_Lower (Source'Img);
+   end To_String;
+
+   procedure Set_Maintenance (Node_Name : String; To : Maintenance) is
+      All_Nodes : Node_List;
+      One_Node  : Node;
+      use DOM.Core.Elements;
+   begin
+      All_Nodes := Get_Elements_By_Tag_Name (Doc      => XML_Doc,
+                                             Tag_Name => "nodename");
+      for I in 0 .. Length (All_Nodes) - 1 loop
+         One_Node := Item (All_Nodes, I);
+         if Has_Child_Nodes (One_Node)
+           and then Value (First_Child (One_Node)) = Node_Name
+         then
+            case To is
+               when none  =>
+                  Remove_Attribute (Elem => One_Node,
+                                    Name => "maint");
+                  Remove_Attribute (Elem => One_Node,
+                                    Name => "bug");
+               when others =>
+                  Set_Attribute (One_Node, "maint", To_String (To));
+                  --                  Set_Attribute (One_Node, "bug", ID);
+            end case;
+            return;
+         end if;
+      end loop;
+      raise Constraint_Error with "could not find " & Node_Name;
+   end Set_Maintenance;
+
+   procedure Write is
+      use Ada.Streams.Stream_IO;
+
+      File_Handle : File_Type;
+   begin
+      Create (File_Handle, Out_File, "/tmp/lightsout.xml");
+      DOM.Core.Nodes.Write (Stream                => Stream (File_Handle),
+                            N                     => XML_Doc,
+                            Print_XML_Declaration => False);
+      Close (File_Handle);
+   end Write;
 
 end Lightsout;

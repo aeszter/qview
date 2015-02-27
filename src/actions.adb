@@ -3,8 +3,23 @@ with HTML;
 with Viewer;
 with CGI;
 with SGE.Actions;
+with Lightsout;
+with Ada.Strings.Fixed;
 
 package body Actions is
+
+   procedure Change_Maintenance (Node : String; To : Lightsout.Maintenance);
+
+   procedure Change_Maintenance (Node : String; To : Lightsout.Maintenance) is
+      Separator : constant Natural := Ada.Strings.Fixed.Index (Node, ".");
+      Short_Name : constant String := Node (Node'First .. Separator - 1);
+   begin
+      --  when and how to lock?
+      Lightsout.Clear;
+      Lightsout.Read;
+      Lightsout.Set_Maintenance (Short_Name, To);
+      Lightsout.Write;
+   end Change_Maintenance;
 
    ------------
    -- Invoke --
@@ -35,6 +50,18 @@ package body Actions is
          Put_Result;
       elsif What = "eq" then
          SGE.Actions.Enable (The_Node => HTML.Param ("q"), Use_Sudo => True);
+         Put_Result;
+      elsif What = "clear_maint" then
+         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.none);
+         Put_Result;
+      elsif What = "maint_ignore" then
+         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.ignore);
+         Put_Result;
+      elsif What = "maint_disable" then
+         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.disable);
+         Put_Result;
+      elsif  What = "maint_poweroff" then
+         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.off);
          Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
