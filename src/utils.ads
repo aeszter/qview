@@ -5,4 +5,6 @@ package Utils is
 
    procedure Mark_Mismatch (Left, Right : in out SGE.Utils.String_Sets.Set);
 
+   procedure Read_Link (Path : String; Buffer : out String; Last : out Natural);
+
 end Utils;
