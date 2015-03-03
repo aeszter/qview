@@ -8,7 +8,8 @@ package Lightsout is
    subtype Host_Name is Host_Names.Bounded_String;
    type Maintenance is (none, ignore, disable, off);
 
-
+   procedure Lock;
+   procedure Unlock;
    procedure Read;
    procedure Write;
    procedure Clear;

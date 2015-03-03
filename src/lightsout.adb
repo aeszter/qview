@@ -12,12 +12,20 @@ with DOM.Core.Documents; use DOM.Core.Documents;
 with DOM.Core.Elements;
 with Ada.Characters;
 with Ada.Characters.Handling;
+with POSIX.Files;
+with GNAT.Lock_Files;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Utils;
+with Ada.Directories;
+with POSIX; use POSIX;
 
 package body Lightsout is
    procedure Add_Host (Name : String; Mode : String; Bug : Natural);
    function To_Host_Name (From : String) return Host_Name;
+   procedure Lock (Path_Name : String);
 
    Lightsout_File : constant String := "/etc/lights-out.xml";
+   Lock_File_Name, Lock_Directory : Unbounded_String;
 
    procedure Clear is
    begin
@@ -76,6 +84,35 @@ package body Lightsout is
       end case;
    end Get_Maintenance;
 
+   procedure Lock is
+      use GNAT.Lock_Files;
+      use POSIX.Files;
+
+      Buffer : String (1 .. 1024);
+      Last : Integer;
+   begin
+      if Is_Symbolic_Link (To_POSIX_String (Lightsout_File)) then
+         Utils.Read_Link (Lightsout_File, Buffer, Last);
+         Lock (Buffer (1 .. Last));
+      else
+         Lock (Lightsout_File);
+      end if;
+   end Lock;
+
+   procedure Lock (Path_Name : String) is
+      use Ada.Directories;
+
+      Directory : constant String := Containing_Directory (Path_Name);
+      File_Name : constant String := "." & Simple_Name (Path_Name) & ".swp";
+   begin
+      Lock_File_Name := To_Unbounded_String (File_Name);
+      Lock_Directory := To_Unbounded_String (Directory);
+      GNAT.Lock_Files.Lock_File (Directory      => Directory,
+                                 Lock_File_Name => File_Name,
+                                 Wait           => 1.0,
+                                 Retries        => 0);
+   end Lock;
+
    procedure Read is
       Reader                : DOM.Readers.Tree_Reader;
       All_Nodes             : Node_List;
@@ -89,6 +126,7 @@ package body Lightsout is
       Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
       Reader.Parse (File);
       Close (Input => File);
+
       XML_Doc := Reader.Get_Tree;
       Config_Node := First_Child (XML_Doc);
       All_Nodes := Child_Nodes (Config_Node);
@@ -228,6 +266,12 @@ package body Lightsout is
       end loop;
       raise Constraint_Error with "could not find " & Node_Name;
    end Set_Maintenance;
+
+   procedure Unlock is
+   begin
+      GNAT.Lock_Files.Unlock_File (Directory => To_String (Lock_Directory),
+                                   Lock_File_Name => To_String (Lock_File_Name));
+   end Unlock;
 
    procedure Write is
       use Ada.Streams.Stream_IO;

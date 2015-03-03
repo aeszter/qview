@@ -5,6 +5,7 @@ with CGI;
 with SGE.Actions;
 with Lightsout;
 with Ada.Strings.Fixed;
+with GNAT.Lock_Files;
 
 package body Actions is
 
@@ -16,9 +17,11 @@ package body Actions is
    begin
       --  when and how to lock?
       Lightsout.Clear;
+      Lightsout.Lock;
       Lightsout.Read;
       Lightsout.Set_Maintenance (Short_Name, Bug, To);
       Lightsout.Write;
+      Lightsout.Unlock;
    end Change_Maintenance;
 
    ------------
@@ -79,6 +82,9 @@ package body Actions is
          Viewer.Put_Error ("Internal error: " & HTML.Param ("j") & " is no valid job");
       when E : SGE.Actions.Subcommand_Error =>
          Viewer.Put_Error ("Backend error: " & Exception_Message (E));
+      when GNAT.Lock_Files.Lock_Error =>
+         Viewer.Put_Error ("Could not lock lightsout file. "
+                             & "<a href=""" & HTML.Current_URL & """>Retry</a>");
       when E : others =>
          Viewer.Put_Error ("Unexpected error: " & Exception_Message (E));
    end Invoke;
