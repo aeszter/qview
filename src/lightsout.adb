@@ -17,6 +17,8 @@ package body Lightsout is
    procedure Add_Host (Name : String; Mode : String; Bug : Natural);
    function To_Host_Name (From : String) return Host_Name;
 
+   Lightsout_File : constant String := "/etc/lights-out.xml";
+
    procedure Clear is
    begin
       List.Clear;
@@ -80,7 +82,7 @@ package body Lightsout is
       Config_Node, One_Node : Node;
       File                  : File_Input;
    begin
-      Open (Filename => "/etc/lights-out.xml",
+      Open (Filename => Lightsout_File,
             Input => File);
 
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
@@ -232,7 +234,7 @@ package body Lightsout is
 
       File_Handle : File_Type;
    begin
-      Create (File_Handle, Out_File, "/tmp/lightsout.xml");
+      Create (File_Handle, Out_File, Lightsout_File);
       DOM.Core.Nodes.Write (Stream                => Stream (File_Handle),
                             N                     => XML_Doc,
                             Print_XML_Declaration => False);
