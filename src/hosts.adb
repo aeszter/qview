@@ -64,26 +64,33 @@ package body Hosts is
       procedure Put_Job (J : Job);
 
       procedure Put_Actions is
+         Bug_ID : constant String := Lightsout.Get_Bug_ID (Get_Name (H));
       begin
          HTML.Begin_Div (ID => "host_actions");
-         HTML.Put_Img (Name => "maint_no",
-                       Text => "Clear maintenance",
-                       Link => HTML.Get_Action_URL (Action => "clear_maint",
-                                                    Params => "h=" & Get_Name (H)));
-         HTML.Put_Img (Name => "maint_ignore",
-                       Text => "Make lightsout ignore node",
-                       Link => HTML.Get_Action_URL (Action => "maint_ignore",
-                                                    Params => "h=" & Get_Name (H)));
-         HTML.Put_Img (Name => "maint_disable",
-                       Text => "Disable node",
-                       Link => HTML.Get_Action_URL (Action => "maint_disable",
-                                                    Params => "h=" & Get_Name (H)));
-         HTML.Put_Img (Name => "maint_off",
-                       Text => "Mark node for poweroff",
-                       Link => HTML.Get_Action_URL (Action => "maint_poweroff",
-                                                    Params => "h=" & Get_Name (H)));
-         HTML.Put_Paragraph (Label    => "Missing",
-                             Contents => "Enter bug id");
+         HTML.Begin_Form;
+         HTML.Put_Hidden_Form (Name => "h", Value => Get_Name (H));
+         HTML.Put_Img_Form (Name   => "maint_no",
+                            Text   => "Clear maintenance",
+                            Action => "act",
+                            Value  => "clear_maint");
+         HTML.Put_Img_Form (Name   => "maint_ignore",
+                            Text   => "Make lightsout ignore node",
+                            Action => "act",
+                            Value  => "maint_ignore");
+         HTML.Put_Img_Form (Name   => "maint_disable",
+                            Text   => "Disable node",
+                            Action => "act",
+                            Value  => "maint_disable");
+         HTML.Put_Img_Form (Name   => "maint_off",
+                            Text   => "Mark node for poweroff",
+                            Action => "act",
+                            Value  => "maint_poweroff");
+         if Bug_ID = "" then
+            HTML.Put_Edit_Box ("bug", "Bug");
+         else
+            HTML.Put_Edit_Box ("bug", Bug_ID);
+         end if;
+         HTML.End_Form;
          HTML.End_Div (ID => "host_actions");
          HTML.Begin_Div (ID => "unlocker");
          HTML.Put_Img (Name => "hand.right",
@@ -213,7 +220,7 @@ package body Hosts is
    procedure Put (H : Host) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => Get_Name (H));
+      HTML.Put_Cell (Data => Get_Name (H), Link_Param => "host");
       HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell (Data => Get_GPU (H));
       HTML.Put_Cell (Data => Get_Model (H));

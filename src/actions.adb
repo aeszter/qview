@@ -8,16 +8,16 @@ with Ada.Strings.Fixed;
 
 package body Actions is
 
-   procedure Change_Maintenance (Node : String; To : Lightsout.Maintenance);
+   procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance);
 
-   procedure Change_Maintenance (Node : String; To : Lightsout.Maintenance) is
+   procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance) is
       Separator : constant Natural := Ada.Strings.Fixed.Index (Node, ".");
       Short_Name : constant String := Node (Node'First .. Separator - 1);
    begin
       --  when and how to lock?
       Lightsout.Clear;
       Lightsout.Read;
-      Lightsout.Set_Maintenance (Short_Name, To);
+      Lightsout.Set_Maintenance (Short_Name, Bug, To);
       Lightsout.Write;
    end Change_Maintenance;
 
@@ -52,16 +52,24 @@ package body Actions is
          SGE.Actions.Enable (The_Node => HTML.Param ("q"), Use_Sudo => True);
          Put_Result;
       elsif What = "clear_maint" then
-         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.none);
+         Change_Maintenance (Node => HTML.Param ("h"),
+                             To   => Lightsout.none,
+                             Bug  => HTML.Param ("bug"));
          Put_Result;
       elsif What = "maint_ignore" then
-         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.ignore);
+         Change_Maintenance (Node => HTML.Param ("h"),
+                             To   => Lightsout.ignore,
+                             Bug  => HTML.Param ("bug"));
          Put_Result;
       elsif What = "maint_disable" then
-         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.disable);
+         Change_Maintenance (Node => HTML.Param ("h"),
+                             To   => Lightsout.disable,
+                             Bug  => HTML.Param ("bug"));
          Put_Result;
       elsif  What = "maint_poweroff" then
-         Change_Maintenance (Node => HTML.Param ("h"), To => Lightsout.off);
+         Change_Maintenance (Node => HTML.Param ("h"),
+                             To   => Lightsout.off,
+                             Bug  => HTML.Param ("bug"));
          Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");

@@ -178,6 +178,10 @@ package body CSS is
       Put_Line ("overflow: hidden;");
       Close_Block;
 
+      Open_Block ("#host_actions");
+      Put_Line ("width: 64px;");
+      Close_Block;
+
       Open_Block ("#job_actions, #host_actions");
       Put_Line ("display: none;");
       Close_Block;

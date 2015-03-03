@@ -23,12 +23,8 @@ package body Lightsout is
    end Clear;
 
    function Get_Bug (From : String) return String is
-      Name : constant Host_Name := To_Host_Name (From);
-      Bug_ID : Natural := 0;
+      Bug_ID : constant Natural := Get_Bug_ID (From);
    begin
-      if List.Contains (Name) then
-         Bug_ID := List.Element (Name).Bug;
-      end if;
       if Bug_ID > 0 then
          return "<a href=""" & Ada.Strings.Unbounded.To_String (Bugzilla_URL)
            & "/show_bug.cgi?id=" & Bug_ID'Img
@@ -37,6 +33,24 @@ package body Lightsout is
          return "";
       end if;
    end Get_Bug;
+
+   function Get_Bug_ID (From : String) return String is
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+   begin
+      return Trim (Integer'Image (Get_Bug_ID (From)), Left);
+   end Get_Bug_ID;
+
+   function Get_Bug_ID (From : String) return Natural is
+      Name : constant Host_Name := To_Host_Name (From);
+   begin
+      if List.Contains (Name) then
+         return List.Element (Name).Bug;
+      else
+         return 0;
+      end if;
+   end Get_Bug_ID;
+
 
    function Get_Maintenance (From : String) return String is
       Name : constant Host_Name := To_Host_Name (From);
@@ -135,7 +149,8 @@ package body Lightsout is
                         end if;
                      end loop;
                   elsif Name (Group_Node) = "#text" or else
-                    Name (Group_Node) = "#comment" then
+                    Name (Group_Node) = "#comment"
+                  then
                      null; -- ignore
                   else
                      raise Config_Error with "Found unexpected """
@@ -147,7 +162,8 @@ package body Lightsout is
             Bugzilla_URL := Ada.Strings.Unbounded.To_Unbounded_String
               (Value (First_Child (One_Node)));
          elsif Node_Name (One_Node) = "#text" or else
-           Node_Name (One_Node) = "#comment" then
+           Node_Name (One_Node) = "#comment"
+         then
             null; -- ignore
          else
             raise Config_Error with "Found unexpected """
@@ -183,7 +199,7 @@ package body Lightsout is
       return Ada.Characters.Handling.To_Lower (Source'Img);
    end To_String;
 
-   procedure Set_Maintenance (Node_Name : String; To : Maintenance) is
+   procedure Set_Maintenance (Node_Name, Bug : String; To : Maintenance) is
       All_Nodes : Node_List;
       One_Node  : Node;
       use DOM.Core.Elements;
@@ -203,7 +219,7 @@ package body Lightsout is
                                     Name => "bug");
                when others =>
                   Set_Attribute (One_Node, "maint", To_String (To));
-                  --                  Set_Attribute (One_Node, "bug", ID);
+                  Set_Attribute (One_Node, "bug", Bug);
             end case;
             return;
          end if;

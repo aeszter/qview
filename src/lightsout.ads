@@ -13,8 +13,10 @@ package Lightsout is
    procedure Write;
    procedure Clear;
    function Get_Maintenance (From : String) return String;
-   procedure Set_Maintenance (Node_Name : String; To : Maintenance);
+   procedure Set_Maintenance (Node_Name, Bug : String; To : Maintenance);
    function Get_Bug (From : String) return String;
+   function Get_Bug_ID (From : String) return String;
+   function Get_Bug_ID (From : String) return Natural;
    function To_String (Source : Maintenance) return String;
 
    Config_Error : exception;
