@@ -22,6 +22,16 @@ package body HTML is
       return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
    end Acronym;
 
+   procedure End_Form is
+   begin
+      if not Form_Open then
+         Error ("Trying to close non-open form");
+      else
+         Put_Line ("</form>");
+         Form_Open := False;
+      end if;
+   end End_Form;
+
    function Get_Action_URL (Action, Params : String) return String is
    begin
       return CGI.My_URL & "priv?act=" & Action & "&" & Params;
@@ -30,10 +40,15 @@ package body HTML is
    procedure Put_Search_Box is
    begin
       Put ("<li><form>");
-      Put ("<input type=""text"" name=""search"" size=""8"" value=""search"""
-           & " onclick=""select()"">");
+      Put_Edit_Box ("search", "search");
       Put ("</form></li>");
    end Put_Search_Box;
+
+   procedure Put_Edit_Box (Name, Default : String) is
+   begin
+      Put ("<input type=""text"" name=""" & Name & """ size=""8"" value="""
+           & Default & """ onclick=""select()"">");
+   end Put_Edit_Box;
 
    ---------------
    -- Help_Icon --
@@ -146,6 +161,13 @@ package body HTML is
             "alt=""" & Text & """ title=""" & Text & """ /></a>");
    end Put_Img;
 
+   procedure Put_Img_Form (Name, Text, Action, Value : String) is
+   begin
+      Put ("<input type=""image"" name=""" & Action
+           & """ src=""/icons/" & Name & ".png"" alt=""" & Text
+           & """ value=""" & Value & """ />");
+   end Put_Img_Form;
+
    function Img_Tag (Image : String) return String is
       Data : constant String :=
          "<img src=""/icons/" &
@@ -159,7 +181,11 @@ package body HTML is
       return Data;
    end Img_Tag;
 
-
+   procedure Put_Hidden_Form (Name, Value : String) is
+   begin
+      Put ("<input type=""hidden"" name=""" & Name & """ value="""
+           & Value & """ />");
+   end Put_Hidden_Form;
 
    -------------------
    -- Put_Time_Cell --
@@ -500,6 +526,16 @@ package body HTML is
       Tag.Class := To_Unbounded_String (Class);
       Div_List.Append (Tag);
    end Begin_Div;
+
+   procedure Begin_Form is
+   begin
+      if Form_Open then
+         Error ("Tried to open nested form");
+      else
+         Form_Open := True;
+         Put_Line ("<form action=""" & CGI.My_URL & "priv"">");
+      end if;
+   end Begin_Form;
 
    procedure End_Div (Class : String := ""; ID : String := "") is
       Tag : constant Div := Div_List.Last_Element;
