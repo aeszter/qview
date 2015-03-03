@@ -90,6 +90,7 @@ package HTML is
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
    function Get_Action_URL (Action, Params : String) return String;
+   function Current_URL return String;
 private
    type Div is record
       Class : Unbounded_String;

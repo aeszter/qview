@@ -22,6 +22,11 @@ package body HTML is
       return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
    end Acronym;
 
+   function Current_URL return String is
+   begin
+      return CGI.My_URL & "?" & CGI.Get_Environment ("QUERY_STRING");
+   end Current_URL;
+
    procedure End_Form is
    begin
       if not Form_Open then
