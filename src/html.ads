@@ -17,7 +17,9 @@ package HTML is
                        Link_Param : String := "";
                        Tag        : String := "td";
                        Class      : String := "");
-   procedure Put_Img_Cell (Image : String);
+   procedure Put_Img_Cell (Image : String; Extra_Text : String := "");
+   procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "");
+
    function Img_Tag (Image : String) return String;
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
@@ -59,6 +61,8 @@ package HTML is
    procedure Error (Message : String);
    procedure Put_Heading (Title : String; Level : Positive);
 
+   function Param (Name : String; Index : in Positive := 1;
+               Required : in Boolean := False) return String renames CGI.Value;
    function Param_Is (Param : String; Expected : String) return Boolean;
    procedure Begin_Div (Class : String := ""; ID : String := "");
    procedure End_Div (Class : String := ""; ID : String := "");
@@ -78,6 +82,7 @@ package HTML is
 
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
+   function Get_Action_URL (Action, Params : String) return String;
 private
    type Div is record
       Class : Unbounded_String;

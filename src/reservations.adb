@@ -26,6 +26,8 @@ package body Reservations is
    -------------
 
    procedure Put_All is
+      procedure Put_Table_Header;
+
       procedure Put_Table_Header is
       begin
          HTML.Put_Heading (Title => "Reservations",
@@ -67,6 +69,9 @@ package body Reservations is
             Name => Schedule_File_Name);
       while not End_Of_File (Schedule_File) loop
          declare
+            procedure Update_Queue (Element : in out Reservation);
+            procedure Try_To_Hide (Element : in out Reservation);
+
             New_Reservation : Reservation;
             Card            : Catalogs.Cursor;
 
@@ -110,7 +115,8 @@ package body Reservations is
                   if New_Reservation.State = reserving or else
                     (New_Reservation.State = starting and then
                     not Catalog.Contains ((Schedule_Run => Iteration_Number,
-                                          Job_ID       => New_Reservation.Job_ID))) then
+                                           Job_ID       => New_Reservation.Job_ID)))
+                  then
 
                      List.Append (New_Reservation);
                      Catalog.Insert (New_Item  => List.Last_Index,
@@ -174,7 +180,8 @@ package body Reservations is
                exit Search;
             elsif Next_Sep = 4 and then
               Index = Separators (3) + 2 and then
-              Line (Index) = 'U' then
+              Line (Index) = 'U'
+            then
                Early_Out := True;
                return;
             end if;
@@ -238,7 +245,8 @@ package body Reservations is
          return;
       end if;
       if Line (Separators (8) + 1 .. Separators (9) - 1) -- resource type
-        /= "slots" then
+        /= "slots"
+      then
          --  never occurred before, but see Bug #2007
          --  raise Read_Error with "resource type not ""slots"" for 'Q' entry";
          Store_Data := False;
@@ -318,7 +326,8 @@ package body Reservations is
    function Equivalent_Cards (Left, Right : Index_Card) return Boolean is
    begin
       if Left.Job_ID = Right.Job_ID and then
-        Left.Schedule_Run = Right.Schedule_Run then
+        Left.Schedule_Run = Right.Schedule_Run
+      then
          return True;
       else
          return False;
@@ -330,7 +339,8 @@ package body Reservations is
       if Left.Job_ID = Right.Job_ID and then
         Left.State = Right.State and then
         Left.Timestamp = Right.Timestamp and then
-        Left.Duration = Right.Duration then
+        Left.Duration = Right.Duration
+      then
          return True;
       else
          return False;

@@ -4,6 +4,8 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 package body Utils is
    procedure Mark_Mismatch (Left, Right : in out String_Sets.Set) is
       use String_Sets;
+      procedure Find_Unbalanced (Position : String_Sets.Cursor);
+
       Mismatch, Marked : Set;
 
       procedure Find_Unbalanced (Position : String_Sets.Cursor) is

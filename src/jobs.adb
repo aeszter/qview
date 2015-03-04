@@ -22,6 +22,7 @@ package body Jobs is
 
    procedure Put_State (Flag : SGE.Jobs.State_Flag);
    procedure Put_State (J : Job);
+   procedure Put_State_Cell (J : Job);
    procedure Put_Core_Header;
    procedure Start_Row (J : Job);
    procedure Finish_Row (J : Job);
@@ -78,6 +79,11 @@ package body Jobs is
          Put ("Error");
       end if;
       Put (""" />");
+      if Has_Error (J) then
+         Put (" <a href=""" &
+                HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)) &
+                """>clear error</a>");
+      end if;
    end Put_State;
 
    ------------------
@@ -338,6 +344,16 @@ package body Jobs is
 
    procedure Put (J : Job) is
 
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "job_actions");
+         HTML.Put_Img (Name => "kill",
+                       Text => "Kill job",
+                       Link => HTML.Get_Action_URL (Action => "k",
+                                                    Params => "j=" & Get_ID (J)));
+         HTML.End_Div (ID => "job_actions");
+      end Put_Actions;
+
       procedure Put_Name is
          procedure Put_Message (Message : String) is
          begin
@@ -351,7 +367,14 @@ package body Jobs is
          end Put_Error;
       begin
          HTML.Begin_Div (Class => "job_name");
-         HTML.Put_Paragraph ("Name", Get_Name (J));
+         Ada.Text_IO.Put ("<p>");
+         HTML.Put_Img (Name => "hand.right",
+                       Text => "unlock job manipulation",
+                       Link => "#",
+                       Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
+         --         HTML.Put_Paragraph ("Name", Get_Name (J));
+
+         Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          Iterate_Messages (J, Put_Message'Access);
          if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
@@ -539,7 +562,11 @@ package body Jobs is
    begin
       HTML.Begin_Div (Class => "job_info");
 
+      HTML.Begin_Div (Class => "action_and_name");
+      Put_Actions;
       Put_Name;
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
       Put_Meta;
       Put_Queues;
       HTML.Begin_Div (Class => "res_and_context");
@@ -637,7 +664,7 @@ package body Jobs is
          when Resources.Error =>
             HTML.Put_Cell (Data => "<i>unknown</i>");
       end;
-      HTML.Put_Img_Cell (Get_State (J));
+      Put_State_Cell (J);
       Finish_Row (J);
    exception
       when E :
@@ -659,7 +686,7 @@ package body Jobs is
       Ranges.Put_Cell (Data => Get_Slot_List (J), Class => "right");
       HTML.Put_Cell (Data   => Get_Hard_Resources (J));
       HTML.Put_Cell (Data   => Get_Soft_Resources (J));
-      HTML.Put_Img_Cell (Get_State (J));
+      Put_State_Cell (J);
       Finish_Row (J);
    exception
       when E :
@@ -681,7 +708,7 @@ package body Jobs is
 
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      HTML.Put_Img_Cell (Get_State (J));
+      Put_State_Cell (J);
       if Get_CPU (J) > 0.1 then
          HTML.Put_Duration_Cell (Integer (Get_CPU (J)));
       else
@@ -721,7 +748,7 @@ package body Jobs is
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       HTML.Put_Cell (Data => To_String (Get_Slot_List (J), Short => True),
                      Tag  => "td class=""right""");
-      HTML.Put_Img_Cell (Get_State (J));
+      Put_State_Cell (J);
       Ada.Text_IO.Put ("<td>");
       HTML.Put (Has_Reserve (J));
       Ada.Text_IO.Put ("</td>");
@@ -733,6 +760,16 @@ package body Jobs is
       Finish_Row (J);
    end Put_Prio_Line;
 
+   procedure Put_State_Cell (J : Job) is
+   begin
+      if Has_Error (J) then
+         HTML.Put_Img_Cell (Get_State (J),
+                            Extra_Text => " <a href=""" &
+                              HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)) & """>clear error</a>");
+      else
+         HTML.Put_Img_Cell (Get_State (J));
+      end if;
+   end Put_State_Cell;
 
    procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
    begin
