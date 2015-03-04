@@ -84,7 +84,7 @@ package body Actions is
          Viewer.Put_Error ("Backend error: " & Exception_Message (E));
       when GNAT.Lock_Files.Lock_Error =>
          Viewer.Put_Error ("Could not lock lightsout file. "
-                             & "<a href=""" & HTML.Current_URL & """>Retry</a>");
+                             & "Reload page to try again.");
       when E : others =>
          Viewer.Put_Error ("Unexpected error: " & Exception_Message (E));
    end Invoke;
