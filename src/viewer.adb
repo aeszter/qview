@@ -26,6 +26,7 @@ with Advance_Reservations;
 with SGE.Loggers;
 with Ada.Strings.Equal_Case_Insensitive;
 with SGE.Taint; use SGE.Taint;
+with CM.Debug;
 
 package body Viewer is
 
@@ -496,6 +497,7 @@ package body Viewer is
 
    begin
       SGE.Debug.Initialize (CGI.Value ("DEBUG"), HTML.Comment'Access);
+      CM.Debug.Initialize (HTML.Comment'Access);
       begin
          if not HTML.Param_Is ("sort", "") then
             if HTML.Param_Is ("dir", "") then

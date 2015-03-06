@@ -8,10 +8,12 @@ with CM.Power; use CM.Power;
 with Ada.Strings.Fixed;
 with GNAT.Lock_Files;
 with CM.Taint;
+with CM.Debug;
 
 package body Actions is
 
    procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance);
+   procedure Silence (Message : String);
 
    procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance) is
       Separator : constant Natural := Ada.Strings.Fixed.Index (Node, ".");
@@ -25,6 +27,13 @@ package body Actions is
       Lightsout.Write;
       Lightsout.Unlock;
    end Change_Maintenance;
+
+   procedure Silence (Message : String) is
+   begin
+      null; -- no facility yet. Cannot print to http since headers have
+      --  not been sent, but maybe use a file in the future?
+   end Silence;
+
 
    ------------
    -- Invoke --
@@ -44,6 +53,7 @@ package body Actions is
       end Put_Result;
 
    begin
+      CM.Debug.Initialize (Silence'Access);
       if What = "cj" then
          SGE.Actions.Clear_Error (The_Job => Integer'Value (HTML.Param ("j")));
          Put_Result;
