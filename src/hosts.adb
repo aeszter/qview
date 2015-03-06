@@ -85,6 +85,10 @@ package body Hosts is
                             Text   => "Mark node for poweroff",
                             Action => "act",
                             Value  => "maint_poweroff");
+         HTML.Put_Img_Form (Name   => "poweron",
+                            Text   => "Power on node",
+                            Action => "act",
+                            Value  => "poweron");
          if Bug_ID = "" then
             HTML.Put_Edit_Box ("bug", "Bug");
          else

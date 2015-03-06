@@ -4,8 +4,10 @@ with Viewer;
 with CGI;
 with SGE.Actions;
 with Lightsout;
+with CM.Power; use CM.Power;
 with Ada.Strings.Fixed;
 with GNAT.Lock_Files;
+with CM.Taint;
 
 package body Actions is
 
@@ -73,6 +75,9 @@ package body Actions is
          Change_Maintenance (Node => HTML.Param ("h"),
                              To   => Lightsout.off,
                              Bug  => HTML.Param ("bug"));
+         Put_Result;
+      elsif What = "poweron" then
+         Poweron (What => CM.Taint.Sanitise (HTML.Param ("h")));
          Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
