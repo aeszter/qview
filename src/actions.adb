@@ -87,7 +87,13 @@ package body Actions is
                              Bug  => HTML.Param ("bug"));
          Put_Result;
       elsif What = "poweron" then
-         Poweron (What => CM.Taint.Sanitise (HTML.Param ("h")));
+         Poweron (What => CM.Taint.Sanitise (HTML.Param ("h")),
+                  Sudo_User => CM.Taint.Implicit_Trust (CGI.Get_Environment ("REMOTE_USER")));
+         --  the call to Implicit_Trust means we have to run in a controlled environment
+         --  (i.e. a web server). Calling Sanitise instead does not help since the main danger
+         --  does not lie in weird strings, but in faked, non-authenticated user names.
+         --  There is no way to check this inside the code, we have to trust
+         --  our environment.
          Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
