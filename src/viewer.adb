@@ -153,6 +153,7 @@ package body Viewer is
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>SGElib " & SGE.Utils.Version & "</li>");
+         Ada.Text_IO.Put_Line ("<li>CMlib " & CM.Version & "</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
