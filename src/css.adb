@@ -179,7 +179,7 @@ package body CSS is
       Close_Block;
 
       Open_Block ("#host_actions");
-      Put_Line ("width: 64px;");
+      Put_Line ("width: 80px;");
       Close_Block;
 
       Open_Block ("#job_actions, #host_actions");
