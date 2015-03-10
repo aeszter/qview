@@ -3,6 +3,7 @@ with HTML;
 with Ada.Text_IO;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Lightsout;
+with CGI;
 
 package body Queues is
 
@@ -16,20 +17,24 @@ package body Queues is
       Separator : constant Positive := Ada.Strings.Fixed.Index (Source => Long_Name,
                                             Pattern => "@");
       Host_Name : constant String := Long_Name (Separator + 1 .. Long_Name'Last);
+      Cluster_Queue : constant String := Long_Name (Long_Name'First .. Separator - 1);
+      Display_Name  : constant String := Cluster_Queue & "@"
+                        & "<a href=""" & CGI.My_URL & "?host=" & Host_Name & """>"
+                        & Host_Name & "</a>";
    begin
       Ada.Text_IO.Put ("<tr>");
       if Has_Error (Q) then
-         HTML.Put_Cell (Long_Name & " <a href="""
+         HTML.Put_Cell (Display_Name & " <a href="""
                         & HTML.Get_Action_URL (Action => "cq",
                                                Params => "q=" & Long_Name)
                         & """>clear error</a>");
       elsif Has_Disabled (Q) then
-         HTML.Put_Cell (Long_Name & " <a href="""
+         HTML.Put_Cell (Display_Name & " <a href="""
                         & HTML.Get_Action_URL (Action => "eq",
                                                Params => "q=" & Long_Name)
                         & """>enable</a>");
       else
-         HTML.Put_Cell (Long_Name);
+         HTML.Put_Cell (Display_Name);
       end if;
       HTML.Put_Cell (Get_Type (Q));
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Host_Name));

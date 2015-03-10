@@ -168,7 +168,7 @@ package body CSS is
 
    procedure Put_Job_Actions is
    begin
-      Open_Block ("#job_actions");
+      Open_Block ("#job_actions, #host_actions, #unlocker");
       Put_Line ("width: 16px;");
       Put_Line (Box_Background);
       Put_Line ("position: relative;");
@@ -176,11 +176,20 @@ package body CSS is
       Put_Line ("margin: 3px;");
       Put_Line ("padding: 3px;");
       Put_Line ("overflow: hidden;");
+      Close_Block;
+
+      Open_Block ("#host_actions");
+      Put_Line ("width: 80px;");
+      Close_Block;
+
+      Open_Block ("#job_actions, #host_actions");
       Put_Line ("display: none;");
       Close_Block;
-      Open_Block ("#job_actions:target");
+
+      Open_Block ("#job_actions:target, #host_actions:target");
       Put_Line ("display: block;");
       Close_Block;
+
       Open_Block (".action_and_name");
       Put_Line ("display: -webkit-flex;");
       Put_Line ("display: flex;");
@@ -190,7 +199,7 @@ package body CSS is
 
    procedure Put_Job_Name is
    begin
-      Open_Block (".job_name, .ar_name");
+      Open_Block (".job_name, .ar_name, .host_name");
       Put_Line ("font-weight: bold;");
       Put_Line ("width: 63em;");
       Put_Line ("position: relative;");
@@ -203,18 +212,23 @@ package body CSS is
 
    procedure Put_Job_Meta is
    begin
-      Open_Block (".job_meta, .ar_meta, .job_usage");
-      Put_Line (Small_Box_Width);
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs");
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
       Close_Block;
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties");
+      Put_Line (Small_Box_Width);
+      Close_Block;
+      Open_Block (".host_jobs");
+      Put_Line ("width : 16em;");
+      Close_Block;
    end Put_Job_Meta;
 
    procedure Put_Job_Files is
    begin
-      Open_Block (".job_files");
+      Open_Block (".job_files, .host_res");
       Put_Line ("clear: both;");
       Put_Line ("position: relative;");
       Put_Line ("bottom: 0;");
@@ -227,7 +241,7 @@ package body CSS is
 
    procedure Put_Job_Queue is
    begin
-      Open_Block (".job_queue, .ar_queue");
+      Open_Block (".job_queue, .ar_queue, .host_queues");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -251,7 +265,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .ar_info, .job_list, .ar_list, .partitions, .bunches");
+      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .partitions, .bunches");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
@@ -293,6 +307,7 @@ package body CSS is
       Put_Background ("tr.res_start", "#33f");
       Put_Background ("tr.res_dupli", "#d0d");
       Put_Background ("tr.program_error", "#d0d");
+      Put_Background ("td.right_active", "#0d0");
 
       Open_Block ("tr.offline, tr.job-held, tr.job-quota");
       Put_Line ("color: #777;");
@@ -302,7 +317,7 @@ package body CSS is
       Put_Line ("font-size: 0.9em;");
       Close_Block;
       Put_Background ("th.delimited", "#8b8");
-      Open_Block ("td.right");
+      Open_Block ("td.right, td.right_active");
       Put_Line ("text-align: right;");
       Close_Block;
       Open_Block ("td");
@@ -347,7 +362,7 @@ package body CSS is
 
    procedure Put_Job_Paragraphs is
    begin
-      Open_Block (".job_info p, .ar_info p");
+      Open_Block (".job_info p, .ar_info p, .host_info p");
       Put_Line ("margin: 5px;");
       Put_Line ("height: 1.2em;");
       Put_Line ("font-size: 0.85em;");

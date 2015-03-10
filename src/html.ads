@@ -5,6 +5,8 @@ with SGE.Utils; use SGE.Utils;
 with CGI; use CGI;
 
 package HTML is
+   procedure Begin_Form;
+   procedure End_Form;
    procedure Put_Cell (Data       : String;
                        Link_Param : String := "";
                        Acronym    : String := "";
@@ -19,14 +21,19 @@ package HTML is
                        Class      : String := "");
    procedure Put_Img_Cell (Image : String; Extra_Text : String := "");
    procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "");
+   procedure Put_Img_Form (Name, Text, Action, Value : String);
 
    function Img_Tag (Image : String) return String;
+
+   procedure Put_Hidden_Form (Name, Value : String);
+
    procedure Put_Time_Cell (Time : Calendar.Time);
    procedure Put_Duration_Cell (Secs : Natural);
    procedure Put_Duration_Cell (Span : Duration);
    procedure Put_Header_Cell (Data     : String;
       Acronym  : String  := "";
                               Sortable : Boolean := True);
+   procedure Put_Edit_Box (Name, Default : String);
    procedure Put_Search_Box;
    --  Purpose: put a text input element used to search for a job or user
    --  Parameters: none
@@ -83,6 +90,7 @@ package HTML is
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
    function Get_Action_URL (Action, Params : String) return String;
+   function Current_URL return String;
 private
    type Div is record
       Class : Unbounded_String;
@@ -92,4 +100,5 @@ private
    package Div_Lists is new Doubly_Linked_Lists (Element_Type => Div);
 
    Div_List : Div_Lists.List;
+   Form_Open : Boolean := False;
 end HTML;

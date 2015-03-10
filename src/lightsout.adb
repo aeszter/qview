@@ -7,10 +7,25 @@ with Sax.Readers; use Sax.Readers;
 with Input_Sources.File; use Input_Sources.File;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Streams.Stream_IO;
+with DOM.Core.Documents; use DOM.Core.Documents;
+with DOM.Core.Elements;
+with Ada.Characters;
+with Ada.Characters.Handling;
+with POSIX.Files;
+with GNAT.Lock_Files;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Utils;
+with Ada.Directories;
+with POSIX; use POSIX;
 
 package body Lightsout is
    procedure Add_Host (Name : String; Mode : String; Bug : Natural);
    function To_Host_Name (From : String) return Host_Name;
+   procedure Lock (Path_Name : String);
+
+   Lightsout_File : constant String := "/etc/lights-out.xml";
+   Lock_File_Name, Lock_Directory : Unbounded_String;
 
    procedure Clear is
    begin
@@ -18,12 +33,8 @@ package body Lightsout is
    end Clear;
 
    function Get_Bug (From : String) return String is
-      Name : constant Host_Name := To_Host_Name (From);
-      Bug_ID : Natural := 0;
+      Bug_ID : constant Natural := Get_Bug_ID (From);
    begin
-      if List.Contains (Name) then
-         Bug_ID := List.Element (Name).Bug;
-      end if;
       if Bug_ID > 0 then
          return "<a href=""" & Ada.Strings.Unbounded.To_String (Bugzilla_URL)
            & "/show_bug.cgi?id=" & Bug_ID'Img
@@ -32,6 +43,24 @@ package body Lightsout is
          return "";
       end if;
    end Get_Bug;
+
+   function Get_Bug_ID (From : String) return String is
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+   begin
+      return Trim (Integer'Image (Get_Bug_ID (From)), Left);
+   end Get_Bug_ID;
+
+   function Get_Bug_ID (From : String) return Natural is
+      Name : constant Host_Name := To_Host_Name (From);
+   begin
+      if List.Contains (Name) then
+         return List.Element (Name).Bug;
+      else
+         return 0;
+      end if;
+   end Get_Bug_ID;
+
 
    function Get_Maintenance (From : String) return String is
       Name : constant Host_Name := To_Host_Name (From);
@@ -55,20 +84,49 @@ package body Lightsout is
       end case;
    end Get_Maintenance;
 
+   procedure Lock is
+      use GNAT.Lock_Files;
+      use POSIX.Files;
+
+      Buffer : String (1 .. 1024);
+      Last : Integer;
+   begin
+      if Is_Symbolic_Link (To_POSIX_String (Lightsout_File)) then
+         Utils.Read_Link (Lightsout_File, Buffer, Last);
+         Lock (Buffer (1 .. Last));
+      else
+         Lock (Lightsout_File);
+      end if;
+   end Lock;
+
+   procedure Lock (Path_Name : String) is
+      use Ada.Directories;
+
+      Directory : constant String := Containing_Directory (Path_Name);
+      File_Name : constant String := "." & Simple_Name (Path_Name) & ".swp";
+   begin
+      Lock_File_Name := To_Unbounded_String (File_Name);
+      Lock_Directory := To_Unbounded_String (Directory);
+      GNAT.Lock_Files.Lock_File (Directory      => Directory,
+                                 Lock_File_Name => File_Name,
+                                 Wait           => 1.0,
+                                 Retries        => 0);
+   end Lock;
+
    procedure Read is
       Reader                : DOM.Readers.Tree_Reader;
-      XML_Doc               : Document;
       All_Nodes             : Node_List;
       Config_Node, One_Node : Node;
       File                  : File_Input;
    begin
-      Open (Filename => "/etc/lights-out.xml",
+      Open (Filename => Lightsout_File,
             Input => File);
 
       Reader.Set_Feature (Sax.Readers.Validation_Feature, False);
       Reader.Set_Feature (Sax.Readers.Namespace_Feature, False);
       Reader.Parse (File);
       Close (Input => File);
+
       XML_Doc := Reader.Get_Tree;
       Config_Node := First_Child (XML_Doc);
       All_Nodes := Child_Nodes (Config_Node);
@@ -131,7 +189,8 @@ package body Lightsout is
                         end if;
                      end loop;
                   elsif Name (Group_Node) = "#text" or else
-                    Name (Group_Node) = "#comment" then
+                    Name (Group_Node) = "#comment"
+                  then
                      null; -- ignore
                   else
                      raise Config_Error with "Found unexpected """
@@ -143,7 +202,8 @@ package body Lightsout is
             Bugzilla_URL := Ada.Strings.Unbounded.To_Unbounded_String
               (Value (First_Child (One_Node)));
          elsif Node_Name (One_Node) = "#text" or else
-           Node_Name (One_Node) = "#comment" then
+           Node_Name (One_Node) = "#comment"
+         then
             null; -- ignore
          else
             raise Config_Error with "Found unexpected """
@@ -173,5 +233,56 @@ package body Lightsout is
       return Host_Names.To_Bounded_String (Source => From (From'First .. Period - 1),
                                            Drop   => Ada.Strings.Error);
    end To_Host_Name;
+
+   function To_String (Source : Maintenance) return String is
+   begin
+      return Ada.Characters.Handling.To_Lower (Source'Img);
+   end To_String;
+
+   procedure Set_Maintenance (Node_Name, Bug : String; To : Maintenance) is
+      All_Nodes : Node_List;
+      One_Node  : Node;
+      use DOM.Core.Elements;
+   begin
+      All_Nodes := Get_Elements_By_Tag_Name (Doc      => XML_Doc,
+                                             Tag_Name => "nodename");
+      for I in 0 .. Length (All_Nodes) - 1 loop
+         One_Node := Item (All_Nodes, I);
+         if Has_Child_Nodes (One_Node)
+           and then Value (First_Child (One_Node)) = Node_Name
+         then
+            case To is
+               when none  =>
+                  Remove_Attribute (Elem => One_Node,
+                                    Name => "maint");
+                  Remove_Attribute (Elem => One_Node,
+                                    Name => "bug");
+               when others =>
+                  Set_Attribute (One_Node, "maint", To_String (To));
+                  Set_Attribute (One_Node, "bug", Bug);
+            end case;
+            return;
+         end if;
+      end loop;
+      raise Constraint_Error with "could not find " & Node_Name;
+   end Set_Maintenance;
+
+   procedure Unlock is
+   begin
+      GNAT.Lock_Files.Unlock_File (Directory => To_String (Lock_Directory),
+                                   Lock_File_Name => To_String (Lock_File_Name));
+   end Unlock;
+
+   procedure Write is
+      use Ada.Streams.Stream_IO;
+
+      File_Handle : File_Type;
+   begin
+      Create (File_Handle, Out_File, Lightsout_File);
+      DOM.Core.Nodes.Write (Stream                => Stream (File_Handle),
+                            N                     => XML_Doc,
+                            Print_XML_Declaration => False);
+      Close (File_Handle);
+   end Write;
 
 end Lightsout;
