@@ -307,6 +307,7 @@ package body CSS is
       Put_Background ("tr.res_start", "#33f");
       Put_Background ("tr.res_dupli", "#d0d");
       Put_Background ("tr.program_error", "#d0d");
+      Put_Background ("td.right_active", "#0d0");
 
       Open_Block ("tr.offline, tr.job-held, tr.job-quota");
       Put_Line ("color: #777;");
@@ -316,7 +317,7 @@ package body CSS is
       Put_Line ("font-size: 0.9em;");
       Close_Block;
       Put_Background ("th.delimited", "#8b8");
-      Open_Block ("td.right");
+      Open_Block ("td.right, td.right_active");
       Put_Line ("text-align: right;");
       Close_Block;
       Open_Block ("td");

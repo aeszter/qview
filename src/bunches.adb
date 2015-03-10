@@ -75,7 +75,9 @@ package body Bunches is
       else
          HTML.Put_Cell (Data => Get_PE (B));
       end if;
-      HTML.Put_Cell (Data => Get_CPU_Slot_Numbers (B), Class => "right");
+      HTML.Put_Cell (Data  => Get_CPU_Slot_Numbers (B),
+                     Class => (if Is_Queued_For_GPU (B) then "right"
+                               else "right_active"));
       for Capability in Balancer_Capability'Range loop
          if Capability /= Any then
             if Has_Balancer (B, Capability) then
@@ -85,7 +87,9 @@ package body Bunches is
             end if;
          end if;
       end loop;
-      HTML.Put_Cell (Data => Get_GPU_Slot_Numbers (B), Class => "right");
+      HTML.Put_Cell (Data  => Get_GPU_Slot_Numbers (B),
+                     Class => (if Is_Queued_For_GPU (B) then "right_active"
+                               else "right"));
       HTML.Put_Cell (Data => Get_Queue (B));
       HTML.Put_Cell (Data => Get_Hard_Resources (B));
       HTML.Put_Cell (Data => Get_Soft_Resources (B));
