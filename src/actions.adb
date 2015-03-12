@@ -9,6 +9,7 @@ with Ada.Strings.Fixed;
 with GNAT.Lock_Files;
 with CM.Taint;
 with CM.Debug;
+with SGE.Utils; use SGE.Utils;
 
 package body Actions is
 
@@ -19,7 +20,9 @@ package body Actions is
       Separator : constant Natural := Ada.Strings.Fixed.Index (Node, ".");
       Short_Name : constant String := Node (Node'First .. Separator - 1);
    begin
-      --  when and how to lock?
+      if not User_Is_Operator (CGI.Get_Environment ("REMOTE_USER")) then
+         raise Permission_Error with "you must be registered as an operator";
+      end if;
       Lightsout.Clear;
       Lightsout.Lock;
       Lightsout.Read;
@@ -99,6 +102,8 @@ package body Actions is
          Viewer.Put_Error ("Unknown action """ & What & """");
       end if;
    exception
+      when E : Permission_Error =>
+         Viewer.Put_Error ("Insufficient permissions: " & Exception_Message (E));
       when Constraint_Error =>
          Viewer.Put_Error ("Internal error: " & HTML.Param ("j") & " is no valid job");
       when E : SGE.Actions.Subcommand_Error =>
