@@ -3,6 +3,7 @@ with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with SGE.Utils; use SGE.Utils;
 with CGI; use CGI;
+with SGE.Host_Properties;
 
 package HTML is
    procedure Begin_Form;
@@ -19,6 +20,10 @@ package HTML is
                        Link_Param : String := "";
                        Tag        : String := "td";
                        Class      : String := "");
+   procedure Put_Cell (Data       : SGE.Host_Properties.Host_Name;
+                       Tag        : String := "td";
+                       Class      : String := "");
+
    procedure Put_Img_Cell (Image : String; Extra_Text : String := "");
    procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "");
    procedure Put_Img_Form (Name, Text, Action, Value : String);
@@ -55,6 +60,7 @@ package HTML is
    procedure Put (Data : Tri_State);
 
    procedure Put_List (List : String_Lists.List);
+   procedure Put_Queue_List (List, Marks : String_Sets.Set);
    procedure Put_List (List : String_Sets.Set);
    procedure Put_List (List : String_Pairs.Map);
    --  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
@@ -87,6 +93,8 @@ package HTML is
    --  Returns: generated string, for inclusion in Put_Cell, Put_Paragraph
    --  or the like
 
+   function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
+                       Mark_As_Link : Boolean := True) return String;
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
    function Get_Action_URL (Action, Params : String) return String;

@@ -3,6 +3,7 @@ with CGI;
 
 package body CSS is
 
+   procedure Put_Anchor;
    procedure Put_Body;
 
    Header_Border       : constant String := "2px solid #444";
@@ -38,6 +39,14 @@ package body CSS is
       Block_Is_Open := False;
       Put_Line ("}");
    end Close_Block;
+
+   procedure Put_Anchor is
+   begin
+      Open_Block ("a.unmarked");
+      Put_Line ("color: #000;");
+      Put_Line ("text-decoration: none;");
+      Close_Block;
+   end Put_Anchor;
 
    procedure Hide_List is
    begin
@@ -442,6 +451,7 @@ package body CSS is
       Put_Header;
       Put_Footer;
       Put_Navigation;
+      Put_Anchor;
       Put_Content;
       Put_Cluster_Queues;
       Put_Job_Actions;

@@ -21,7 +21,6 @@ with POSIX; use POSIX;
 
 package body Lightsout is
    procedure Add_Host (Name : String; Mode : String; Bug : Natural);
-   function To_Host_Name (From : String) return Host_Name;
    procedure Lock (Path_Name : String);
 
    Lightsout_File : constant String := "/etc/lights-out.xml";
@@ -32,7 +31,7 @@ package body Lightsout is
       List.Clear;
    end Clear;
 
-   function Get_Bug (From : String) return String is
+   function Get_Bug (From : Host_Name) return String is
       Bug_ID : constant Natural := Get_Bug_ID (From);
    begin
       if Bug_ID > 0 then
@@ -44,30 +43,28 @@ package body Lightsout is
       end if;
    end Get_Bug;
 
-   function Get_Bug_ID (From : String) return String is
+   function Get_Bug_ID (From : Host_Name) return String is
       use Ada.Strings;
       use Ada.Strings.Fixed;
    begin
       return Trim (Integer'Image (Get_Bug_ID (From)), Left);
    end Get_Bug_ID;
 
-   function Get_Bug_ID (From : String) return Natural is
-      Name : constant Host_Name := To_Host_Name (From);
+   function Get_Bug_ID (From : Host_Name) return Natural is
    begin
-      if List.Contains (Name) then
-         return List.Element (Name).Bug;
+      if List.Contains (From) then
+         return List.Element (From).Bug;
       else
          return 0;
       end if;
    end Get_Bug_ID;
 
 
-   function Get_Maintenance (From : String) return String is
-      Name : constant Host_Name := To_Host_Name (From);
+   function Get_Maintenance (From : Host_Name) return String is
       Maint_Status : Maintenance := none;
    begin
-      if List.Contains (Name) then
-         Maint_Status := List.Element (Name).Maintain;
+      if List.Contains (From) then
+         Maint_Status := List.Element (From).Maintain;
       end if;
       case Maint_Status is
          when none =>
@@ -218,21 +215,11 @@ package body Lightsout is
    end Read;
 
    procedure Add_Host (Name : String; Mode : String; Bug : Natural) is
+      use SGE.Host_Properties;
    begin
       List.Insert (Key => To_Host_Name (Name),
                    New_Item => (Maintain => Maintenance'Value (Mode), Bug => Bug));
    end Add_Host;
-
-   function To_Host_Name (From : String) return Host_Name is
-      Period : Natural := Ada.Strings.Fixed.Index (Source  => From,
-                                                    Pattern => ".");
-   begin
-      if Period < 1 then
-         Period := From'Last + 1;
-      end if;
-      return Host_Names.To_Bounded_String (Source => From (From'First .. Period - 1),
-                                           Drop   => Ada.Strings.Error);
-   end To_Host_Name;
 
    function To_String (Source : Maintenance) return String is
    begin
