@@ -63,6 +63,20 @@ package body Hosts is
       procedure Put_Jobs;
       procedure Put_Queue_Row (Q : Queue_Pointer);
       procedure Put_Job (J : Job);
+      procedure Append_Job (J : Job);
+
+      Job_List : Unbounded_String := Null_Unbounded_String;
+      First : Boolean := True;
+
+      procedure Append_Job (J : Job) is
+      begin
+         if not First then
+            Append (Job_List, "&");
+         end if;
+
+         Append (Job_List, "j=" & Get_Full_ID (J));
+         First := False;
+      end Append_Job;
 
       procedure Put_Actions is
          Bug_ID : constant String := Lightsout.Get_Bug_ID (Get_Name (H));
@@ -94,6 +108,13 @@ package body Hosts is
             HTML.Put_Edit_Box ("bug", "Bug");
          else
             HTML.Put_Edit_Box ("bug", Bug_ID);
+         end if;
+         if Has_Unreachable_Queue (H) then
+            Iterate_Jobs (H, Append_Job'Access);
+            Ada.Text_IO.Put_Line ("<p><a href="""
+                 & HTML.Get_Action_URL (Action => "forcekill",
+                                        Params => To_String (Job_List))
+                 & """>kill all jobs</a></p>");
          end if;
          HTML.End_Form;
          HTML.End_Div (ID => "host_actions");
