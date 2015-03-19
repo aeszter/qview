@@ -2,6 +2,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 with HTML;
 with Viewer;
 with CGI;
+use CGI;
 with SGE.Actions;
 with Lightsout;
 with CM.Power; use CM.Power;
@@ -10,10 +11,13 @@ with GNAT.Lock_Files;
 with CM.Taint;
 with CM.Debug;
 with SGE.Utils; use SGE.Utils;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Maps;
 
 package body Actions is
 
    procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance);
+   procedure Force_Kill;
    procedure Silence (Message : String);
 
    procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance) is
@@ -30,6 +34,25 @@ package body Actions is
       Lightsout.Write;
       Lightsout.Unlock;
    end Change_Maintenance;
+
+   procedure Force_Kill is
+      Job_List : Unbounded_String := Null_Unbounded_String;
+   begin
+      if not User_Is_Manager (CGI.Get_Environment ("REMOTE_USER")) then
+         raise Permission_Error with "you must be registered as a manager";
+      end if;
+      for Index in 1 .. Key_Count ("j") loop
+         Append (Job_List, To_String (Value ("j", Index)) & ",");
+      end loop;
+      if Key_Count ("j") = 0 then
+         raise Constraint_Error;
+      else
+         Trim (Job_List,
+               Left  => Ada.Strings.Maps.Null_Set,
+               Right => Ada.Strings.Maps.To_Set (','));
+      end if;
+      SGE.Actions.Force_Kill (To_String (Job_List));
+   end Force_Kill;
 
    procedure Silence (Message : String) is
    begin
@@ -65,6 +88,9 @@ package body Actions is
          Put_Result;
       elsif What = "k" then
          SGE.Actions.Kill_Job (The_Job => Integer'Value (HTML.Param ("j")));
+         Put_Result;
+      elsif What = "forcekill" then
+         Force_Kill;
          Put_Result;
       elsif What = "eq" then
          SGE.Actions.Enable (The_Node => HTML.Param ("q"), Use_Sudo => True);
