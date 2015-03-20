@@ -30,7 +30,11 @@ package body Actions is
       Lightsout.Clear;
       Lightsout.Lock;
       Lightsout.Read;
-      Lightsout.Set_Maintenance (Short_Name, Bug, To);
+      if Separator = 0 then
+         Lightsout.Set_Maintenance (Node, Bug, To);
+      else
+         Lightsout.Set_Maintenance (Short_Name, Bug, To);
+      end if;
       Lightsout.Write;
       Lightsout.Unlock;
    end Change_Maintenance;
