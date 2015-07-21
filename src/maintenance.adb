@@ -232,7 +232,7 @@ package body Maintenance is
         and then not SGE.Hosts.Has_Unreachable_Queue (H);
    exception
       when Constraint_Error =>
-         HTML.Error (SGE.Hosts.Get_Name (H) & " has inconsistent load");
+         HTML.Error (Value (SGE.Hosts.Get_Name (H)) & " has inconsistent load");
          return False;
    end High_Load;
 

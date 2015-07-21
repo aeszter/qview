@@ -13,7 +13,6 @@ with SGE.Ranges; use SGE.Ranges;
 with Ranges; use Ranges;
 with SGE.Resources;
 with SGE.Utils;
-with Utils;
 with SGE.Context;
 
 
@@ -408,7 +407,7 @@ package body Jobs is
 
       procedure Put_Queues is
 
-         Assigned_Queues, Detected_Queues : String_Sets.Set;
+         Assigned_Queues, Detected_Queues, Marked_Queues : String_Sets.Set;
 
          procedure Put_Queue (Q : String) is
          begin
@@ -428,8 +427,7 @@ package body Jobs is
       begin
          Assigned_Queues := Get_Task_List (J);
          Detected_Queues := Get_Detected_Queues (J);
-         Utils.Mark_Mismatch (Assigned_Queues, Detected_Queues);
-
+         Marked_Queues := String_Sets.Symmetric_Difference (Assigned_Queues, Detected_Queues);
 
          HTML.Begin_Div (Class => "job_queue");
          HTML.Put_Heading (Title => "Requested",
@@ -443,11 +441,11 @@ package body Jobs is
 
          HTML.Put_Heading (Title => "Assigned",
                            Level => 3);
-         HTML.Put_List (Assigned_Queues);
+         HTML.Put_Queue_List (Assigned_Queues, Marked_Queues);
 
          HTML.Put_Heading (Title => "Detected",
                            Level => 3);
-         HTML.Put_List (Detected_Queues);
+         HTML.Put_Queue_List (Detected_Queues, Marked_Queues);
 
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_queue");

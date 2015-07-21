@@ -6,6 +6,7 @@ with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
+with SGE.Host_Properties;
 
 package body Hosts is
 
@@ -62,13 +63,27 @@ package body Hosts is
       procedure Put_Jobs;
       procedure Put_Queue_Row (Q : Queue_Pointer);
       procedure Put_Job (J : Job);
+      procedure Append_Job (J : Job);
+
+      Job_List : Unbounded_String := Null_Unbounded_String;
+      First : Boolean := True;
+
+      procedure Append_Job (J : Job) is
+      begin
+         if not First then
+            Append (Job_List, "&");
+         end if;
+
+         Append (Job_List, "j=" & Get_Full_ID (J));
+         First := False;
+      end Append_Job;
 
       procedure Put_Actions is
          Bug_ID : constant String := Lightsout.Get_Bug_ID (Get_Name (H));
       begin
          HTML.Begin_Div (ID => "host_actions");
          HTML.Begin_Form;
-         HTML.Put_Hidden_Form (Name => "h", Value => Get_Name (H));
+         HTML.Put_Hidden_Form (Name => "h", Value => SGE.Host_Properties.Value (Get_Name (H)));
          HTML.Put_Img_Form (Name   => "maint_no",
                             Text   => "Clear maintenance",
                             Action => "act",
@@ -94,6 +109,13 @@ package body Hosts is
          else
             HTML.Put_Edit_Box ("bug", Bug_ID);
          end if;
+         if Has_Unreachable_Queue (H) then
+            Iterate_Jobs (H, Append_Job'Access);
+            Ada.Text_IO.Put_Line ("<p><a href="""
+                 & HTML.Get_Action_URL (Action => "forcekill",
+                                        Params => To_String (Job_List))
+                 & """>kill all jobs</a></p>");
+         end if;
          HTML.End_Form;
          HTML.End_Div (ID => "host_actions");
          HTML.Begin_Div (ID => "unlocker");
@@ -110,7 +132,7 @@ package body Hosts is
          HTML.Begin_Div (Class => "host_name");
          Ada.Text_IO.Put ("<p>");
 
-         Ada.Text_IO.Put_Line (Get_Name (H) & "</p>");
+         Ada.Text_IO.Put_Line (HTML.To_String (Get_Name (H), False) & "</p>");
          Ada.Text_IO.Put_Line ("<p>" & Lightsout.Get_Maintenance (Get_Name (H)));
          Ada.Text_IO.Put_Line (Lightsout.Get_Bug (Get_Name (H)) & "</p>");
          HTML.End_Div (Class => "host_name");
@@ -224,7 +246,7 @@ package body Hosts is
    procedure Put (H : Host) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => Get_Name (H), Link_Param => "host");
+      HTML.Put_Cell (Data => Get_Name (H));
       HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell (Data => Get_GPU (H));
       HTML.Put_Cell (Data => Get_Model (H));
@@ -250,7 +272,7 @@ package body Hosts is
       Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host " & Get_Name (H) & ": "
+         HTML.Error ("Error while putting host " & SGE.Host_Properties.Value (Get_Name (H)) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
@@ -258,7 +280,7 @@ package body Hosts is
    procedure Put_For_Maintenance (H : Host) is
    begin
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Cell (Data => Get_Name (H));
+      HTML.Put_Cell (Data => HTML.To_String (Get_Name (H)));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Used_Slots (H)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Load (H)'Img, Class      => "right");
@@ -273,7 +295,7 @@ package body Hosts is
       Iterate_Jobs (H, Put_Jobs'Access);
    exception
       when E : others =>
-         HTML.Error ("Error while putting host " & Get_Name (H) & ": "
+         HTML.Error ("Error while putting host " & SGE.Host_Properties.Value (Get_Name (H)) & ": "
                      & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;

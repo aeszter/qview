@@ -1,9 +1,8 @@
 with Parser; use Parser;
 with HTML;
 with Ada.Text_IO;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Lightsout;
-with CGI;
+with SGE.Host_Properties;
 
 package body Queues is
 
@@ -13,32 +12,30 @@ package body Queues is
    end Put_Selected;
 
    procedure Put_For_Maintenance (Q : Queue) is
-      Long_Name : constant String := Get_Long_Name (Q);
-      Separator : constant Positive := Ada.Strings.Fixed.Index (Source => Long_Name,
-                                            Pattern => "@");
-      Host_Name : constant String := Long_Name (Separator + 1 .. Long_Name'Last);
-      Cluster_Queue : constant String := Long_Name (Long_Name'First .. Separator - 1);
+      use SGE.Host_Properties;
+      Host          : constant Host_Name := Get_Host_Name (Q);
+      Cluster_Queue : constant String := Get_Name (Q);
       Display_Name  : constant String := Cluster_Queue & "@"
-                        & "<a href=""" & CGI.My_URL & "?host=" & Host_Name & """>"
-                        & Host_Name & "</a>";
+                        & HTML.To_String (Host);
+      Link_Name     : constant String := Cluster_Queue & "@" & Value (Host);
    begin
       Ada.Text_IO.Put ("<tr>");
       if Has_Error (Q) then
          HTML.Put_Cell (Display_Name & " <a href="""
                         & HTML.Get_Action_URL (Action => "cq",
-                                               Params => "q=" & Long_Name)
+                                               Params => "q=" & Link_Name)
                         & """>clear error</a>");
       elsif Has_Disabled (Q) then
          HTML.Put_Cell (Display_Name & " <a href="""
                         & HTML.Get_Action_URL (Action => "eq",
-                                               Params => "q=" & Long_Name)
+                                               Params => "q=" & Link_Name)
                         & """>enable</a>");
       else
          HTML.Put_Cell (Display_Name);
       end if;
       HTML.Put_Cell (Get_Type (Q));
-      HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Host_Name));
-      HTML.Put_Cell (Data => Lightsout.Get_Bug (Host_Name), Class => "right");
+      HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Host));
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Host), Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;
 
