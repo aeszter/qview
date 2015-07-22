@@ -1,20 +1,21 @@
 with SGE.Spread_Sheets; use SGE.Spread_Sheets;
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Strings.Bounded;
 with SGE.Utils; use SGE.Utils;
+with Ada.Containers.Ordered_Maps;
+with SGE.Jobs;
 
 package Share_Tree is
    procedure Put_List;
    procedure Put_Summary;
    procedure Append_List (Cells : in out Spread_Sheet);
    procedure Sort_By (Field : String; Direction : String);
+   procedure Read_Current_Status;
 
    type User_Node is private;
 
 
 private
-   package User_Name_Strings is new Ada.Strings.Bounded.Generic_Bounded_Length (Max => 8);
-   subtype User_Name_String is User_Name_Strings.Bounded_String;
+   subtype User_Name_String is SGE.Utils.User_Name;
 
    type User_Node is record
       User_Name : User_Name_String;

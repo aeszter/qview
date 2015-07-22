@@ -1,6 +1,5 @@
 with HTML;
 with Ada.Text_IO;
-with Ada.Strings.Bounded; use Ada.Strings.Bounded;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
 
@@ -68,7 +67,7 @@ package body Share_Tree is
          declare
             User : User_Node;
          begin
-            User.User_Name := User_Name_Strings.To_Bounded_String (Cells.Current);
+            User.User_Name := To_User_Name (Cells.Current);
             Cells.Next;
             User.Usage := Usage_Number'Value (Cells.Current);
             Cells.Next;
@@ -133,7 +132,6 @@ package body Share_Tree is
    end Sort_By;
 
    procedure Put (Item : Share_Lists.Cursor) is
-      package Str renames User_Name_Strings;
       User : constant User_Node := Share_Lists.Element (Item);
    begin
       if 1 > 0 then
@@ -143,7 +141,8 @@ package body Share_Tree is
       else
          Ada.Text_IO.Put ("<tr>");
       end if;
-      HTML.Put_Cell (Data => Str.To_String (User.User_Name));
+
+      HTML.Put_Cell (Data => To_String (User.User_Name));
       HTML.Put_Cell (Data => Scale_Usage (User.Usage), Class => "right");
       HTML.Put_Cell (Data    => Scale_CPU (User.CPU), Class => "right");
       HTML.Put_Cell (Data => Scale_CPU (User.LT_CPU), Class => "right");
@@ -176,7 +175,7 @@ package body Share_Tree is
 
    function Precedes_By_User (Left, Right : User_Node) return Boolean is
    begin
-      return User_Name_Strings."<" (Left.User_Name, Right.User_Name);
+      return Left.User_Name < Right.User_Name;
    end Precedes_By_User;
 
    function Precedes_By_Usage (Left, Right : User_Node) return Boolean is
