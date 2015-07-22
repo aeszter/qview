@@ -479,12 +479,19 @@ package body Viewer is
       end View_Maintenance_Report;
 
       procedure View_Share_Tree is
-         SGE_Out : SGE.Spread_Sheets.Spread_Sheet;
+         Plain_Out : SGE.Spread_Sheets.Spread_Sheet;
+         SGE_Out : Parser.Tree;
 
       begin
-         SGE_Out := Parser.Setup_No_XML (Command => Trust_As_Command ("sge_share_mon"),
-                                         Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
-         Share_Tree.Append_List (SGE_Out);
+         Plain_Out := Parser.Setup_No_XML (Command => Trust_As_Command ("sge_share_mon"),
+                                          Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
+         Share_Tree.Append_List (Plain_Out);
+
+         SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -s r -r"));
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
+         SGE.Parser.Free;
+         Share_Tree.Read_Current_Status;
+
          if not HTML.Param_Is ("sort", "") then
             Share_Tree.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);

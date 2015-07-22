@@ -15,6 +15,7 @@ package body Share_Tree is
       Ada.Text_IO.Put ("<table><tr>");
       HTML.Put_Header_Cell (Data => "User");
       HTML.Put_Header_Cell (Data => "Usage");
+      HTML.Put_Header_Cell (Data => "Current");
       HTML.Put_Header_Cell (Data => "CPU",
                             Acronym => "in CPU years");
       HTML.Put_Header_Cell (Data => "LT CPU");
@@ -122,7 +123,9 @@ package body Share_Tree is
       elsif Field = "IO" then
             Sorting_By_IO.Sort (List);
       elsif Field = "Job count" then
-            Sorting_By_Job_Count.Sort (List);
+         Sorting_By_Job_Count.Sort (List);
+      elsif Field = "Current" then
+         Sorting_By_Occupation.Sort (List);
       else
          HTML.Error ("Sorting by " & Field & " unimplemented");
       end if;
@@ -133,6 +136,7 @@ package body Share_Tree is
 
    procedure Put (Item : Share_Lists.Cursor) is
       User : constant User_Node := Share_Lists.Element (Item);
+      Current_Usage : Occupation;
    begin
       if 1 > 0 then
          Ada.Text_IO.Put ("<tr class=""hot"">");
@@ -144,6 +148,12 @@ package body Share_Tree is
 
       HTML.Put_Cell (Data => To_String (User.User_Name));
       HTML.Put_Cell (Data => Scale_Usage (User.Usage), Class => "right");
+      if Occupation_List.Contains (User.User_Name) then
+         Current_Usage := Occupation_List.Element (User.User_Name);
+         HTML.Put_Cell (Data => Current_Usage.Slots'Img & " (" & Current_Usage.Tasks'Img & ")");
+      else
+         HTML.Put_Cell ("");
+      end if;
       HTML.Put_Cell (Data    => Scale_CPU (User.CPU), Class => "right");
       HTML.Put_Cell (Data => Scale_CPU (User.LT_CPU), Class => "right");
       HTML.Put_Cell (Data    => Scale_Memory (User.Mem), Class => "right");
@@ -207,5 +217,47 @@ package body Share_Tree is
    begin
       return Left.Job_Count < Right.Job_Count;
    end Precedes_By_Job_Count;
+
+   function Precedes_By_Occupation (Left, Right : User_Node) return Boolean is
+      Left_Slots, Right_Slots : Natural := 0;
+   begin
+      if Occupation_List.Contains (Left.User_Name) then
+         Left_Slots := Occupation_List.Element (Left.User_Name).Slots;
+      end if;
+      if Occupation_List.Contains (Right.User_Name) then
+         Right_Slots := Occupation_List.Element (Right.User_Name).Slots;
+      end if;
+
+      return Left_Slots < Right_Slots;
+   end Precedes_By_Occupation;
+
+   procedure Update_Occupation (J : SGE.Jobs.Job) is
+      use Occupation_Lists;
+      procedure Count_Job (Key : User_Name_String; Item : in out Occupation);
+
+      Position : Cursor;
+      User : constant User_Name_String := J.Get_Owner;
+
+      procedure Count_Job (Key : User_Name_String; Item : in out Occupation) is
+         pragma Unreferenced (Key);
+      begin
+         Item.Slots := Item.Slots + Integer'Value (To_String (J.Get_Slot_Number));
+         Item.Tasks := Item.Tasks + 1;
+      end Count_Job;
+   begin
+      Position := Occupation_List.Find (User);
+      if Position = No_Element then
+         Occupation_List.Insert (Key => User, New_Item => (Slots => Integer'Value (To_String (J.Get_Slot_Number)), Tasks => 1));
+      else
+         Occupation_Lists.Update_Element (Container => Occupation_List,
+                                          Position  => Position,
+                                          Process   => Count_Job'Access);
+      end if;
+   end Update_Occupation;
+
+   procedure Read_Current_Status is
+   begin
+      SGE.Jobs.Iterate (Update_Occupation'Access);
+   end Read_Current_Status;
 
 end Share_Tree;
