@@ -491,6 +491,7 @@ package body Viewer is
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
          Share_Tree.Read_Current_Status;
+         Share_Tree.Read_Tickets;
 
          if not HTML.Param_Is ("sort", "") then
             Share_Tree.Sort_By (Field     => CGI.Value ("sort"),

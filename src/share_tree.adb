@@ -16,6 +16,7 @@ package body Share_Tree is
       HTML.Put_Header_Cell (Data => "User");
       HTML.Put_Header_Cell (Data => "Usage");
       HTML.Put_Header_Cell (Data => "Current");
+      HTML.Put_Header_Cell (Data => "Tickets");
       HTML.Put_Header_Cell (Data => "CPU",
                             Acronym => "in CPU years");
       HTML.Put_Header_Cell (Data => "LT CPU");
@@ -114,6 +115,8 @@ package body Share_Tree is
          Sorting_By_User.Sort (List);
       elsif Field = "Usage" then
          Sorting_By_Usage.Sort (List);
+      elsif Field = "Tickets" then
+         Sorting_By_Tickets.Sort (List);
       elsif Field = "CPU" then
          Sorting_By_CPU.Sort (List);
       elsif Field = "LT CPU" then
@@ -151,6 +154,11 @@ package body Share_Tree is
       if Occupation_List.Contains (User.User_Name) then
          Current_Usage := Occupation_List.Element (User.User_Name);
          HTML.Put_Cell (Data => Current_Usage.Slots'Img & " (" & Current_Usage.Tasks'Img & ")");
+      else
+         HTML.Put_Cell ("");
+      end if;
+      if User.Tickets /= 0 then
+         HTML.Put_Cell (Data => User.Tickets'Img);
       else
          HTML.Put_Cell ("");
       end if;
@@ -231,6 +239,11 @@ package body Share_Tree is
       return Left_Slots < Right_Slots;
    end Precedes_By_Occupation;
 
+   function Precedes_By_Tickets (Left, Right : User_Node) return Boolean is
+   begin
+      return Left.Tickets < Right.Tickets;
+   end Precedes_By_Tickets;
+
    procedure Update_Occupation (J : SGE.Jobs.Job) is
       use Occupation_Lists;
       procedure Count_Job (Key : User_Name_String; Item : in out Occupation);
@@ -259,5 +272,26 @@ package body Share_Tree is
    begin
       SGE.Jobs.Iterate (Update_Occupation'Access);
    end Read_Current_Status;
+
+   procedure Read_Tickets is
+      use Share_Lists;
+      procedure Copy_Tickets (Item : in out User_Node);
+      procedure Update_Tickets (Position : Share_Lists.Cursor);
+
+      procedure Copy_Tickets (Item : in out User_Node) is
+      begin
+         Item.Tickets := Get_User_Tickets (To_String (Item.User_Name));
+      end Copy_Tickets;
+
+      procedure Update_Tickets (Position : Share_Lists.Cursor) is
+      begin
+         Update_Element (Container => List,
+                         Position  => Position,
+                         Process   => Copy_Tickets'Access);
+      end Update_Tickets;
+
+   begin
+      List.Iterate (Update_Tickets'Access);
+   end Read_Tickets;
 
 end Share_Tree;
