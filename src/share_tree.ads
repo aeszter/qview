@@ -10,6 +10,7 @@ package Share_Tree is
    procedure Append_List (Cells : in out Spread_Sheet);
    procedure Sort_By (Field : String; Direction : String);
    procedure Read_Current_Status;
+   procedure Read_Tickets;
 
    type User_Node is private;
 
@@ -25,6 +26,7 @@ private
       Job_Count : Usage_Integer;
       Mem       : Usage_Number;
       IO        : Usage_Number;
+      Tickets   : Long_Integer;
    end record;
 
    type Occupation is record
@@ -33,7 +35,7 @@ private
 
    package Share_Lists is new Ada.Containers.Doubly_Linked_Lists (Element_Type => User_Node);
    package Occupation_Lists is new Ada.Containers.Ordered_Maps (Key_Type     => User_Name_String,
-                                                           Element_Type => Occupation);
+                                                                Element_Type => Occupation);
    List : Share_Lists.List;
    Occupation_List : Occupation_Lists.Map;
    Total_Usage : Usage_Number;
@@ -54,6 +56,7 @@ private
    function Precedes_By_IO (Left, Right : User_Node) return Boolean;
    function Precedes_By_Job_Count (Left, Right : User_Node) return Boolean;
    function Precedes_By_Occupation (Left, Right : User_Node) return Boolean;
+   function Precedes_By_Tickets (Left, Right : User_Node) return Boolean;
 
    package Sorting_By_User is new Share_Lists.Generic_Sorting ("<" => Precedes_By_User);
    package Sorting_By_Usage is new Share_Lists.Generic_Sorting ("<" => Precedes_By_Usage);
@@ -63,6 +66,7 @@ private
    package Sorting_By_IO is new Share_Lists.Generic_Sorting ("<" => Precedes_By_IO);
    package Sorting_By_Job_Count is new Share_Lists.Generic_Sorting ("<" => Precedes_By_Job_Count);
    package Sorting_By_Occupation is new Share_Lists.Generic_Sorting ("<" => Precedes_By_Occupation);
+   package Sorting_By_Tickets is new Share_Lists.Generic_Sorting ("<" => Precedes_By_Tickets);
 
    procedure Update_Occupation (J : SGE.Jobs.Job);
 end Share_Tree;
