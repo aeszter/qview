@@ -19,10 +19,14 @@ with SGE.Context;
 
 package body Jobs is
 
+   List : SGE.Jobs.List;
+
    procedure Put_State (Flag : SGE.Jobs.State_Flag);
    procedure Put_State (J : Job);
    procedure Put_State_Cell (J : Job);
    procedure Put_Core_Header;
+   procedure Put_Core_Line (J : Job);
+   procedure Put_Prio_Core (J : Job);
    procedure Start_Row (J : Job);
    procedure Finish_Row (J : Job);
    procedure Try_Put_Paragraph (Label  : String;
@@ -32,12 +36,18 @@ package body Jobs is
                                 Getter : not null access function (J : Job) return Time;
                                 J     : Job);
 
+   procedure Bunch (Result : out SGE.Bunches.List) is
+   begin
+      SGE.Bunches.Initialize (Job_List   => List,
+                              Bunch_List => Result);
+   end Bunch;
 
    procedure Put_Summary is
       Task_Summary, Slot_Summary : State_Count;
    begin
-      SGE.Jobs.Get_Summary (Tasks => Task_Summary,
-                        Slots => Slot_Summary);
+      SGE.Jobs.Get_Summary (Collection => List,
+                            Tasks => Task_Summary,
+                            Slots => Slot_Summary);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Task_Summary'Range loop
@@ -101,9 +111,8 @@ package body Jobs is
 
    procedure Append_List (Nodes : Node_List) is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830,
-                    Info   => "Jobs.Append_List called");
-      SGE.Jobs.Append_List (Nodes);
+      SGE.Jobs.Append (Collection => List,
+                       Nodes      => Nodes);
    exception
       when E : others
          => HTML.Error ("Unable to read job info (Append_List): " & Exception_Message (E));
@@ -111,7 +120,8 @@ package body Jobs is
 
    procedure Update_Messages (Nodes : Node_List) is
    begin
-      SGE.Jobs.Update_Messages (Nodes);
+      SGE.Jobs.Update_Messages (Collection => List,
+                                Nodes      => Nodes);
    exception
       when E : others
          => HTML.Error ("Unable to update job messages: " & Exception_Message (E));
@@ -139,12 +149,13 @@ package body Jobs is
    begin
       HTML.Bug_Ref (Bug_ID => 1830,
                     Info   => "Jobs.Prune_List called");
-      SGE.Jobs.Prune_List (PE            => PE,
-                           Queue         => Queue,
-                           Hard_Requests => Hard_Requests,
-                           Soft_Requests => Soft_Requests,
-                           Slot_Number   => Slot_Number,
-                           Slot_Ranges   => Slot_Ranges);
+      SGE.Jobs.Prune (Collection    => List,
+                      PE            => PE,
+                      Queue         => Queue,
+                      Hard_Requests => Hard_Requests,
+                      Soft_Requests => Soft_Requests,
+                      Slot_Number   => Slot_Number,
+                      Slot_Ranges   => Slot_Ranges);
    end Prune_List;
 
    -------------------
@@ -153,9 +164,7 @@ package body Jobs is
 
    procedure Update_Status is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830,
-                    Info   => "Jobs.Update_Status called");
-      SGE.Jobs.Update_Status;
+      SGE.Jobs.Update_Status (List);
    end Update_Status;
 
 
@@ -165,9 +174,7 @@ package body Jobs is
 
    procedure Search_Queues is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830,
-                    Info   => "Jobs.Search_Queues called");
-      SGE.Jobs.Search_Queues;
+      SGE.Jobs.Search_Queues (List);
    exception
       when E : others => HTML.Error ("Error while searching for queues: "
                                        & Exception_Message (E));
@@ -181,9 +188,8 @@ package body Jobs is
 
    procedure Sort_By (Field : String; Direction : String) is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830,
-                    Info   => "Jobs.Sort_By");
-      SGE.Jobs.Sort_By (Field     => Field,
+      SGE.Jobs.Sort_By (Collection => List,
+                        Field      => Field,
                         Direction => Direction);
    end Sort_By;
 
@@ -277,9 +283,9 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Custom");
       Ada.Text_IO.Put ("</tr>");
       if Show_Resources then
-         Iterate (Jobs.Put_Res_Line'Access);
+         Iterate (List, Jobs.Put_Res_Line'Access);
       else
-         Iterate (Jobs.Put_Prio_Line'Access);
+         Iterate (List, Jobs.Put_Prio_Line'Access);
       end if;
    end Put_List;
 
@@ -297,7 +303,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Ends At");
       HTML.Put_Header_Cell (Data => "State");
       Ada.Text_IO.Put ("</tr>");
-      Iterate (Jobs.Put_Time_Line'Access);
+      Iterate (List, Jobs.Put_Time_Line'Access);
          --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
@@ -320,7 +326,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data     => "Soft");
       HTML.Put_Header_Cell (Data     => "State");
       Ada.Text_IO.Put ("</tr>");
-      Iterate (Jobs.Put_Bunch_Line'Access);
+      Iterate (List, Jobs.Put_Bunch_Line'Access);
 
       --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
@@ -334,7 +340,7 @@ package body Jobs is
 
    procedure Put_Details is
    begin
-      Iterate (Jobs.Put'Access);
+      Iterate (List, Jobs.Put'Access);
    end Put_Details;
 
    ---------
@@ -342,6 +348,14 @@ package body Jobs is
    ---------
 
    procedure Put (J : Job) is
+      procedure Put_Actions;
+      procedure Put_Context;
+      procedure Put_Files;
+      procedure Put_Meta;
+      procedure Put_Name;
+      procedure Put_Queues;
+      procedure Put_Resources;
+      procedure Put_Usage;
 
       procedure Put_Actions is
       begin
@@ -354,6 +368,9 @@ package body Jobs is
       end Put_Actions;
 
       procedure Put_Name is
+         procedure Put_Error (Message : String);
+         procedure Put_Message (Message : String);
+
          procedure Put_Message (Message : String) is
          begin
             Ada.Text_IO.Put_Line ("<p class=""message"">"
@@ -406,6 +423,9 @@ package body Jobs is
       end Put_Meta;
 
       procedure Put_Queues is
+         procedure Put_Queue (Q : String);
+         procedure Put_Slot_Range (R : Step_Range);
+         procedure Put_Task_Range (R : Step_Range);
 
          Assigned_Queues, Detected_Queues, Marked_Queues : String_Sets.Set;
 
@@ -857,6 +877,8 @@ package body Jobs is
    end Start_Row;
 
    procedure Finish_Row (J : Job) is
+      procedure Put_Error (Message : String);
+
       procedure Put_Error (Message : String) is
       begin
          HTML.Comment (Message);
@@ -880,6 +902,8 @@ package body Jobs is
    procedure Try_Put_Paragraph (Label  : String;
                                 Getter : not null access function (J : Job) return Time;
                                 J      : Job) is
+      function Wrapper (J : Job) return String;
+
       function Wrapper (J : Job) return String is
       begin
          return HTML.To_String (Getter (J));
@@ -909,8 +933,18 @@ package body Jobs is
 
    procedure Apply_Overlay is
    begin
-      SGE.Jobs.Apply_Overlay;
+      SGE.Jobs.Apply_Overlay (List);
    end Apply_Overlay;
 
+   procedure Update_Quota is
+   begin
+      SGE.Jobs.Update_Quota (List);
+   end Update_Quota;
+
+   procedure Iterate (Process : not null access procedure (J : Job)) is
+   begin
+      SGE.Jobs.Iterate (Collection => List,
+                        Process    => Process);
+   end Iterate;
 
 end Jobs;

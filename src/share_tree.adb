@@ -2,6 +2,7 @@ with HTML;
 with Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
+with Jobs;
 
 package body Share_Tree is
 
@@ -272,7 +273,7 @@ package body Share_Tree is
 
    procedure Read_Current_Status is
    begin
-      SGE.Jobs.Iterate (Update_Occupation'Access);
+      Jobs.Iterate (Update_Occupation'Access);
    end Read_Current_Status;
 
    procedure Read_Tickets is

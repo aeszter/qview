@@ -5,9 +5,12 @@ with Ada.Strings.Fixed;
 with SGE.Partitions; use SGE.Partitions;
 with SGE.Utils;
 with Ada.Exceptions; use Ada.Exceptions;
+with Queues;
 
 package body Partitions is
    procedure Put_Summary_Item (Item : State);
+
+   List : SGE.Partitions.Summarized_List;
 
    procedure Put_List is
    begin
@@ -34,7 +37,7 @@ package body Partitions is
       HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
       HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
-      SGE.Partitions.Iterate (Put'Access);
+      SGE.Partitions.Iterate (List, Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
    end Put_List;
 
@@ -131,7 +134,7 @@ package body Partitions is
    procedure Put_Summary_Item (Item : State) is
    begin
       Ada.Text_IO.Put ("<li>");
-      Ada.Text_IO.Put (Get_Summary (Item)'Img & " ");
+      Ada.Text_IO.Put (Get_Summary (List, Item)'Img & " ");
       Ada.Text_IO.Put (To_String (Item));
       Ada.Text_IO.Put ("</li>");
    end Put_Summary_Item;
@@ -147,8 +150,7 @@ package body Partitions is
 
    procedure Build_List is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830, Info => "Partitions.Build_List called");
-      SGE.Partitions.Build_List;
+      Queues.Partition (List);
    end Build_List;
 
 end Partitions;

@@ -6,10 +6,33 @@ with SGE.Host_Properties;
 
 package body Queues is
 
-   procedure Put_Selected (Selector : not null access function (Q : Queue) return Boolean) is
+   List : SGE.Queues.List;
+
+   procedure Partition (Result : out SGE.Partitions.Summarized_List) is
    begin
-      Iterate (Process => Put_For_Maintenance'Access, Selector => Selector);
+      SGE.Partitions.Initialize (Queue_List    => List,
+                                 Partition_List => Result);
+   end Partition;
+
+   procedure Put_Selected (Selector : not null access function (Q : Queue) return Boolean) is
+      procedure Wrapper (Q : Queue);
+
+      procedure Wrapper (Q : Queue) is
+      begin
+         if Selector (Q) then
+            Put_For_Maintenance (Q);
+         end if;
+      end Wrapper;
+
+   begin
+      Iterate (Process => Wrapper'Access);
    end Put_Selected;
+
+   procedure Iterate (Process : not null access procedure (q : Queue)) is
+   begin
+      SGE.Queues.Iterate (Collection => List,
+                          Process    => Process);
+   end Iterate;
 
    procedure Put_For_Maintenance (Q : Queue) is
       use SGE.Host_Properties;
@@ -41,9 +64,7 @@ package body Queues is
 
    procedure Append_List (Input_Nodes : Node_List) is
    begin
-      HTML.Bug_Ref (Bug_ID => 1830,
-                    Info   => "Queues.Append_List called");
-      SGE.Queues.Append_List (Input_Nodes);
+      SGE.Queues.Append_List (List, Input_Nodes);
    end Append_List;
 
 end Queues;

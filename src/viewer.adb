@@ -21,12 +21,12 @@ with Ada.Strings;
 with SGE.Spread_Sheets;
 with SGE.Hosts;
 with SGE.Queues;
-with SGE.Jobs;
 with Advance_Reservations;
 with SGE.Loggers;
 with Ada.Strings.Equal_Case_Insensitive;
 with SGE.Taint; use SGE.Taint;
 with CM.Debug;
+with Queues; use Queues;
 
 package body Viewer is
 
@@ -186,7 +186,7 @@ package body Viewer is
          Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
          Jobs.Apply_Overlay;
-         SGE.Jobs.Update_Quota;
+         Jobs.Update_Quota;
 
          --  Detect different bunches
          Bunches.Build_List;
@@ -211,7 +211,7 @@ package body Viewer is
 
          SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
 
-         SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
          SGE.Parser.Free;
 
 
@@ -245,7 +245,7 @@ package body Viewer is
             Jobs.Apply_Overlay;
             SGE.Parser.Free;
          end if;
-         SGE.Jobs.Update_Quota;
+         Jobs.Update_Quota;
 
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
@@ -345,25 +345,25 @@ package body Viewer is
       -------------------
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
+         procedure View_One_Queue (Q : SGE.Queues.Queue);
          SGE_Out : Parser.Tree;
-         Q       : SGE.Queues.Queue;
-         Props : Set_Of_Properties;
-      begin
-         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector
-                                  & Implicit_Trust (" -q *@") & Sanitise (Host_Name));
-         SGE.Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
-         SGE.Parser.Free;
+         Props   : Set_Of_Properties;
 
-         SGE.Queues.Rewind;
-         Q := SGE.Queues.Current;
-         loop
+         procedure View_One_Queue (Q : SGE.Queues.Queue) is
+         begin
             Props := SGE.Queues.Get_Properties (Q);
             Set_Runtime (Props   => Props,
                          Runtime => Null_Unbounded_String); -- not used, see Bug #1495
             View_Hosts (Props => Props, Queue_Name => SGE.Queues.Get_Name (Q));
-            exit when SGE.Queues.At_End;
-            Q := SGE.Queues.Next;
-         end loop;
+         end View_One_Queue;
+
+      begin
+         SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector
+                                  & Implicit_Trust (" -q *@") & Sanitise (Host_Name));
+         Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
+         SGE.Parser.Free;
+
+         Queues.Iterate (Process => View_One_Queue'Access);
       end View_Equivalent_Hosts;
 
       procedure View_Forecast is
@@ -375,7 +375,7 @@ package body Viewer is
 
          Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
          SGE.Parser.Free;
-         SGE.Jobs.Update_Quota;
+         Jobs.Update_Quota;
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
                           Direction => Sort_Direction);
@@ -438,7 +438,7 @@ package body Viewer is
                           Slot_Ranges   => CGI.Value ("slot_ranges"),
                           Slot_Number   => CGI.Value ("slot_number")
                          );
-         SGE.Jobs.Update_Quota;
+         Jobs.Update_Quota;
 
          if not HTML.Param_Is ("sort", "") then
             Jobs.Sort_By (Field     => CGI.Value ("sort"),
