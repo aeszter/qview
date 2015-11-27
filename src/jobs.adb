@@ -38,6 +38,7 @@ package body Jobs is
 
    procedure Bunch (Result : out SGE.Bunches.List) is
    begin
+      Sort (List);
       SGE.Bunches.Initialize (Job_List   => List,
                               Bunch_List => Result);
    end Bunch;

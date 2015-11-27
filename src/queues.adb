@@ -10,6 +10,7 @@ package body Queues is
 
    procedure Partition (Result : out SGE.Partitions.Summarized_List) is
    begin
+      Sort (List);
       SGE.Partitions.Initialize (Queue_List    => List,
                                  Partition_List => Result);
    end Partition;
