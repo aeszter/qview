@@ -461,9 +461,9 @@ package body Viewer is
                Net    => CGI.Value ("net"),
                Memory => CGI.Value ("mem") & "G",
                Cores  => CGI.Value ("cores"),
-               Model  => CGI.Value ("model"),
+               Model  => To_CPU (CGI.Value ("model")),
                SSD    => CGI.Value ("ssd"),
-               GPU    => CGI.Value ("gm"));
+               GPU    => To_GPU (CGI.Value ("gm")));
          View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
       end View_Partition;
 
@@ -689,7 +689,7 @@ package body Viewer is
 
    begin
       Append_Params ("gm=" & GPU);
-      Append_Params ("model=" & Get_Model (Props)'Img);
+      Append_Params ("model=" & To_String (Get_Model (Props)));
       Append_Params ("cores=" & Get_Cores (Props)'Img);
       Append_Params ("mem=" & To_String (Get_Memory (Props)));
       Append_Params ("q=" & Queue_Name);
