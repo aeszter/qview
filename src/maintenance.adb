@@ -239,7 +239,8 @@ package body Maintenance is
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
       return SGE.Hosts.Get_Load (H) < 0.9  * SGE.Hosts.Get_Used_Slots (H)
-      and then SGE.Hosts.Get_Load_One (H) < 1.1 * SGE.Hosts.Get_Load (H);
+        and then (SGE.Hosts.Get_Load_One (H) < 1.1 * SGE.Hosts.Get_Load (H)
+                  or else SGE.Hosts.Get_Load (H) < 0.1);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is
