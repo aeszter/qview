@@ -54,6 +54,7 @@ package HTML is
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Put_Link (Label : String; ID : String; Link_Param : String);
+   procedure Put_Link (Text, Link_Param : String);
    procedure Comment (Data : String);
    procedure Comment (Data : Unbounded_String);
    procedure Bug_Ref (Bug_ID : Positive; Info : String);
