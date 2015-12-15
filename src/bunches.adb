@@ -3,17 +3,18 @@ with CGI;
 with HTML;
 with SGE.Bunches; use SGE.Bunches;
 with SGE.Jobs; use SGE.Jobs;
+with Jobs;
 
 package body Bunches is
 
+   List : SGE.Bunches.List;
    ----------------
    -- Build_List --
    ----------------
 
    procedure Build_List is
    begin
-      HTML.Comment ("Bug #1830: Bunches.Build_List called");
-      SGE.Bunches.Build_List;
+      Jobs.Bunch (List);
    end Build_List;
 
 
@@ -40,7 +41,7 @@ package body Bunches is
       HTML.Put_Cell (Data => "Held", Tag => "th");
       HTML.Put_Cell (Data => "Error", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
-      SGE.Bunches.Iterate (Put'Access);
+      SGE.Bunches.Iterate (List, Put'Access);
    end Put_List;
 
    ---------

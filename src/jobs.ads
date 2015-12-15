@@ -2,6 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Parser; use Parser;
 with SGE.Utils; use SGE.Utils;
 with SGE.Jobs; use SGE.Jobs;
+with SGE.Bunches;
 
 
 package Jobs is
@@ -17,22 +18,23 @@ package Jobs is
    procedure Put_List (Show_Resources : Boolean);
    procedure Prune_List;
    procedure Put_Summary;
+   procedure Iterate (Process : not null access procedure (J : Job));
 
    procedure Append_List (Nodes : Node_List);
    procedure Update_Messages (Nodes : Node_List);
    procedure Create_Overlay (Nodes : Node_List);
    procedure Apply_Overlay;
    procedure Sort_By (Field : String; Direction : String);
+   procedure Update_Quota;
    procedure Update_Status;
    procedure Search_Queues;
    procedure Prune_List (PE, Queue, Hard_Requests,
                          Soft_Requests,
                          Slot_Number, Slot_Ranges : Unbounded_String);
 
+   procedure Bunch (Result : out SGE.Bunches.List);
 
 private
-
-
    procedure Put (J : Job);
    procedure Put_Time_Line (J : Job);
    procedure Put_Res_Line (J : Job);

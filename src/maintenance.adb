@@ -10,6 +10,9 @@ with Lightsout;
 with Ada.Exceptions; use Ada.Exceptions;
 with SGE.Parser;
 with SGE.Taint; use SGE.Taint;
+with SGE.Loggers;
+with Ada.Strings;
+with Ada.Strings.Fixed;
 
 package body Maintenance is
 
@@ -41,11 +44,12 @@ package body Maintenance is
 
       SGE.Hosts.Append_List (SGE.Parser.Get_Elements_By_Tag_Name (SGE_Out, "host"));
       SGE.Parser.Free;
-      SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-F state"));
+      SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-F state -explain E"));
       Queues.Append_List (SGE.Parser.Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
       SGE.Parser.Free;
       Read_Lightsout_Information;
 
+      Put_Error_Messages;
       Put_High_Load_Hosts;
       Put_Low_Load_Hosts;
       Put_Swapping_Hosts;
@@ -218,6 +222,39 @@ package body Maintenance is
       HTML.End_Div (Class => "maintenance");
    end Put_Multi_Queues;
 
+   procedure Put_Error_Messages is
+      procedure Put_Error (Message : String);
+
+      procedure Put_Error (Message : String) is
+         use Ada.Strings.Fixed;
+
+         Job_Start  : constant Natural := Index (Source => Message, Pattern => "of job") + 7;
+         Job_End    : constant Natural := Index (Source => Message, Pattern => "'s", From => Job_Start);
+         Host_Start : constant Natural := Index (Source => Message, Pattern => "at host") + 8;
+         Host_End   : constant Natural := Message'Last + 1;
+      begin
+         if Job_Start > 0 and then Host_Start > 0 then
+            Ada.Text_IO.Put_Line ("<li>" & Message (Message'First .. Job_Start - 1));
+            HTML.Put_Link (Text       => Message (Job_Start .. Job_End - 1),
+                           Link_Param => "job_id");
+            Ada.Text_IO.Put_Line (Message (Job_End .. Host_Start - 1));
+            HTML.Put_Link (Text => Message (Host_Start .. Host_End - 1),
+                           Link_Param => "host");
+            Ada.Text_IO.Put_Line (Message (Host_End .. Message'Last) & "</li>");
+         else
+            Ada.Text_IO.Put_Line ("<li>" & Message & "</li>");
+         end if;
+      end Put_Error;
+
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Heading  (Title => "Messages",
+                         Level => 3);
+      Ada.Text_IO.Put_Line ("<ul>");
+      SGE.Loggers.Iterate_Errors (Put_Error'Access);
+      Ada.Text_IO.Put_Line ("</ul>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Error_Messages;
 
    ------------------------
    -- Selector Functions --
@@ -239,7 +276,8 @@ package body Maintenance is
    function Low_Load (H : Hosts.Host) return Boolean is
    begin
       return SGE.Hosts.Get_Load (H) < 0.9  * SGE.Hosts.Get_Used_Slots (H)
-      and then SGE.Hosts.Get_Load_One (H) < 1.1 * SGE.Hosts.Get_Load (H);
+        and then (SGE.Hosts.Get_Load_One (H) < 1.1 * SGE.Hosts.Get_Load (H)
+                  or else SGE.Hosts.Get_Load (H) < 0.1);
    end Low_Load;
 
    function High_Swap (H : Hosts.Host) return Boolean is

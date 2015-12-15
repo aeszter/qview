@@ -7,6 +7,7 @@ with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
 with SGE.Host_Properties;
+with SGE.Resources;
 
 package body Hosts is
 
@@ -139,15 +140,16 @@ package body Hosts is
       end Put_Name;
 
       procedure Put_Properties is
+         use SGE.Resources;
       begin
          HTML.Begin_Div ("host_properties");
          HTML.Put_Paragraph ("Load", Get_Load_One (H)'Img & "," & Get_Load (H)'Img);
          HTML.Put_Paragraph ("Slots used", Get_Used_Slots (H)'Img);
          HTML.Put_Paragraph ("Memory", Get_Memory (H));
          HTML.Put_Paragraph ("Network", Get_Network (H));
-         HTML.Put_Paragraph ("CPU", Get_Model (H));
+         HTML.Put_Paragraph ("CPU", To_String (Get_Model (H)));
          HTML.Put_Paragraph ("Cores", Get_Cores (H)'Img);
-         HTML.Put_Paragraph ("GPU", Get_GPU (H));
+         HTML.Put_Paragraph ("GPU", To_String (Get_GPU (H)));
          HTML.End_Div ("host_properties");
       end Put_Properties;
 
@@ -244,12 +246,13 @@ package body Hosts is
    ---------
 
    procedure Put (H : Host) is
+      use SGE.Resources;
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => Get_Name (H));
       HTML.Put_Cell (Data => Get_Network (H));
-      HTML.Put_Cell (Data => Get_GPU (H));
-      HTML.Put_Cell (Data => Get_Model (H));
+      HTML.Put_Cell (Data => To_String (Get_GPU (H)));
+      HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       begin
          HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");

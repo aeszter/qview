@@ -383,6 +383,11 @@ package body HTML is
                                  "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
    end Put_Link;
 
+   procedure Put_Link (Text, Link_Param : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL &
+                            "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
+   end Put_Link;
    --------------
    -- Put_List --
    --------------

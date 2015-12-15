@@ -2,6 +2,7 @@ with HTML;
 with Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
+with Jobs;
 
 package body Share_Tree is
 
@@ -149,7 +150,7 @@ package body Share_Tree is
          Ada.Text_IO.Put ("<tr>");
       end if;
 
-      HTML.Put_Cell (Data => To_String (User.User_Name));
+      HTML.Put_Cell (Data => To_String (User.User_Name), Link_Param => "user");
       HTML.Put_Cell (Data => Scale_Usage (User.Usage), Class => "right");
       if Occupation_List.Contains (User.User_Name) then
          Current_Usage := Occupation_List.Element (User.User_Name);
@@ -272,7 +273,7 @@ package body Share_Tree is
 
    procedure Read_Current_Status is
    begin
-      SGE.Jobs.Iterate (Update_Occupation'Access);
+      Jobs.Iterate (Update_Occupation'Access);
    end Read_Current_Status;
 
    procedure Read_Tickets is
