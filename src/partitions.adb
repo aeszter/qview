@@ -12,6 +12,14 @@ package body Partitions is
    procedure Put_Summary_Item (Item : State);
 
    List : SGE.Partitions.Summarized_List;
+   Total_Cores : Integer := 0;
+
+   procedure Count_Slots (Item : Partition);
+
+   procedure Count_Slots (Item : Partition) is
+   begin
+      Total_Cores := Total_Cores + Get_Total_Slots (Item);
+   end Count_Slots;
 
    procedure Put_List is
    begin
@@ -39,6 +47,22 @@ package body Partitions is
       HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
       SGE.Partitions.Iterate (List, Put'Access);
+      SGE.Partitions.Iterate (List, Count_Slots'Access);
+      Ada.Text_IO.Put_Line ("<tr>");
+      HTML.Put_Cell (Data    => "",
+                     Colspan => 7);
+      HTML.Put_Cell (Data    => "Total Slots:",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
+                     Class   => "right");
+      HTML.Put_Cell (Data    => "",
+                     Colspan => 2);
+      HTML.Put_Cell (Data    => "Million Core-hours per Year:",
+                     Colspan => 4,
+                     Class   => "right");
+      HTML.Put_Cell (Integer'Image (Total_Cores * 24 * 356 / 1_000_000),
+                     Class   => "right");
+      Ada.Text_IO.Put_Line ("</tr>");
       Ada.Text_IO.Put_Line ("</table>");
    end Put_List;
 
