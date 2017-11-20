@@ -10,7 +10,7 @@ package body CSS is
    Standard_Border     : constant String := "2px solid #a0a0a0;";
 
    Full_Width          : constant String := "width: 75em;";
-   Content_Width       : constant String := "width: 70em;";
+   Content_Width       : constant String := "width: 71em;";
    Widest_Box_Width    : constant String := "width: 65em;";
    Small_Box_Width     : constant String := "width: 13em;";
 
