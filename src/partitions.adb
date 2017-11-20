@@ -32,6 +32,8 @@ package body Partitions is
                      Tag        => "th");
       HTML.Put_Cell (Data => "GPU",
                      Tag  => "th");
+      HTML.Put_Cell (Data => "Memory",
+                     Tag  => "th");
       HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
                   Tag => "th");
       HTML.Put_Cell (Data => "Cores", Tag => "th");
@@ -82,6 +84,7 @@ package body Partitions is
 
       GPU_Present : Boolean;
       Config_Error : Boolean := False;
+      GPU_Memory   : constant String := P.Get_GPU_Memory;
    begin
       begin
          GPU_Present := Has_GPU (P);
@@ -122,6 +125,11 @@ package body Partitions is
       end if;
       Ada.Text_IO.Put ("</td>");
       HTML.Put_Cell (Data => To_String (Get_GPU (P)));
+      if GPU_Memory /= "" then
+         HTML.Put_Cell (Data => GPU_Memory & "G", Class => "right");
+      else
+         HTML.Put_Cell ("");
+      end if;
       HTML.Put_Cell (Data => To_String (Get_Model (P)));
       HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
