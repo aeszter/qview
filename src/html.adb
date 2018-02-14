@@ -134,7 +134,6 @@ package body HTML is
                        Tag   : String := "td";
                        Class : String := "") is
       Close_Tag : constant String := "</" & Tag & ">";
-      Display_Host : constant String := SGE.Host_Properties.Value (Data);
    begin
       --  Start open tag
       Put ("<" & Tag);
@@ -145,17 +144,7 @@ package body HTML is
       Put (">");
       --  Open tag ended
 
-      --  Start link
-      Put
-        ("<a href=""" &
-         CGI.My_URL &
-         "?host=" &
-         Display_Host &
-         """>");
-
       Put (To_String (Data));
-      Put ("</a>");
-      --  Link ended
 
       Put_Line (Close_Tag);
    end Put_Cell;
