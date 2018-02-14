@@ -20,7 +20,7 @@ package Jobs is
    procedure Put_Summary;
    procedure Iterate (Process : not null access procedure (J : Job));
 
-   procedure Append_List (Nodes : Node_List);
+   procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False);
    procedure Update_Messages (Nodes : Node_List);
    procedure Create_Overlay (Nodes : Node_List);
    procedure Apply_Overlay;

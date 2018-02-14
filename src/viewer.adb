@@ -310,7 +310,7 @@ package body Viewer is
                                Level => 2);
          SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j ") & Sanitise (Job_ID));
 
-         Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out));
+         Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out), True);
          Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
          SGE.Parser.Free;
          Jobs.Update_Status;

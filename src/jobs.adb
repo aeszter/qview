@@ -112,10 +112,11 @@ package body Jobs is
       end if;
    end Name_As_HTML;
 
-   procedure Append_List (Nodes : Node_List) is
+   procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False) is
    begin
-      SGE.Jobs.Append (Collection => List,
-                       Nodes      => Nodes);
+      SGE.Jobs.Append (Collection     => List,
+                       Nodes          => Nodes,
+                       Fix_Posix_Prio => Fix_Posix_Prio);
    exception
       when E : others
          => HTML.Error ("Unable to read job info (Append_List): " & Exception_Message (E));
