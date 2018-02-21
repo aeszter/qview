@@ -185,26 +185,16 @@ package body Lightsout is
                            end if;
                         end if;
                      end loop;
-                  elsif Name (Group_Node) = "#text" or else
-                    Name (Group_Node) = "#comment"
-                  then
-                     null; -- ignore
                   else
-                     raise Config_Error with "Found unexpected """
-                       & Name (Group_Node) & """ in <nodegroup>";
+                     null; -- ignore
                   end if;
                end loop;
             end;
          elsif Name (One_Node) = "bugzilla" then
             Bugzilla_URL := Ada.Strings.Unbounded.To_Unbounded_String
               (Value (First_Child (One_Node)));
-         elsif Node_Name (One_Node) = "#text" or else
-           Node_Name (One_Node) = "#comment"
-         then
-            null; -- ignore
          else
-            raise Config_Error with "Found unexpected """
-              & Node_Name (One_Node) & """ in <config> while reading config file";
+            null; -- ignore
          end if;
       end loop;
 
