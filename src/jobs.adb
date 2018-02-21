@@ -112,10 +112,11 @@ package body Jobs is
       end if;
    end Name_As_HTML;
 
-   procedure Append_List (Nodes : Node_List) is
+   procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False) is
    begin
-      SGE.Jobs.Append (Collection => List,
-                       Nodes      => Nodes);
+      SGE.Jobs.Append (Collection     => List,
+                       Nodes          => Nodes,
+                       Fix_Posix_Prio => Fix_Posix_Prio);
    exception
       when E : others
          => HTML.Error ("Unable to read job info (Append_List): " & Exception_Message (E));
@@ -238,7 +239,7 @@ package body Jobs is
    --------------
 
    procedure Put_List (Show_Resources : Boolean) is
-      Span : Positive := 5 + Balancer_Capability'Range_Length;
+      Span : Positive := 6 + Balancer_Capability'Range_Length;
    begin
       if not Show_Resources then
          Span := Span + 1;
@@ -409,6 +410,7 @@ package body Jobs is
          HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", Get_Group (J));
          HTML.Put_Paragraph ("Account", Get_Account (J));
+         HTML.Put_Paragraph ("Project", Get_Project (J));
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => Get_Submission_Time (J));
          Iterate_Predecessors (J, Process => Put_Predecessor'Access);
@@ -617,6 +619,7 @@ package body Jobs is
          end if;
       end loop;
 
+      HTML.Put_Header_Cell (Data => "Project");
       HTML.Put_Header_Cell (Data => "Owner");
       HTML.Put_Header_Cell (Data => "Name");
    end Put_Core_Header;
@@ -641,6 +644,7 @@ package body Jobs is
             end if;
          end if;
       end loop;
+      HTML.Put_Cell (Data => Get_Project (J));
       HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;

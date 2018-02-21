@@ -373,7 +373,7 @@ package body Reservations is
    function To_String (Source : Queue) return String is
    begin
       return Integer'Image (Source.Slots) & '@' &
-            "<a href=""" & CGI.My_URL & "?search=" & Source.Name & """>"
+            "<a href=""" & CGI.My_URL & "?host=" & Source.Name & """>"
         & Source.Name & "</a>";
    end To_String;
 
