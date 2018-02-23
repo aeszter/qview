@@ -95,6 +95,7 @@ package body Viewer is
          Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
                                & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
+         HTML.Put_Opensearch (CGI.My_URL & "?opensearch=y");
          Ada.Text_IO.Put_Line ("</head><body>");
          HTML.Begin_Div (ID => "page");
          HTML.Begin_Div (ID => "header");
