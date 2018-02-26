@@ -564,6 +564,15 @@ package body HTML is
          """ type=""text/css"" media=""screen"" />");
    end Put_Stylesheet;
 
+   procedure Put_Opensearch (URL : String) is
+   begin
+      Ada.Text_IO.Put_Line
+        ("<link rel=""search"" href=""" &
+           URL &
+           """ type=""application/opensearchdescription+xml"" " &
+           " title=""qview search"" />");
+   end Put_Opensearch;
+
    procedure Put_Clearer is
    begin
       Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk

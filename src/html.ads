@@ -70,6 +70,7 @@ package HTML is
    procedure Put_List_Entry (Key, Element : String);
    procedure Put_Empty_List;
 
+   procedure Put_Opensearch (URL : String);
    procedure Put_Stylesheet (URL : String);
    procedure Put_Clearer;
    procedure Error (Message : String);
