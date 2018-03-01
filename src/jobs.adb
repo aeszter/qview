@@ -420,6 +420,9 @@ package body Jobs is
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (Has_Reserve (J));
          Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>Notify: ");
+         HTML.Put (Has_Notify (J));
+         Ada.Text_IO.Put_Line ("</p>");
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (J);
          Ada.Text_IO.Put_Line ("</p>");
@@ -527,9 +530,6 @@ package body Jobs is
          HTML.Put_Heading (Title => "StdErr",
                            Level => 3);
          HTML.Put_List (Get_Std_Err_Paths (J));
-         Ada.Text_IO.Put ("<p>Notify: ");
-         HTML.Put (Has_Notify (J));
-         Ada.Text_IO.Put_Line ("</p>");
          HTML.End_Div (Class => "job_files");
       end Put_Files;
 
