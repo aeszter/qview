@@ -396,6 +396,7 @@ package body Jobs is
          Iterate_Messages (J, Put_Message'Access);
          if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
+            Ada.Text_IO.Put_Line ("<em>Purple lines refer to jobs with errors</em>");
          end if;
          Iterate_Errors (J, Put_Error'Access);
          HTML.End_Div (Class => "job_name");
