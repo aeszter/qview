@@ -49,8 +49,6 @@ package body Jobs is
       SGE.Jobs.Get_Summary (Collection => List,
                             Tasks => Task_Summary,
                             Slots => Slot_Summary);
-      Task_Summary (waiting) := Task_Summary (waiting) - Task_Summary (hold);
-      Slot_Summary (waiting) := Slot_Summary (waiting) - Slot_Summary (hold);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Task_Summary'Range loop
