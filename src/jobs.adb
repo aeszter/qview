@@ -797,6 +797,18 @@ package body Jobs is
    end Put_State_Cell;
 
    procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
+      procedure Put_Memory (Label : String; Memory : Usage_Number);
+
+      procedure Put_Memory (Label : String; Memory : Usage_Number) is
+      begin
+         HTML.Put_Paragraph (Label    => Label,
+                    Contents => To_Memory (Usage_Integer (Memory)));
+      exception
+         when Constraint_Error =>
+            HTML.Put_Paragraph (Label    => Label,
+                           Contents => "&gtr; 1 TB");
+      end Put_Memory;
+
    begin
       case Kind is
          when cpu =>
@@ -834,11 +846,11 @@ package body Jobs is
             HTML.Put_Paragraph (Label    => "I/O",
                            Contents => Amount'Img);
          when vmem =>
-            HTML.Put_Paragraph (Label    => "vMem",
-                           Contents => To_Memory (Usage_Integer (Amount)));
+            Put_Memory (Label => "vMem",
+                        Memory => Amount);
          when maxvmem =>
-            HTML.Put_Paragraph (Label    => "Maximum vMem",
-                           Contents => To_Memory (Usage_Integer (Amount)));
+            Put_Memory (Label => "Maximum vMem",
+                        Memory => Amount);
          when iow =>
             null; -- iow is suppressed in qstat -j without -xml as well
          when submission_time =>
