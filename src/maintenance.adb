@@ -13,6 +13,7 @@ with SGE.Taint; use SGE.Taint;
 with SGE.Loggers;
 with Ada.Strings;
 with Ada.Strings.Fixed;
+with SGE.Utils;
 
 package body Maintenance is
 
@@ -270,6 +271,9 @@ package body Maintenance is
    exception
       when Constraint_Error =>
          HTML.Error (Value (SGE.Hosts.Get_Name (H)) & " has inconsistent load");
+         return False;
+      when E : SGE.Utils.Operator_Error =>
+         HTML.Error (Value (SGE.Hosts.Get_Name (H)) & " has " & Exception_Message (E));
          return False;
    end High_Load;
 

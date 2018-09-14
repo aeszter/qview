@@ -49,8 +49,6 @@ package body Jobs is
       SGE.Jobs.Get_Summary (Collection => List,
                             Tasks => Task_Summary,
                             Slots => Slot_Summary);
-      Task_Summary (waiting) := Task_Summary (waiting) - Task_Summary (hold);
-      Slot_Summary (waiting) := Slot_Summary (waiting) - Slot_Summary (hold);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Task_Summary'Range loop
@@ -398,6 +396,7 @@ package body Jobs is
          Iterate_Messages (J, Put_Message'Access);
          if Has_Errors (J) then
             Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
+            Ada.Text_IO.Put_Line ("<em>Purple lines refer to jobs with errors</em>");
          end if;
          Iterate_Errors (J, Put_Error'Access);
          HTML.End_Div (Class => "job_name");
@@ -419,6 +418,9 @@ package body Jobs is
          HTML.Put_Link ("Advance Reservation", Get_Advance_Reservation (J), "ar_id");
          Ada.Text_IO.Put ("<p>Reserve: ");
          HTML.Put (Has_Reserve (J));
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>Notify: ");
+         HTML.Put (Has_Notify (J));
          Ada.Text_IO.Put_Line ("</p>");
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (J);
@@ -527,9 +529,6 @@ package body Jobs is
          HTML.Put_Heading (Title => "StdErr",
                            Level => 3);
          HTML.Put_List (Get_Std_Err_Paths (J));
-         Ada.Text_IO.Put ("<p>Notify: ");
-         HTML.Put (Has_Notify (J));
-         Ada.Text_IO.Put_Line ("</p>");
          HTML.End_Div (Class => "job_files");
       end Put_Files;
 
@@ -798,6 +797,18 @@ package body Jobs is
    end Put_State_Cell;
 
    procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
+      procedure Put_Memory (Label : String; Memory : Usage_Number);
+
+      procedure Put_Memory (Label : String; Memory : Usage_Number) is
+      begin
+         HTML.Put_Paragraph (Label    => Label,
+                    Contents => To_Memory (Usage_Integer (Memory)));
+      exception
+         when Constraint_Error =>
+            HTML.Put_Paragraph (Label    => Label,
+                           Contents => "&gtr; 1 TB");
+      end Put_Memory;
+
    begin
       case Kind is
          when cpu =>
@@ -835,11 +846,11 @@ package body Jobs is
             HTML.Put_Paragraph (Label    => "I/O",
                            Contents => Amount'Img);
          when vmem =>
-            HTML.Put_Paragraph (Label    => "vMem",
-                           Contents => To_Memory (Usage_Integer (Amount)));
+            Put_Memory (Label => "vMem",
+                        Memory => Amount);
          when maxvmem =>
-            HTML.Put_Paragraph (Label    => "Maximum vMem",
-                           Contents => To_Memory (Usage_Integer (Amount)));
+            Put_Memory (Label => "Maximum vMem",
+                        Memory => Amount);
          when iow =>
             null; -- iow is suppressed in qstat -j without -xml as well
          when submission_time =>
