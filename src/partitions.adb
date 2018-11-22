@@ -131,7 +131,13 @@ package body Partitions is
          HTML.Put_Cell ("");
       end if;
       HTML.Put_Cell (Data => To_String (Get_Model (P)));
-      HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
+      if Get_Cores (P) = Get_Slots (P) then
+         HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
+      else
+         HTML.Put_Cell (Data  => Get_Slots (P)'Img & "/" &
+                          Ada.Strings.Fixed.Trim (Get_Cores (P)'Img, Ada.Strings.Left),
+                        Class => "right");
+      end if;
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
       HTML.Put_Cell (Data => Get_Runtime (P), Class => "right");
       HTML.Put_Cell (Data => P.Get_Total_Slots'Img, Class => "right");
