@@ -110,7 +110,7 @@ package body Partitions is
                      & "&model=" & To_String (Get_Model (P))
                      & "&cores=" & Get_Cores (P)'Img
                      & "&mem=" & Get_Memory (P)
-                     & "&q=" & P.Get_Name
+                     & "&slots=" & P.Get_Slots'Img
                      & "&gpu=" & GPU_Present'Img
                      & "&ssd=" & Has_SSD (P)'Img
                      & """><img src=""/icons/arrow_right.png"" /></a>");
