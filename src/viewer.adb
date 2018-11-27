@@ -355,7 +355,7 @@ package body Viewer is
             Props := SGE.Queues.Get_Properties (Q);
             Set_Runtime (Props   => Props,
                          Runtime => Null_Unbounded_String); -- not used, see Bug #1495
-            View_Hosts (Props => Props, Queue_Name => SGE.Queues.Get_Name (Q));
+            View_Hosts (Props => Props, Slots => SGE.Queues.Get_Slot_Count (Q));
          end View_One_Queue;
 
       begin
@@ -465,7 +465,7 @@ package body Viewer is
                Model  => To_CPU (CGI.Value ("model")),
                SSD    => CGI.Value ("ssd"),
                GPU    => To_GPU (CGI.Value ("gm")));
-         View_Hosts (Props => Props, Queue_Name => CGI.Value ("q"));
+         View_Hosts (Props => Props, Slots => Integer'Value (CGI.Value ("slots")));
       end View_Partition;
 
       procedure View_Reservations is
@@ -651,7 +651,7 @@ package body Viewer is
          CGI.Put_HTML_Tail;
    end View;
 
-   procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String) is
+   procedure View_Hosts (Props : Set_Of_Properties; Slots : Positive) is
       function GPU_Selector return Trusted_String;
       function Net_Selector return Trusted_String;
 
@@ -693,7 +693,7 @@ package body Viewer is
       Append_Params ("model=" & To_String (Get_Model (Props)));
       Append_Params ("cores=" & Get_Cores (Props)'Img);
       Append_Params ("mem=" & To_String (Get_Memory (Props)));
-      Append_Params ("q=" & Queue_Name);
+      Append_Params ("slots=" & Slots'Img);
 
       SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
                                Selector => Implicit_Trust ("-q -j ") & Parser.Resource_Selector
@@ -701,7 +701,7 @@ package body Viewer is
 
       SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
       SGE.Parser.Free;
-      SGE.Hosts.Prune_List (Requirements => Props, Queue_Name => Queue_Name);
+      SGE.Hosts.Prune_List (Requirements => Props, Slots => Slots);
 
       --  Can we factor this out?
       if not HTML.Param_Is ("sort", "") then
