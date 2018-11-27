@@ -8,7 +8,7 @@ package Viewer is
    --  Purpose: Add a parameter to the list kept to create links that preserve
    --          user selections
    --  Parameter Params: the parameter to add; should be of the form "param=value"
-   procedure View_Hosts (Props : Set_Of_Properties; Queue_Name : String);
+   procedure View_Hosts (Props : Set_Of_Properties; Slots : Positive);
    function Params return String;
    procedure Put_Error (Message : String);
    procedure Put_Result (Message : String);
