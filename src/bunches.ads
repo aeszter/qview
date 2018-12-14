@@ -1,5 +1,5 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with SGE.Bunches;
+--  with SGE.Bunches;
 
 package Bunches is
 
@@ -9,6 +9,6 @@ package Bunches is
 
 private
 
-   procedure Put (B : SGE.Bunches.Bunch);
+--     procedure Put (B : SGE.Bunches.Bunch);
 
 end Bunches;

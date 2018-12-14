@@ -4,7 +4,7 @@ with Queues;
 package Maintenance is
    procedure Put_All;
 private
-   procedure Read_Lightsout_Information;
+--     procedure Read_Lightsout_Information;
    procedure Put_Error_Messages;
    procedure Put_Header;
    procedure Put_High_Load_Hosts;
@@ -20,15 +20,15 @@ private
    procedure Put_Old_Config;
 
 
-   function High_Load (H : Hosts.Host) return Boolean;
-   function Low_Load (H : Hosts.Host) return Boolean;
-   function High_Swap (H : Hosts.Host) return Boolean;
-   function No_Queue (H : Hosts.Host) return Boolean;
-   function Multi_Queue (H : Hosts.Host) return Boolean;
-   function Old_Config (Q : Queues.Queue) return Boolean;
-   function In_Error_State (Q : Queues.Queue) return Boolean;
-   function Reachable_Disabled (Q : Queues.Queue) return Boolean;
-   function Unreachable_Enabled (Q : Queues.Queue) return Boolean;
-   function Unreachable_Disabled (Q : Queues.Queue) return Boolean;
-   function Unusual_Type (Q : Queues.Queue) return Boolean;
+--     function High_Load (H : Hosts.Host) return Boolean;
+--     function Low_Load (H : Hosts.Host) return Boolean;
+--     function High_Swap (H : Hosts.Host) return Boolean;
+--     function No_Queue (H : Hosts.Host) return Boolean;
+--     function Multi_Queue (H : Hosts.Host) return Boolean;
+--     function Old_Config (Q : Queues.Queue) return Boolean;
+--     function In_Error_State (Q : Queues.Queue) return Boolean;
+--     function Reachable_Disabled (Q : Queues.Queue) return Boolean;
+--     function Unreachable_Enabled (Q : Queues.Queue) return Boolean;
+--     function Unreachable_Disabled (Q : Queues.Queue) return Boolean;
+--     function Unusual_Type (Q : Queues.Queue) return Boolean;
 end Maintenance;
