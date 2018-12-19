@@ -1,13 +1,10 @@
 with Ada.Text_IO, CGI;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with HTML;
---  with Parser;
---  with SGE.Parser; use SGE.Parser;
---  with SGE.Quota;
 with Ada.Exceptions; use Ada.Exceptions;
 with Slurm.Utils;
+with Slurm.General;
 with Utils;
---  with SGE.Resources; use SGE.Resources; use SGE.Resources.Resource_Lists;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
 with Partitions; use Partitions;
@@ -16,23 +13,16 @@ with Reservations;
 with Maintenance;
 with Share_Tree;
 with Diagnostics;
---  with SGE.Debug;
 with Ada.Strings;
---  with SGE.Spread_Sheets;
---  with SGE.Hosts;
---  with SGE.Queues;
---  with SGE.Loggers;
-with Ada.Strings.Equal_Case_Insensitive;
---  with SGE.Taint; use SGE.Taint;
---  with CM.Debug;
 with Queues; use Queues;
+with Ada.Integer_Text_IO;
 
 package body Viewer is
 
    procedure Put_Error (Message : String) is
    begin
       CGI.Put_CGI_Header;
-      Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - Error</title>");
+      Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - Error</title>");
       Ada.Text_IO.Put_Line ("</head><body>");
       Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
       CGI.Put_HTML_Tail;
@@ -41,7 +31,7 @@ package body Viewer is
    procedure Put_Result (Message : String) is
    begin
       CGI.Put_CGI_Header;
-      Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - Result</title>");
+      Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - Result</title>");
       Ada.Text_IO.Put_Line ("</head><body>");
       Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
       CGI.Put_HTML_Tail;
@@ -89,14 +79,14 @@ package body Viewer is
 --           SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
 --                      Where    => SGE.Debug.Default,
 --                      Severity => 1);
-         Ada.Text_IO.Put_Line ("<html><head><title>Owl Status - "
+         Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - "
                                & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
          HTML.Put_Opensearch (CGI.My_URL & "?opensearch=y");
          Ada.Text_IO.Put_Line ("</head><body>");
          HTML.Begin_Div (ID => "page");
          HTML.Begin_Div (ID => "header");
-         CGI.Put_HTML_Heading (Title => "Owl Status", Level => 1);
+         CGI.Put_HTML_Heading (Title => "Strix Status", Level => 1);
          HTML.Put_Navigation_Begin;
          HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=both");
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
@@ -151,7 +141,9 @@ package body Viewer is
          Put_Diagnostics;
          Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>slurmlib " & Slurm.Utils.Version & "</li>");
---           Ada.Text_IO.Put_Line ("<li>CMlib " & CM.Version & "</li>");
+         Ada.Text_IO.Put ("<li>Slurm API");
+         Ada.Integer_Text_IO.Put (Slurm.General.API_Version, Base => 16);
+         Ada.Text_IO.Put_Line ("</li>");
          Ada.Text_IO.Put ("</ul>");
          HTML.End_Div (ID =>  "footer");
          HTML.Put_Clearer;
@@ -270,9 +262,7 @@ package body Viewer is
       procedure View_Global_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-         HTML.Put_Paragraph (Label    => "View_Global_Jobs",
-                             Contents => "unimplemented");
---           View_Jobs (Implicit_Trust ("-u *"));
+         Jobs.Put_List;
       end View_Global_Jobs;
 
       procedure View_Waiting_Jobs is

@@ -1,5 +1,4 @@
 with "../slurmlib/slurmlib.gpr";
-with "/sw/cluster/florist17/share/gpr/florist.gpr";
 
 project Qview is
 
@@ -50,15 +49,8 @@ project Qview is
    end Compiler;
 
    package Linker is
+      for Default_Switches ("Ada") use ("-lslurm");
 
-      case Library_Type is
-
-         when "static" =>
-            for Default_Switches ("ada") use ("-g", "-lc");
-
-         when "relocatable" =>
-            for Default_Switches ("ada") use ("-g", "-fprofile-generate");
-      end case;
    end Linker;
 
 end Qview;

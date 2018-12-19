@@ -1,7 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with Parser; use Parser;
 --  with SGE.Utils; use SGE.Utils;
---  with SGE.Jobs; use SGE.Jobs;
+with Slurm.Jobs; use Slurm.Jobs;
 --  with SGE.Bunches;
 
 
@@ -10,12 +10,12 @@ package Jobs is
    Max_Name_Length : constant Positive := 25;
 
 
---     function Name_As_HTML (J : Job) return String;
+   function Name_As_HTML (J : Job) return String;
 
    procedure Put_Details;
 --     procedure Put_Time_List;
 --     procedure Put_Bunch_List;
---     procedure Put_List (Show_Resources : Boolean);
+   procedure Put_List;
 --     procedure Prune_List;
    procedure Put_Summary;
 --     procedure Iterate (Process : not null access procedure (J : Job));

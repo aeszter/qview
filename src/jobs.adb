@@ -13,21 +13,23 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with SGE.Resources;
 --  with SGE.Utils;
 --  with SGE.Context;
+with Slurm.Jobs; use Slurm.Jobs;
+with Slurm.Utils; use Slurm.Utils;
 
 
 
 package body Jobs is
 
 --     List : SGE.Jobs.List;
-
+   procedure Put (Position : Slurm.Jobs.Cursor);
 --     procedure Put_State (Flag : SGE.Jobs.State_Flag);
 --     procedure Put_State (J : Job);
 --     procedure Put_State_Cell (J : Job);
---     procedure Put_Core_Header;
---     procedure Put_Core_Line (J : Job);
+   procedure Put_Core_Header;
+   procedure Put_Core_Line (J : Job);
 --     procedure Put_Prio_Core (J : Job);
---     procedure Start_Row (J : Job);
---     procedure Finish_Row (J : Job);
+   procedure Start_Row (J : Job);
+   procedure Finish_Row (J : Job);
 --     procedure Try_Put_Paragraph (Label  : String;
 --                                  Getter : not null access function (J : Job) return String;
 --                                  J     : Job);
@@ -100,15 +102,16 @@ package body Jobs is
 --     -- Name_As_HTML --
 --     ------------------
 --
---     function Name_As_HTML (J : Job) return String is
---     begin
---        if Is_Name_Truncated (J) then
---           return "<acronym title=""" & Get_Full_Name (J) & """>"
---                             & Get_Name (J) & "</acronym>";
---        else
---           return Get_Name (J);
---        end if;
---     end Name_As_HTML;
+   function Name_As_HTML (J : Job) return String is
+      Name : constant String := Get_Name (J);
+   begin
+      if Name'Length > 20 then
+         return "<acronym title=""" & Name & """>"
+                           & Name (Name'First .. Name'First + 19) & "</acronym>";
+      else
+         return Name;
+      end if;
+   end Name_As_HTML;
 --
 --     procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False) is
 --     begin
@@ -232,64 +235,59 @@ package body Jobs is
 --     end Put_Request;
 --
 --
---     --------------
---     -- Put_List --
---     --------------
---
---     procedure Put_List (Show_Resources : Boolean) is
---        Span : Positive := 6 + Balancer_Capability'Range_Length;
---     begin
---        if not Show_Resources then
---           Span := Span + 1;
---        end if;
---        HTML.Begin_Div (Class => "job_list");
---        Ada.Text_IO.Put ("<table><tr>");
---        HTML.Put_Cell (Data       => "",
---                       Tag        => "th",
---                       Colspan => Span,
---                       Class => "delimited");
---        if Show_Resources then
---           HTML.Put_Cell (Data => "Resource Usage",
---                          Tag => "th",
---                          Colspan => 3,
---                          Class   => "delimited");
---        end if;
---        HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
---                       Tag => "th",
---                       Colspan => 8,
---                       Class => "delimited");
---        Ada.Text_IO.Put ("</tr><tr>");
---        Put_Core_Header;
---        HTML.Put_Header_Cell (Data => "Submitted");
---        HTML.Put_Header_Cell (Data => "Slots");
---        HTML.Put_Header_Cell (Data => "State");
---        if Show_Resources then
---           HTML.Put_Header_Cell (Data => "CPU");
---           HTML.Put_Header_Cell (Data => "Memory",
---                              Acronym => "Gigabyte-hours");
---           HTML.Put_Header_Cell (Data => "IO",
---                              Acronym => "Gigabytes");
---        else
---           HTML.Put_Header_Cell (Data => "Res");
---        end if;
---        HTML.Put_Header_Cell (Data => "Priority");
---        HTML.Put_Header_Cell (Data => "O",
---                              Acronym => "Override");
---        HTML.Put_Header_Cell (Data => "S",
---                              Acronym => "Share");
---        HTML.Put_Header_Cell (Data => "F",
---                              Acronym => "Functional");
---        HTML.Put_Header_Cell (Data => "Urgency");
---        HTML.Put_Header_Cell (Data => "Resource");
---        HTML.Put_Header_Cell (Data => "Waiting");
---        HTML.Put_Header_Cell (Data => "Custom");
---        Ada.Text_IO.Put ("</tr>");
---        if Show_Resources then
---           Iterate (List, Jobs.Put_Res_Line'Access);
---        else
---           Iterate (List, Jobs.Put_Prio_Line'Access);
---        end if;
---     end Put_List;
+
+   procedure Put (Position : Slurm.Jobs.Cursor) is
+      use Slurm.Jobs;
+      J : Job;
+   begin
+      if Has_Element (Position) then
+         J := Element (Position);
+      else
+         raise Constraint_Error with "no such job";
+      end if;
+      Start_Row (J);
+      Put_Core_Line (J);
+      Finish_Row (J);
+   end Put;
+
+   procedure Put_List is
+      use Slurm.Jobs;
+      List : Slurm.Jobs.List;
+   begin
+      List := Slurm.Jobs.Load_Jobs;
+      Put_Summary;
+      HTML.Begin_Div (Class => "job_list");
+      Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Cell (Data       => "",
+                     Tag        => "th",
+                     Colspan => 8,
+                     Class => "delimited");
+      HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
+                     Tag => "th",
+                     Colspan => 8,
+                     Class => "delimited");
+      Ada.Text_IO.Put ("</tr><tr>");
+      Put_Core_Header;
+      HTML.Put_Header_Cell (Data => "Submitted");
+      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "State");
+      HTML.Put_Header_Cell (Data => "Res");
+      HTML.Put_Header_Cell (Data => "Priority");
+      HTML.Put_Header_Cell (Data => "O",
+                            Acronym => "Override");
+      HTML.Put_Header_Cell (Data => "S",
+                            Acronym => "Share");
+      HTML.Put_Header_Cell (Data => "F",
+                            Acronym => "Functional");
+      HTML.Put_Header_Cell (Data => "Urgency");
+      HTML.Put_Header_Cell (Data => "Resource");
+      HTML.Put_Header_Cell (Data => "Waiting");
+      HTML.Put_Header_Cell (Data => "Custom");
+      Ada.Text_IO.Put ("</tr>");
+      Iterate (List, Put'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
+   end Put_List;
 --
 --     -------------------
 --     -- Put_Time_List --
@@ -610,44 +608,29 @@ package body Jobs is
 --     --  This included ID, name, and owner
 --     -------------------
 --
---     procedure Put_Core_Header is
---     begin
---        HTML.Put_Header_Cell (Data => "Number");
---        for Capability in Balancer_Capability'Range loop
---           if Capability /= Any then
---              HTML.Put_Header_Cell (Data => ""); -- Balancer support
---           end if;
---        end loop;
---
---        HTML.Put_Header_Cell (Data => "Project");
---        HTML.Put_Header_Cell (Data => "Owner");
---        HTML.Put_Header_Cell (Data => "Name");
---     end Put_Core_Header;
---
---     procedure Put_Core_Line (J : Job) is
+   procedure Put_Core_Header is
+   begin
+      HTML.Put_Header_Cell (Data => "Number");
+      HTML.Put_Header_Cell (Data => "Project");
+      HTML.Put_Header_Cell (Data => "Owner");
+      HTML.Put_Header_Cell (Data => "Name");
+   end Put_Core_Header;
+
+   procedure Put_Core_Line (J : Job) is
 --        Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
---     begin
+   begin
 --        if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
---           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left),
---                          Link_Param => "job_id");
+         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+                        Link_Param => "job_id");
 --        else
 --           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
 --                                        & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
 --                          Link_Param => "job_id");
 --        end if;
---        for Capability in Balancer_Capability'Range loop
---           if Capability /= Any then
---              if Supports_Balancer (J, Capability) then
---                 HTML.Put_Img_Cell ("balance_" & To_String (Capability));
---              else
---                 HTML.Put_Cell (Data => "");
---              end if;
---           end if;
---        end loop;
---        HTML.Put_Cell (Data => Get_Project (J));
---        HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
---        HTML.Put_Cell (Data => Name_As_HTML (J));
---     end Put_Core_Line;
+      HTML.Put_Cell (Data => Get_Project (J));
+      HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
+      HTML.Put_Cell (Data => Name_As_HTML (J));
+   end Put_Core_Line;
 --
 --     -------------------
 --     -- Put_Prio_Core --
@@ -885,29 +868,31 @@ package body Jobs is
 --        end case;
 --     end Put_Usage;
 --
---     procedure Start_Row (J : Job) is
---     begin
---        Ada.Text_IO.Put ("<tr");
+   procedure Start_Row (J : Job) is
+      pragma Unreferenced (J);
+   begin
+      Ada.Text_IO.Put ("<tr");
 --        if Has_Error_Log_Entries (J) then
 --           Ada.Text_IO.Put (" class=""program_error""");
 --        elsif Quota_Inhibited (J) and then not Is_Running (J) then
 --           Ada.Text_IO.Put (" class=""job-quota""");
 --        end if;
---        Ada.Text_IO.Put_Line (">");
---     end Start_Row;
---
---     procedure Finish_Row (J : Job) is
---        procedure Put_Error (Message : String);
---
---        procedure Put_Error (Message : String) is
---        begin
---           HTML.Comment (Message);
---        end Put_Error;
---
---     begin
---        Ada.Text_IO.Put_Line ("</tr>");
+      Ada.Text_IO.Put_Line (">");
+   end Start_Row;
+
+   procedure Finish_Row (J : Job) is
+      pragma Unreferenced (J);
+      procedure Put_Error (Message : String);
+
+      procedure Put_Error (Message : String) is
+      begin
+         HTML.Comment (Message);
+      end Put_Error;
+
+   begin
+      Ada.Text_IO.Put_Line ("</tr>");
 --        Iterate_Errors (J, Put_Error'Access);
---     end Finish_Row;
+   end Finish_Row;
 --
 --     procedure Try_Put_Paragraph (Label  : String;
 --                                  Getter : not null access function (J : Job) return String;
