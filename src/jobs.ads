@@ -1,4 +1,3 @@
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with Parser; use Parser;
 --  with SGE.Utils; use SGE.Utils;
 with Slurm.Jobs; use Slurm.Jobs;

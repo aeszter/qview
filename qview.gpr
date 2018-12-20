@@ -2,18 +2,18 @@ with "../slurmlib/slurmlib.gpr";
 
 project Qview is
 
-   type Build_Kind is
-      ("default");
    type Xmlada_Kind_Type is
       ("static", "relocatable");
    Library_Type : Xmlada_Kind_Type := external ("LIBRARY_TYPE");
-   FLORIST_BUILD : Build_Kind := external ("FLORIST_BUILD");
+   type Build_Kind is
+      ("default");
+   Florist_Build : Build_Kind := external ("FLORIST_BUILD");
 
    case Library_Type is
 
       when "static" =>
 
-         case FLORIST_BUILD is
+         case Florist_Build is
 
             when "default" =>
                for Main use ("qview.adb");
@@ -41,7 +41,12 @@ project Qview is
       case Library_Type is
 
          when "static" =>
-            for Default_Switches ("ada") use ("-gnatVaefimo", "-gnaty3bBcxtSOnaihelkrs", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
+
+            case Florist_Build is
+
+               when "default" =>
+                  for Default_Switches ("ada") use ("-gnatVaefimo", "-gnatyyabBehiklnoO3bBcxtSOnaihelkrs", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
+            end case;
 
          when "relocatable" =>
             for Default_Switches ("ada") use ("-gnato", "-fstack-check", "-g", "-gnat05", "-ftest-coverage", "-fprofile-arcs", "-gnatf");
@@ -49,8 +54,7 @@ project Qview is
    end Compiler;
 
    package Linker is
-      for Default_Switches ("Ada") use ("-lslurm");
-
+      for Default_Switches ("ada") use ("-lslurm");
    end Linker;
 
 end Qview;

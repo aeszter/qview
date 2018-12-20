@@ -24,7 +24,7 @@ package body Jobs is
    procedure Put (Position : Slurm.Jobs.Cursor);
 --     procedure Put_State (Flag : SGE.Jobs.State_Flag);
 --     procedure Put_State (J : Job);
---     procedure Put_State_Cell (J : Job);
+   procedure Put_State_Cell (J : Job);
    procedure Put_Core_Header;
    procedure Put_Core_Line (J : Job);
 --     procedure Put_Prio_Core (J : Job);
@@ -247,6 +247,14 @@ package body Jobs is
       end if;
       Start_Row (J);
       Put_Core_Line (J);
+      HTML.Put_Time_Cell (Get_Submission_Time (J));
+      HTML.Put_Cell (Data  => Get_Tasks (J)'Img,
+                Class => "right");
+      Put_State_Cell (J);
+      HTML.Put_Cell (Data => Get_Gres (J));
+      HTML.Put_Cell (Data => Get_Priority (J)'Img,
+                Class => "right");
+      HTML.Put_Time_Cell (Get_Start_Time (J));
       Finish_Row (J);
    end Put;
 
@@ -258,31 +266,14 @@ package body Jobs is
       Put_Summary;
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
-      HTML.Put_Cell (Data       => "",
-                     Tag        => "th",
-                     Colspan => 8,
-                     Class => "delimited");
-      HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
-                     Tag => "th",
-                     Colspan => 8,
-                     Class => "delimited");
-      Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
       HTML.Put_Header_Cell (Data => "Submitted");
-      HTML.Put_Header_Cell (Data => "Slots");
+      HTML.Put_Header_Cell (Data => "Tasks");
       HTML.Put_Header_Cell (Data => "State");
       HTML.Put_Header_Cell (Data => "Res");
       HTML.Put_Header_Cell (Data => "Priority");
-      HTML.Put_Header_Cell (Data => "O",
-                            Acronym => "Override");
-      HTML.Put_Header_Cell (Data => "S",
-                            Acronym => "Share");
-      HTML.Put_Header_Cell (Data => "F",
-                            Acronym => "Functional");
-      HTML.Put_Header_Cell (Data => "Urgency");
-      HTML.Put_Header_Cell (Data => "Resource");
-      HTML.Put_Header_Cell (Data => "Waiting");
-      HTML.Put_Header_Cell (Data => "Custom");
+      HTML.Put_Header_Cell (Data => "Start");
+
       Ada.Text_IO.Put ("</tr>");
       Iterate (List, Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
@@ -769,16 +760,16 @@ package body Jobs is
 --        Finish_Row (J);
 --     end Put_Prio_Line;
 --
---     procedure Put_State_Cell (J : Job) is
---     begin
---        if Has_Error (J) then
---           HTML.Put_Img_Cell (Get_State (J),
---                              Extra_Text => " <a href=""" &
---                                HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)) & """>clear error</a>");
---        else
---           HTML.Put_Img_Cell (Get_State (J));
---        end if;
---     end Put_State_Cell;
+   procedure Put_State_Cell (J : Job) is
+   begin
+      if Has_Error (J) then
+         HTML.Put_Img_Cell (Get_State (J),
+                            Extra_Text => " <a href=""" &
+                              HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)'Img) & """>clear error</a>");
+      else
+         HTML.Put_Img_Cell (Get_State (J));
+      end if;
+   end Put_State_Cell;
 --
 --     procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
 --        procedure Put_Memory (Label : String; Memory : Usage_Number);
