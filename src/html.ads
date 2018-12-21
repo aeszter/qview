@@ -4,7 +4,6 @@ with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 
 with CGI; use CGI;
 
-
 package HTML is
    procedure Begin_Form;
    procedure End_Form;

@@ -3,11 +3,9 @@
 with Slurm.Jobs; use Slurm.Jobs;
 --  with SGE.Bunches;
 
-
 package Jobs is
 
    Max_Name_Length : constant Positive := 25;
-
 
    function Name_As_HTML (J : Job) return String;
 

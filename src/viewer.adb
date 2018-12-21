@@ -14,10 +14,19 @@ with Maintenance;
 with Share_Tree;
 with Diagnostics;
 with Ada.Strings;
-with Queues; use Queues;
 with Ada.Integer_Text_IO;
 
 package body Viewer is
+
+   procedure Append_Params (Params : String) is
+   begin
+      My_Params := My_Params & "&" & Params;
+   end Append_Params;
+
+   function Params return String is
+   begin
+      return To_String (My_Params);
+   end Params;
 
    procedure Put_Error (Message : String) is
    begin
@@ -37,10 +46,10 @@ package body Viewer is
       CGI.Put_HTML_Tail;
    end Put_Result;
 
-   ----------
-   -- View --
-   --  Purpose: Main routine, display the entire page
-   ----------
+   procedure Set_Params (Params : String) is
+   begin
+      My_Params := To_Unbounded_String (Params);
+   end Set_Params;
 
    procedure View is
       procedure Put_Error (Message : String);
@@ -55,7 +64,8 @@ package body Viewer is
       procedure View_Host (Name : String);
       procedure View_Job (Job_ID : String);
       procedure View_Job_Overview;
---        procedure View_Jobs (Selector : Trusted_String; Only_Waiting : Boolean := False);
+      --        procedure View_Jobs (Selector : Trusted_String;
+      -- Only_Waiting : Boolean := False);
       procedure View_Jobs_Of_User (User : String);
       procedure View_Jobs_In_Queue (Queue : String);
       procedure View_Maintenance_Report;
@@ -66,10 +76,6 @@ package body Viewer is
 
       Headers_Sent : Boolean := False;
 
-      procedure Put_Error (Message : String) is
-      begin
-         Ada.Text_IO.Put_Line ("<li>" & Message & "</li>");
-      end Put_Error;
 
 
       procedure Put_Headers (Title : String) is
@@ -125,6 +131,10 @@ package body Viewer is
          Ada.Text_IO.Put ("</li>");
       end Put_Diagnostics;
 
+      procedure Put_Error (Message : String) is
+      begin
+         Ada.Text_IO.Put_Line ("<li>" & Message & "</li>");
+      end Put_Error;
 
       procedure Put_Footer is
       begin
@@ -132,7 +142,8 @@ package body Viewer is
          Ada.Text_IO.Put ("<ul>");
          Ada.Text_IO.Put_Line ("<li><a href=""mailto:aeszter@gwdg.de"">"
                                & "aeszter@gwdg.de</a></li>");
-         Ada.Text_IO.Put_Line ("<li><a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+         Ada.Text_IO.Put_Line ("<li><a href="""
+                               & CGI.Get_Environment ("BUGZILLA_URL")
                                & "/enter_bug.cgi?"
                                & "component=qview&form_name=enter_bug"
                                & "&product=Projects&version="
@@ -171,8 +182,8 @@ package body Viewer is
 --           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
 --           SGE.Parser.Free;
 --
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
---
+--           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
+--                                    Selector => Implicit_Trust ("-j *"));
 --           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
 --           SGE.Parser.Free;
 --           Jobs.Apply_Overlay;
@@ -204,7 +215,6 @@ package body Viewer is
 --           Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
 --           SGE.Parser.Free;
 
-
          --  Detect different partitions
          Partitions.Build_List;
 
@@ -214,7 +224,8 @@ package body Viewer is
          HTML.End_Div (Class => "partitions");
       end View_Detailed_Queues;
 
---        procedure View_Jobs (Selector : Trusted_String; Only_Waiting : Boolean := False) is
+      --        procedure View_Jobs (Selector : Trusted_String;
+      -- Only_Waiting : Boolean := False) is
 --           SGE_Out     : Parser.Tree;
 --
 --
@@ -318,11 +329,6 @@ package body Viewer is
 --              Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
-
-      -------------------
-      -- View_Forecast --
-      -------------------
-
       procedure View_Equivalent_Hosts (Host_Name : String) is
 --           procedure View_One_Queue (Q : SGE.Queues.Queue);
 --           SGE_Out : Parser.Tree;
@@ -371,9 +377,6 @@ package body Viewer is
       end View_Forecast;
 
 
-      ----------------
-      -- View_Bunch --
-      ----------------
 
       procedure View_Bunch is
 --           SGE_Out : Parser.Tree;
@@ -425,6 +428,10 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
+      procedure View_Maintenance_Report is
+      begin
+         Maintenance.Put_All;
+      end View_Maintenance_Report;
 
       procedure View_Partition is
 --           Props : Set_Of_Properties;
@@ -447,18 +454,13 @@ package body Viewer is
          Reservations.Put_All;
       end View_Reservations;
 
-      procedure View_Maintenance_Report is
-      begin
-         Maintenance.Put_All;
-      end View_Maintenance_Report;
-
       procedure View_Share_Tree is
 --           Plain_Out : SGE.Spread_Sheets.Spread_Sheet;
 --           SGE_Out : Parser.Tree;
 
       begin
 --           Plain_Out := Parser.Setup_No_XML (Command => Trust_As_Command ("sge_share_mon"),
---                                            Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
+-- Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
 --           Share_Tree.Append_List (Plain_Out);
 --
 --           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -s r -r"));
@@ -474,7 +476,6 @@ package body Viewer is
 
          Share_Tree.Put_Summary;
          Share_Tree.Put_List;
-
 
       end View_Share_Tree;
 
@@ -621,7 +622,8 @@ package body Viewer is
 --        function Net_Selector return Trusted_String;
 --
 --        SGE_Out      : Parser.Tree;
---        CPU_Selector : constant Trusted_String := Implicit_Trust (" -l cm=") & Sanitise (To_String (Get_Model (Props)));
+--        CPU_Selector : constant Trusted_String := Implicit_Trust (" -l cm=")
+-- & Sanitise (To_String (Get_Model (Props)));
 --        GPU          : constant String := To_String (Get_GPU (Props));
 --
 --        function GPU_Selector return Trusted_String is
@@ -682,29 +684,5 @@ package body Viewer is
 --           Ada.Text_IO.Put_Line ("</table>");
 --           HTML.End_Div (Class => "host_list");
 --     end View_Hosts;
-
-
-   ----------------
-   -- Set_Params --
-   ----------------
-
-   procedure Set_Params (Params : String) is
-   begin
-      My_Params := To_Unbounded_String (Params);
-   end Set_Params;
-
-   -------------------
-   -- Append_Params --
-   -------------------
-
-   procedure Append_Params (Params : String) is
-   begin
-      My_Params := My_Params & "&" & Params;
-   end Append_Params;
-
-   function Params return String is
-   begin
-      return To_String (My_Params);
-   end Params;
 
 end Viewer;

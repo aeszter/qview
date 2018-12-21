@@ -45,7 +45,7 @@ project Qview is
             case Florist_Build is
 
                when "default" =>
-                  for Default_Switches ("ada") use ("-gnatVaefimo", "-gnatyyabBehiklnoO3bBcxtSOnaihelkrs", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
+                  for Default_Switches ("ada") use ("-gnatVaefimo", "-gnatyylbyaAbBCehiklM100noOpsStux3", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
             end case;
 
          when "relocatable" =>

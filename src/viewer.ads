@@ -1,6 +1,5 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-
 package Viewer is
    procedure View;
    procedure Set_Params (Params : String);

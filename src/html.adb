@@ -150,7 +150,6 @@ package body HTML is
 --        Put_Line (Close_Tag);
 --     end Put_Cell;
 
-
    --------------
    -- Put_Cell --
    --------------
@@ -362,7 +361,6 @@ package body HTML is
    begin
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
-
 
    ----------------
    -- Put_Job_ID --
