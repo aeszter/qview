@@ -251,12 +251,12 @@ package body Jobs is
       if Show_Resources then
          HTML.Put_Cell (Data => "Resource Usage",
                         Tag => "th",
-                        Colspan => 3,
+                        Colspan => 4,
                         Class   => "delimited");
       end if;
       HTML.Put_Cell (Data => "Priority" & HTML.Help_Icon (Topic => "Job_priority"),
                      Tag => "th",
-                     Colspan => 8,
+                     Colspan => 6,
                      Class => "delimited");
       Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
@@ -268,17 +268,14 @@ package body Jobs is
          HTML.Put_Header_Cell (Data => "Memory",
                             Acronym => "Gigabyte-hours");
          HTML.Put_Header_Cell (Data => "IO",
-                            Acronym => "Gigabytes");
+                               Acronym => "Gigabytes");
+         HTML.Put_Header_Cell (Data => "Walltime");
       else
          HTML.Put_Header_Cell (Data => "Res");
       end if;
       HTML.Put_Header_Cell (Data => "Priority");
       HTML.Put_Header_Cell (Data => "O",
                             Acronym => "Override");
-      HTML.Put_Header_Cell (Data => "S",
-                            Acronym => "Share");
-      HTML.Put_Header_Cell (Data => "F",
-                            Acronym => "Functional");
       HTML.Put_Header_Cell (Data => "Urgency");
       HTML.Put_Header_Cell (Data => "Resource");
       HTML.Put_Header_Cell (Data => "Waiting");
@@ -656,8 +653,6 @@ package body Jobs is
    begin
       HTML.Put_Cell (Data => Get_Priority (J)'Img);
       HTML.Put_Cell (Data => Get_Override_Tickets (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Share_Tickets (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Functional_Tickets (J)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Urgency (J)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Resource_Contrib (J)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Waiting_Contrib (J)'Img, Class => "right");
@@ -756,6 +751,7 @@ package body Jobs is
       else
          HTML.Put_Cell ("");
       end if;
+      HTML.Put_Duration_Cell (Walltime (J));
       Put_Prio_Core (J);
       Finish_Row (J);
    exception

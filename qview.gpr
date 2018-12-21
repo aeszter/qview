@@ -1,4 +1,5 @@
-with "/sw/cluster/florist17/share/gpr/florist.gpr";
+with "/opt/florist/share/gpr/florist.gpr";
+--with "/sw/cluster/florist17/share/gpr/florist.gpr";
 with "../sgelib/sgelib.gpr";
 with "../cmlib/cmlib.gpr";
 
