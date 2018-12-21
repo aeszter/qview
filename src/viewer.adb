@@ -76,43 +76,6 @@ package body Viewer is
 
       Headers_Sent : Boolean := False;
 
-
-
-      procedure Put_Headers (Title : String) is
-      begin
-         CGI.Put_CGI_Header;
-         Headers_Sent := True;
---           SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
---                      Where    => SGE.Debug.Default,
---                      Severity => 1);
-         Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - "
-                               & HTML.Encode (Title) & "</title>");
-         HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
-         HTML.Put_Opensearch (CGI.My_URL & "?opensearch=y");
-         Ada.Text_IO.Put_Line ("</head><body>");
-         HTML.Begin_Div (ID => "page");
-         HTML.Begin_Div (ID => "header");
-         CGI.Put_HTML_Heading (Title => "Strix Status", Level => 1);
-         HTML.Put_Navigation_Begin;
-         HTML.Put_Navigation_Link (Data => "Overview", Link_Param => "categories=both");
-         HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
-         HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
-         HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
-                                   Link_Param => "forecast=y");
-         HTML.Put_Navigation_Link (Data       => "Reservations",
-                                   Link_Param => "ar=y");
-         HTML.Put_Navigation_Link (Data       => "Scheduler",
-                                   Link_Param => "reservation=y");
-         HTML.Put_Navigation_Link (Data       => "Maintenance",
-                                   Link_Param => "maintenance=y");
-         HTML.Put_Navigation_Link (Data       => "Users",
-                                   Link_Param => "sharetree=y");
-         HTML.Put_Search_Box;
-         HTML.Put_Navigation_End;
-         HTML.End_Div (ID => "header");
-         HTML.Begin_Div (ID => "content");
-      end Put_Headers;
-
       procedure Put_Diagnostics is
       begin
          Ada.Text_IO.Put ("<li>");
@@ -161,47 +124,91 @@ package body Viewer is
          HTML.End_Div (ID => "page");
       end Put_Footer;
 
-      -----------------------
-      -- View_Job_Overview --
-      -----------------------
-
-      procedure View_Job_Overview is
---           SGE_Out     : Parser.Tree;
+      procedure Put_Headers (Title : String) is
       begin
-         HTML.Begin_Div (Class => "bunches");
-         CGI.Put_HTML_Heading (Title => "Demand",
-                            Level => 2);
+         CGI.Put_CGI_Header;
+         Headers_Sent := True;
+--           SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
+--                      Where    => SGE.Debug.Default,
+--                      Severity => 1);
+         Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - "
+                               & HTML.Encode (Title) & "</title>");
+         HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
+         HTML.Put_Opensearch (CGI.My_URL & "?opensearch=y");
+         Ada.Text_IO.Put_Line ("</head><body>");
+         HTML.Begin_Div (ID => "page");
+         HTML.Begin_Div (ID => "header");
+         CGI.Put_HTML_Heading (Title => "Strix Status", Level => 1);
+         HTML.Put_Navigation_Begin;
+         HTML.Put_Navigation_Link (Data       => "Overview",
+                                   Link_Param => "categories=both");
+         HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
+         HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
+         HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
+                                   Link_Param => "forecast=y");
+         HTML.Put_Navigation_Link (Data       => "Reservations",
+                                   Link_Param => "ar=y");
+         HTML.Put_Navigation_Link (Data       => "Scheduler",
+                                   Link_Param => "reservation=y");
+         HTML.Put_Navigation_Link (Data       => "Maintenance",
+                                   Link_Param => "maintenance=y");
+         HTML.Put_Navigation_Link (Data       => "Users",
+                                   Link_Param => "sharetree=y");
+         HTML.Put_Search_Box;
+         HTML.Put_Navigation_End;
+         HTML.End_Div (ID => "header");
+         HTML.Begin_Div (ID => "content");
+      end Put_Headers;
+
+      procedure View_Bunch is
+--           SGE_Out : Parser.Tree;
+
+      begin
 --           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
 --                                    Selector => Implicit_Trust ("-l slots -u *"));
 --           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
 --                                                            Tag_Name => "qquota_rule"));
 --           SGE.Parser.Free;
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -r -s p"));
---
+--           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
+--                                    Selector => Implicit_Trust ("-r -s p -u *"));
+
+         Append_Params ("pe=" & CGI.Value ("pe"));
+         Append_Params ("queue=" & CGI.Value ("queue"));
+         Append_Params ("hr=" & CGI.Value ("hr"));
+         Append_Params ("sr=" & CGI.Value ("sr"));
+         Append_Params ("slot_ranges=" & CGI.Value ("slot_ranges"));
+         Append_Params ("slot_number=" & CGI.Value ("slot_number"));
+
 --           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
 --           SGE.Parser.Free;
---
 --           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
 --                                    Selector => Implicit_Trust ("-j *"));
 --           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
 --           SGE.Parser.Free;
---           Jobs.Apply_Overlay;
+--           Jobs.Prune_List (PE            => CGI.Value ("pe"),
+--                            Queue         => CGI.Value ("queue"),
+--                            Hard_Requests => CGI.Value ("hr"),
+--                            Soft_Requests => CGI.Value ("sr"),
+--                            Slot_Ranges   => CGI.Value ("slot_ranges"),
+--                            Slot_Number   => CGI.Value ("slot_number")
+--                           );
 --           Jobs.Update_Quota;
-
-         --  Detect different bunches
-         Bunches.Build_List;
-
-         --  Output
-         Bunches.Put_List;
-         Ada.Text_IO.Put_Line ("</table>");
-         HTML.End_Div (Class => "bunches");
-      end View_Job_Overview;
-
-
-      --------------------------
-      -- View_Detailed_Queues --
-      --------------------------
+--
+--           if not HTML.Param_Is ("sort", "") then
+--              Jobs.Sort_By (Field     => CGI.Value ("sort"),
+--                            Direction => Sort_Direction);
+--           end if;
+--
+--           Jobs.Put_Bunch_List;
+         HTML.Put_Paragraph (Label    => "View_Bunch",
+                             Contents => "unimplemented");
+      exception
+         when E : others =>
+            HTML.Error ("Error while viewing bunch of jobs: "
+                        & Exception_Message (E));
+            Ada.Text_IO.Put_Line ("</table>");
+            HTML.End_Div (Class => "job_list");
+      end View_Bunch;
 
       procedure View_Detailed_Queues is
 --           SGE_Out        : Parser.Tree;
@@ -261,74 +268,6 @@ package body Viewer is
 --           HTML.End_Div (Class => "job_list");
 --        end View_Jobs;
 
-      procedure View_Jobs_In_Queue (Queue : String) is
-      begin
-         CGI.Put_HTML_Heading (Title => """" & Queue & """ Jobs", Level => 2);
-         HTML.Put_Paragraph (Label    => "View_Jobs_In_Queue",
-                             Contents => "unimplemented");
---           View_Jobs (Implicit_Trust ("-u * -s r -q ") & Sanitise (Queue));
-      end View_Jobs_In_Queue;
-
-
-      procedure View_Global_Jobs is
-      begin
-         CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-         Jobs.Put_List;
-      end View_Global_Jobs;
-
-      procedure View_Waiting_Jobs is
-      begin
-         CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         HTML.Put_Paragraph (Label    => "View_Waiting_Jobs",
-                             Contents => "unimplemented");
---  View_Jobs (Selector => Implicit_Trust ("-u * -s p"), Only_Waiting => True);
-      end View_Waiting_Jobs;
-
-      procedure View_Jobs_Of_User (User : String) is
-      begin
-         CGI.Put_HTML_Heading (Title => "Jobs of " & User,
-                               Level => 2);
-         HTML.Put_Paragraph (Label    => "View_Jobs_Of_User",
-                             Contents => "unimplemented");
---           View_Jobs (Implicit_Trust ("-u ") & Sanitise (User));
-      end View_Jobs_Of_User;
-
-      procedure View_Host (Name : String) is
---           SGE_Out       : Parser.Tree;
-      begin
-         CGI.Put_HTML_Heading (Title => "Details of " & Name,
-                               Level => 2);
---           SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
---                                    Selector => Parser.Resource_Selector
---                                    & Implicit_Trust (",load_short -q -j -h ") & Sanitise (Name));
---           SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
---           SGE.Parser.Free;
-         Hosts.Put_Details;
-
---        exception
---           when Parser_Error =>
---              Ada.Text_IO.Put_Line ("<p><it>Host does not exist</it></p>");
-      end View_Host;
-
-      procedure View_Job (Job_ID : String) is
---           SGE_Out       : Parser.Tree;
-      begin
-         CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
-                               Level => 2);
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j ") & Sanitise (Job_ID));
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out), True);
---           Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Update_Status;
---           Jobs.Search_Queues;
---           Jobs.Put_Details;
-
---        exception
---           when Parser_Error =>
---              Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
-      end View_Job;
-
       procedure View_Equivalent_Hosts (Host_Name : String) is
 --           procedure View_One_Queue (Q : SGE.Queues.Queue);
 --           SGE_Out : Parser.Tree;
@@ -376,58 +315,96 @@ package body Viewer is
 
       end View_Forecast;
 
-
-
-      procedure View_Bunch is
---           SGE_Out : Parser.Tree;
-
-
+      procedure View_Global_Jobs is
       begin
+         CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
+         Jobs.Put_Global_List;
+      end View_Global_Jobs;
+
+      procedure View_Host (Name : String) is
+--           SGE_Out       : Parser.Tree;
+      begin
+         CGI.Put_HTML_Heading (Title => "Details of " & Name,
+                               Level => 2);
+--           SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
+--                                    Selector => Parser.Resource_Selector
+--                                    & Implicit_Trust (",load_short -q -j -h ") & Sanitise (Name));
+--           SGE.Hosts.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "host"));
+--           SGE.Parser.Free;
+         Hosts.Put_Details;
+
+--        exception
+--           when Parser_Error =>
+--              Ada.Text_IO.Put_Line ("<p><it>Host does not exist</it></p>");
+      end View_Host;
+
+      procedure View_Job (Job_ID : String) is
+--           SGE_Out       : Parser.Tree;
+      begin
+         CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
+                               Level => 2);
+--           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j ") & Sanitise (Job_ID));
+--
+--           Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out), True);
+--           Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
+--           SGE.Parser.Free;
+--           Jobs.Update_Status;
+--           Jobs.Search_Queues;
+--           Jobs.Put_Details;
+
+--        exception
+--           when Parser_Error =>
+--              Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
+      end View_Job;
+
+      procedure View_Job_Overview is
+--           SGE_Out     : Parser.Tree;
+      begin
+         HTML.Begin_Div (Class => "bunches");
+         CGI.Put_HTML_Heading (Title => "Demand",
+                            Level => 2);
 --           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
 --                                    Selector => Implicit_Trust ("-l slots -u *"));
 --           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
 --                                                            Tag_Name => "qquota_rule"));
 --           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-r -s p -u *"));
-
-         Append_Params ("pe=" & CGI.Value ("pe"));
-         Append_Params ("queue=" & CGI.Value ("queue"));
-         Append_Params ("hr=" & CGI.Value ("hr"));
-         Append_Params ("sr=" & CGI.Value ("sr"));
-         Append_Params ("slot_ranges=" & CGI.Value ("slot_ranges"));
-         Append_Params ("slot_number=" & CGI.Value ("slot_number"));
-
+--
+--           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -r -s p"));
+--
 --           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
 --           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-j *"));
+--
+--           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
+--
 --           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
 --           SGE.Parser.Free;
---           Jobs.Prune_List (PE            => CGI.Value ("pe"),
---                            Queue         => CGI.Value ("queue"),
---                            Hard_Requests => CGI.Value ("hr"),
---                            Soft_Requests => CGI.Value ("sr"),
---                            Slot_Ranges   => CGI.Value ("slot_ranges"),
---                            Slot_Number   => CGI.Value ("slot_number")
---                           );
+--           Jobs.Apply_Overlay;
 --           Jobs.Update_Quota;
---
---           if not HTML.Param_Is ("sort", "") then
---              Jobs.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           end if;
---
---           Jobs.Put_Bunch_List;
-         HTML.Put_Paragraph (Label    => "View_Bunch",
+
+         --  Detect different bunches
+         Bunches.Build_List;
+
+         --  Output
+         Bunches.Put_List;
+         Ada.Text_IO.Put_Line ("</table>");
+         HTML.End_Div (Class => "bunches");
+      end View_Job_Overview;
+
+      procedure View_Jobs_In_Queue (Queue : String) is
+      begin
+         CGI.Put_HTML_Heading (Title => """" & Queue & """ Jobs", Level => 2);
+         HTML.Put_Paragraph (Label    => "View_Jobs_In_Queue",
                              Contents => "unimplemented");
-      exception
-         when E : others =>
-            HTML.Error ("Error while viewing bunch of jobs: "
-                        & Exception_Message (E));
-            Ada.Text_IO.Put_Line ("</table>");
-            HTML.End_Div (Class => "job_list");
-      end View_Bunch;
+--           View_Jobs (Implicit_Trust ("-u * -s r -q ") & Sanitise (Queue));
+      end View_Jobs_In_Queue;
+
+      procedure View_Jobs_Of_User (User : String) is
+      begin
+         CGI.Put_HTML_Heading (Title => "Jobs of " & User,
+                               Level => 2);
+         Jobs.Put_User_List (User);
+      end View_Jobs_Of_User;
+
       procedure View_Maintenance_Report is
       begin
          Maintenance.Put_All;
@@ -478,6 +455,14 @@ package body Viewer is
          Share_Tree.Put_List;
 
       end View_Share_Tree;
+
+      procedure View_Waiting_Jobs is
+      begin
+         CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
+         HTML.Put_Paragraph (Label    => "View_Waiting_Jobs",
+                             Contents => "unimplemented");
+--  View_Jobs (Selector => Implicit_Trust ("-u * -s p"), Only_Waiting => True);
+      end View_Waiting_Jobs;
 
    begin
 --        SGE.Debug.Initialize (CGI.Value ("DEBUG"), HTML.Comment'Access);

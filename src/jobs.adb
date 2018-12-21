@@ -16,8 +16,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Utils; use Slurm.Utils;
 
-
-
 package body Jobs is
 
 --     List : SGE.Jobs.List;
@@ -44,6 +42,31 @@ package body Jobs is
 --                                Bunch_List => Result);
 --     end Bunch;
 
+   procedure Finish_Row (J : Job) is
+      pragma Unreferenced (J);
+      procedure Put_Error (Message : String);
+
+      procedure Put_Error (Message : String) is
+      begin
+         HTML.Comment (Message);
+      end Put_Error;
+
+   begin
+      Ada.Text_IO.Put_Line ("</tr>");
+--        Iterate_Errors (J, Put_Error'Access);
+   end Finish_Row;
+
+   function Name_As_HTML (J : Job) return String is
+      Name : constant String := Get_Name (J);
+   begin
+      if Name'Length > 20 then
+         return "<acronym title=""" & Name & """>"
+                           & Name (Name'First .. Name'First + 19) & "</acronym>";
+      else
+         return Name;
+      end if;
+   end Name_As_HTML;
+
    procedure Put_Summary is
 --        Task_Summary, Slot_Summary : State_Count;
    begin
@@ -56,7 +79,8 @@ package body Jobs is
 --           Ada.Text_IO.Put ("<li>");
 --           Ada.Text_IO.Put (Task_Summary (State)'Img);
 --           if Slot_Summary (State) > 0 then
---              Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
+--              Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (
+      -- Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
 --           end if;
 --           Ada.Text_IO.Put (" ");
 --           --           Put_State (Flag => State);
@@ -98,20 +122,6 @@ package body Jobs is
 --        end if;
 --     end Put_State;
 --
---     ------------------
---     -- Name_As_HTML --
---     ------------------
---
-   function Name_As_HTML (J : Job) return String is
-      Name : constant String := Get_Name (J);
-   begin
-      if Name'Length > 20 then
-         return "<acronym title=""" & Name & """>"
-                           & Name (Name'First .. Name'First + 19) & "</acronym>";
-      else
-         return Name;
-      end if;
-   end Name_As_HTML;
 --
 --     procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False) is
 --     begin
@@ -259,11 +269,44 @@ package body Jobs is
       Finish_Row (J);
    end Put;
 
-   procedure Put_List is
-      use Slurm.Jobs;
-      List : Slurm.Jobs.List;
+   procedure Put_Core_Header is
    begin
-      List := Slurm.Jobs.Load_Jobs;
+      HTML.Put_Header_Cell (Data => "Number");
+      HTML.Put_Header_Cell (Data => "Project");
+      HTML.Put_Header_Cell (Data => "Owner");
+      HTML.Put_Header_Cell (Data => "Name");
+   end Put_Core_Header;
+
+   procedure Put_Core_Line (J : Job) is
+--        Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
+   begin
+--        if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
+         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+                        Link_Param => "job_id");
+--        else
+--           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
+--                                        & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
+--                          Link_Param => "job_id");
+--        end if;
+      HTML.Put_Cell (Data => Get_Project (J));
+      HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
+      HTML.Put_Cell (Data => Name_As_HTML (J));
+   end Put_Core_Line;
+
+   procedure Put_Details is
+   begin
+      Ada.Text_IO.Put ("unimplemented");
+--      Iterate (List, Jobs.Put'Access);
+   end Put_Details;
+
+   procedure Put_Global_List is
+   begin
+      Put_List (Slurm.Jobs.Load_Jobs);
+   end Put_Global_List;
+
+   procedure Put_List (List : Slurm.Jobs.List) is
+      use Slurm.Jobs;
+   begin
       Put_Summary;
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
@@ -327,16 +370,6 @@ package body Jobs is
 --     end Put_Bunch_List;
 --
 --
---     -----------------
---     -- Put_Details --
---     -----------------
---
-   procedure Put_Details is
-   begin
-      Ada.Text_IO.Put ("unimplemented");
---      Iterate (List, Jobs.Put'Access);
-   end Put_Details;
-
 --     ---------
 --     -- Put --
 --     ---------
@@ -595,35 +628,6 @@ package body Jobs is
 --        HTML.Put_Clearer;
 --     end Put;
 --
---     -------------------
---     -- Put_Core_Line --
---     --  Purpose: Output standard data for one job as a number of table cells (td).
---     --  This included ID, name, and owner
---     -------------------
---
-   procedure Put_Core_Header is
-   begin
-      HTML.Put_Header_Cell (Data => "Number");
-      HTML.Put_Header_Cell (Data => "Project");
-      HTML.Put_Header_Cell (Data => "Owner");
-      HTML.Put_Header_Cell (Data => "Name");
-   end Put_Core_Header;
-
-   procedure Put_Core_Line (J : Job) is
---        Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
-   begin
---        if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
-         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
-                        Link_Param => "job_id");
---        else
---           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
---                                        & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
---                          Link_Param => "job_id");
---        end if;
-      HTML.Put_Cell (Data => Get_Project (J));
-      HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
-      HTML.Put_Cell (Data => Name_As_HTML (J));
-   end Put_Core_Line;
 --
 --     -------------------
 --     -- Put_Prio_Core --
@@ -767,7 +771,9 @@ package body Jobs is
       if Has_Error (J) then
          HTML.Put_Img_Cell (Get_State (J),
                             Extra_Text => " <a href=""" &
-                              HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)'Img) & """>clear error</a>");
+                              HTML.Get_Action_URL (Action => "cj",
+                                                   Params => "j="
+                                                   & Get_ID (J)'Img) & """>clear error</a>");
       else
          HTML.Put_Img_Cell (Get_State (J));
       end if;
@@ -861,6 +867,12 @@ package body Jobs is
 --        end case;
 --     end Put_Usage;
 --
+
+   procedure Put_User_List (User : String) is
+   begin
+      Put_List (Slurm.Jobs.Load_User (User));
+   end Put_User_List;
+
    procedure Start_Row (J : Job) is
       pragma Unreferenced (J);
    begin
@@ -873,20 +885,6 @@ package body Jobs is
       Ada.Text_IO.Put_Line (">");
    end Start_Row;
 
-   procedure Finish_Row (J : Job) is
-      pragma Unreferenced (J);
-      procedure Put_Error (Message : String);
-
-      procedure Put_Error (Message : String) is
-      begin
-         HTML.Comment (Message);
-      end Put_Error;
-
-   begin
-      Ada.Text_IO.Put_Line ("</tr>");
---        Iterate_Errors (J, Put_Error'Access);
-   end Finish_Row;
---
 --     procedure Try_Put_Paragraph (Label  : String;
 --                                  Getter : not null access function (J : Job) return String;
 --                                  J      : Job) is

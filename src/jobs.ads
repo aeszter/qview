@@ -12,7 +12,9 @@ package Jobs is
    procedure Put_Details;
 --     procedure Put_Time_List;
 --     procedure Put_Bunch_List;
-   procedure Put_List;
+   procedure Put_List (List : Slurm.Jobs.List);
+   procedure Put_Global_List;
+   procedure Put_User_List (User : String);
 --     procedure Prune_List;
    procedure Put_Summary;
 --     procedure Iterate (Process : not null access procedure (J : Job));
