@@ -252,6 +252,7 @@ package body Jobs is
                 Class => "right");
       Put_State_Cell (J);
       HTML.Put_Cell (Data => Get_Gres (J));
+      HTML.Put_Duration_Cell (Walltime (J));
       HTML.Put_Cell (Data => Get_Priority (J)'Img,
                 Class => "right");
       HTML.Put_Time_Cell (Get_Start_Time (J));
@@ -271,6 +272,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Tasks");
       HTML.Put_Header_Cell (Data => "State");
       HTML.Put_Header_Cell (Data => "Res");
+      HTML.Put_Header_Cell (Data => "Walltime");
       HTML.Put_Header_Cell (Data => "Priority");
       HTML.Put_Header_Cell (Data => "Start");
 
