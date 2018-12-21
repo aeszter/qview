@@ -254,6 +254,8 @@ package body HTML is
    begin
       if Span < 0.0 then
          Put_Cell (Data => "<i>expired</i>", Class => "right");
+      elsif Span = 0.0 then
+         Put_Cell ("");
       else
          Put_Cell (Data => To_String (Span),
                   Class => "right");
