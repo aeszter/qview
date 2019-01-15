@@ -1,0 +1,40 @@
+qview
+=====
+
+A web-based front-end for Slurm
+
+By Ansgar Esztermann <aeszter@mpibpc.mpg.de>
+
+1. Goal
+This CGI program began its life as an interface to SGE. See the file
+README.orig for information pertaining to that version.
+
+The Slurm version aims to provide information in a similar manner, so
+that existing qview users can adapt to Slurm without much ado.
+
+2. Requirements
+The following libraries are needed:
+
+  * Florist (POSIX API)
+  * slurmlib (Slurm frontend, also on github by the author of
+    qview)
+
+Of course, a working Slurm installation with the API library is also
+necessary, as is a way to run CGI programs. We use Apache2.
+
+3. Configuration
+qview reads the following environment variables:
+BUGZILLA_URL -- Bugtracker URL: 1) for feedback regarding qview and 2)
+for known host problems
+HELP_URL -- Wiki URL for documentation
+CLUSTER_NAME -- used in HTML titles and headings
+
+4. Shortcomings/Bugs
+For an up-to-date list of bugs, see the issue tracker on GitHub.
+This document lists only a few problems that are particularly hard to
+fix.
+
+4.1. Work in Progress
+The current version has been forked from the SGE version, so there are
+a lot of unimplemented features around. These will be implemented or
+removed, as appropriate, in the future.
