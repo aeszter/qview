@@ -16,7 +16,7 @@ package Jobs is
    procedure Put_Global_List;
    procedure Put_User_List (User : String);
 --     procedure Prune_List;
-   procedure Put_Summary;
+   procedure Put_Summary (List : Slurm.Jobs.List);
 --     procedure Iterate (Process : not null access procedure (J : Job));
 --
 --     procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False);

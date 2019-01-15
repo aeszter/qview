@@ -20,7 +20,7 @@ package body Jobs is
 
 --     List : SGE.Jobs.List;
    procedure Put (Position : Slurm.Jobs.Cursor);
---     procedure Put_State (Flag : SGE.Jobs.State_Flag);
+   procedure Put_State (Flag : Slurm.Jobs.states);
 --     procedure Put_State (J : Job);
    procedure Put_State_Cell (J : Job);
    procedure Put_Core_Header;
@@ -67,38 +67,37 @@ package body Jobs is
       end if;
    end Name_As_HTML;
 
-   procedure Put_Summary is
---        Task_Summary, Slot_Summary : State_Count;
+   procedure Put_State (Flag : Slurm.Jobs.states) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
    begin
---        SGE.Jobs.Get_Summary (Collection => List,
---                              Tasks => Task_Summary,
---                              Slots => Slot_Summary);
+      Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
+      Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
+   end Put_State;
+
+   procedure Put_Summary (List : Slurm.Jobs.List) is
+      Job_Summary, Task_Summary : State_Count;
+   begin
+      Slurm.Jobs.Get_Summary (Collection => List,
+                            Jobs => Job_Summary,
+                            Tasks => Task_Summary);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
---        for State in Task_Summary'Range loop
---           Ada.Text_IO.Put ("<li>");
---           Ada.Text_IO.Put (Task_Summary (State)'Img);
---           if Slot_Summary (State) > 0 then
---              Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (
-      -- Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
---           end if;
---           Ada.Text_IO.Put (" ");
---           --           Put_State (Flag => State);
---           Ada.Text_IO.Put_Line ("</li>");
---        end loop;
-      Ada.Text_IO.Put ("unimplemented");
+      for State in Job_Summary'Range loop
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put (Job_Summary (State)'Img);
+         if Task_Summary (State) > 0 then
+            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (
+      Task_Summary (State)'Img, Ada.Strings.Left) & ")");
+         end if;
+         Ada.Text_IO.Put (" ");
+         Put_State (Flag => State);
+         Ada.Text_IO.Put_Line ("</li>");
+      end loop;
 
       Ada.Text_IO.Put ("</ul>");
       HTML.End_Div (ID => "job_summary");
    end Put_Summary;
 
---     procedure Put_State (Flag : SGE.Jobs.State_Flag) is
---        procedure Put (What : String) renames Ada.Text_IO.put;
---     begin
---        Put ("<img src=""/icons/" & To_Abbrev (Flag) & ".png"" ");
---        Put ("alt=""" & To_Abbrev (Flag) & """ title=""" & To_Abbrev (Flag) & ": ");
---        Put (To_String (Flag) & """ />");
---     end Put_State;
 --
 --     procedure Put_State (J : Job) is
 --        procedure Put (What : String) renames Ada.Text_IO.put;
@@ -307,7 +306,7 @@ package body Jobs is
    procedure Put_List (List : Slurm.Jobs.List) is
       use Slurm.Jobs;
    begin
-      Put_Summary;
+      Put_Summary (List);
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
       Put_Core_Header;

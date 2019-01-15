@@ -18,6 +18,8 @@ with Ada.Integer_Text_IO;
 
 package body Viewer is
 
+   Cluster_Name : constant String := CGI.Get_Environment ("CLUSTER_NAME");
+
    procedure Append_Params (Params : String) is
    begin
       My_Params := My_Params & "&" & Params;
@@ -31,7 +33,7 @@ package body Viewer is
    procedure Put_Error (Message : String) is
    begin
       CGI.Put_CGI_Header;
-      Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - Error</title>");
+      Ada.Text_IO.Put_Line ("<html><head><title>" & Cluster_Name & " Status - Error</title>");
       Ada.Text_IO.Put_Line ("</head><body>");
       Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
       CGI.Put_HTML_Tail;
@@ -40,7 +42,7 @@ package body Viewer is
    procedure Put_Result (Message : String) is
    begin
       CGI.Put_CGI_Header;
-      Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - Result</title>");
+      Ada.Text_IO.Put_Line ("<html><head><title>" & Cluster_Name & " Status - Result</title>");
       Ada.Text_IO.Put_Line ("</head><body>");
       Ada.Text_IO.Put_Line ("<p>" & Message & "</p>");
       CGI.Put_HTML_Tail;
@@ -131,14 +133,14 @@ package body Viewer is
 --           SGE.Debug.Log (Message  => CGI.Cookie_Count'Img & " cookies read",
 --                      Where    => SGE.Debug.Default,
 --                      Severity => 1);
-         Ada.Text_IO.Put_Line ("<html><head><title>Strix Status - "
+         Ada.Text_IO.Put_Line ("<html><head><title>" & Cluster_Name & " Status - "
                                & HTML.Encode (Title) & "</title>");
          HTML.Put_Stylesheet (CGI.My_URL & "?css=y");
          HTML.Put_Opensearch (CGI.My_URL & "?opensearch=y");
          Ada.Text_IO.Put_Line ("</head><body>");
          HTML.Begin_Div (ID => "page");
          HTML.Begin_Div (ID => "header");
-         CGI.Put_HTML_Heading (Title => "Strix Status", Level => 1);
+         CGI.Put_HTML_Heading (Title => Cluster_Name & " Status", Level => 1);
          HTML.Put_Navigation_Begin;
          HTML.Put_Navigation_Link (Data       => "Overview",
                                    Link_Param => "categories=both");
