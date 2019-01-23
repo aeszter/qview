@@ -1,5 +1,4 @@
-with "/opt/florist/share/gpr/florist.gpr";
---with "/sw/cluster/florist17/share/gpr/florist.gpr";
+with "florist";
 with "../sgelib/sgelib.gpr";
 with "../cmlib/cmlib.gpr";
 
@@ -8,7 +7,7 @@ project Qview is
     Style : Style_Type := external ("BUILD", "debug");
 
   for Main use ("qview.adb");
-  for Source_Dirs use ("src", "../tools/adacgi-1.6");
+  for Source_Dirs use ("src");
   for Languages use ("Ada");
 
    case Style is
@@ -48,17 +47,9 @@ project Qview is
 
    end Compiler;
 
-   package Linker is
-
-      case Library_Type is
-
-         when "static" =>
-            for Default_Switches ("ada") use ("-g", "-lc");
-
-         when "relocatable" =>
-            for Default_Switches ("ada") use ("-g", "-fprofile-generate");
-      end case;
-   end Linker;
+--     package Linker is
+--          for Default_Switches ("ada") use ("-lslurm");
+--     end Linker;
 
 end Qview;
 
