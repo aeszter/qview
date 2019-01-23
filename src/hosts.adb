@@ -15,6 +15,8 @@ package body Hosts is
 --   use Job_Lists;
 --   use Queue_Maps;
 
+   procedure Put_Swap_Cell (H :Host);
+
    procedure Put_All is
    begin
       HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
@@ -205,8 +207,7 @@ package body Hosts is
                         Class => "right " & Color_Class (Load_Per_Core (H)));
          HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
                         Class => "right " & Color_Class (Mem_Percentage (H)));
-         HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
-                        Class => "right " & Color_Class (Swap_Percentage (H)));
+         Put_Swap_Cell (H);
          Ada.Text_IO.Put ("</tr></table>");
          HTML.End_Div ("host_res");
       end Put_Resources;
@@ -233,6 +234,17 @@ package body Hosts is
       SGE.Hosts.Iterate (Process  => Put_For_Maintenance'Access,
                          Selector => Selector);
    end Put_Selected;
+
+   procedure Put_Swap_Cell (H : Host) is
+      The_Swap : Percent;
+   begin
+      The_Swap := Swap_Percentage (H);
+      HTML.Put_Cell (Data  => The_Swap'Img,
+                     Class => "right " & Color_Class (The_Swap));
+   exception
+      when Constraint_Error =>
+         HTML.Put_Cell (Data => "");
+   end Put_Swap_Cell;
 
    ---------
    -- Put --
@@ -266,8 +278,7 @@ package body Hosts is
                      Class => "right " & Color_Class (Load_Per_Core (H)));
       HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
                      Class => "right " & Color_Class (Mem_Percentage (H)));
-      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
-                     Class => "right " & Color_Class (Swap_Percentage (H)));
+      Put_Swap_Cell (H);
       Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
@@ -289,8 +300,7 @@ package body Hosts is
       HTML.Put_Cell (Data => Get_Load (H)'Img, Class      => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (H)));
-      HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
-                     Class => "right " & Color_Class (Swap_Percentage (H)));
+      Put_Swap_Cell (H);
       Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
