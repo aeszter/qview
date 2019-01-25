@@ -6,9 +6,10 @@ with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 with GNAT.Calendar;
 with GNAT.Calendar.Time_IO;   use GNAT.Calendar.Time_IO;
 with Ada.Real_Time;
-with SGE.Queues;
-with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
-use SGE.Utils.String_Pairs;
+--  with SGE.Queues;
+--  with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
+--  use SGE.Utils.String_Pairs;
+with Slurm.Utils;
 with Viewer;
 with Utils;
 
@@ -130,25 +131,24 @@ package body HTML is
       Put_Line (Close_Tag);
    end Put_Cell;
 
-   procedure Put_Cell (Data  : SGE.Host_Properties.Host_Name;
-                       Tag   : String := "td";
-                       Class : String := "") is
-      Close_Tag : constant String := "</" & Tag & ">";
-   begin
-      --  Start open tag
-      Put ("<" & Tag);
-
-      if Class /= "" then
-         Put (" class=""" & Class & """");
-      end if;
-      Put (">");
-      --  Open tag ended
-
-      Put (To_String (Data));
-
-      Put_Line (Close_Tag);
-   end Put_Cell;
-
+--     procedure Put_Cell (Data  : SGE.Host_Properties.Host_Name;
+--                         Tag   : String := "td";
+--                         Class : String := "") is
+--        Close_Tag : constant String := "</" & Tag & ">";
+--     begin
+--        --  Start open tag
+--        Put ("<" & Tag);
+--
+--        if Class /= "" then
+--           Put (" class=""" & Class & """");
+--        end if;
+--        Put (">");
+--        --  Open tag ended
+--
+--        Put (To_String (Data));
+--
+--        Put_Line (Close_Tag);
+--     end Put_Cell;
 
    --------------
    -- Put_Cell --
@@ -362,7 +362,6 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
-
    ----------------
    -- Put_Job_ID --
    ----------------
@@ -402,87 +401,87 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
    end Put_Empty_List;
 
-   procedure Put_Queue_List (List, Marks : String_Sets.Set) is
-      Elem : String_Sets.Cursor;
-   begin
-      Elem := List.First;
-      Put_List_Head;
-      if Elem = String_Sets.No_Element then
-         Put_Empty_List;
-      else
-         while Elem /= String_Sets.No_Element loop
-            declare
-               Queue : Unbounded_String;
-               Host  : SGE.Host_Properties.Host_Name;
-               Marked : constant Boolean := Marks.Contains (Element (Elem));
-            begin
-               Ada.Text_IO.Put ("<li>");
-               if Marked then
-                  Ada.Text_IO.Put ("<em>");
-               end if;
-               SGE.Queues.Decompose_Long_Name (Long_Name => To_String (String_Sets.Element (Elem)),
-                                               Queue     => Queue,
-                                               Host      => Host);
-               Ada.Text_IO.Put_Line (To_String (Queue) & "@" & To_String (Host));
-               if Marked then
-                  Ada.Text_IO.Put ("</em>");
-               end if;
-               Ada.Text_IO.Put ("</li>");
-               Next (Elem);
-            end;
-         end loop;
-      end if;
-      Put_List_Tail;
-   end Put_Queue_List;
-
-   procedure Put_List (List : String_Lists.List) is
-      Elem : String_Lists.Cursor;
-   begin
-      Elem := List.First;
-      Put_List_Head;
-      if Elem = String_Lists.No_Element then
-         Put_Empty_List;
-      else
-         while Elem /= String_Lists.No_Element loop
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Elem)) & "</li>");
-            Next (Elem);
-         end loop;
-      end if;
-      Put_List_Tail;
-   end Put_List;
-
-   procedure Put_List (List : String_Pairs.Map) is
-      Elem : String_Pairs.Cursor;
-   begin
-      Elem := List.First;
-      Put_List_Head;
-      if Elem = String_Pairs.No_Element then
-         Put_Empty_List;
-      else
-         while Elem /= String_Pairs.No_Element loop
-            Put_List_Entry (Key => To_String (String_Pairs.Key (Elem)),
-                            Element => To_String (String_Pairs.Element (Elem)));
-            Next (Elem);
-         end loop;
-      end if;
-      Put_List_Tail;
-   end Put_List;
-
-   procedure Put_List (List : String_Sets.Set) is
-      Elem : String_Sets.Cursor;
-   begin
-      Elem := List.First;
-      Put_List_Head;
-      if Elem = String_Sets.No_Element then
-         Put_Empty_List;
-      else
-         while Elem /= String_Sets.No_Element loop
-            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Sets.Element (Elem)) & "</li>");
-            Next (Elem);
-         end loop;
-      end if;
-      Put_List_Tail;
-   end Put_List;
+--     procedure Put_Queue_List (List, Marks : String_Sets.Set) is
+--        Elem : String_Sets.Cursor;
+--     begin
+--        Elem := List.First;
+--        Put_List_Head;
+--        if Elem = String_Sets.No_Element then
+--           Put_Empty_List;
+--        else
+--           while Elem /= String_Sets.No_Element loop
+--              declare
+--                 Queue : Unbounded_String;
+--                 Host  : SGE.Host_Properties.Host_Name;
+--                 Marked : constant Boolean := Marks.Contains (Element (Elem));
+--              begin
+--                 Ada.Text_IO.Put ("<li>");
+--                 if Marked then
+--                    Ada.Text_IO.Put ("<em>");
+--                 end if;
+--                 SGE.Queues.Decompose_Long_Name (Long_Name => To_String (String_Sets.Element (Elem)),
+--                                                 Queue     => Queue,
+--                                                 Host      => Host);
+--                 Ada.Text_IO.Put_Line (To_String (Queue) & "@" & To_String (Host));
+--                 if Marked then
+--                    Ada.Text_IO.Put ("</em>");
+--                 end if;
+--                 Ada.Text_IO.Put ("</li>");
+--                 Next (Elem);
+--              end;
+--           end loop;
+--        end if;
+--        Put_List_Tail;
+--     end Put_Queue_List;
+--
+--     procedure Put_List (List : String_Lists.List) is
+--        Elem : String_Lists.Cursor;
+--     begin
+--        Elem := List.First;
+--        Put_List_Head;
+--        if Elem = String_Lists.No_Element then
+--           Put_Empty_List;
+--        else
+--           while Elem /= String_Lists.No_Element loop
+--              Ada.Text_IO.Put_Line ("<li>" & To_String (String_Lists.Element (Elem)) & "</li>");
+--              Next (Elem);
+--           end loop;
+--        end if;
+--        Put_List_Tail;
+--     end Put_List;
+--
+--     procedure Put_List (List : String_Pairs.Map) is
+--        Elem : String_Pairs.Cursor;
+--     begin
+--        Elem := List.First;
+--        Put_List_Head;
+--        if Elem = String_Pairs.No_Element then
+--           Put_Empty_List;
+--        else
+--           while Elem /= String_Pairs.No_Element loop
+--              Put_List_Entry (Key => To_String (String_Pairs.Key (Elem)),
+--                              Element => To_String (String_Pairs.Element (Elem)));
+--              Next (Elem);
+--           end loop;
+--        end if;
+--        Put_List_Tail;
+--     end Put_List;
+--
+--     procedure Put_List (List : String_Sets.Set) is
+--        Elem : String_Sets.Cursor;
+--     begin
+--        Elem := List.First;
+--        Put_List_Head;
+--        if Elem = String_Sets.No_Element then
+--           Put_Empty_List;
+--        else
+--           while Elem /= String_Sets.No_Element loop
+--              Ada.Text_IO.Put_Line ("<li>" & To_String (String_Sets.Element (Elem)) & "</li>");
+--              Next (Elem);
+--           end loop;
+--        end if;
+--        Put_List_Tail;
+--     end Put_List;
 
    -------------
    -- Comment --
@@ -512,21 +511,21 @@ package body HTML is
    -- Put --
    ---------
 
-   procedure Put (Data : Tri_State) is
-   begin
-      Ada.Text_IO.Put ("<img src=""");
-      case Data is
-         when True =>
-            Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
-         when False =>
-            Ada.Text_IO.Put
-              ("/icons/cross.png"" alt=""false"" title=""false""");
-         when Undecided =>
-            Ada.Text_IO.Put
-              ("/icons/error.png"" alt=""undefined"" title=""undefined""");
-      end case;
-      Ada.Text_IO.Put_Line (" />");
-   end Put;
+--     procedure Put (Data : Tri_State) is
+--     begin
+--        Ada.Text_IO.Put ("<img src=""");
+--        case Data is
+--           when True =>
+--              Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
+--           when False =>
+--              Ada.Text_IO.Put
+--                ("/icons/cross.png"" alt=""false"" title=""false""");
+--           when Undecided =>
+--              Ada.Text_IO.Put
+--                ("/icons/error.png"" alt=""undefined"" title=""undefined""");
+--        end case;
+--        Ada.Text_IO.Put_Line (" />");
+--     end Put;
 
    -----------
    -- Error --
@@ -543,7 +542,7 @@ package body HTML is
                             & "&product=Projects"
                               & "&version=" & Utils.Version
                       & "&short_desc=" & CGI.HTML_Encode (Message)
-                            & "&comment=SGElib " & SGE.Utils.Version
+                            & "&comment=slurmlib " & Slurm.Utils.Version
                             & Newline
                             & "Please describe what you did before the error occurred. "
                       & "Are there any extraordinary jobs in the queue?"
@@ -724,13 +723,13 @@ package body HTML is
       end if;
    end To_String;
 
-   function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
-                       Mark_As_Link : Boolean := True) return String is
-      use SGE.Host_Properties;
-   begin
-      return "<a href=""" & CGI.My_URL & "?host=" & Value (Host_Name)
-        & """" & (if Mark_As_Link then "" else "class=""unmarked""")
-        & ">" & Value (Host_Name) & "</a>";
-   end To_String;
+--     function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
+--                         Mark_As_Link : Boolean := True) return String is
+--        use SGE.Host_Properties;
+--     begin
+--        return "<a href=""" & CGI.My_URL & "?host=" & Value (Host_Name)
+--          & """" & (if Mark_As_Link then "" else "class=""unmarked""")
+--          & ">" & Value (Host_Name) & "</a>";
+--     end To_String;
 
 end HTML;

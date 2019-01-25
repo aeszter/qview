@@ -22,12 +22,6 @@ package body Diagnostics is
    end To_Seconds;
 
 
-   ---------------------------------------------------------------------------
-   -- Put_Time ---------------------------------------------------------------
-   --  Purpose: Put User and CPU times for both self and children to Standard Out
-   --  Parameters: none
-   ---------------------------------------------------------------------------
-
    procedure Put_Time is
       Times : Process_Times;
       Self  : Seconds;
@@ -36,8 +30,12 @@ package body Diagnostics is
       Times := Get_Process_Times;
       Self := To_Seconds (User_CPU_Time_Of (Times) + System_CPU_Time_Of (Times));
       Children := To_Seconds (Descendants_User_CPU_Time_Of (Times)
-                   + Descendants_System_CPU_Time_Of (Times));
-      Put_Line (Self'Img & "s self " & Children'Img & "s children");
+                              + Descendants_System_CPU_Time_Of (Times));
+      if Children > 0.0 then
+         Put_Line (Self'Img & "s self " & Children'Img & "s children");
+      else
+         Put_Line (Self'Img & "s");
+      end if;
    end Put_Time;
 
    procedure Put_Date is

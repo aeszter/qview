@@ -1,58 +1,54 @@
-with "/opt/florist/share/gpr/florist.gpr";
---with "/sw/cluster/florist17/share/gpr/florist.gpr";
-with "../sgelib/sgelib.gpr";
-with "../cmlib/cmlib.gpr";
+with "../slurmlib/slurmlib.gpr";
 
 project Qview is
+  type Style_Type is ("debug", "release");
+    Style : Style_Type := external ("BUILD", "debug");
 
-   type Xmlada_Kind_Type is
-      ("static", "relocatable");
-   Library_Type : Xmlada_Kind_Type := external ("LIBRARY_TYPE");
+  for Main use ("qview.adb");
+  for Source_Dirs use ("src", "../tools/adacgi-1.6");
+  for Languages use ("Ada");
 
-   case Library_Type is
-
-      when "static" =>
-         for Main use ("qview.adb");
-         for Object_Dir use "obj";
-         for Source_Dirs use ("src");
-         for Languages use ("Ada");
-
-      when "relocatable" =>
-         for Main use ("hello.adb");
-         for Object_Dir use "./obj";
-         for Source_Dirs use ("./src", "../tools/adacgi-1.6");
+   case Style is
+     when "debug" =>
+      for Object_Dir use "obj/debug";
+      for Exec_Dir use "debug";
+     when "release" =>
+       for Object_Dir use "obj/release";
+       for Exec_Dir use "release";
    end case;
+
+
 
    package Ide is
       for Vcs_Kind use "Git";
    end Ide;
 
    package Builder is
+     case Style is
+       when "debug" =>
       for Default_Switches ("ada") use ("-j4", "-k", "-g", "-s");
+       when "release" =>
+      for Default_Switches ("ada") use ("-j4", "-k", "-s");
+     end case;
    end Builder;
 
+
    package Compiler is
-
-      case Library_Type is
-
-         when "static" =>
-            for Default_Switches ("ada") use ("-gnatVaefimo", "-gnaty3bBcxtSOnaihelkrs", "-gnato", "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
-
-         when "relocatable" =>
-            for Default_Switches ("ada") use ("-gnato", "-fstack-check", "-g", "-gnat05", "-ftest-coverage", "-fprofile-arcs", "-gnatf");
+     case Style is
+       when "debug" =>
+      for Default_Switches ("ada") use
+        ("-gnatVaefimo", "-gnatyylbyaAbBCehiklM100noOpsStux3", "-gnato",
+         "-fstack-check", "-g", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
+       when "release" =>
+      for Default_Switches ("ada") use
+        ("-gnatVaefimo", "-gnatyylbyaAbBCehiklM100noOpsStux3", "-gnato",
+         "-fstack-check", "-O2", "-gnatf", "-gnatwumfk", "-gnat12", "-gnata");
       end case;
+
    end Compiler;
 
    package Linker is
-
-      case Library_Type is
-
-         when "static" =>
-            for Default_Switches ("ada") use ("-g", "-lc");
-
-         when "relocatable" =>
-            for Default_Switches ("ada") use ("-g", "-fprofile-generate");
-      end case;
+      for Default_Switches ("ada") use ("-lslurm");
    end Linker;
 
 end Qview;

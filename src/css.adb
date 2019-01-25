@@ -90,7 +90,7 @@ package body CSS is
       Put_Line ("float: center;");
       Put_Line ("margin: 0;");
       Put_Line ("padding: 1px 0 0 0;");
-      Put_Line ("height: 7.5em;");
+      Put_Line ("height: 9em;");
       Put_Line (Full_Width);
       Put_Line ("border-bottom: " & Header_Border & ";");
       Close_Block;
