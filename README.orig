@@ -1,0 +1,83 @@
+qview
+=====
+
+A web-based front-end for Grid Engine
+
+By Ansgar Esztermann <aeszter@mpibpc.mpg.de>
+
+1. Goal
+This CGI program provides a friendly interface to the monitoring tools
+of Grid Engine. For the most part, it merely executes qstat et al with
+sensible arguments and cross-references the output (e.g. the
+individual jobs displayed by qstat -u link to qstat -j). However, some
+analysis is also performed. For example, qhost is used to detect all
+queues used by a given job. The result is then integrated with
+qstat -j. Moreover, a maintenance page lists nodes that may require
+admin intervention, and scheduler reservations (not available from
+qtools) can be shown as well.
+
+2. Requirements
+The following libraries are needed:
+
+  * Florist (POSIX API)
+  * SGElib (Grid Engine frontend, also on github by the author of
+    qview)
+
+  The latter needs:
+  * ADAcgi
+  * XMLAda
+
+Of course, a working Grid Engine installation is also necessary, as is
+a way to run CGI programs. We use Apache2.
+
+Optionally, qview reads the configuration from Lightsout (by the same
+author) to determine which nodes are marked for maintenance.
+
+3. Configuration
+qview reads the following environment variables:
+SGE_ROOT -- Path to Grid Engine installation
+BUGZILLA_URL -- Bugtracker URL: 1) for feedback regarding qview and 2)
+for known host problems (see lightsout above)
+HELP_URL -- Wiki URL for documentation
+
+qview can use the following files:
+/etc/lights-out.xml (for nodes in maintenance)
+$SGE_ROOT/default/common/schedule (enabled with qconf -msconf, params
+ monitor=1)
+
+4. Shortcomings/Bugs
+For an up-to-date list of bugs, see the issue tracker on GitHub.
+This document lists only a few problems that are particularly hard to
+fix.
+
+4.1. Hard-coded site-specific values
+Some values (e.g. available network types, CPU categories) are
+hard-coded in the source. This means that all the advantages[1] that
+Ada enumeration types have over a dynamic array are available; but
+users will have to edit the source code in order to adapt the program to
+their environment.
+Site-specifics have been marked with
+pragma Compile_tome_Warning
+("hardcoded config")
+
+4.2. No buffering
+Some operations can be quite time consuming, especially when a simple
+call (qstat -u *, say) is not enough and something more
+time consuming (like qstat -j *) is necessary.
+Performance could, in principle, be improved by buffering the data
+retrieved from qstat etc. This is not currently done (nor is it likely
+to change) for several reasons:
+ * buffering leads to a significant increase in complexity, especially
+   in a CGI context where multiple users might run multiple queries at
+   the same time;
+ * between qstat calls, contents of the buffer will be (at least)
+   slightly outdated. Qview, however, is intended to accurately
+   present an up-to-date view of the cluster.
+
+4.3. Limited maintenance
+We're in the progress of switching our cluster to Slurm, so the SGE
+version of qview is in limited maintenance mode. Some bugs might still
+get fixed, but do not expect work on new features or harder bugs.
+
+Notes
+[1] such as checking case statements for missing alternatives

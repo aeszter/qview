@@ -292,63 +292,7 @@ package body Jobs is
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
 
-<<<<<<< HEAD
-   -------------------
-   -- Put_Prio_Core --
-   -------------------
-
-   procedure Put_Prio_Core (J : Job) is
-   begin
-      HTML.Put_Cell (Data => Get_Priority (J)'Img);
-      HTML.Put_Cell (Data => Get_Override_Tickets (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Urgency (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Resource_Contrib (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Waiting_Contrib (J)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Posix_Priority (J)'Img, Class => "right");
-   end Put_Prio_Core;
-
-
-   -------------------
-   -- Put_Time_Line --
-   --  Purpose: Output one Job, including prospective end time, as a table row (tr).
-   -------------------
-
-   procedure Put_Time_Line (J : Job) is
-   begin
-      Start_Row (J);
-      Put_Core_Line (J);
-
-      HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      begin
-         HTML.Put_Duration_Cell (Remaining_Time (J));
-      exception
-         when Resources.Error =>
-            HTML.Put_Cell (Data => "<i>unknown</i>", Class => "right");
-      end;
-      begin
-         HTML.Put_Time_Cell (End_Time (J));
-      exception
-         when Resources.Error =>
-            HTML.Put_Cell (Data => "<i>unknown</i>");
-      end;
-      Put_State_Cell (J);
-      Finish_Row (J);
-   exception
-      when E :
-         others => HTML.Error (Message => "Error while outputting job: "
-                                     & Exception_Message (E));
-         Finish_Row (J);
-   end Put_Time_Line;
-
-   -------------------
-   -- Put_Bunch_Line --
-   --  Purpose: Output one Job
-   -------------------
-
-   procedure Put_Bunch_Line (J : Job) is
-=======
    procedure Put_Details is
->>>>>>> feature/slurm
    begin
       Ada.Text_IO.Put ("unimplemented");
 --      Iterate (List, Jobs.Put'Access);
@@ -356,48 +300,8 @@ package body Jobs is
 
    procedure Put_Global_List is
    begin
-<<<<<<< HEAD
-      Start_Row (J);
-      Put_Core_Line (J);
-
-      HTML.Put_Time_Cell (Get_Submission_Time (J));
-      HTML.Put_Cell (Data => Get_Slot_Number (J), Tag => "td class=""right""");
-      Put_State_Cell (J);
-      if Get_CPU (J) > 0.1 then
-         HTML.Put_Duration_Cell (Integer (Get_CPU (J)));
-      else
-         HTML.Put_Cell ("");
-      end if;
-      if Get_Mem (J) > 3_600.0 then
-         HTML.Put_Cell (Data  => Integer'Image (Integer (Get_Mem (J) / 3_600.0)),
-                        Class => "right");
-      elsif Get_Mem (J) > 1.0 then
-         HTML.Put_Cell (Data  => HTML.Encode ("<1"),
-                        Class => "right");
-      else
-         HTML.Put_Cell ("");
-      end if;
-      if Get_IO (J) > 1.0 then
-         HTML.Put_Cell (Data  => Integer'Image (Integer (Get_IO (J))),
-                        Class => "right");
-      elsif Get_IO (J) > 0.01 then
-         HTML.Put_Cell (Data  => "<1",
-                        Class => "right");
-      else
-         HTML.Put_Cell ("");
-      end if;
-      HTML.Put_Duration_Cell (Walltime (J));
-      Put_Prio_Core (J);
-      Finish_Row (J);
-   exception
-      when E : others => HTML.Error (Message => "Error while outputting job: "
-                                     & Exception_Message (E));
-      Finish_Row (J);
-   end Put_Res_Line;
-=======
       Put_List (Slurm.Jobs.Load_Jobs);
    end Put_Global_List;
->>>>>>> feature/slurm
 
    procedure Put_List (List : Slurm.Jobs.List) is
       use Slurm.Jobs;
