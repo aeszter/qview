@@ -1,4 +1,3 @@
-with Hosts;
 with Queues;
 
 package Maintenance is

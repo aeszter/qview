@@ -1,7 +1,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with SGE.Hosts; use SGE.Hosts;
 
-package Hosts is
+package Nodes is
 --     subtype Host is SGE.Hosts.Host;
 
    procedure Put_All;
@@ -15,4 +15,4 @@ private
 --     procedure Put_Details (H : SGE.Hosts.Host);
 --     procedure Put_Jobs (J : SGE.Hosts.Job);
 --     procedure Put_For_Maintenance (H : SGE.Hosts.Host);
-end Hosts;
+end Nodes;

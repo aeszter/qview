@@ -3,7 +3,7 @@ with HTML;
 with Ada.Text_IO;
 --  with SGE.Hosts; use SGE.Hosts;
 --  with SGE.Host_Properties; use SGE.Host_Properties;
-with Hosts; use Hosts;
+--with Hosts; use Hosts;
 --  with Host_Properties; use Host_Properties;
 --  with SGE.Queues; use SGE.Queues;
 --  with Lightsout;

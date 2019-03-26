@@ -9,7 +9,7 @@ with Ada.Calendar; use Ada.Calendar;
 --  with SGE.Host_Properties;
 --  with SGE.Resources;
 
-package body Hosts is
+package body Nodes is
 
 --   use Host_Lists;
 --   use Job_Lists;
@@ -56,7 +56,7 @@ package body Hosts is
 --        Lightsout.Clear;
 --        Lightsout.Read;
 --        SGE.Hosts.Iterate (Put_Details'Access);
-      html.Put_Paragraph ("Hosts.Put_Details","unimplemented");
+      html.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
    end Put_Details;
 
 --     procedure Put_Details (H : SGE.Hosts.Host) is
@@ -343,4 +343,4 @@ package body Hosts is
 --        HTML.Put_Img_Cell (Image => Get_State (Q));
 --     end Put_Queue;
 
-end Hosts;
+end Nodes;
