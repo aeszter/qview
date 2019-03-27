@@ -18,6 +18,7 @@ private
    procedure Put_Multi_Queues;
    procedure Put_No_Queues;
    procedure Put_Old_Config;
+   procedure Put_Local_Menu;
 
 
    function High_Load (H : Hosts.Host) return Boolean;

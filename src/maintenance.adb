@@ -50,6 +50,7 @@ package body Maintenance is
       SGE.Parser.Free;
       Read_Lightsout_Information;
 
+      Put_Local_Menu;
       Put_Error_Messages;
       Put_High_Load_Hosts;
       Put_Low_Load_Hosts;
@@ -80,6 +81,7 @@ package body Maintenance is
    procedure Put_High_Load_Hosts is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("high_load");
       HTML.Put_Heading  (Title => "Overloaded Nodes",
                          Level => 3);
       HTML.Put_Heading (Title => "Load_5 > 1.1 * Used_Slots + 0.1 * Free_Slots"
@@ -96,6 +98,7 @@ package body Maintenance is
    procedure Put_Low_Load_Hosts is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("low_load");
       HTML.Put_Heading  (Title => "Underutilized Nodes",
                          Level => 3);
       HTML.Put_Heading (Title => "Load_5 < 0.9 * Used_Slots and Load_1 < 1.1 * Load_5",
@@ -110,6 +113,7 @@ package body Maintenance is
    procedure Put_Swapping_Hosts is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("swap");
       HTML.Put_Heading  (Title => "Swapping Nodes",
                          Level => 3);
       HTML.Put_Heading (Title => "Swap_Used > 50%",
@@ -124,6 +128,7 @@ package body Maintenance is
    procedure Put_Error_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("error");
       HTML.Put_Heading  (Title => "Queues in Error state",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue State contains E",
@@ -137,6 +142,7 @@ package body Maintenance is
    procedure Put_Disabled_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("disabled");
       HTML.Put_Heading  (Title => "Disabled queues",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue_State has d but not u",
@@ -150,6 +156,7 @@ package body Maintenance is
    procedure Put_Unreachable_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("unreachable");
       HTML.Put_Heading  (Title => "Unreachable queues",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue_State has u but not d",
@@ -163,6 +170,7 @@ package body Maintenance is
    procedure Put_Unusual_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("unusual");
       HTML.Put_Heading  (Title => "Unusual queues",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue_Type is not BIP",
@@ -176,6 +184,7 @@ package body Maintenance is
    procedure Put_Offline_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("offline");
       HTML.Put_Heading  (Title => "Offline queues",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue_State has both u and d",
@@ -191,6 +200,7 @@ package body Maintenance is
    procedure Put_Old_Config is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("old");
       HTML.Put_Heading  (Title => "Old config",
                          Level => 3);
       HTML.Put_Heading (Title => "Queue_State has o",
@@ -204,6 +214,7 @@ package body Maintenance is
    procedure Put_No_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("no_queue");
       HTML.Put_Heading  (Title => "Hosts with no defined queue",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
@@ -215,6 +226,7 @@ package body Maintenance is
    procedure Put_Multi_Queues is
    begin
       HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("multi_queue");
       HTML.Put_Heading  (Title => "Hosts with more than one queue",
                          Level => 3);
       Ada.Text_IO.Put_Line ("<table>");
@@ -222,6 +234,32 @@ package body Maintenance is
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "maintenance");
    end Put_Multi_Queues;
+
+   procedure Put_Local_Menu is
+      procedure Put_Link (Data, Anchor : String) is
+      begin
+         Ada.Text_IO.Put_Line
+        ("<li><a href=""#" &
+         Anchor &
+         """>" &
+         Data &
+           "</a></li>");
+      end Put_Link;
+   begin
+      HTML.Put_Navigation_Begin;
+      Put_Link (Data => "Overloaded", Anchor => "high_load");
+      Put_Link ("Underutilized", "low_load");
+      Put_Link ("Swapping", "swap");
+      Put_Link ("Error", "error");
+      Put_Link ("Unusual", "unusual");
+      Put_Link ("Disabled", "disabled");
+      Put_Link ("Unreachable", "unreachable");
+      Put_Link ("Offline", "offline");
+      Put_Link ("Multiple Queues", "multi_queue");
+      Put_Link ("No Queue", "no_queue");
+      Put_Link ("Old Config", "old");
+      HTML.Put_Navigation_End;
+   end Put_Local_Menu;
 
    procedure Put_Error_Messages is
       procedure Put_Error (Message : String);

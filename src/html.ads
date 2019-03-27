@@ -75,6 +75,7 @@ package HTML is
    procedure Put_Clearer;
    procedure Error (Message : String);
    procedure Put_Heading (Title : String; Level : Positive);
+   procedure Put_Anchor (Tag : String);
 
    function Param (Name : String; Index : in Positive := 1;
                Required : in Boolean := False) return String renames CGI.Value;

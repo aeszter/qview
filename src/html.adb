@@ -23,6 +23,11 @@ package body HTML is
       return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
    end Acronym;
 
+   procedure Put_Anchor (Tag : String) is
+   begin
+      Put_Line ("<a name=""" & Tag & """></a>");
+   end Put_Anchor;
+
    function Current_URL return String is
    begin
       return CGI.My_URL & "?" & CGI.Get_Environment ("QUERY_STRING");
