@@ -263,8 +263,12 @@ package body Jobs is
       HTML.Put_Cell (Data => Get_Gres (J));
       HTML.Put_Duration_Cell (Walltime (J));
       HTML.Put_Cell (Data => Get_Priority (J)'Img,
-                Class => "right");
-      HTML.Put_Time_Cell (Get_Start_Time (J));
+                     Class => "right");
+      if Has_Start_Time (J) then
+         HTML.Put_Time_Cell (Get_Start_Time (J));
+      else
+         HTML.Put_Cell ("");
+      end if;
       Finish_Row (J);
    end Put;
 
