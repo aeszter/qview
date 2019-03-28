@@ -324,22 +324,14 @@ package body Viewer is
       end View_Global_Jobs;
 
       procedure View_Job (Job_ID : String) is
---           SGE_Out       : Parser.Tree;
       begin
          CGI.Put_HTML_Heading (Title => "Details of Job " & Job_ID,
                                Level => 2);
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j ") & Sanitise (Job_ID));
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_J (SGE_Out), True);
---           Jobs.Update_Messages (Get_Message_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Update_Status;
---           Jobs.Search_Queues;
---           Jobs.Put_Details;
+         Jobs.Put_Details (Integer'Value (Job_ID));
 
---        exception
---           when Parser_Error =>
---              Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
+      exception
+         when Constraint_Error =>
+            Ada.Text_IO.Put_Line ("<p><it>Job does not exist</it></p>");
       end View_Job;
 
       procedure View_Job_Overview is
