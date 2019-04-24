@@ -1,11 +1,11 @@
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
---  with SGE.Hosts; use SGE.Hosts;
+with Slurm.Nodes; use Slurm.Nodes;
 
 package Nodes is
 --     subtype Host is SGE.Hosts.Host;
 
    procedure Put_All;
    procedure Put_Details;
+   procedure Put_List (List : Slurm.Nodes.List);
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean);
 private
 

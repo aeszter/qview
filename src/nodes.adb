@@ -15,49 +15,7 @@ package body Nodes is
 --   use Job_Lists;
 --   use Queue_Maps;
 
-   procedure Put_All is
-   begin
-      HTML.Put_Heading (Title => "Hosts " & HTML.Help_Icon (Topic => "Host List"),
-                        Level => 2);
-      HTML.Begin_Div (Class => "host_list");
-      Ada.Text_IO.Put_Line ("<table><tr>");
-      HTML.Put_Header_Cell (Data     => "Name");
-      HTML.Put_Header_Cell (Data     => "Interconnect");
-      HTML.Put_Header_Cell (Data => "GPU");
-      HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                    Tag => "th");
-      HTML.Put_Header_Cell (Data     => "Cores");
-      HTML.Put_Header_Cell (Data     => "Free");
-      HTML.Put_Header_Cell (Data     => "Reserved");
-      HTML.Put_Header_Cell (Data     => "RAM");
-      HTML.Put_Header_Cell (Data     => "Load",
-                           Acronym => "per core");
-      HTML.Put_Header_Cell (Data => "Mem",
-                            Acronym => "% used");
-      HTML.Put_Header_Cell (Data => "Swap",
-                            Acronym => "% used");
-      HTML.Put_Header_Cell (Data     => "Queues",
-                            Sortable => False);
-      Ada.Text_IO.Put ("</tr>");
---        Lightsout.Clear;
---        Lightsout.Read;
---        SGE.Hosts.Iterate (Hosts.Put'Access);
-      --  Table Footer
-      Ada.Text_IO.Put_Line ("<tr>");
-      HTML.Put_Cell ("unimplemented");
-      Ada.Text_IO.Put_Line ("</tr>");
-      Ada.Text_IO.Put_Line ("</table>");
-      HTML.End_Div (Class => "host_list");
-
-   end Put_All;
-
-   procedure Put_Details is
-   begin
---        Lightsout.Clear;
---        Lightsout.Read;
---        SGE.Hosts.Iterate (Put_Details'Access);
-      html.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
-   end Put_Details;
+   procedure Put (Position : Slurm.Nodes.Cursor);
 
 --     procedure Put_Details (H : SGE.Hosts.Host) is
 --        procedure Put_Actions;
@@ -249,11 +207,16 @@ package body Nodes is
 --     -- Put --
 --     ---------
 --
---     procedure Put (H : Host) is
---        use SGE.Resources;
---     begin
---        Ada.Text_IO.Put ("<tr>");
---        HTML.Put_Cell (Data => Get_Name (H));
+   procedure Put (Position : Slurm.Nodes.Cursor) is
+      N : Node;
+   begin
+      if Has_Element (Position) then
+         N := Element (Position);
+      else
+         raise Constraint_Error with "no such node";
+      end if;
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => Get_Name (N));
 --        HTML.Put_Cell (Data => Get_Network (H));
 --        HTML.Put_Cell (Data => To_String (Get_GPU (H)));
 --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
@@ -277,12 +240,59 @@ package body Nodes is
 --        HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
 --        Ada.Text_IO.Put ("</tr>");
 --        Iterate_Jobs (H, Put_Jobs'Access);
---     exception
---        when E : others =>
+   exception
+      when --  E :
+         others =>
 --           HTML.Error ("Error while putting host " & SGE.Host_Properties.Value (Get_Name (H)) & ": "
 --                       & Exception_Message (E));
---           Ada.Text_IO.Put ("</tr>");
---     end Put;
+         Ada.Text_IO.Put ("</tr>");
+   end Put;
+
+   procedure Put_All is
+   begin
+      Put_List (Slurm.Nodes.Load_Nodes);
+   end Put_All;
+
+   procedure Put_Details is
+   begin
+--        Lightsout.Clear;
+--        Lightsout.Read;
+--        SGE.Hosts.Iterate (Put_Details'Access);
+      HTML.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
+   end Put_Details;
+
+   procedure Put_List (List : Slurm.Nodes.List) is
+   begin
+      HTML.Put_Heading (Title => "Nodes " & HTML.Help_Icon (Topic => "Node List"),
+                        Level => 2);
+      HTML.Begin_Div (Class => "host_list");
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Header_Cell (Data     => "Name");
+      HTML.Put_Header_Cell (Data     => "Interconnect");
+      HTML.Put_Header_Cell (Data => "GPU");
+      HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                    Tag => "th");
+      HTML.Put_Header_Cell (Data     => "Cores");
+      HTML.Put_Header_Cell (Data     => "Free");
+      HTML.Put_Header_Cell (Data     => "Reserved");
+      HTML.Put_Header_Cell (Data     => "RAM");
+      HTML.Put_Header_Cell (Data     => "Load",
+                           Acronym => "per core");
+      HTML.Put_Header_Cell (Data => "Mem",
+                            Acronym => "% used");
+      HTML.Put_Header_Cell (Data => "Swap",
+                            Acronym => "% used");
+      HTML.Put_Header_Cell (Data     => "Queues",
+                            Sortable => False);
+      Ada.Text_IO.Put ("</tr>");
+--        Lightsout.Clear;
+--        Lightsout.Read;
+      Iterate (List, Put'Access);
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "host_list");
+
+   end Put_List;
 --
 --     procedure Put_For_Maintenance (H : Host) is
 --     begin
