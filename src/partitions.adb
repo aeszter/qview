@@ -12,13 +12,29 @@ package body Partitions is
    procedure Put_Summary_Item (Item : State);
 
    List : SGE.Partitions.Summarized_List;
-   Total_Cores : Integer := 0;
+   Total_Cores, Total_Hosts : Integer := 0;
+   Used_Slots, Used_Hosts,
+   Available_Slots, Available_Hosts,
+   Disabled_Slots, Disabled_Hosts,
+   Offline_Slots, Offline_Hosts : Integer := 0;
+   Total_Reserved, Total_Suspended : Integer := 0;
 
    procedure Count_Slots (Item : Partition);
 
    procedure Count_Slots (Item : Partition) is
    begin
       Total_Cores := Total_Cores + Get_Total_Slots (Item);
+      Total_Hosts := Total_Hosts + Get_Total_Hosts (Item);
+      Used_Slots := Used_Slots + Get_Used_Slots (Item);
+      Used_Hosts := Used_Hosts + Get_Used_Hosts (Item);
+      Available_Slots := Available_Slots + Get_Available_Slots (Item);
+      Available_Hosts := Available_Hosts + Get_Available_Hosts (Item);
+      Disabled_Slots := Disabled_Slots + Get_Disabled_Slots (Item);
+      Disabled_Hosts := Disabled_Hosts + Get_Disabled_Hosts (Item);
+      Offline_Slots := Offline_Slots + Get_Offline_Slots (Item);
+      Offline_Hosts := Offline_Hosts + Get_Offline_Hosts (Item);
+      Total_Reserved := Total_Reserved + Get_Reserved_Hosts (Item);
+      Total_Suspended := Total_Suspended + Get_Suspended_Slots (Item);
    end Count_Slots;
 
    procedure Put_List is
@@ -52,13 +68,33 @@ package body Partitions is
       SGE.Partitions.Iterate (List, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 7);
-      HTML.Put_Cell (Data    => "Total Slots:",
+                     Colspan => 8);
+      HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                      Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_Hosts),
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Used_Slots) &
+                       " (" & Integer'Image (Used_Hosts) & ")",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_Reserved),
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Available_Slots) &
+                       " (" & Integer'Image (Available_Hosts) & ")",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Disabled_Slots) &
+                       " (" & Integer'Image (Disabled_Hosts) & ")",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Offline_Slots) &
+                       " (" & Integer'Image (Offline_Hosts) & ")",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_Suspended),
+                     Class   => "right");
+      Ada.Text_IO.Put_Line ("</tr>");
+      Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 2);
+                     Colspan => 5);
       HTML.Put_Cell (Data    => "Million Core-hours per Year:",
                      Colspan => 4,
                      Class   => "right");
@@ -67,7 +103,6 @@ package body Partitions is
       Ada.Text_IO.Put_Line ("</tr>");
       Ada.Text_IO.Put_Line ("</table>");
    end Put_List;
-
 
    procedure Put (P : Partition) is
       package Str renames Ada.Strings;
