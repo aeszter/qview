@@ -7,6 +7,8 @@ with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Partitions; use Slurm.Partitions;
+with Slurm.Gres;
+with Ada.Strings.Unbounded;
 --  with SGE.Utils;
 --  with SGE.Host_Properties;
 --  with SGE.Resources;
@@ -18,6 +20,7 @@ package body Nodes is
 --   use Queue_Maps;
 
    procedure Put (Position : Slurm.Nodes.Cursor);
+   procedure Put_GPU_Cell (N : Node);
 
 --     procedure Put_Details (H : SGE.Hosts.Host) is
 --        procedure Put_Actions;
@@ -221,7 +224,7 @@ package body Nodes is
       HTML.Put_Cell (Data => Get_Name (N));
       --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
-      HTML.Put_Cell (Get_GRES (N));
+      Put_GPU_Cell (N);
       --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell ("");
       HTML.Put_Cell (Data => Get_CPUs (N)'Img, Class => "right");
@@ -262,6 +265,24 @@ package body Nodes is
 --        SGE.Hosts.Iterate (Put_Details'Access);
       HTML.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
    end Put_Details;
+
+   procedure Put_GPU_Cell (N : Node) is
+      use Slurm.Gres;
+      use Ada.Strings.Unbounded;
+
+      procedure Put_GPU (R : Resource) is
+      begin
+         if R.Category = "gpu" or else
+            R.Category = "GPU" then
+            Ada.Text_IO.Put_Line (R.Number'Img & " " & To_String (R.Name));
+         end if;
+      end Put_GPU;
+
+   begin
+      Ada.Text_IO.Put ("<td>");
+      Iterate_GRES (N, Put_GPU'Access);
+      Ada.Text_IO.Put ("</td>");
+   end Put_GPU_Cell;
 
    procedure Put_Jobs (J : Slurm.Jobs.Job) is
    begin
