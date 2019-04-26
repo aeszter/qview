@@ -5,6 +5,8 @@ with HTML;
 --  with Lightsout;
 with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
+with Slurm.Jobs; use Slurm.Jobs;
+with Slurm.Partitions; use Slurm.Partitions;
 --  with SGE.Utils;
 --  with SGE.Host_Properties;
 --  with SGE.Resources;
@@ -217,29 +219,29 @@ package body Nodes is
       end if;
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => Get_Name (N));
---        HTML.Put_Cell (Data => Get_Network (H));
---        HTML.Put_Cell (Data => To_String (Get_GPU (H)));
---        HTML.Put_Cell (Data => To_String (Get_Model (H)));
---        HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
+      --        HTML.Put_Cell (Data => Get_Network (H));
+      HTML.Put_Cell ("");
+      HTML.Put_Cell (Get_GRES (N));
+      --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
+      HTML.Put_Cell ("");
+      HTML.Put_Cell (Data => Get_CPUs (N)'Img, Class => "right");
 --        begin
 --           HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
 --        exception
 --           when E : SGE.Utils.Operator_Error =>
 --              HTML.Put_Cell (Data => "err", Class => "right", Acronym => Exception_Message (E));
 --        end;
---        HTML.Put_Cell (Data => Get_Reserved_Slots (H)'Img, Class => "right");
---        HTML.Put_Cell (Data => Get_Memory (H), Class => "right");
---        HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
---                       Class => "right " & Color_Class (Load_Per_Core (H)));
---        HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
---                       Class => "right " & Color_Class (Mem_Percentage (H)));
---        HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
---                       Class => "right " & Color_Class (Swap_Percentage (H)));
---        Iterate_Queues (H, Put_Queue'Access);
+      HTML.Put_Cell ("");
+      HTML.Put_Cell (Data => Get_Memory (N), Class => "right");
+      HTML.Put_Cell (Data  => Load_Per_Core (N)'Img,
+                     Class => "right " & Color_Class (Load_Per_Core (N)));
+      HTML.Put_Cell (Data  => Mem_Percentage (N)'Img,
+                     Class => "right " & Color_Class (Mem_Percentage (N)));
+      Iterate_Partitions (N, Put_Partition'Access);
 --        HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
 --        HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
---        Ada.Text_IO.Put ("</tr>");
---        Iterate_Jobs (H, Put_Jobs'Access);
+      Ada.Text_IO.Put ("</tr>");
+      Iterate_Jobs (N, Put_Jobs'Access);
    exception
       when --  E :
          others =>
@@ -261,6 +263,16 @@ package body Nodes is
       HTML.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
    end Put_Details;
 
+   procedure Put_Jobs (J : Slurm.Jobs.Job) is
+   begin
+      Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => ""); -- H.Name
+      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+                    Link_Param => "job_id");
+      HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
+      Ada.Text_IO.Put ("</tr>");
+   end Put_Jobs;
+
    procedure Put_List (List : Slurm.Nodes.List) is
    begin
       HTML.Put_Heading (Title => "Nodes " & HTML.Help_Icon (Topic => "Node List"),
@@ -274,15 +286,12 @@ package body Nodes is
                     Tag => "th");
       HTML.Put_Header_Cell (Data     => "Cores");
       HTML.Put_Header_Cell (Data     => "Free");
-      HTML.Put_Header_Cell (Data     => "Reserved");
       HTML.Put_Header_Cell (Data     => "RAM");
       HTML.Put_Header_Cell (Data     => "Load",
                            Acronym => "per core");
       HTML.Put_Header_Cell (Data => "Mem",
                             Acronym => "% used");
-      HTML.Put_Header_Cell (Data => "Swap",
-                            Acronym => "% used");
-      HTML.Put_Header_Cell (Data     => "Queues",
+      HTML.Put_Header_Cell (Data     => "Partitions",
                             Sortable => False);
       Ada.Text_IO.Put ("</tr>");
 --        Lightsout.Clear;
@@ -317,40 +326,10 @@ package body Nodes is
 --           Ada.Text_IO.Put ("</tr>");
 --     end Put_For_Maintenance;
 --
---     --------------
---     -- Put_Jobs --
---     --------------
---
---     procedure Put_Jobs (J : Job) is
---     begin
---        Ada.Text_IO.Put ("<tr>");
---        HTML.Put_Cell (Data => ""); -- H.Name
---        if Is_Master (J) then
---           if Has_Slaves (J) then -- master
---              HTML.Put_Cell (Data => "<img src=""/icons/master.png"" />" & Get_Slaves (J)'Img,
---                             Class => "right");
---           else -- serial
---              HTML.Put_Cell (Data => "<img src=""/icons/serial.png"" />" & "1",
---                             Class => "right");
---           end if;
---        else
---           HTML.Put_Cell (Data => Get_Slaves (J)'Img, Class => "right");
---        end if;
---        HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
---                      Link_Param => "job_id");
---        HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
---        Ada.Text_IO.Put ("</tr>");
---     end Put_Jobs;
---
---     ----------------
---     -- Put_Status --
---     ----------------
---
---     procedure Put_Queue (Q : Queue_Pointer) is
---     begin
---        HTML.Put_Cell (Data => Get_Name (Q) & ':'
---                       & Get_Slots (Q)'Img);
---        HTML.Put_Img_Cell (Image => Get_State (Q));
---     end Put_Queue;
+   procedure Put_Partition (P : Slurm.Partitions.Partition) is
+   begin
+      HTML.Put_Cell (Data => Get_Name (P));
+--      HTML.Put_Img_Cell (Image => Get_State (P));
+   end Put_Partition;
 
 end Nodes;
