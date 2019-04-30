@@ -15,19 +15,93 @@ with Utils;
 
 package body HTML is
 
-   -------------
-   -- Acronym --
-   -------------
-
    function Acronym (Short, Long : String) return String is
    begin
       return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
    end Acronym;
 
+   procedure Begin_Div (Class : String := ""; ID : String := "") is
+      Tag : Div;
+   begin
+      Ada.Text_IO.Put ("<div");
+      if ID /= "" then
+         Ada.Text_IO.Put (" id=""" & ID & """");
+      end if;
+      if Class /= "" then
+         Ada.Text_IO.Put (" class=""" & Class & """");
+      end if;
+      Ada.Text_IO.Put_Line (">");
+      Tag.ID    := To_Unbounded_String (ID);
+      Tag.Class := To_Unbounded_String (Class);
+      Div_List.Append (Tag);
+   end Begin_Div;
+
+   procedure Begin_Form is
+   begin
+      if Form_Open then
+         Error ("Tried to open nested form");
+      else
+         Form_Open := True;
+         Put_Line ("<form action=""" & CGI.My_URL & "priv"">");
+      end if;
+   end Begin_Form;
+
+   procedure Bug_Ref (Bug_ID : Positive; Info : String) is
+   begin
+      Comment ("<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+               --  http://ram/bugzilla
+               & "/show_bug.cgi?id="
+               & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
+               & Info);
+         pragma Compile_Time_Warning (True, "hardcoded config");
+   end Bug_Ref;
+
+   procedure Comment (Data : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<!-- " & Data & " -->");
+   end Comment;
+
+   procedure Comment (Data : Unbounded_String) is
+   begin
+      Comment (To_String (Data));
+   end Comment;
+
    function Current_URL return String is
    begin
       return CGI.My_URL & "?" & CGI.Get_Environment ("QUERY_STRING");
    end Current_URL;
+
+   procedure End_Div (Class : String := ""; ID : String := "") is
+      Tag : constant Div := Div_List.Last_Element;
+   begin
+      if Class /= "" and then Class /= Tag.Class then
+         HTML.Error
+           ("Found <div class=""" &
+            To_String (Tag.Class) &
+            """> while trying to close class=""" &
+            Class &
+            """");
+      end if;
+      if ID /= "" and then ID /= Tag.ID then
+         HTML.Error
+           ("Found <div id=""" &
+            To_String (Tag.ID) &
+            """> while trying to close id=""" &
+            ID &
+            """");
+      end if;
+      if not Div_List.Is_Empty then
+         Ada.Text_IO.Put_Line ("</div>");
+         Div_List.Delete_Last;
+      else
+         HTML.Error
+           ("Trying to close non-existant <div id=""" &
+            ID &
+            """ class=""" &
+            Class &
+            """>");
+      end if;
+   end End_Div;
 
    procedure End_Form is
    begin
@@ -39,27 +113,48 @@ package body HTML is
       end if;
    end End_Form;
 
+   procedure Error (Message : String) is
+      Newline : constant String := "%0D%0A";
+   begin
+      Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
+                            & "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+                            --http://ram/bugzilla
+                              & "/enter_bug.cgi?"
+                      & "component=qview&form_name=enter_bug"
+                            & "&product=Projects"
+                              & "&version=" & Utils.Version
+                      & "&short_desc=" & CGI.HTML_Encode (Message)
+                            & "&comment=slurmlib " & Slurm.Utils.Version
+                            & Newline
+                            & "Please describe what you did before the error occurred. "
+                      & "Are there any extraordinary jobs in the queue?"
+                      & """>"
+                      & CGI.HTML_Encode (Message) & "</a></p>");
+         pragma Compile_Time_Warning (True, "hardcoded config");
+   end Error;
+
+   procedure Finalize_Divs (Silent : Boolean := False) is
+      Tag : Div;
+   begin
+      if not Silent and then not Div_List.Is_Empty then
+         Error ("Found unclosed <div>s");
+      end if;
+      while not Div_List.Is_Empty loop
+         Tag := Div_List.Last_Element;
+         Ada.Text_IO.Put_Line
+           ("</div><!-- id=""" &
+            To_String (Tag.ID) &
+            """ class=""" &
+            To_String (Tag.Class) &
+            """ -->");
+         Div_List.Delete_Last;
+      end loop;
+   end Finalize_Divs;
+
    function Get_Action_URL (Action, Params : String) return String is
    begin
       return CGI.My_URL & "priv?act=" & Action & "&" & Params;
    end Get_Action_URL;
-
-   procedure Put_Search_Box is
-   begin
-      Put ("<li><form>");
-      Put_Edit_Box ("search", "search");
-      Put ("</form></li>");
-   end Put_Search_Box;
-
-   procedure Put_Edit_Box (Name, Default : String) is
-   begin
-      Put ("<input type=""text"" name=""" & Name & """ size=""8"" value="""
-           & Default & """ onclick=""select()"">");
-   end Put_Edit_Box;
-
-   ---------------
-   -- Help_Icon --
-   ---------------
 
    function Help_Icon (Topic : String) return String is
    begin
@@ -70,14 +165,23 @@ package body HTML is
          pragma Compile_Time_Warning (True, "hardcoded config");
    end Help_Icon;
 
-   --------------
-   -- Put_Cell --
-   --  Purpose: Write a table cell with given contents.
-   --  Input: Data: Contents of the cell;
-   --  Input: Tag: (optional) tag to use instead of <td> (e.g. <th>)
-   --  Input: Link_Param: (optional) CGI Parameter to use in link, sc.
-   --        <a href="the_url?Link_Param=Data">Data</a>
-   --------------
+   function Img_Tag (Image : String) return String is
+      Data : constant String :=
+         "<img src=""/icons/" &
+         Image &
+         ".png"" alt=""" &
+         Image &
+         """ title=""" &
+         Image &
+         """ />";
+   begin
+      return Data;
+   end Img_Tag;
+
+   function Param_Is (Param : String; Expected : String) return Boolean is
+   begin
+      return Standard."=" (CGI.Value (Param), Expected);
+   end Param_Is;
 
    procedure Put_Cell
      (Data       : String;
@@ -131,29 +235,6 @@ package body HTML is
       Put_Line (Close_Tag);
    end Put_Cell;
 
---     procedure Put_Cell (Data  : SGE.Host_Properties.Host_Name;
---                         Tag   : String := "td";
---                         Class : String := "") is
---        Close_Tag : constant String := "</" & Tag & ">";
---     begin
---        --  Start open tag
---        Put ("<" & Tag);
---
---        if Class /= "" then
---           Put (" class=""" & Class & """");
---        end if;
---        Put (">");
---        --  Open tag ended
---
---        Put (To_String (Data));
---
---        Put_Line (Close_Tag);
---     end Put_Cell;
-
-   --------------
-   -- Put_Cell --
-   --------------
-
    procedure Put_Cell
      (Data       : Unbounded_String;
       Link_Param : String := "";
@@ -168,63 +249,10 @@ package body HTML is
          Class      => Class);
    end Put_Cell;
 
-   ------------------
-   -- Put_Img_Cell --
-   ------------------
-
-   procedure Put_Img_Cell (Image : String; Extra_Text : String := "") is
+   procedure Put_Clearer is
    begin
-      Put_Cell (Data => Img_Tag (Image) & Extra_Text);
-   end Put_Img_Cell;
-
-   procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "") is
-   begin
-      Put ("<a href=""" & Link & """");
-      if Extra_Args /= "" then
-         Put (" " & Extra_Args);
-      end if;
-      Put ("><img src=""/icons/" & Name & ".png"" " &
-            "alt=""" & Text & """ title=""" & Text & """ /></a>");
-   end Put_Img;
-
-   procedure Put_Img_Form (Name, Text, Action, Value : String) is
-   begin
-      Put ("<input type=""image"" name=""" & Action
-           & """ src=""/icons/" & Name & ".png"" alt=""" & Text
-           & """ value=""" & Value & """ />");
-   end Put_Img_Form;
-
-   function Img_Tag (Image : String) return String is
-      Data : constant String :=
-         "<img src=""/icons/" &
-         Image &
-         ".png"" alt=""" &
-         Image &
-         """ title=""" &
-         Image &
-         """ />";
-   begin
-      return Data;
-   end Img_Tag;
-
-   procedure Put_Hidden_Form (Name, Value : String) is
-   begin
-      Put ("<input type=""hidden"" name=""" & Name & """ value="""
-           & Value & """ />");
-   end Put_Hidden_Form;
-
-   -------------------
-   -- Put_Time_Cell --
-   -------------------
-
-   procedure Put_Time_Cell (Time : Calendar.Time) is
-   begin
-      Put_Cell (To_String (Time));
-   end Put_Time_Cell;
-
-   -----------------------
-   -- Put_Duration_Cell --
-   -----------------------
+      Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
+   end Put_Clearer;
 
    procedure Put_Duration_Cell (Secs : Natural) is
       Days, Hours : Natural;
@@ -246,10 +274,6 @@ package body HTML is
       end if;
    end Put_Duration_Cell;
 
-   -----------------------
-   -- Put_Duration_Cell --
-   -----------------------
-
    procedure Put_Duration_Cell (Span : Duration) is
    begin
       if Span < 0.0 then
@@ -262,9 +286,16 @@ package body HTML is
       end if;
    end Put_Duration_Cell;
 
-   ---------------------
-   -- Put_Header_Cell --
-   ---------------------
+   procedure Put_Edit_Box (Name, Default : String) is
+   begin
+      Put ("<input type=""text"" name=""" & Name & """ size=""8"" value="""
+           & Default & """ onclick=""select()"">");
+   end Put_Edit_Box;
+
+   procedure Put_Empty_List is
+   begin
+      Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
+   end Put_Empty_List;
 
    procedure Put_Header_Cell
      (Data     : String;
@@ -305,6 +336,68 @@ package body HTML is
       end if;
    end Put_Header_Cell;
 
+   procedure Put_Heading (Title : String; Level : Positive) is
+   begin
+      CGI.Put_HTML_Heading (Title => Title,
+                            Level => Level);
+   end Put_Heading;
+
+   procedure Put_Hidden_Form (Name, Value : String) is
+   begin
+      Put ("<input type=""hidden"" name=""" & Name & """ value="""
+           & Value & """ />");
+   end Put_Hidden_Form;
+
+   procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "") is
+   begin
+      Put ("<a href=""" & Link & """");
+      if Extra_Args /= "" then
+         Put (" " & Extra_Args);
+      end if;
+      Put ("><img src=""/icons/" & Name & ".png"" " &
+            "alt=""" & Text & """ title=""" & Text & """ /></a>");
+   end Put_Img;
+
+   procedure Put_Img_Cell (Image : String; Extra_Text : String := "") is
+   begin
+      Put_Cell (Data => Img_Tag (Image) & Extra_Text);
+   end Put_Img_Cell;
+
+   procedure Put_Img_Form (Name, Text, Action, Value : String) is
+   begin
+      Put ("<input type=""image"" name=""" & Action
+           & """ src=""/icons/" & Name & ".png"" alt=""" & Text
+           & """ value=""" & Value & """ />");
+   end Put_Img_Form;
+
+   procedure Put_Link (Label : String; ID : String; Link_Param : String) is
+   begin
+      Put_Paragraph (Label    => Label,
+                     Contents => "<a href=""" & CGI.My_URL &
+                                 "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
+   end Put_Link;
+
+   procedure Put_Link (Text, Link_Param : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL &
+                            "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
+   end Put_Link;
+
+   procedure Put_List_Entry (Key, Element : String) is
+   begin
+      Ada.Text_IO.Put_Line ("<li><b>" & Key & ":</b> " & Element & "</li>");
+   end Put_List_Entry;
+
+   procedure Put_List_Head is
+   begin
+      Ada.Text_IO.Put ("<ul>");
+   end Put_List_Head;
+
+   procedure Put_List_Tail is
+   begin
+      Ada.Text_IO.Put ("</ul>");
+   end Put_List_Tail;
+
    procedure Put_Navigation_Begin is
    begin
       Begin_Div (ID => "navigation");
@@ -329,9 +422,14 @@ package body HTML is
          "</a></li>");
    end Put_Navigation_Link;
 
-   -------------------
-   -- Put_Paragraph --
-   -------------------
+   procedure Put_Opensearch (URL : String) is
+   begin
+      Ada.Text_IO.Put_Line
+        ("<link rel=""search"" href=""" &
+           URL &
+           """ type=""application/opensearchdescription+xml"" " &
+           " title=""qview search"" />");
+   end Put_Opensearch;
 
    procedure Put_Paragraph (Label : String; Contents : String) is
    begin
@@ -354,6 +452,34 @@ package body HTML is
       Put_Paragraph (Label, To_String (Contents));
    end Put_Paragraph;
 
+   --------------
+   -- Put_Cell --
+   --  Purpose: Write a table cell with given contents.
+   --  Input: Data: Contents of the cell;
+   --  Input: Tag: (optional) tag to use instead of <td> (e.g. <th>)
+   --  Input: Link_Param: (optional) CGI Parameter to use in link, sc.
+   --        <a href="the_url?Link_Param=Data">Data</a>
+   --------------
+
+--     procedure Put_Cell (Data  : SGE.Host_Properties.Host_Name;
+--                         Tag   : String := "td";
+--                         Class : String := "") is
+--        Close_Tag : constant String := "</" & Tag & ">";
+--     begin
+--        --  Start open tag
+--        Put ("<" & Tag);
+--
+--        if Class /= "" then
+--           Put (" class=""" & Class & """");
+--        end if;
+--        Put (">");
+--        --  Open tag ended
+--
+--        Put (To_String (Data));
+--
+--        Put_Line (Close_Tag);
+--     end Put_Cell;
+
    procedure Put_Paragraph
      (Label    : Unbounded_String;
       Contents : Unbounded_String)
@@ -362,44 +488,7 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
-   ----------------
-   -- Put_Job_ID --
-   ----------------
-
-   procedure Put_Link (Label : String; ID : String; Link_Param : String) is
    begin
-      Put_Paragraph (Label    => Label,
-                     Contents => "<a href=""" & CGI.My_URL &
-                                 "?" & Link_Param & "=" & ID & """>" & ID & "</a>");
-   end Put_Link;
-
-   procedure Put_Link (Text, Link_Param : String) is
-   begin
-      Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL &
-                            "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
-   end Put_Link;
-   --------------
-   -- Put_List --
-   --------------
-   procedure Put_List_Head is
-   begin
-      Ada.Text_IO.Put ("<ul>");
-   end Put_List_Head;
-
-   procedure Put_List_Tail is
-   begin
-      Ada.Text_IO.Put ("</ul>");
-   end Put_List_Tail;
-
-   procedure Put_List_Entry (Key, Element : String) is
-   begin
-      Ada.Text_IO.Put_Line ("<li><b>" & Key & ":</b> " & Element & "</li>");
-   end Put_List_Entry;
-
-   procedure Put_Empty_List is
-   begin
-      Ada.Text_IO.Put_Line ("<img src=""/icons/cross.png"" alt=""empty"" title=""empty"" />");
-   end Put_Empty_List;
 
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set) is
 --        Elem : String_Sets.Cursor;
@@ -483,79 +572,12 @@ package body HTML is
 --        Put_List_Tail;
 --     end Put_List;
 
-   -------------
-   -- Comment --
-   -------------
-
-   procedure Comment (Data : String) is
+   procedure Put_Search_Box is
    begin
-      Ada.Text_IO.Put_Line ("<!-- " & Data & " -->");
-   end Comment;
-
-   procedure Comment (Data : Unbounded_String) is
-   begin
-      Comment (To_String (Data));
-   end Comment;
-
-   procedure Bug_Ref (Bug_ID : Positive; Info : String) is
-   begin
-      Comment ("<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
-               --  http://ram/bugzilla
-               & "/show_bug.cgi?id="
-               & Bug_ID'Img & """>Bug #" & Bug_ID'Img & "</a>: "
-               & Info);
-         pragma Compile_Time_Warning (True, "hardcoded config");
-   end Bug_Ref;
-
-   ---------
-   -- Put --
-   ---------
-
---     procedure Put (Data : Tri_State) is
---     begin
---        Ada.Text_IO.Put ("<img src=""");
---        case Data is
---           when True =>
---              Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
---           when False =>
---              Ada.Text_IO.Put
---                ("/icons/cross.png"" alt=""false"" title=""false""");
---           when Undecided =>
---              Ada.Text_IO.Put
---                ("/icons/error.png"" alt=""undefined"" title=""undefined""");
---        end case;
---        Ada.Text_IO.Put_Line (" />");
---     end Put;
-
-   -----------
-   -- Error --
-   -----------
-
-   procedure Error (Message : String) is
-      Newline : constant String := "%0D%0A";
-   begin
-      Ada.Text_IO.Put_Line ("<p class=""error""> Error: "
-                            & "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
-                            --http://ram/bugzilla
-                              & "/enter_bug.cgi?"
-                      & "component=qview&form_name=enter_bug"
-                            & "&product=Projects"
-                              & "&version=" & Utils.Version
-                      & "&short_desc=" & CGI.HTML_Encode (Message)
-                            & "&comment=slurmlib " & Slurm.Utils.Version
-                            & Newline
-                            & "Please describe what you did before the error occurred. "
-                      & "Are there any extraordinary jobs in the queue?"
-                      & """>"
-                      & CGI.HTML_Encode (Message) & "</a></p>");
-         pragma Compile_Time_Warning (True, "hardcoded config");
-   end Error;
-
-   procedure Put_Heading (Title : String; Level : Positive) is
-   begin
-      CGI.Put_HTML_Heading (Title => Title,
-                            Level => Level);
-   end Put_Heading;
+      Put ("<li><form>");
+      Put_Edit_Box ("search", "search");
+      Put ("</form></li>");
+   end Put_Search_Box;
 
    procedure Put_Stylesheet (URL : String) is
    begin
@@ -565,100 +587,10 @@ package body HTML is
          """ type=""text/css"" media=""screen"" />");
    end Put_Stylesheet;
 
-   procedure Put_Opensearch (URL : String) is
+   procedure Put_Time_Cell (Time : Calendar.Time) is
    begin
-      Ada.Text_IO.Put_Line
-        ("<link rel=""search"" href=""" &
-           URL &
-           """ type=""application/opensearchdescription+xml"" " &
-           " title=""qview search"" />");
-   end Put_Opensearch;
-
-   procedure Put_Clearer is
-   begin
-      Ada.Text_IO.Put_Line ("<div class=""clearer""></div>"); -- css quirk
-   end Put_Clearer;
-
-   function Param_Is (Param : String; Expected : String) return Boolean is
-   begin
-      return Standard."=" (CGI.Value (Param), Expected);
-   end Param_Is;
-
-   procedure Begin_Div (Class : String := ""; ID : String := "") is
-      Tag : Div;
-   begin
-      Ada.Text_IO.Put ("<div");
-      if ID /= "" then
-         Ada.Text_IO.Put (" id=""" & ID & """");
-      end if;
-      if Class /= "" then
-         Ada.Text_IO.Put (" class=""" & Class & """");
-      end if;
-      Ada.Text_IO.Put_Line (">");
-      Tag.ID    := To_Unbounded_String (ID);
-      Tag.Class := To_Unbounded_String (Class);
-      Div_List.Append (Tag);
-   end Begin_Div;
-
-   procedure Begin_Form is
-   begin
-      if Form_Open then
-         Error ("Tried to open nested form");
-      else
-         Form_Open := True;
-         Put_Line ("<form action=""" & CGI.My_URL & "priv"">");
-      end if;
-   end Begin_Form;
-
-   procedure End_Div (Class : String := ""; ID : String := "") is
-      Tag : constant Div := Div_List.Last_Element;
-   begin
-      if Class /= "" and then Class /= Tag.Class then
-         HTML.Error
-           ("Found <div class=""" &
-            To_String (Tag.Class) &
-            """> while trying to close class=""" &
-            Class &
-            """");
-      end if;
-      if ID /= "" and then ID /= Tag.ID then
-         HTML.Error
-           ("Found <div id=""" &
-            To_String (Tag.ID) &
-            """> while trying to close id=""" &
-            ID &
-            """");
-      end if;
-      if not Div_List.Is_Empty then
-         Ada.Text_IO.Put_Line ("</div>");
-         Div_List.Delete_Last;
-      else
-         HTML.Error
-           ("Trying to close non-existant <div id=""" &
-            ID &
-            """ class=""" &
-            Class &
-            """>");
-      end if;
-   end End_Div;
-
-   procedure Finalize_Divs (Silent : Boolean := False) is
-      Tag : Div;
-   begin
-      if not Silent and then not Div_List.Is_Empty then
-         Error ("Found unclosed <div>s");
-      end if;
-      while not Div_List.Is_Empty loop
-         Tag := Div_List.Last_Element;
-         Ada.Text_IO.Put_Line
-           ("</div><!-- id=""" &
-            To_String (Tag.ID) &
-            """ class=""" &
-            To_String (Tag.Class) &
-            """ -->");
-         Div_List.Delete_Last;
-      end loop;
-   end Finalize_Divs;
+      Put_Cell (To_String (Time));
+   end Put_Time_Cell;
 
    function To_String (Time : Calendar.Time) return String is
             Year, This_Year   : Ada.Calendar.Year_Number;

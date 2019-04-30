@@ -270,10 +270,13 @@ package body Nodes is
       use Slurm.Gres;
       use Ada.Strings.Unbounded;
 
+      procedure Put_GPU (R : Resource);
+
       procedure Put_GPU (R : Resource) is
       begin
          if R.Category = "gpu" or else
-            R.Category = "GPU" then
+           R.Category = "GPU"
+         then
             Ada.Text_IO.Put_Line (R.Number'Img & " " & To_String (R.Name));
          end if;
       end Put_GPU;
