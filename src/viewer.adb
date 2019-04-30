@@ -436,9 +436,7 @@ package body Viewer is
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         HTML.Put_Paragraph (Label    => "View_Waiting_Jobs",
-                             Contents => "unimplemented");
---  View_Jobs (Selector => Implicit_Trust ("-u * -s p"), Only_Waiting => True);
+         Jobs.Put_Pending_List;
       end View_Waiting_Jobs;
 
    begin

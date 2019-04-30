@@ -380,6 +380,14 @@ package body Jobs is
       HTML.End_Div (Class => "job_list");
    end Put_List;
 
+   procedure Put_Pending_List is
+      use Slurm.Jobs;
+      Pending_List : List;
+   begin
+      Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
+      Put_List (Pending_List);
+   end Put_Pending_List;
+
    procedure Put_State (Flag : Slurm.Jobs.states) is
       procedure Put (What : String) renames Ada.Text_IO.put;
    begin
@@ -418,7 +426,13 @@ package body Jobs is
                                                    Params => "j="
                                                    & Get_ID (J)'Img) & """>clear error</a>");
       else
-         HTML.Put_Img_Cell (Get_State (J));
+         if Get_State(J)= JOB_PENDING and then
+           Get_state_Reason (J) = WAIT_DEPENDENCY
+         then
+            html.Put_Img_Cell ("WAIT_DEPENDENCY");
+            else
+            HTML.Put_Img_Cell (Get_State (J));
+            end if;
       end if;
    end Put_State_Cell;
 
