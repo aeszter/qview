@@ -183,6 +183,19 @@ package body HTML is
       return Standard."=" (CGI.Value (Param), Expected);
    end Param_Is;
 
+   procedure Put (Data : Boolean) is
+   begin
+      Ada.Text_IO.Put ("<img src=""");
+      case Data is
+         when True =>
+            Ada.Text_IO.Put ("/icons/tick.png"" alt=""true"" title=""true""");
+         when False =>
+            Ada.Text_IO.Put
+              ("/icons/cross.png"" alt=""false"" title=""false""");
+      end case;
+      Ada.Text_IO.Put_Line (" />");
+   end Put;
+
    procedure Put_Cell
      (Data       : String;
       Link_Param : String   := "";
@@ -488,7 +501,12 @@ package body HTML is
       Put_Paragraph (To_String (Label), To_String (Contents));
    end Put_Paragraph;
 
+   procedure Put_Paragraph (Label : String; Contents : Boolean) is
    begin
+      Ada.Text_IO.Put ("<p>" & Label);
+      Put (Contents);
+      Ada.Text_IO.Put_Line ("</p>");
+   end Put_Paragraph;
 
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set) is
 --        Elem : String_Sets.Cursor;
@@ -608,6 +626,9 @@ package body HTML is
          Month   => Month,
          Day     => Day,
          Seconds => Secs);
+      if Year = 1970 and then Month = 1 and then Day = 1 then
+         return "<i>unknown</i>";
+      end if;
       Calendar.Split
         (Date    => Ada.Calendar.Clock,
          Year    => This_Year,

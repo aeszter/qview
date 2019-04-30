@@ -50,6 +50,7 @@ package HTML is
    procedure Put_Paragraph (Label : String; Contents : String);
    procedure Put_Paragraph (Label : String; Contents : Calendar.Time);
    procedure Put_Paragraph (Label : String; Contents : Duration);
+   procedure Put_Paragraph (Label : String; Contents : Boolean);
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
    procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
    procedure Put_Link (Label : String; ID : String; Link_Param : String);
@@ -57,7 +58,7 @@ package HTML is
    procedure Comment (Data : String);
    procedure Comment (Data : Unbounded_String);
    procedure Bug_Ref (Bug_ID : Positive; Info : String);
---     procedure Put (Data : Tri_State);
+   procedure Put (Data : Boolean);
 --
 --     procedure Put_List (List : String_Lists.List);
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set);

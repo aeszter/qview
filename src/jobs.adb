@@ -274,8 +274,13 @@ package body Jobs is
          HTML.Put_Paragraph ("Project", Get_Project (J));
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => Get_Submission_Time (J));
+         HTML.Put_Paragraph (Label    => "Starts",
+                             Contents => Get_Start_Time (J));
+         HTML.Put_Paragraph (Label    => "Ends",
+                             Contents => Get_End_Time (J));
          HTML.Put_Paragraph ("Dependency", Get_Dependency (J));
          HTML.Put_Paragraph ("Reservation", Get_Reservation (J));
+         HTML.Put_Paragraph ("Submitted on", Get_Alloc_Node (J));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (J);
          if Get_State_Reason (J) /= WAIT_NO_REASON then
@@ -323,6 +328,7 @@ package body Jobs is
       procedure Put_Resources is
       begin
          HTML.Begin_Div (Class => "job_resources");
+         HTML.Put_Paragraph ("Share", Has_Share (J));
          Ada.Text_IO.Put_Line (Get_Gres (J));
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
