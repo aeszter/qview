@@ -221,6 +221,7 @@ package body Nodes is
          raise Constraint_Error with "no such node";
       end if;
       Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Img_Cell (Get_State (N));
       HTML.Put_Cell (Data => Get_Name (N));
       --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
@@ -303,6 +304,7 @@ package body Nodes is
                         Level => 2);
       HTML.Begin_Div (Class => "host_list");
       Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Header_Cell (Data     => "State");
       HTML.Put_Header_Cell (Data     => "Name");
       HTML.Put_Header_Cell (Data     => "Interconnect");
       HTML.Put_Header_Cell (Data => "GPU");
