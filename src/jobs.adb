@@ -432,13 +432,13 @@ package body Jobs is
                                                    Params => "j="
                                                    & Get_ID (J)'Img) & """>clear error</a>");
       else
-         if Get_State(J)= JOB_PENDING and then
-           Get_state_Reason (J) = WAIT_DEPENDENCY
+         if Get_State (J) = JOB_PENDING and then
+           Get_State_Reason (J) = WAIT_DEPENDENCY
          then
-            html.Put_Img_Cell ("WAIT_DEPENDENCY");
-            else
+            HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
+         else
             HTML.Put_Img_Cell (Get_State (J));
-            end if;
+         end if;
       end if;
    end Put_State_Cell;
 

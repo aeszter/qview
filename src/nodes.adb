@@ -1,18 +1,14 @@
 with Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
-with HTML;
---  with Lightsout;
-with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
 with Ada.Calendar; use Ada.Calendar;
+--  with Lightsout;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
 with Slurm.Utils;
-with Ada.Strings.Unbounded;
---  with SGE.Utils;
---  with SGE.Host_Properties;
---  with SGE.Resources;
+with HTML;
 with Utils;
 
 package body Nodes is
@@ -25,178 +21,6 @@ package body Nodes is
    procedure Put_GPU_Cell (N : Node);
    procedure Put_State (N : Node);
 
---     procedure Put_Details (H : SGE.Hosts.Host) is
---        procedure Put_Actions;
---        procedure Put_Name;
---        procedure Put_Properties;
---        procedure Put_Queues;
---        procedure Put_Resources;
---        procedure Put_Jobs;
---        procedure Put_Queue_Row (Q : Queue_Pointer);
---        procedure Put_Job (J : Job);
---        procedure Append_Job (J : Job);
---
---        Job_List : Unbounded_String := Null_Unbounded_String;
---        First : Boolean := True;
---
---        procedure Append_Job (J : Job) is
---        begin
---           if not First then
---              Append (Job_List, "&");
---           end if;
---
---           Append (Job_List, "j=" & Get_Full_ID (J));
---           First := False;
---        end Append_Job;
---
---        procedure Put_Actions is
---           Bug_ID : constant String := Lightsout.Get_Bug_ID (Get_Name (H));
---        begin
---           HTML.Begin_Div (ID => "host_actions");
---           HTML.Begin_Form;
---           HTML.Put_Hidden_Form (Name => "h", Value => SGE.Host_Properties.Value (Get_Name (H)));
---           HTML.Put_Img_Form (Name   => "maint_no",
---                              Text   => "Clear maintenance",
---                              Action => "act",
---                              Value  => "clear_maint");
---           HTML.Put_Img_Form (Name   => "maint_ignore",
---                              Text   => "Make lightsout ignore node",
---                              Action => "act",
---                              Value  => "maint_ignore");
---           HTML.Put_Img_Form (Name   => "maint_disable",
---                              Text   => "Disable node",
---                              Action => "act",
---                              Value  => "maint_disable");
---           HTML.Put_Img_Form (Name   => "maint_off",
---                              Text   => "Mark node for poweroff",
---                              Action => "act",
---                              Value  => "maint_poweroff");
---           HTML.Put_Img_Form (Name   => "poweron",
---                              Text   => "Power on node",
---                              Action => "act",
---                              Value  => "poweron");
---           if Bug_ID = "" then
---              HTML.Put_Edit_Box ("bug", "Bug");
---           else
---              HTML.Put_Edit_Box ("bug", Bug_ID);
---           end if;
---           if Has_Unreachable_Queue (H) then
---              Iterate_Jobs (H, Append_Job'Access);
---              Ada.Text_IO.Put_Line ("<p><a href="""
---                   & HTML.Get_Action_URL (Action => "forcekill",
---                                          Params => To_String (Job_List))
---                   & """>kill all jobs</a></p>");
---           end if;
---           HTML.End_Form;
---           HTML.End_Div (ID => "host_actions");
---           HTML.Begin_Div (ID => "unlocker");
---           HTML.Put_Img (Name => "hand.right",
---                         Text => "unlock host manipulation",
---                         Link => "#",
---                         Extra_Args => "onclick=""document.getElementById('host_actions').style.display = 'block';"
---                                   & "document.getElementById('unlocker').style.display = 'none' """);
---           HTML.End_Div (ID => "unlocker");
---        end Put_Actions;
---
---        procedure Put_Name is
---        begin
---           HTML.Begin_Div (Class => "host_name");
---           Ada.Text_IO.Put ("<p>");
---
---           Ada.Text_IO.Put_Line (HTML.To_String (Get_Name (H), False) & "</p>");
---           Ada.Text_IO.Put_Line ("<p>" & Lightsout.Get_Maintenance (Get_Name (H)));
---           Ada.Text_IO.Put_Line (Lightsout.Get_Bug (Get_Name (H)) & "</p>");
---           HTML.End_Div (Class => "host_name");
---        end Put_Name;
---
---        procedure Put_Properties is
---           use SGE.Resources;
---        begin
---           HTML.Begin_Div ("host_properties");
---           HTML.Put_Paragraph ("Load", Get_Load_One (H)'Img & "," & Get_Load (H)'Img);
---           HTML.Put_Paragraph ("Slots used", Get_Used_Slots (H)'Img);
---           HTML.Put_Paragraph ("Memory", Get_Memory (H));
---           HTML.Put_Paragraph ("Network", Get_Network (H));
---           HTML.Put_Paragraph ("CPU", To_String (Get_Model (H)));
---           HTML.Put_Paragraph ("Cores", Get_Cores (H)'Img);
---           HTML.Put_Paragraph ("GPU", To_String (Get_GPU (H)));
---           HTML.End_Div ("host_properties");
---        end Put_Properties;
---
---        --  Add table with coloured memory, swap usage cells
---
---        procedure Put_Queue_Row (Q : Queue_Pointer) is
---        begin
---           Ada.Text_IO. Put ("<tr>");
---           Put_Queue (Q);
---           Ada.Text_IO. Put ("</tr>");
---        end Put_Queue_Row;
---
---        procedure Put_Job (J : Job) is
---        begin
---           Put_Jobs (J);
---        end Put_Job;
---
---        procedure Put_Queues is
---        begin
---           HTML.Begin_Div ("host_queues");
---           HTML.Put_Heading ("Queues", 3);
---           Ada.Text_IO.Put ("<table>");
---           Iterate_Queues (H, Put_Queue_Row'Access);
---           Ada.Text_IO.Put_Line ("</table>");
---           HTML.End_Div ("host_queues");
---        end Put_Queues;
---
---        procedure Put_Jobs is
---        begin
---           HTML.Begin_Div ("host_jobs");
---           HTML.Put_Heading ("Jobs", 3);
---           Ada.Text_IO.Put ("<table>");
---           Iterate_Jobs (H, Put_Job'Access);
---           Ada.Text_IO.Put_Line ("</table>");
---           HTML.End_Div ("host_jobs");
---        end Put_Jobs;
---
---        procedure Put_Resources is
---        begin
---           HTML.Begin_Div ("host_res");
---           Ada.Text_IO.Put ("<table><tr>");
---           HTML.Put_Header_Cell (Data     => "Load",
---                                 Acronym  => "per core",
---                                 Sortable => False);
---           HTML.Put_Header_Cell (Data     => "Mem",
---                                 Acronym  => "% used",
---                                 Sortable => False);
---           HTML.Put_Header_Cell (Data     => "Swap",
---                                 Acronym  => "% used",
---                                 Sortable => False);
---           Ada.Text_IO.Put ("</tr><tr>");
---           HTML.Put_Cell (Data  => Load_Per_Core (H)'Img,
---                          Class => "right " & Color_Class (Load_Per_Core (H)));
---           HTML.Put_Cell (Data  => Mem_Percentage (H)'Img,
---                          Class => "right " & Color_Class (Mem_Percentage (H)));
---           HTML.Put_Cell (Data  => Swap_Percentage (H)'Img,
---                          Class => "right " & Color_Class (Swap_Percentage (H)));
---           Ada.Text_IO.Put ("</tr></table>");
---           HTML.End_Div ("host_res");
---        end Put_Resources;
---
---     begin
---        HTML.Begin_Div (Class => "host_info");
---
---        HTML.Begin_Div (Class => "action_and_name");
---        Put_Actions;
---        Put_Name;
---        HTML.Put_Clearer;
---        HTML.End_Div (Class => "action_and_name");
---        Put_Properties;
---        Put_Queues;
---        Put_Jobs;
---        Put_Resources;
---        HTML.Put_Clearer;
---        HTML.End_Div (Class => "host_info");
---        HTML.Put_Clearer;
---     end Put_Details;
 --
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
 --     begin
@@ -273,7 +97,8 @@ package body Nodes is
    exception
       when --  E :
          others =>
---           HTML.Error ("Error while putting host " & SGE.Host_Properties.Value (Get_Name (H)) & ": "
+         --           HTML.Error ("Error while putting host "
+--           & SGE.Host_Properties.Value (Get_Name (H)) & ": "
 --                       & Exception_Message (E));
          Ada.Text_IO.Put ("</tr>");
    end Put;
@@ -462,7 +287,8 @@ package body Nodes is
 --        Iterate_Jobs (H, Put_Jobs'Access);
 --     exception
 --        when E : others =>
---           HTML.Error ("Error while putting host " & SGE.Host_Properties.Value (Get_Name (H)) & ": "
+--           HTML.Error ("Error while putting host "
+-- & SGE.Host_Properties.Value (Get_Name (H)) & ": "
 --                       & Exception_Message (E));
 --           Ada.Text_IO.Put ("</tr>");
 --     end Put_For_Maintenance;
