@@ -6,8 +6,10 @@ package Nodes is
 --     subtype Host is SGE.Hosts.Host;
 
    procedure Put_All;
-   procedure Put_Details;
+   procedure Put_Details (Name : String);
    procedure Put_List (List : Slurm.Nodes.List);
+   function Explain_State (S : states) return String;
+
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean);
 private
 

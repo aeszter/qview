@@ -503,18 +503,9 @@ package body Viewer is
             Put_Headers (Title => "Queue " & CGI.Value ("queue"));
             Set_Params ("queue=" & CGI.Value ("queue"));
             View_Jobs_In_Queue (CGI.Value ("queue"));
-         elsif not HTML.Param_Is ("hosts", "") then
-            Put_Headers (Title => "Hosts: "
-                         & CGI.Value ("net") & "/"
-                         & CGI.Value ("model") & "/"
-                         & CGI.Value ("cores") & "/"
-                         & CGI.Value ("mem")
-                        );
-                        --  & "/" & CGI.Value "rt"
-                        --  currently not used, so do not confuse the user
-                        --  see Bug #1495
-            Set_Params ("hosts=" & CGI.Value ("hosts"));
-            View_Partition;
+         elsif not HTML.Param_Is ("node", "") then
+            Put_Headers (Title => "Node " & CGI.Value ("node"));
+            Nodes.Put_Details (CGI. Value ("node"));
          elsif not HTML.Param_Is ("user", "") then
             Put_Headers (Title => "User " & CGI.Value ("user"));
             Set_Params ("user=" & CGI.Value ("user"));

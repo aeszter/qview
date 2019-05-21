@@ -8,10 +8,12 @@ with Ada.Calendar; use Ada.Calendar;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
+with Slurm.Utils;
 with Ada.Strings.Unbounded;
 --  with SGE.Utils;
 --  with SGE.Host_Properties;
 --  with SGE.Resources;
+with Utils;
 
 package body Nodes is
 
@@ -21,6 +23,7 @@ package body Nodes is
 
    procedure Put (Position : Slurm.Nodes.Cursor);
    procedure Put_GPU_Cell (N : Node);
+   procedure Put_State (N : Node);
 
 --     procedure Put_Details (H : SGE.Hosts.Host) is
 --        procedure Put_Actions;
@@ -212,6 +215,26 @@ package body Nodes is
 --     -- Put --
 --     ---------
 --
+   function Explain_State (S : Slurm.Nodes.states) return String is
+   begin
+      case S is
+         when NODE_STATE_ALLOCATED =>
+            return "allocated to a job";
+         when NODE_STATE_DOWN =>
+            return "down";
+         when NODE_STATE_ERROR =>
+            return "error";
+         when NODE_STATE_FUTURE =>
+            return "reserved for future use";
+         when NODE_STATE_IDLE =>
+            return "idle";
+         when NODE_STATE_MIXED =>
+            return "mixed";
+         when NODE_STATE_UNKNOWN =>
+            return "unknown";
+      end case;
+   end Explain_State;
+
    procedure Put (Position : Slurm.Nodes.Cursor) is
       N : Node;
    begin
@@ -222,7 +245,8 @@ package body Nodes is
       end if;
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Img_Cell (Get_State (N));
-      HTML.Put_Cell (Data => Get_Name (N));
+      HTML.Put_Cell (Data => Get_Name (N),
+                    Link_Param => "node");
       --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
       Put_GPU_Cell (N);
@@ -259,12 +283,103 @@ package body Nodes is
       Put_List (Slurm.Nodes.Load_Nodes);
    end Put_All;
 
-   procedure Put_Details is
+   procedure Put_Details (Name : String) is
+      procedure Put_Hardware;
+      procedure Put_Resources;
+      procedure Put_Slurm;
+      procedure Put_System;
+
+      The_List : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
+      N        : constant Node := Slurm.Nodes.Get_Node (The_List, Name);
+
+      procedure Put_Hardware is
+      begin
+         HTML.Begin_Div (Class => "node_hardware");
+         HTML.Put_Paragraph ("Architecture", Get_Architecture (N));
+         HTML.Put_Paragraph ("Boards",  Get_Boards (N)'Img);
+         HTML.Put_Paragraph ("Sockets:Cores:Threads",
+                             Utils.To_String (Get_Sockets (N)) & ":"
+                             & Utils.To_String (Get_Cores_Per_Socket (N)) & ":"
+                             & Utils.To_String (Get_Threads_Per_Core (N)));
+         HTML.Put_Paragraph ("CPUs", Get_CPUs (N)'Img);
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "node_hardware");
+      end Put_Hardware;
+
+      procedure Put_Resources is
+         procedure Put_GRES (Res : Slurm.Gres.Resource);
+
+         Label : String := "GRES ";
+
+         procedure Put_GRES (Res : Slurm.Gres.Resource) is
+            use Slurm.Gres;
+         begin
+            HTML.Put_Paragraph (Label => Label, Contents => To_String (Res));
+         end Put_GRES;
+
+      begin
+         HTML.Begin_Div (Class => "node_resources");
+         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
+         HTML.Put_Paragraph ("Memory free/total", Get_Free_Memory (N) & "/" & Get_Memory (N));
+         HTML.Put_Paragraph ("Features", Get_Features (N));
+
+         Iterate_GRES (N, Put_GRES'Access);
+         Label := "Drain";
+         Iterate_GRES_Drain (N, Put_GRES'Access);
+         Label := "Used ";
+         Iterate_GRES_Used (N, Put_GRES'Access);
+
+         HTML.Put_Paragraph ("tmp", Slurm.Utils.To_String (Get_Tmp_Total (N)));
+         HTML.Put_Paragraph ("TRES", Get_TRES (N));
+         HTML.Put_Clearer;
+         HTML. End_Div (Class => "node_resources");
+      exception
+            when others =>
+         HTML.Put_Clearer;
+         HTML. End_Div (Class => "node_resources");
+      end Put_Resources;
+
+      procedure Put_Slurm is
+         use Slurm.Utils;
+      begin
+         HTML.Begin_Div (Class => "node_slurm");
+         HTML.Put_Paragraph ("Owner", To_String (Get_Owner (N)));
+         Ada.Text_IO.Put ("<p>State: ");
+         Put_State (N);
+         if Get_Reason (N) /= "" then
+            HTML.Put_Paragraph ("Reason", Get_Reason (N));
+            HTML.Put_Paragraph ("by", To_String (Get_Reason_User (N)));
+            HTML.Put_Paragraph ("since", Get_Reason_Time (N));
+         end if;
+         Ada.Text_IO.Put_Line ("</p>");
+         HTML.Put_Paragraph ("Job started", Get_Start_Time (N));
+         HTML.Put_Paragraph ("Weight", Get_Weight (N)'Img);
+         HTML.Put_Paragraph ("Version", Get_Version (N));
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "node_slurm");
+      end Put_Slurm;
+
+      procedure Put_System is
+      begin
+         HTML.Begin_Div (Class => "node_system");
+         Ada.Text_IO. Put_Line ("<p>" & Get_Name (N) & "</p>");
+         Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
+         Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
+                               & HTML.To_String (Get_Boot_Time (N)) & "</p>");
+         HTML.Put_Clearer;
+         HTML. End_Div (Class => "node_system");
+      end Put_System;
+
    begin
---        Lightsout.Clear;
---        Lightsout.Read;
---        SGE.Hosts.Iterate (Put_Details'Access);
-      HTML.Put_Paragraph ("Nodes.Put_Details", "unimplemented");
+      HTML.Begin_Div (Class => "node_info");
+      HTML.Begin_Div (Class => "node_head_data");
+      Put_System;
+      HTML.End_Div (Class => "node_head_data");
+      Put_Hardware;
+      Put_Slurm;
+      Put_Resources;
+      HTML.Put_Clearer;
+      HTML. End_Div (Class => "node_info");
    end Put_Details;
 
    procedure Put_GPU_Cell (N : Node) is
@@ -357,5 +472,14 @@ package body Nodes is
       HTML.Put_Cell (Data => Get_Name (P));
 --      HTML.Put_Img_Cell (Image => Get_State (P));
    end Put_Partition;
+
+   procedure Put_State (N : Node) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Get_State (N) & ".png"" ");
+      Put ("alt=""" & Get_State (N) & """ title=""" & Get_State (N) & ": ");
+      Put (Explain_State (Get_State (N)));
+      Put (""" />");
+   end Put_State;
 
 end Nodes;

@@ -17,7 +17,6 @@ package body CSS is
    Standard_Background : constant String := "background: #e0e0e0;";
    Box_Background      : constant String := "background: #e8e8e8;";
 
-
    procedure Put_Line (Item : String) is
    begin
       if Block_Is_Open then
@@ -199,7 +198,7 @@ package body CSS is
       Put_Line ("display: block;");
       Close_Block;
 
-      Open_Block (".action_and_name");
+      Open_Block (".action_and_name, .node_head_data");
       Put_Line ("display: -webkit-flex;");
       Put_Line ("display: flex;");
       Put_Line ("margin-bottom: 10px;");
@@ -208,7 +207,7 @@ package body CSS is
 
    procedure Put_Job_Name is
    begin
-      Open_Block (".job_name, .ar_name, .host_name");
+      Open_Block (".job_name, .ar_name, .host_name, .node_system");
       Put_Line ("font-weight: bold;");
       Put_Line ("width: 63em;");
       Put_Line ("position: relative;");
@@ -221,13 +220,14 @@ package body CSS is
 
    procedure Put_Job_Meta is
    begin
-      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs");
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs, "
+               &".node_slurm, .node_usage, .node_resources");
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
       Close_Block;
-      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties");
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .node_slurm, .node_usage, .node_resource");
       Put_Line (Small_Box_Width);
       Close_Block;
       Open_Block (".host_jobs");
@@ -250,7 +250,7 @@ package body CSS is
 
    procedure Put_Job_Queue is
    begin
-      Open_Block (".job_queue, .ar_queue, .host_queues");
+      Open_Block (".job_queue, .ar_queue, .host_queues, .node_hardware");
       Put_Line (Small_Box_Width);
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
@@ -274,7 +274,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .partitions, .bunches");
+      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .partitions, .bunches, .node_info");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
@@ -297,7 +297,7 @@ package body CSS is
    procedure Put_Table_Padding is
    begin
       Open_Block (".partitions td, .bunches td");
-      Put_Line ("padding: 1px 3px 1px 5px;");
+      Put_Line ("padding: 1px 3, .node_slurm, .node_usagepx 1px 5px;");
       Close_Block;
    end Put_Table_Padding;
 
@@ -371,7 +371,7 @@ package body CSS is
 
    procedure Put_Job_Paragraphs is
    begin
-      Open_Block (".job_info p, .ar_info p, .host_info p");
+      Open_Block (".job_info p, .ar_info p, .host_info p, .node_info p");
       Put_Line ("margin: 5px;");
       Put_Line ("height: 1.2em;");
       Put_Line ("font-size: 0.85em;");
@@ -379,7 +379,7 @@ package body CSS is
       Put_Line ("line-height: 1em;");
       Close_Block;
 
-      Open_Block (".job_name p, .ar_name p");
+      Open_Block (".job_name p, .ar_name p, .node_system p");
       Put_Line ("margin: 10px;");
 --  /*line-height: 10px;*/
       Close_Block;

@@ -1,3 +1,5 @@
+with Ada.Strings; use Ada.Strings;
+with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with POSIX.C; use POSIX.C;
 with System;
 with POSIX;
@@ -21,5 +23,10 @@ package body Utils is
       end if;
       Last := Buffer'First + Integer (Result) - 1;
    end Read_Link;
+
+   function To_String (Source : Integer) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (Source'Img, Left);
+   end To_String;
 
 end Utils;
