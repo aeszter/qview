@@ -21,7 +21,7 @@ package body Jobs is
 --     List : SGE.Jobs.List;
    procedure Put (Position : Slurm.Jobs.Cursor);
    procedure Put_State (Flag : Slurm.Jobs.states);
---     procedure Put_State (J : Job);
+   procedure Put_State (J : Job);
    procedure Put_State_Cell (J : Job);
    procedure Put_Core_Header;
    procedure Put_Core_Line (J : Job);
@@ -67,59 +67,6 @@ package body Jobs is
       end if;
    end Name_As_HTML;
 
-   procedure Put_State (Flag : Slurm.Jobs.states) is
-      procedure Put (What : String) renames Ada.Text_IO.put;
-   begin
-      Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
-      Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
-   end Put_State;
-
-   procedure Put_Summary (List : Slurm.Jobs.List) is
-      Job_Summary, Task_Summary : State_Count;
-   begin
-      Slurm.Jobs.Get_Summary (Collection => List,
-                            Jobs => Job_Summary,
-                            Tasks => Task_Summary);
-      HTML.Begin_Div (ID => "job_summary");
-      Ada.Text_IO.Put ("<ul>");
-      for State in Job_Summary'Range loop
-         Ada.Text_IO.Put ("<li>");
-         Ada.Text_IO.Put (Job_Summary (State)'Img);
-         if Task_Summary (State) > 0 then
-            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (
-      Task_Summary (State)'Img, Ada.Strings.Left) & ")");
-         end if;
-         Ada.Text_IO.Put (" ");
-         Put_State (Flag => State);
-         Ada.Text_IO.Put_Line ("</li>");
-      end loop;
-
-      Ada.Text_IO.Put ("</ul>");
-      HTML.End_Div (ID => "job_summary");
-   end Put_Summary;
-
---
---     procedure Put_State (J : Job) is
---        procedure Put (What : String) renames Ada.Text_IO.put;
---     begin
---        Put ("<img src=""/icons/" & Get_State (J) & ".png"" ");
---        Put ("alt=""" & Get_State (J) & """ title=""" & Get_State (J) & ": ");
---        if Is_Running (J) then
---           Put ("running");
---        end if;
---        if On_Hold (J) then
---           Put ("on hold");
---        end if;
---        if Has_Error (J) then
---           Put ("Error");
---        end if;
---        Put (""" />");
---        if Has_Error (J) then
---           Put (" <a href=""" &
---                  HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)) &
---                  """>clear error</a>");
---        end if;
---     end Put_State;
 --
 --
 --     procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False) is
@@ -263,8 +210,12 @@ package body Jobs is
       HTML.Put_Cell (Data => Get_Gres (J));
       HTML.Put_Duration_Cell (Walltime (J));
       HTML.Put_Cell (Data => Get_Priority (J)'Img,
-                Class => "right");
-      HTML.Put_Time_Cell (Get_Start_Time (J));
+                     Class => "right");
+      if Has_Start_Time (J) then
+         HTML.Put_Time_Cell (Get_Start_Time (J));
+      else
+         HTML.Put_Cell ("");
+      end if;
       Finish_Row (J);
    end Put;
 
@@ -292,10 +243,121 @@ package body Jobs is
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
 
-   procedure Put_Details is
+   procedure Put_Details (ID : Natural) is
+      The_List : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
+      J        : constant Job := Slurm.Jobs.Get_Job (The_List, ID);
+
+--        procedure Put_Actions;
+      -- procedure Put_Files;
+      procedure Put_Meta;
+      procedure Put_Name;
+      procedure Put_Queues;
+      procedure Put_Resources;
+      procedure Put_Usage;
+
+--        procedure Put_Actions is
+--        begin
+--           HTML.Begin_Div (ID => "job_actions");
+--           HTML.Put_Img (Name => "kill",
+--                         Text => "Kill job",
+--                         Link => HTML.Get_Action_URL (Action => "k",
+--                                                      Params => "j=" & Get_ID (J)));
+--           HTML.End_Div (ID => "job_actions");
+--        end Put_Actions;
+
+      procedure Put_Meta is
+      begin
+         HTML.Begin_Div (Class => "job_meta");
+         HTML.Put_Paragraph ("ID", Get_ID (J)'Img);
+         HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
+         HTML.Put_Paragraph ("Group", To_String (Get_Group (J)));
+         HTML.Put_Paragraph ("Project", Get_Project (J));
+         HTML.Put_Paragraph (Label    => "Submitted",
+                             Contents => Get_Submission_Time (J));
+         HTML.Put_Paragraph (Label    => "Starts",
+                             Contents => Get_Start_Time (J));
+         HTML.Put_Paragraph (Label    => "Ends",
+                             Contents => Get_End_Time (J));
+         HTML.Put_Paragraph ("Dependency", Get_Dependency (J));
+         HTML.Put_Paragraph ("Reservation", Get_Reservation (J));
+         HTML.Put_Paragraph ("Submitted on", Get_Alloc_Node (J));
+         Ada.Text_IO.Put ("<p>State: ");
+         Put_State (J);
+         if Get_State_Reason (J) /= WAIT_NO_REASON then
+            HTML.Put_Paragraph ("Reason", Get_State_Reason (J)'Img);
+         end if;
+         Ada.Text_IO.Put_Line (Get_State_Description (J));
+         Ada.Text_IO.Put_Line ("</p>");
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "job_meta");
+      end Put_Meta;
+
+      procedure Put_Name is
+      begin
+         HTML.Begin_Div (Class => "job_name");
+         Ada.Text_IO.Put ("<p>");
+--           HTML.Put_Img (Name => "hand.right",
+--                         Text => "unlock job manipulation",
+--                         Link => "#",
+--                         Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
+         --         HTML.Put_Paragraph ("Name", Get_Name (J));
+
+         Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
+         HTML.End_Div (Class => "job_name");
+      end Put_Name;
+
+      procedure Put_Queues is
+         procedure Put_Queue (Q : String);
+
+         procedure Put_Queue (Q : String) is
+         begin
+            HTML.Put_Paragraph (Label => "Queue", Contents => Q);
+         end Put_Queue;
+
+      begin
+         HTML.Begin_Div (Class => "job_queue");
+
+         HTML.Put_Paragraph ("Partition", Get_Partition (J));
+         HTML.Put_Paragraph ("Nodes", Get_Nodes (J));
+         HTML.Put_Paragraph ("CPUs", Get_CPUs (J)'Img);
+
+         HTML.Put_Clearer;
+         HTML.End_Div (Class => "job_queue");
+      end Put_Queues;
+
+      procedure Put_Resources is
+      begin
+         HTML.Begin_Div (Class => "job_resources");
+         HTML.Put_Paragraph ("Share", Has_Share (J));
+         Ada.Text_IO.Put_Line (Get_Gres (J));
+         HTML.End_Div (Class => "job_resources");
+      end Put_Resources;
+
+      procedure Put_Usage is
+      begin
+         HTML.Begin_Div (Class => "job_usage");
+         Ada.Text_IO.Put_Line ("unimplemented");
+         HTML.End_Div (Class => "job_usage");
+      end Put_Usage;
+
    begin
-      Ada.Text_IO.Put ("unimplemented");
---      Iterate (List, Jobs.Put'Access);
+      HTML.Begin_Div (Class => "job_info");
+
+      HTML.Begin_Div (Class => "action_and_name");
+--      Put_Actions;
+      Put_Name;
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
+      Put_Meta;
+      Put_Queues;
+      HTML.Begin_Div (Class => "res_and_context");
+      Put_Resources;
+      HTML.End_Div (Class => "res_and_context");
+      Put_Usage;
+
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "job_info");
+      HTML.Put_Clearer;
    end Put_Details;
 
    procedure Put_Global_List is
@@ -323,6 +385,86 @@ package body Jobs is
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
    end Put_List;
+
+   procedure Put_Pending_List is
+      use Slurm.Jobs;
+      Pending_List : List;
+   begin
+      Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
+      Put_List (Pending_List);
+   end Put_Pending_List;
+
+   procedure Put_State (Flag : Slurm.Jobs.states) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
+      Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
+   end Put_State;
+
+   procedure Put_State (J : Job) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Get_State (J) & ".png"" ");
+      Put ("alt=""" & Get_State (J) & """ title=""" & Get_State (J) & ": ");
+      if Is_Running (J) then
+         Put ("running");
+      end if;
+--        if On_Hold (J) then
+--           Put ("on hold");
+--        end if;
+--        if Has_Error (J) then
+--           Put ("Error");
+--        end if;
+      Put (""" />");
+--        if Has_Error (J) then
+--           Put (" <a href=""" &
+--                  HTML.Get_Action_URL (Action => "cj", Params => "j=" & Get_ID (J)) &
+--                  """>clear error</a>");
+--        end if;
+   end Put_State;
+
+   procedure Put_State_Cell (J : Job) is
+   begin
+      if Has_Error (J) then
+         HTML.Put_Img_Cell (Get_State (J),
+                            Extra_Text => " <a href=""" &
+                              HTML.Get_Action_URL (Action => "cj",
+                                                   Params => "j="
+                                                   & Get_ID (J)'Img) & """>clear error</a>");
+      else
+         if Get_State (J) = JOB_PENDING and then
+           Get_State_Reason (J) = WAIT_DEPENDENCY
+         then
+            HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
+         else
+            HTML.Put_Img_Cell (Get_State (J));
+         end if;
+      end if;
+   end Put_State_Cell;
+
+   procedure Put_Summary (List : Slurm.Jobs.List) is
+      Job_Summary, Task_Summary : State_Count;
+   begin
+      Slurm.Jobs.Get_Summary (Collection => List,
+                            Jobs => Job_Summary,
+                            Tasks => Task_Summary);
+      HTML.Begin_Div (ID => "job_summary");
+      Ada.Text_IO.Put ("<ul>");
+      for State in Job_Summary'Range loop
+         Ada.Text_IO.Put ("<li>");
+         Ada.Text_IO.Put (Job_Summary (State)'Img);
+         if Task_Summary (State) > 0 then
+            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (
+      Task_Summary (State)'Img, Ada.Strings.Left) & ")");
+         end if;
+         Ada.Text_IO.Put (" ");
+         Put_State (Flag => State);
+         Ada.Text_IO.Put_Line ("</li>");
+      end loop;
+
+      Ada.Text_IO.Put ("</ul>");
+      HTML.End_Div (ID => "job_summary");
+   end Put_Summary;
 --
 --     -------------------
 --     -- Put_Time_List --
@@ -373,259 +515,6 @@ package body Jobs is
 --     -- Put --
 --     ---------
 --
---     procedure Put (J : Job) is
---        procedure Put_Actions;
---        procedure Put_Context;
---        procedure Put_Files;
---        procedure Put_Meta;
---        procedure Put_Name;
---        procedure Put_Queues;
---        procedure Put_Resources;
---        procedure Put_Usage;
---
---        procedure Put_Actions is
---        begin
---           HTML.Begin_Div (ID => "job_actions");
---           HTML.Put_Img (Name => "kill",
---                         Text => "Kill job",
---                         Link => HTML.Get_Action_URL (Action => "k",
---                                                      Params => "j=" & Get_ID (J)));
---           HTML.End_Div (ID => "job_actions");
---        end Put_Actions;
---
---        procedure Put_Name is
---           procedure Put_Error (Message : String);
---           procedure Put_Message (Message : String);
---
---           procedure Put_Message (Message : String) is
---           begin
---              Ada.Text_IO.Put_Line ("<p class=""message"">"
---                     & Message & "</p>");
---           end Put_Message;
---
---           procedure Put_Error (Message : String) is
---           begin
---              HTML.Comment (Message);
---           end Put_Error;
---        begin
---           HTML.Begin_Div (Class => "job_name");
---           Ada.Text_IO.Put ("<p>");
---           HTML.Put_Img (Name => "hand.right",
---                         Text => "unlock job manipulation",
---                         Link => "#",
---                         Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
---           --         HTML.Put_Paragraph ("Name", Get_Name (J));
---
---           Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
---           Iterate_Messages (J, Put_Message'Access);
---           if Has_Errors (J) then
---              Ada.Text_IO.Put_Line ("<em>Internal error log entries present</em>");
---              Ada.Text_IO.Put_Line ("<em>Purple lines refer to jobs with errors</em>");
---           end if;
---           Iterate_Errors (J, Put_Error'Access);
---           HTML.End_Div (Class => "job_name");
---        end Put_Name;
---
---        procedure Put_Meta is
---        begin
---           HTML.Begin_Div (Class => "job_meta");
---           HTML.Put_Paragraph ("ID", Get_ID (J));
---           HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
---           HTML.Put_Paragraph ("Group", Get_Group (J));
---           HTML.Put_Paragraph ("Account", Get_Account (J));
---           HTML.Put_Paragraph ("Project", Get_Project (J));
---           HTML.Put_Paragraph (Label    => "Submitted",
---                               Contents => Get_Submission_Time (J));
---           Iterate_Predecessors (J, Process => Put_Predecessor'Access);
---           Iterate_Predecessor_Requests (J, Process => Put_Request'Access);
---           Iterate_Successors (J, Process => Put_Successor'Access);
---           HTML.Put_Link ("Advance Reservation", Get_Advance_Reservation (J), "ar_id");
---           Ada.Text_IO.Put ("<p>Reserve: ");
---           HTML.Put (Has_Reserve (J));
---           Ada.Text_IO.Put_Line ("</p>");
---           Ada.Text_IO.Put ("<p>Notify: ");
---           HTML.Put (Has_Notify (J));
---           Ada.Text_IO.Put_Line ("</p>");
---           Ada.Text_IO.Put ("<p>State: ");
---           Put_State (J);
---           Ada.Text_IO.Put_Line ("</p>");
---           HTML.Put_Clearer;
---           HTML.End_Div (Class => "job_meta");
---        end Put_Meta;
---
---        procedure Put_Queues is
---           procedure Put_Queue (Q : String);
---           procedure Put_Slot_Range (R : Step_Range);
---           procedure Put_Task_Range (R : Step_Range);
---
---           Assigned_Queues, Detected_Queues, Marked_Queues : String_Sets.Set;
---
---           procedure Put_Queue (Q : String) is
---           begin
---              HTML.Put_Paragraph (Label => "Queue", Contents => Q);
---           end Put_Queue;
---
---           procedure Put_Slot_Range (R : Step_Range) is
---           begin
---              Ranges.Put (R, Label => "Slots");
---           end Put_Slot_Range;
---
---           procedure Put_Task_Range (R : Step_Range) is
---           begin
---              Ranges.Put (R, Label => "Tasks");
---           end Put_Task_Range;
---
---        begin
---           Assigned_Queues := Get_Task_List (J);
---           Detected_Queues := Get_Detected_Queues (J);
---           Marked_Queues := String_Sets.Symmetric_Difference (Assigned_Queues, Detected_Queues);
---
---           HTML.Begin_Div (Class => "job_queue");
---           HTML.Put_Heading (Title => "Requested",
---                             Level => 3);
---           Iterate_Queues (J, Put_Queue'Access);
---
---           HTML.Put_Paragraph ("PE", Get_PE (J));
---           HTML.Put_Paragraph ("Granted", Get_Granted_PE (J));
---           Iterate_Slots (J, Put_Slot_Range'Access);
---           Iterate_Tasks (J, Put_Task_Range'Access);
---
---           HTML.Put_Heading (Title => "Assigned",
---                             Level => 3);
---           HTML.Put_Queue_List (Assigned_Queues, Marked_Queues);
---
---           HTML.Put_Heading (Title => "Detected",
---                             Level => 3);
---           HTML.Put_Queue_List (Detected_Queues, Marked_Queues);
---
---           HTML.Put_Clearer;
---           HTML.End_Div (Class => "job_queue");
---        end Put_Queues;
---
---        procedure Put_Resources is
---        begin
---           HTML.Begin_Div (Class => "job_resources");
---           HTML.Put_Heading (Title => "Hard",
---                             Level => 3);
---           Resources.Put_List (Get_Hard_Resources (J));
---
---           HTML.Put_Heading (Title => "Soft",
---                             Level => 3);
---           Resources.Put_List (Get_Soft_Resources (J));
---           HTML.End_Div (Class => "job_resources");
---        end Put_Resources;
---
---        procedure Put_Usage is
---           JAT : constant SGE.Jobs.Usage := Get_JAT_Usage (J);
---           PET : constant SGE.Jobs.Usage := Get_PET_Usage (J);
---        begin
---           HTML.Begin_Div (Class => "job_usage");
---           HTML.Put_Heading (Title => "JAT",
---                             Level => 3);
---           for T in JAT'Range loop
---              Put_Usage (T, JAT (T));
---           end loop;
---           HTML.Put_Heading (Title => "PET",
---                             Level => 3);
---           for T in PET'Range loop
---              Put_Usage (T, PET (T));
---           end loop;
---           HTML.End_Div (Class => "job_usage");
---        end Put_Usage;
---
---        procedure Put_Files is
---        begin
---           HTML.Begin_Div (Class => "job_files");
---           HTML.Put_Paragraph ("Directory", Get_Directory (J));
---           HTML.Put_Paragraph ("Script", Get_Script_File (J));
---           HTML.Put_Heading (Title => "Job Args",
---                             Level => 3);
---           HTML.Put_List (Get_Args (J));
---
---           HTML.Put_Paragraph ("Executable", Get_Exec_File (J));
---           Ada.Text_IO.Put ("<p>Merge StdErr: ");
---           HTML.Put (Is_Merge_Std_Err (J));
---           Ada.Text_IO.Put_Line ("</p>");
---           HTML.Put_Heading (Title => "StdOut",
---                             Level => 3);
---           HTML.Put_List (Get_Std_Out_Paths (J));
---
---           HTML.Put_Heading (Title => "StdErr",
---                             Level => 3);
---           HTML.Put_List (Get_Std_Err_Paths (J));
---           HTML.End_Div (Class => "job_files");
---        end Put_Files;
---
---        procedure Put_Context is
---           Slot_Range : SGE.Ranges.Step_Range_List;
---           pragma Unreferenced (Slot_Range);
---        begin
---           HTML.Begin_Div (Class => "job_context");
---           HTML.Put_Heading (Title => "Balancer",
---                             Level => 3);
---           if Supports_Balancer (J, CPU_GPU) then
---              HTML.Put_Paragraph (Label => "Cores without GPU",
---                                  Contents => Get_CPU_Range (J));
---              Slot_Range := To_Step_Range_List (Get_Context (J, SGE.Context.Slots_CPU));
---              HTML.Put_Paragraph (Label => "Cores with GPU",
---                                  Contents => Get_GPU_Range (J));
---              Try_Put_Paragraph (Label => "Last migration",
---                                 Getter => Get_Last_Migration'Access,
---                                 J => J);
---           end if;
---           if Supports_Balancer (J, Low_Cores) then
---              HTML.Put_Paragraph (Label => "Reduce slots after",
---                                  Contents => SGE.Resources.Format_Duration (Get_Reduce_Wait (J)));
---              HTML.Put_Paragraph (Label => "Reduce slots to",
---                                  Contents => Get_Reduced_Slots (J));
---              Try_Put_Paragraph (Label => "Reduce runtime to",
---                                 Getter => Get_Reduced_Runtime'Access,
---                                J => J);
---              Try_Put_Paragraph (Label => "Last slot reduction",
---                                 Getter => Get_Last_Reduction'Access,
---                                 J => J);
---           end if;
---           if Supports_Balancer (J, High_Cores) then
---              HTML.Put_Paragraph (Label    => "Extend slots to",
---                                  Contents => Get_Extended_Slots (J));
---              Try_Put_Paragraph (Label => "Last slot extension",
---                                 Getter => Get_Last_Extension'Access,
---                                 J     => J);
---           end if;
---
---           HTML.Put_Heading (Title => "Other context",
---                             Level => 3);
---           HTML.Put_List_Head;
---           if Has_Context (J) then
---              Iterate_Context (J, HTML.Put_List_Entry'Access);
---           else
---              HTML.Put_Empty_List;
---           end if;
---           HTML.Put_List_Tail;
---           HTML.End_Div (Class => "job_context");
---        end Put_Context;
---
---     begin
---        HTML.Begin_Div (Class => "job_info");
---
---        HTML.Begin_Div (Class => "action_and_name");
---        Put_Actions;
---        Put_Name;
---        HTML.Put_Clearer;
---        HTML.End_Div (Class => "action_and_name");
---        Put_Meta;
---        Put_Queues;
---        HTML.Begin_Div (Class => "res_and_context");
---        Put_Resources;
---        Put_Context;
---        HTML.End_Div (Class => "res_and_context");
---        Put_Usage;
---        Put_Files;
---
---        HTML.Put_Clearer;
---        HTML.End_Div (Class => "job_info");
---        HTML.Put_Clearer;
---     end Put;
 --
 --
 --     -------------------
@@ -764,19 +653,6 @@ package body Jobs is
 --                                       & Exception_Message (E));
 --        Finish_Row (J);
 --     end Put_Prio_Line;
---
-   procedure Put_State_Cell (J : Job) is
-   begin
-      if Has_Error (J) then
-         HTML.Put_Img_Cell (Get_State (J),
-                            Extra_Text => " <a href=""" &
-                              HTML.Get_Action_URL (Action => "cj",
-                                                   Params => "j="
-                                                   & Get_ID (J)'Img) & """>clear error</a>");
-      else
-         HTML.Put_Img_Cell (Get_State (J));
-      end if;
-   end Put_State_Cell;
 --
 --     procedure Put_Usage (Kind : Usage_Type; Amount : Usage_Number) is
 --        procedure Put_Memory (Label : String; Memory : Usage_Number);

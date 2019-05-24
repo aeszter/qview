@@ -9,11 +9,12 @@ package Jobs is
 
    function Name_As_HTML (J : Job) return String;
 
-   procedure Put_Details;
+   procedure Put_Details (ID : Natural);
 --     procedure Put_Time_List;
 --     procedure Put_Bunch_List;
    procedure Put_List (List : Slurm.Jobs.List);
    procedure Put_Global_List;
+   procedure Put_Pending_List;
    procedure Put_User_List (User : String);
 --     procedure Prune_List;
    procedure Put_Summary (List : Slurm.Jobs.List);
