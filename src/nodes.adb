@@ -68,7 +68,9 @@ package body Nodes is
          raise Constraint_Error with "no such node";
       end if;
       Ada.Text_IO.Put ("<tr>");
-      HTML.Put_Img_Cell (Get_State (N));
+      Ada.Text_IO.Put ("<td>");
+      Put_State (N);
+      Ada.Text_IO.Put_Line ("</td>");
       HTML.Put_Cell (Data => Get_Name (N),
                     Link_Param => "node");
       --        HTML.Put_Cell (Data => Get_Network (H));
@@ -306,6 +308,41 @@ package body Nodes is
       Put ("alt=""" & Get_State (N) & """ title=""" & Get_State (N) & ": ");
       Put (Explain_State (Get_State (N)));
       Put (""" />");
+      if Is_Maintenance (N) then
+         HTML.Put_Img (Name => "maintenance",
+                       Text => "maintenance",
+                      Link => "");
+      end if;
+      if Is_Powering_Up (N) then
+         HTML.Put_Img (Name => "powerup",
+                      Text => "powering up",
+                      Link => "");
+      end if;
+      if Is_Failing (N) then
+         HTML.Put_Img (Name => "fail",
+                      Text => "failing",
+                      Link => "");
+      end if;
+      if Is_Power_Saving (N) then
+         HTML.Put_Img (Name => "powersave",
+                      Text => "power saving",
+                      Link => "");
+      end if;
+      if Is_Not_Responding (N) then
+         HTML.Put_Img (Name => "noresponse",
+                      Text => "not responding",
+                      Link => "");
+      end if;
+      if Is_Completing (N) then
+         HTML.Put_Img (Name => "complete",
+                      Text => "completing a job",
+                      Link => "");
+      end if;
+      if Is_Draining (N) then
+         HTML.Put_Img (Name => "draining",
+                      Text => "draining",
+                      Link => "");
+      end if;
    end Put_State;
 
 end Nodes;
