@@ -394,6 +394,14 @@ package body Jobs is
       Put_List (Pending_List);
    end Put_Pending_List;
 
+   procedure Put_Running_List is
+      use Slurm.Jobs;
+      Running_List : List;
+   begin
+      Running_List := Extract (Source => Load_Jobs, Selector => Is_Running'Access);
+      Put_List (Running_List);
+   end Put_Running_List;
+
    procedure Put_State (Flag : Slurm.Jobs.states) is
       procedure Put (What : String) renames Ada.Text_IO.put;
    begin

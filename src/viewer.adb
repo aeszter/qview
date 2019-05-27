@@ -61,7 +61,6 @@ package body Viewer is
       procedure View_Bunch;
       procedure View_Detailed_Queues;
       procedure View_Equivalent_Hosts (Host_Name : String);
-      procedure View_Forecast;
       procedure View_Global_Jobs;
       procedure View_Job (Job_ID : String);
       procedure View_Job_Overview;
@@ -74,6 +73,7 @@ package body Viewer is
       procedure View_Reservations;
       procedure View_Share_Tree;
       procedure View_Waiting_Jobs;
+      procedure View_Running_Jobs;
 
       Headers_Sent : Boolean := False;
 
@@ -146,8 +146,8 @@ package body Viewer is
          HTML.Put_Navigation_Link ("All Jobs", "jobs=all");
          HTML.Put_Navigation_Link ("All Nodes", "nodes=all");
          HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
-         HTML.Put_Navigation_Link (Data       => "Finishing Jobs",
-                                   Link_Param => "forecast=y");
+         HTML.Put_Navigation_Link (Data       => "Running Jobs",
+                                   Link_Param => "jobs=running");
          HTML.Put_Navigation_Link (Data       => "Reservations",
                                    Link_Param => "ar=y");
          HTML.Put_Navigation_Link (Data       => "Scheduler",
@@ -294,29 +294,6 @@ package body Viewer is
                              Contents => "unimplemented");
       end View_Equivalent_Hosts;
 
-      procedure View_Forecast is
---           SGE_Out     : Parser.Tree;
-
-      begin
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -s r -r"));
---
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Update_Quota;
---           if not HTML.Param_Is ("sort", "") then
---              Jobs.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           else
---              Jobs.Sort_By (Field     => "Ends In",
---                            Direction => "inc");
---           end if;
---           Jobs.Put_Time_List;
-         HTML.Put_Paragraph (Label    => "View_Forecast",
-                             Contents => "unimplemented");
-
-      end View_Forecast;
-
       procedure View_Global_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
@@ -407,6 +384,12 @@ package body Viewer is
          Reservations.Read;
          Reservations.Put_All;
       end View_Reservations;
+
+      procedure View_Running_Jobs is
+      begin
+         CGI.Put_HTML_Heading (Title => "Running Jobs", Level => 2);
+         Jobs.Put_Running_List;
+      end View_Running_Jobs;
 
       procedure View_Share_Tree is
 --           Plain_Out : SGE.Spread_Sheets.Spread_Sheet;
@@ -525,10 +508,10 @@ package body Viewer is
             Put_Headers (Title => "Waiting Jobs");
             Set_Params ("jobs=waiting");
             View_Waiting_Jobs;
-         elsif HTML.Param_Is ("forecast", "y") then
-            Put_Headers (Title => "Finishing Jobs");
-            Set_Params ("forecast=y");
-            View_Forecast;
+         elsif HTML.Param_Is ("jobs", "running") then
+            Put_Headers (Title => "Running Jobs");
+            Set_Params ("jobs=running");
+            View_Running_Jobs;
          elsif HTML.Param_Is ("reservation", "y") then
             Put_Headers (Title => "Reservations");
             Set_Params ("reservation=y");
