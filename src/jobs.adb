@@ -16,6 +16,7 @@ package body Jobs is
 
 --     List : SGE.Jobs.List;
    procedure Put (Position : Slurm.Jobs.Cursor);
+   procedure Put_Reason (Flag : Slurm.Jobs.state_reasons);
    procedure Put_State (Flag : Slurm.Jobs.states);
    procedure Put_State (J : Job);
    procedure Put_State_Cell (J : Job);
@@ -290,11 +291,13 @@ package body Jobs is
          HTML.Put_Paragraph ("Submitted on", Get_Alloc_Node (J));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (J);
-         if Get_State_Reason (J) /= WAIT_NO_REASON then
-            HTML.Put_Paragraph ("Reason", Get_State_Reason (J)'Img);
-         end if;
-         Ada.Text_IO.Put_Line (Get_State_Description (J));
          Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>Reason: ");
+         if Get_State_Reason (J) /= WAIT_NO_REASON then
+            Put_Reason (Get_State_Reason (J));
+         end if;
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put_Line (Get_State_Description (J));
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");
       end Put_Meta;
@@ -402,6 +405,13 @@ package body Jobs is
       Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
       Put_List (Pending_List);
    end Put_Pending_List;
+
+   procedure Put_Reason (Flag : Slurm.Jobs.state_reasons) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
+      Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
+   end Put_Reason;
 
    procedure Put_Running_List is
       use Slurm.Jobs;
