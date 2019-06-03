@@ -4,10 +4,6 @@ with Ada.Calendar;   use Ada.Calendar;
 --  with Resources;      use Resources;
 with HTML;
 --  with Parser; use Parser;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Real_Time;
-with Ada.Calendar.Formatting;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with SGE.Ranges; use SGE.Ranges;
 --  with Ranges; use Ranges;
 --  with SGE.Resources;
@@ -248,7 +244,7 @@ package body Jobs is
       J        : constant Job := Slurm.Jobs.Get_Job (The_List, ID);
 
 --        procedure Put_Actions;
-      -- procedure Put_Files;
+      procedure Put_Files;
       procedure Put_Meta;
       procedure Put_Name;
       procedure Put_Queues;
@@ -264,6 +260,17 @@ package body Jobs is
 --                                                      Params => "j=" & Get_ID (J)));
 --           HTML.End_Div (ID => "job_actions");
 --        end Put_Actions;
+
+      procedure Put_Files is
+      begin
+         HTML.Begin_Div (Class => "job_files");
+         HTML.Put_Paragraph ("Directory", Get_Working_Directory (J));
+         HTML.Put_Paragraph ("Command", Get_Command (J));
+         HTML.Put_Paragraph ("StdIn", Get_Std_In (J));
+         HTML.Put_Paragraph ("StdOut", Get_Std_Out (J));
+         HTML.Put_Paragraph ("StdErr", Get_Std_Err (J));
+         HTML.End_Div (Class => "job_files");
+      end Put_Files;
 
       procedure Put_Meta is
       begin
@@ -303,17 +310,18 @@ package body Jobs is
          --         HTML.Put_Paragraph ("Name", Get_Name (J));
 
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
+         if Has_Comment (J) then
+            Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
+                                  & Get_Comment (J) & "</p>");
+         end if;
+         if Has_Admin_Comment (J) then
+            Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
+                                  & Get_Admin_Comment (J) & "</p>");
+         end if;
          HTML.End_Div (Class => "job_name");
       end Put_Name;
 
       procedure Put_Queues is
-         procedure Put_Queue (Q : String);
-
-         procedure Put_Queue (Q : String) is
-         begin
-            HTML.Put_Paragraph (Label => "Queue", Contents => Q);
-         end Put_Queue;
-
       begin
          HTML.Begin_Div (Class => "job_queue");
 
@@ -354,6 +362,7 @@ package body Jobs is
       Put_Resources;
       HTML.End_Div (Class => "res_and_context");
       Put_Usage;
+      Put_Files;
 
       HTML.Put_Clearer;
       HTML.End_Div (Class => "job_info");
