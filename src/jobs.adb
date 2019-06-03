@@ -341,13 +341,14 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_resources");
          HTML.Put_Paragraph ("Share", Has_Share (J));
          Ada.Text_IO.Put_Line (Get_Gres (J));
+         Ada.Text_IO.Put_Line (Get_TRES_Request (J));
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
 
       procedure Put_Usage is
       begin
          HTML.Begin_Div (Class => "job_usage");
-         Ada.Text_IO.Put_Line ("unimplemented");
+         Ada.Text_IO.Put_Line (Get_TRES_Allocated (J));
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
 
