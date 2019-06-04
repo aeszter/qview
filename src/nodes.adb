@@ -1,5 +1,4 @@
 with Ada.Text_IO;
-with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Calendar; use Ada.Calendar;
@@ -21,6 +20,8 @@ package body Nodes is
    procedure Put_GPU_Cell (N : Node);
    procedure Put_State (N : Node);
 
+   All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
+
 --
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
 --     begin
@@ -28,17 +29,7 @@ package body Nodes is
 --                           Selector => Selector);
 --     end Put_Selected;
 --
---     ---------
---     -- Put --
---     --  Purpose : Output one Host as an HTML <tr>,
---     --    adding one <tr> for every Job on the Host
---     --  Parameter Pos : Cursor pointing to the Job record to output
---     ---------
---
---     ---------
---     -- Put --
---     ---------
---
+
    function Explain_State (S : Slurm.Nodes.states) return String is
    begin
       case S is
@@ -112,16 +103,18 @@ package body Nodes is
 
    procedure Put_Details (Name : String) is
       procedure Put_Hardware;
+      procedure Put_Jobs;
       procedure Put_Resources;
       procedure Put_Slurm;
       procedure Put_System;
 
       The_List : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
-      N        : constant Node := Slurm.Nodes.Get_Node (The_List, Name);
+      N        : Node := Slurm.Nodes.Get_Node (The_List, Name);
 
       procedure Put_Hardware is
       begin
          HTML.Begin_Div (Class => "node_hardware");
+         HTML.Put_Heading ("Hardware", 3);
          HTML.Put_Paragraph ("Architecture", Get_Architecture (N));
          HTML.Put_Paragraph ("Boards",  Get_Boards (N)'Img);
          HTML.Put_Paragraph ("Sockets:Cores:Threads",
@@ -132,6 +125,16 @@ package body Nodes is
          HTML.Put_Clearer;
          HTML.End_Div (Class => "node_hardware");
       end Put_Hardware;
+
+      procedure Put_Jobs is
+      begin
+         HTML.Begin_Div (Class => "node_jobs");
+         HTML.Put_Heading ("Jobs", 3);
+         ada.Text_IO.Put_Line ("<table><tbody>");
+         Iterate_Jobs (N, Put_Jobs'Access);
+         ada.Text_IO.Put_Line ("</tbody></table>");
+         HTML. End_Div (Class => "node_jobs");
+      end Put_Jobs;
 
       procedure Put_Resources is
          procedure Put_GRES (Res : Slurm.Gres.Resource);
@@ -146,7 +149,7 @@ package body Nodes is
 
       begin
          HTML.Begin_Div (Class => "node_resources");
-         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
+         HTML.Put_Heading ("Resources", 3);         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
          HTML.Put_Paragraph ("Memory free/total", Get_Free_Memory (N) & "/" & Get_Memory (N));
          HTML.Put_Paragraph ("Features", Get_Features (N));
 
@@ -170,6 +173,8 @@ package body Nodes is
          use Slurm.Utils;
       begin
          HTML.Begin_Div (Class => "node_slurm");
+         HTML.Put_Heading ("Slurm", 3);
+         HTML.Put_Paragraph ("Partitions", Get_Partitions (N));
          HTML.Put_Paragraph ("Owner", To_String (Get_Owner (N)));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (N);
@@ -198,6 +203,7 @@ package body Nodes is
       end Put_System;
 
    begin
+      Add_Jobs (All_Jobs, N);
       HTML.Begin_Div (Class => "node_info");
       HTML.Begin_Div (Class => "node_head_data");
       Put_System;
@@ -205,6 +211,7 @@ package body Nodes is
       Put_Hardware;
       Put_Slurm;
       Put_Resources;
+      Put_Jobs;
       HTML.Put_Clearer;
       HTML. End_Div (Class => "node_info");
    end Put_Details;
@@ -230,18 +237,21 @@ package body Nodes is
       Ada.Text_IO.Put ("</td>");
    end Put_GPU_Cell;
 
-   procedure Put_Jobs (J : Slurm.Jobs.Job) is
+   procedure Put_Jobs (ID : Positive) is
+      J : constant Job := Get_Job (All_Jobs, ID);
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Name
-      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
 
    procedure Put_List (List : Slurm.Nodes.List) is
+      With_Jobs : Slurm.Nodes.List := List;
    begin
+      Add_Jobs (All_Jobs, With_Jobs);
       HTML.Put_Heading (Title => "Nodes " & HTML.Help_Icon (Topic => "Node List"),
                         Level => 2);
       HTML.Begin_Div (Class => "host_list");
@@ -264,7 +274,7 @@ package body Nodes is
       Ada.Text_IO.Put ("</tr>");
 --        Lightsout.Clear;
 --        Lightsout.Read;
-      Iterate (List, Put'Access);
+      Iterate (With_Jobs, Put'Access);
       --  Table Footer
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "host_list");
