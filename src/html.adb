@@ -396,6 +396,24 @@ package body HTML is
                             "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
    end Put_Link;
 
+   procedure Put_List (List : String_Sets.Set) is
+      use String_Sets;
+
+      Elem : String_Sets.Cursor;
+   begin
+      Elem := List.First;
+      Put_List_Head;
+      if Elem = String_Sets.No_Element then
+         Put_Empty_List;
+      else
+         while Elem /= String_Sets.No_Element loop
+            Ada.Text_IO.Put_Line ("<li>" & To_String (String_Sets.Element (Elem)) & "</li>");
+            Next (Elem);
+         end loop;
+      end if;
+      Put_List_Tail;
+   end Put_List;
+
    procedure Put_List_Entry (Key, Element : String) is
    begin
       Ada.Text_IO.Put_Line ("<li><b>" & Key & ":</b> " & Element & "</li>");
@@ -574,21 +592,6 @@ package body HTML is
 --        Put_List_Tail;
 --     end Put_List;
 --
---     procedure Put_List (List : String_Sets.Set) is
---        Elem : String_Sets.Cursor;
---     begin
---        Elem := List.First;
---        Put_List_Head;
---        if Elem = String_Sets.No_Element then
---           Put_Empty_List;
---        else
---           while Elem /= String_Sets.No_Element loop
---              Ada.Text_IO.Put_Line ("<li>" & To_String (String_Sets.Element (Elem)) & "</li>");
---              Next (Elem);
---           end loop;
---        end if;
---        Put_List_Tail;
---     end Put_List;
 
    procedure Put_Search_Box is
    begin

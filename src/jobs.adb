@@ -4,10 +4,6 @@ with Ada.Calendar;   use Ada.Calendar;
 --  with Resources;      use Resources;
 with HTML;
 --  with Parser; use Parser;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Real_Time;
-with Ada.Calendar.Formatting;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 --  with SGE.Ranges; use SGE.Ranges;
 --  with Ranges; use Ranges;
 --  with SGE.Resources;
@@ -20,6 +16,7 @@ package body Jobs is
 
 --     List : SGE.Jobs.List;
    procedure Put (Position : Slurm.Jobs.Cursor);
+   procedure Put_Reason (Flag : Slurm.Jobs.state_reasons);
    procedure Put_State (Flag : Slurm.Jobs.states);
    procedure Put_State (J : Job);
    procedure Put_State_Cell (J : Job);
@@ -248,7 +245,7 @@ package body Jobs is
       J        : constant Job := Slurm.Jobs.Get_Job (The_List, ID);
 
 --        procedure Put_Actions;
-      -- procedure Put_Files;
+      procedure Put_Files;
       procedure Put_Meta;
       procedure Put_Name;
       procedure Put_Queues;
@@ -264,6 +261,17 @@ package body Jobs is
 --                                                      Params => "j=" & Get_ID (J)));
 --           HTML.End_Div (ID => "job_actions");
 --        end Put_Actions;
+
+      procedure Put_Files is
+      begin
+         HTML.Begin_Div (Class => "job_files");
+         HTML.Put_Paragraph ("Directory", Get_Working_Directory (J));
+         HTML.Put_Paragraph ("Command", Get_Command (J));
+         HTML.Put_Paragraph ("StdIn", Get_Std_In (J));
+         HTML.Put_Paragraph ("StdOut", Get_Std_Out (J));
+         HTML.Put_Paragraph ("StdErr", Get_Std_Err (J));
+         HTML.End_Div (Class => "job_files");
+      end Put_Files;
 
       procedure Put_Meta is
       begin
@@ -283,11 +291,13 @@ package body Jobs is
          HTML.Put_Paragraph ("Submitted on", Get_Alloc_Node (J));
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (J);
-         if Get_State_Reason (J) /= WAIT_NO_REASON then
-            HTML.Put_Paragraph ("Reason", Get_State_Reason (J)'Img);
-         end if;
-         Ada.Text_IO.Put_Line (Get_State_Description (J));
          Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put ("<p>Reason: ");
+         if Get_State_Reason (J) /= WAIT_NO_REASON then
+            Put_Reason (Get_State_Reason (J));
+         end if;
+         Ada.Text_IO.Put_Line ("</p>");
+         Ada.Text_IO.Put_Line (Get_State_Description (J));
          HTML.Put_Clearer;
          HTML.End_Div (Class => "job_meta");
       end Put_Meta;
@@ -303,22 +313,24 @@ package body Jobs is
          --         HTML.Put_Paragraph ("Name", Get_Name (J));
 
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
+         if Has_Comment (J) then
+            Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
+                                  & Get_Comment (J) & "</p>");
+         end if;
+         if Has_Admin_Comment (J) then
+            Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
+                                  & Get_Admin_Comment (J) & "</p>");
+         end if;
          HTML.End_Div (Class => "job_name");
       end Put_Name;
 
       procedure Put_Queues is
-         procedure Put_Queue (Q : String);
-
-         procedure Put_Queue (Q : String) is
-         begin
-            HTML.Put_Paragraph (Label => "Queue", Contents => Q);
-         end Put_Queue;
-
       begin
          HTML.Begin_Div (Class => "job_queue");
 
          HTML.Put_Paragraph ("Partition", Get_Partition (J));
-         HTML.Put_Paragraph ("Nodes", Get_Nodes (J));
+         HTML.Put_Heading ("Nodes", 3);
+         HTML.Put_List (Get_Nodes (J));
          HTML.Put_Paragraph ("CPUs", Get_CPUs (J)'Img);
 
          HTML.Put_Clearer;
@@ -330,13 +342,14 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_resources");
          HTML.Put_Paragraph ("Share", Has_Share (J));
          Ada.Text_IO.Put_Line (Get_Gres (J));
+         Ada.Text_IO.Put_Line (Get_TRES_Request (J));
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
 
       procedure Put_Usage is
       begin
          HTML.Begin_Div (Class => "job_usage");
-         Ada.Text_IO.Put_Line ("unimplemented");
+         Ada.Text_IO.Put_Line (Get_TRES_Allocated (J));
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
 
@@ -354,6 +367,7 @@ package body Jobs is
       Put_Resources;
       HTML.End_Div (Class => "res_and_context");
       Put_Usage;
+      Put_Files;
 
       HTML.Put_Clearer;
       HTML.End_Div (Class => "job_info");
@@ -393,6 +407,21 @@ package body Jobs is
       Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
       Put_List (Pending_List);
    end Put_Pending_List;
+
+   procedure Put_Reason (Flag : Slurm.Jobs.state_reasons) is
+      procedure Put (What : String) renames Ada.Text_IO.put;
+   begin
+      Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
+      Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
+   end Put_Reason;
+
+   procedure Put_Running_List is
+      use Slurm.Jobs;
+      Running_List : List;
+   begin
+      Running_List := Extract (Source => Load_Jobs, Selector => Is_Running'Access);
+      Put_List (Running_List);
+   end Put_Running_List;
 
    procedure Put_State (Flag : Slurm.Jobs.states) is
       procedure Put (What : String) renames Ada.Text_IO.put;

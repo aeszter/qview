@@ -221,13 +221,14 @@ package body CSS is
    procedure Put_Job_Meta is
    begin
       Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs, "
-               &".node_slurm, .node_usage, .node_resources");
+               &".node_slurm, .node_usage, .node_resources, .node_jobs");
       Put_Line ("position: relative;");
       Put_Line ("float: left;");
       Put_Line (Box_Background);
       Put_Line ("margin: 3px;");
       Close_Block;
-      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .node_slurm, .node_usage, .node_resource");
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .node_slurm, "
+               & ".node_usage, .node_resource, .node_jobs");
       Put_Line (Small_Box_Width);
       Close_Block;
       Open_Block (".host_jobs");

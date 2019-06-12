@@ -1,8 +1,8 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Calendar;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
-
+with Calendar;
 with CGI; use CGI;
+with Slurm.Utils; use Slurm.Utils;
 
 package HTML is
    procedure Begin_Form;
@@ -62,7 +62,7 @@ package HTML is
 --
 --     procedure Put_List (List : String_Lists.List);
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set);
---     procedure Put_List (List : String_Sets.Set);
+   procedure Put_List (List : String_Sets.Set);
 --     procedure Put_List (List : String_Pairs.Map);
    --  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
    procedure Put_List_Head;
