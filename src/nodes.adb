@@ -241,6 +241,7 @@ package body Nodes is
       J : constant Job := Get_Job (All_Jobs, ID);
    begin
       Ada.Text_IO.Put ("<tr>");
+      HTML.Put_Cell (Data => ""); -- H.Status
       HTML.Put_Cell (Data => ""); -- H.Name
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
