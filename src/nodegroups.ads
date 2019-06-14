@@ -1,13 +1,11 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
---  with SGE.Partitions;
+with Slurm.Nodegroups;
 
-package Partitions is
+package Nodegroups is
 
---     subtype Partition is SGE.Partitions.Partition;
-
---     procedure Put (P : Partition);
-   procedure Put_List;
+   procedure Put (G : Slurm.Nodegroups.Nodegroup);
+   procedure Put_List (Source : Slurm.Nodegroups.Summarized_List);
    procedure Put_Summary;
 
-   procedure Build_List;
-end Partitions;
+   procedure Put_All;
+end Nodegroups;

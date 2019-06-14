@@ -7,7 +7,6 @@ with Slurm.General;
 with Utils;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
-with Partitions; use Partitions;
 with Nodes; use Nodes;
 with Reservations;
 with Maintenance;
@@ -15,6 +14,7 @@ with Share_Tree;
 with Diagnostics;
 with Ada.Strings;
 with Ada.Integer_Text_IO;
+with Nodegroups;
 
 package body Viewer is
 
@@ -59,7 +59,6 @@ package body Viewer is
       procedure Put_Diagnostics;
       procedure Put_Footer;
       procedure View_Bunch;
-      procedure View_Detailed_Queues;
       procedure View_Equivalent_Hosts (Host_Name : String);
       procedure View_Global_Jobs;
       procedure View_Job (Job_ID : String);
@@ -211,27 +210,6 @@ package body Viewer is
             Ada.Text_IO.Put_Line ("</table>");
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
-
-      procedure View_Detailed_Queues is
---           SGE_Out        : Parser.Tree;
-      begin
-         HTML.Begin_Div (Class => "partitions");
-         CGI.Put_HTML_Heading (Title => "Supply",
-                               Level => 2);
-
---           SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
---
---           Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
---           SGE.Parser.Free;
-
-         --  Detect different partitions
-         Partitions.Build_List;
-
-         --  Output
-         Partitions.Put_Summary;
-         Partitions.Put_List;
-         HTML.End_Div (Class => "partitions");
-      end View_Detailed_Queues;
 
       --        procedure View_Jobs (Selector : Trusted_String;
       -- Only_Waiting : Boolean := False) is
@@ -454,7 +432,9 @@ package body Viewer is
          if not HTML.Param_Is ("categories", "") then
             Set_Params ("categories=" & CGI.Value ("categories"));
             Put_Headers (Title => "Supply & Demand");
-            View_Detailed_Queues;
+            HTML.Begin_Div (Class => "nodegroups");
+            Nodegroups.Put_All;
+            HTML.End_Div (Class => "nodegroups");
             View_Job_Overview;
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;

@@ -9,6 +9,7 @@ with Slurm.Gres;
 with Slurm.Utils;
 with HTML;
 with Utils;
+with Slurm.Node_Properties; use Slurm.Node_Properties;
 
 package body Nodes is
 
@@ -62,8 +63,8 @@ package body Nodes is
       Ada.Text_IO.Put ("<td>");
       Put_State (N);
       Ada.Text_IO.Put_Line ("</td>");
-      HTML.Put_Cell (Data => Get_Name (N),
-                    Link_Param => "node");
+      HTML.Put_Cell (Data => To_String (Get_Name (N)),
+                     Link_Param => "node");
       --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
       Put_GPU_Cell (N);
@@ -130,9 +131,9 @@ package body Nodes is
       begin
          HTML.Begin_Div (Class => "node_jobs");
          HTML.Put_Heading ("Jobs", 3);
-         ada.Text_IO.Put_Line ("<table><tbody>");
+         Ada.Text_IO.Put_Line ("<table><tbody>");
          Iterate_Jobs (N, Put_Jobs'Access);
-         ada.Text_IO.Put_Line ("</tbody></table>");
+         Ada.Text_IO.Put_Line ("</tbody></table>");
          HTML. End_Div (Class => "node_jobs");
       end Put_Jobs;
 
@@ -194,7 +195,7 @@ package body Nodes is
       procedure Put_System is
       begin
          HTML.Begin_Div (Class => "node_system");
-         Ada.Text_IO. Put_Line ("<p>" & Get_Name (N) & "</p>");
+         Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
                                & HTML.To_String (Get_Boot_Time (N)) & "</p>");

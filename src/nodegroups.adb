@@ -1,27 +1,87 @@
 with Ada.Text_IO;
+with Ada.Strings.Fixed;
+
+with Slurm.Nodegroups; use Slurm.Nodegroups;
+
 with HTML; use HTML;
 with CGI;
-with Ada.Strings.Fixed;
---  with SGE.Partitions; use SGE.Partitions;
---  with SGE.Utils;
-with Ada.Exceptions; use Ada.Exceptions;
-with Queues;
---  with SGE.Resources;
 
-package body Partitions is
---     procedure Put_Summary_Item (Item : State);
---
---     List : SGE.Partitions.Summarized_List;
---     Total_Cores : Integer := 0;
---
---     procedure Count_Slots (Item : Partition);
---
---     procedure Count_Slots (Item : Partition) is
---     begin
---        Total_Cores := Total_Cores + Get_Total_Slots (Item);
---     end Count_Slots;
+package body Nodegroups is
 
-   procedure Put_List is
+   procedure Put_Summary_Item (Item : State);
+
+   All_Groups : Slurm.Nodegroups.Summarized_List;
+   Total_Cores : Integer := 0;
+
+   procedure Count_Slots (Item : Nodegroup);
+
+   procedure Count_Slots (Item : Nodegroup) is
+   begin
+      Total_Cores := Total_Cores + Get_Total_Cores (Item);
+   end Count_Slots;
+
+   procedure Put (G : Nodegroup) is
+      package Str renames Ada.Strings;
+      package Str_F renames Str.Fixed;
+--        use SGE.Utils.String_Lists;
+--        use SGE.Resources;
+
+      GPU_Memory   : constant String := Get_GPU_Memory (G);
+   begin
+      if Get_Available_Nodes (G) > 0 then
+         Ada.Text_IO.Put ("<tr class=""available"">");
+      elsif Get_Available_Cores (G) > 0 then
+         Ada.Text_IO.Put ("<tr class=""slots_available"">");
+      elsif Get_Offline_Cores (G) = Get_Total_Cores (G) then
+         Ada.Text_IO.Put ("<tr class=""offline"">");
+      else
+         Ada.Text_IO.Put ("<tr>");
+      end if;
+      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
+                     & "&net=" & Get_Network (G)
+                     & "&gm=" & Get_GPU (G)
+                     & "&model=" & Get_CPU_Model (G)
+                     & "&cores=" & Get_CPUs (G)'Img
+                     & "&mem=" & Get_Memory (G)
+                     & """><img src=""/icons/arrow_right.png"" /></a>");
+
+      HTML.Put_Cell (Data => Get_Network (G));
+      Ada.Text_IO.Put ("<td>");
+      Ada.Text_IO.Put ("</td>");
+      HTML.Put_Cell (Data => Get_GPU (G));
+      if GPU_Memory /= "" then
+         HTML.Put_Cell (Data => GPU_Memory & "G", Class => "right");
+      else
+         HTML.Put_Cell ("");
+      end if;
+      HTML.Put_Cell (Data => Get_CPU_Model (G));
+      HTML.Put_Cell (Data => Get_CPUs (G)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Memory (G) & "G", Class => "right");
+      HTML.Put_Cell (Data => Get_Total_Cores (G)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Total_Nodes (G)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Used_Cores (G)'Img & " ("
+                     & Str_F.Trim (Get_Used_Nodes (G)'Img, Str.Left)
+                     & ")", Class => "right");
+      HTML.Put_Cell (Data  => Get_Available_Cores (G)'Img & " ("
+                     & Str_F.Trim (Get_Available_Nodes (G)'Img, Str.Left) & ")",
+                     Class => "right");
+      HTML.Put_Cell (Data  => Get_Drained_Cores (G)'Img
+                     & " (" & Str_F.Trim (Get_Drained_Nodes (G)'Img, Str.Left) & ")",
+                     Class => "right");
+      HTML.Put_Cell (Data  => Get_Offline_Cores (G)'Img
+                     & " (" & Str_F.Trim (Get_Offline_Nodes (G)'Img, Str.Left) & ")",
+                     Class => "right");
+      Ada.Text_IO.Put ("</tr>");
+   end Put;
+
+   procedure Put_All is
+   begin
+      All_Groups := Slurm.Nodegroups.Load;
+      Put_Summary;
+      Put_List (All_Groups);
+   end Put_All;
+
+   procedure Put_List (Source : Slurm.Nodegroups.Summarized_List) is
    begin
       Ada.Text_IO.Put_Line ("<table>");
       Ada.Text_IO.Put ("<tr>");
@@ -44,156 +104,48 @@ package body Partitions is
       HTML.Put_Cell (Data => "Used", Tag => "th");
       HTML.Put_Cell (Data => "Reserved", Tag => "th");
       HTML.Put_Cell (Data => "Available", Tag => "th");
-      HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker; D: disabled by calendar"">Disabled</acronym>", Tag => "th");
+      HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker; D: disabled by calendar"">Disabled</acronym>",
+                     Tag  => "th");
       HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
-      HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>", Tag => "th");
+      HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>",
+                     Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
---        SGE.Partitions.Iterate (List, Put'Access);
---        SGE.Partitions.Iterate (List, Count_Slots'Access);
+      Slurm.Nodegroups.Iterate (Source, Put'Access);
+      Slurm.Nodegroups.Iterate (Source, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
                      Colspan => 7);
       HTML.Put_Cell (Data    => "Total Slots:",
                      Class   => "right");
---        HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
---                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
+                       Class   => "right");
       HTML.Put_Cell (Data    => "",
                      Colspan => 2);
       HTML.Put_Cell (Data    => "Million Core-hours per Year:",
                      Colspan => 4,
                      Class   => "right");
---        HTML.Put_Cell (Integer'Image (Total_Cores * 24 * 356 / 1_000_000),
---        Class   => "right");
+      HTML.Put_Cell (Integer'Image (Total_Cores * 24 * 356 / 1_000_000),
+        Class   => "right");
       HTML.Put_Cell ("unimplemented");
       Ada.Text_IO.Put_Line ("</tr>");
       Ada.Text_IO.Put_Line ("</table>");
    end Put_List;
 
-
---     procedure Put (P : Partition) is
---        package Str renames Ada.Strings;
---        package Str_F renames Str.Fixed;
---        use SGE.Utils.String_Lists;
---        use SGE.Resources;
---
---        procedure Put_Error (Message : String);
---
---        procedure Put_Error (Message : String) is
---        begin
---           HTML.Comment (Message);
---        end Put_Error;
---
---        GPU_Present : Boolean;
---        Config_Error : Boolean := False;
---        GPU_Memory   : constant String := P.Get_GPU_Memory;
---     begin
---        begin
---           GPU_Present := Has_GPU (P);
---        exception
---           when SGE.Utils.Operator_Error =>
---              Config_Error := True;
---              GPU_Present := False;
---        end;
---        if Get_Available_Hosts (P) > 0 then
---           Ada.Text_IO.Put ("<tr class=""available"">");
---        elsif Get_Available_Slots (P) > 0 then
---           Ada.Text_IO.Put ("<tr class=""slots_available"">");
---        elsif Get_Offline_Slots (P) = Get_Total_Slots (P) then
---           Ada.Text_IO.Put ("<tr class=""offline"">");
---        elsif P.Has_Errors or else Config_Error then
---           Ada.Text_IO.Put ("<tr class=""program_error"">");
---        else
---           Ada.Text_IO.Put ("<tr>");
---        end if;
---        HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
---                       & "&net=" & Get_Network (P)
---                       & "&gm=" & To_String (Get_GPU (P))
---                       & "&model=" & To_String (Get_Model (P))
---                       & "&cores=" & Get_Cores (P)'Img
---                       & "&mem=" & Get_Memory (P)
---                       & "&slots=" & P.Get_Slots'Img
---                       & "&gpu=" & GPU_Present'Img
---                       & "&ssd=" & Has_SSD (P)'Img
---                       & """><img src=""/icons/arrow_right.png"" /></a>");
---
---        HTML.Put_Cell (Data => Get_Network (P));
---        Ada.Text_IO.Put ("<td>");
---        if GPU_Present then
---           Ada.Text_IO.Put (HTML.Img_Tag ("GPU"));
---        end if;
---        if Has_SSD (P) then
---           Ada.Text_IO.Put (HTML.Img_Tag ("SSD"));
---        end if;
---        Ada.Text_IO.Put ("</td>");
---        HTML.Put_Cell (Data => To_String (Get_GPU (P)));
---        if GPU_Memory /= "" then
---           HTML.Put_Cell (Data => GPU_Memory & "G", Class => "right");
---        else
---           HTML.Put_Cell ("");
---        end if;
---        HTML.Put_Cell (Data => To_String (Get_Model (P)));
---        if Get_Cores (P) = Get_Slots (P) then
---           HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
---        else
---           HTML.Put_Cell (Data  => Get_Slots (P)'Img & "/" &
---                            Ada.Strings.Fixed.Trim (Get_Cores (P)'Img, Ada.Strings.Left),
---                          Class => "right");
---        end if;
---        HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
---        HTML.Put_Cell (Data => Get_Runtime (P), Class => "right");
---        HTML.Put_Cell (Data => P.Get_Total_Slots'Img, Class => "right");
---        HTML.Put_Cell (Data => P.Get_Total_Hosts'Img, Class => "right");
---        HTML.Put_Cell (Data => P.Get_Used_Slots'Img & " ("
---                       & Str_F.Trim (P.Get_Used_Hosts'Img, Str.Left)
---                       & ")", Class => "right");
---        HTML.Put_Cell (Data => P.Get_Reserved_Slots'Img, Class => "right");
---        HTML.Put_Cell (Data  => P.Get_Available_Slots'Img & " ("
---                       & Str_F.Trim (P.Get_Available_Hosts'Img, Str.Left) & ")",
---                       Class => "right");
---        HTML.Put_Cell (Data  => P.Get_Disabled_Slots'Img
---                       & " (" & Str_F.Trim (P.Get_Disabled_Hosts'Img, Str.Left) & ")",
---                       Class => "right");
---        HTML.Put_Cell (Data  => P.Get_Offline_Slots'Img
---                       & " (" & Str_F.Trim (P.Get_Offline_Hosts'Img, Str.Left) & ")",
---                       Class => "right");
---        HTML.Put_Cell (Data  => P.Get_Suspended_Slots'Img,
---                       Class => "right");
---        if Config_Error then
---           HTML.Put_Cell ("inconsistent GPU config encountered");
---        end if;
---        Ada.Text_IO.Put ("</tr>");
---        if Has_Errors (P) then
---           P.Iterate_Errors (Put_Error'Access);
---        end if;
---     exception
---        when E : SGE.Utils.Operator_Error =>
---           HTML.Put_Paragraph (Label    => "Misconfiguration",
---                               Contents => Exception_Message (E));
---           Ada.Text_IO.Put ("</tr>"); -- close open row
---     end Put;
---
---     procedure Put_Summary_Item (Item : State) is
---     begin
---        Ada.Text_IO.Put ("<li>");
---        Ada.Text_IO.Put (Get_Summary (List, Item)'Img & " ");
---        Ada.Text_IO.Put (To_String (Item));
---        Ada.Text_IO.Put ("</li>");
---     end Put_Summary_Item;
-
-   procedure Put_Summary is
+   procedure Put_Summary  is
    begin
-      HTML.Begin_Div (ID => "partition_summary");
+      HTML.Begin_Div (ID => "nodegroup_summary");
       Ada.Text_IO.Put ("<ul>");
-      --        Iterate_Summary (Put_Summary_Item'Access);
-      Ada.Text_IO.Put ("<li>unimplemented</li>");
+      Iterate_Summary (Put_Summary_Item'Access);
       Ada.Text_IO.Put ("</ul>");
-      HTML.End_Div (ID => "partition_summary");
+      HTML.End_Div (ID => "nodegroup_summary");
    end Put_Summary;
 
-   procedure Build_List is
+   procedure Put_Summary_Item (Item : State) is
    begin
---        Queues.Partition (List);
-      null;
-   end Build_List;
+      Ada.Text_IO.Put ("<li>");
+      Ada.Text_IO.Put (Get_Summary (All_Groups, Item)'Img & " ");
+      Ada.Text_IO.Put (To_String (Item));
+      Ada.Text_IO.Put ("</li>");
+   end Put_Summary_Item;
 
-end Partitions;
+end Nodegroups;
