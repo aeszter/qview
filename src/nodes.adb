@@ -71,13 +71,7 @@ package body Nodes is
       --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell ("");
       HTML.Put_Cell (Data => Get_CPUs (N)'Img, Class => "right");
---        begin
---           HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
---        exception
---           when E : SGE.Utils.Operator_Error =>
---              HTML.Put_Cell (Data => "err", Class => "right", Acronym => Exception_Message (E));
---        end;
-      HTML.Put_Cell ("");
+      HTML.Put_Cell (Data => Get_Free_CPUs (N)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (N), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (N)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (N)));
@@ -244,6 +238,8 @@ package body Nodes is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Status
       HTML.Put_Cell (Data => ""); -- H.Name
+      HTML.Put_Cell (Data => Integer'Image (Get_CPUs (J) / Get_Node_Number (J)),
+                    Class => "right");
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
