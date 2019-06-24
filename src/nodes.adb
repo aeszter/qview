@@ -144,7 +144,8 @@ package body Nodes is
 
       begin
          HTML.Begin_Div (Class => "node_resources");
-         HTML.Put_Heading ("Resources", 3);         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
+         HTML.Put_Heading ("Resources", 3);
+         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
          HTML.Put_Paragraph ("Memory free/total", Get_Free_Memory (N) & "/" & Get_Memory (N));
          HTML.Put_Paragraph ("Features", Get_Features (N));
 

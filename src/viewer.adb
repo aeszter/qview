@@ -433,6 +433,8 @@ package body Viewer is
             Set_Params ("categories=" & CGI.Value ("categories"));
             Put_Headers (Title => "Supply & Demand");
             HTML.Begin_Div (Class => "nodegroups");
+            CGI.Put_HTML_Heading (Title => "Supply",
+                   Level => 2);
             Nodegroups.Put_All;
             HTML.End_Div (Class => "nodegroups");
             View_Job_Overview;
