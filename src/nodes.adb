@@ -156,7 +156,7 @@ package body Nodes is
          Iterate_GRES_Used (N, Put_GRES'Access);
 
          HTML.Put_Paragraph ("tmp", Slurm.Utils.To_String (Get_Tmp_Total (N)));
-         HTML.Put_Paragraph ("TRES", Get_TRES (N));
+         HTML.Put_Paragraph ("TRES", HTML.To_String (Get_TRES (N)));
          HTML.Put_Clearer;
          HTML. End_Div (Class => "node_resources");
       exception

@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with Slurm.Utils; use Slurm.Utils;
 with Slurm.Nodegroups; use Slurm.Nodegroups;
 
 with HTML; use HTML;
@@ -26,7 +27,6 @@ package body Nodegroups is
 --        use SGE.Utils.String_Lists;
 --        use SGE.Resources;
 
-      GPU_Memory   : constant String := Get_GPU_Memory (G);
    begin
       if Get_Available_Nodes (G) > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
@@ -38,25 +38,17 @@ package body Nodegroups is
          Ada.Text_IO.Put ("<tr>");
       end if;
       HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
-                     & "&net=" & Get_Network (G)
-                     & "&gm=" & Get_GPU (G)
-                     & "&model=" & Get_CPU_Model (G)
+                     & "&gres=" & HTML.To_String (Get_GRES (G))
+                     & "&tres=" & HTML.To_String (Get_TRES (G))
+                     & "&features=" & Get_Features (G)
                      & "&cores=" & Get_CPUs (G)'Img
-                     & "&mem=" & Get_Memory (G)
+                     & "&mem=" & To_String (Get_Memory (G))
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
-      HTML.Put_Cell (Data => Get_Network (G));
-      Ada.Text_IO.Put ("<td>");
-      Ada.Text_IO.Put ("</td>");
-      HTML.Put_Cell (Data => Get_GPU (G));
-      if GPU_Memory /= "" then
-         HTML.Put_Cell (Data => GPU_Memory & "G", Class => "right");
-      else
-         HTML.Put_Cell ("");
-      end if;
-      HTML.Put_Cell (Data => Get_CPU_Model (G));
+      HTML.Put_Cell (Data => Get_Features (G));
+      HTML.Put_Cell (Data => HTML.To_String (Get_GRES (G), 1));
       HTML.Put_Cell (Data => Get_CPUs (G)'Img, Class => "right");
-      HTML.Put_Cell (Data => Get_Memory (G) & "G", Class => "right");
+      HTML.Put_Cell (Data => To_String (Get_Memory (G)) & "G", Class => "right");
       HTML.Put_Cell (Data => Get_Total_Cores (G)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Total_Nodes (G)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Used_Cores (G)'Img & " ("
@@ -87,34 +79,24 @@ package body Nodegroups is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
                   & "Detail</acronym>", Tag => "th");
-      HTML.Put_Cell (Data => "Interconnect", Tag => "th");
+      HTML.Put_Cell (Data => "Features", Tag => "th");
       HTML.Put_Cell (Data       => "Resources",
                      Tag        => "th");
-      HTML.Put_Cell (Data => "GPU",
-                     Tag  => "th");
-      HTML.Put_Cell (Data => "Memory",
-                     Tag  => "th");
-      HTML.Put_Cell (Data => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
-                  Tag => "th");
       HTML.Put_Cell (Data => "Cores", Tag => "th");
       HTML.Put_Cell (Data => "RAM", Tag => "th");
-      HTML.Put_Cell (Data => "Runtime", Tag => "th");
       HTML.Put_Cell (Data => "Slots", Tag => "th");
-      HTML.Put_Cell (Data => "Hosts", Tag => "th");
+      HTML.Put_Cell (Data => "Nodes", Tag => "th");
       HTML.Put_Cell (Data => "Used", Tag => "th");
-      HTML.Put_Cell (Data => "Reserved", Tag => "th");
       HTML.Put_Cell (Data => "Available", Tag => "th");
-      HTML.Put_Cell (Data => "<acronym title=""d: disabled by admin or health checker; D: disabled by calendar"">Disabled</acronym>",
+      HTML.Put_Cell (Data => "Draining",
                      Tag  => "th");
-      HTML.Put_Cell ("<acronym title=""u: unreacheable"">Offline</acronym>", Tag => "th");
-      HTML.Put_Cell ("<acronym title=""S: suspended by a competing queue"">Suspended</acronym>",
-                     Tag => "th");
+      HTML.Put_Cell ("Offline", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
       Slurm.Nodegroups.Iterate (Source, Put'Access);
       Slurm.Nodegroups.Iterate (Source, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 7);
+                     Colspan => 2);
       HTML.Put_Cell (Data    => "Total Slots:",
                      Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),

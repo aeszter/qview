@@ -2,7 +2,10 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with Calendar;
 with CGI; use CGI;
+with Slurm.Node_Properties;
 with Slurm.Utils; use Slurm.Utils;
+with Slurm.Gres;
+with Slurm.Tres;
 
 package HTML is
    procedure Begin_Form;
@@ -60,9 +63,9 @@ package HTML is
    procedure Bug_Ref (Bug_ID : Positive; Info : String);
    procedure Put (Data : Boolean);
 --
---     procedure Put_List (List : String_Lists.List);
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set);
    procedure Put_List (List : String_Sets.Set);
+   procedure Put_List (List : Slurm.Node_Properties.Name_Set);
 --     procedure Put_List (List : String_Pairs.Map);
    --  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
    procedure Put_List_Head;
@@ -99,6 +102,8 @@ package HTML is
 --                         Mark_As_Link : Boolean := True) return String;
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
+   function To_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String;
+   function To_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String;
    function Get_Action_URL (Action, Params : String) return String;
    function Current_URL return String;
 private
