@@ -108,7 +108,6 @@ package body Nodegroups is
                      Class   => "right");
       HTML.Put_Cell (Integer'Image (Total_Cores * 24 * 356 / 1_000_000),
         Class   => "right");
-      HTML.Put_Cell ("unimplemented");
       Ada.Text_IO.Put_Line ("</tr>");
       Ada.Text_IO.Put_Line ("</table>");
    end Put_List;
