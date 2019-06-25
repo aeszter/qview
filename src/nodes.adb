@@ -7,9 +7,11 @@ with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
 with Slurm.Utils;
+use Slurm.Utils;
 with HTML;
 with Utils;
 with Slurm.Node_Properties; use Slurm.Node_Properties;
+with Slurm.Tres;
 
 package body Nodes is
 
@@ -50,6 +52,21 @@ package body Nodes is
             return "unknown";
       end case;
    end Explain_State;
+
+   procedure Init (Properties : out Slurm.Node_Properties.Set_Of_Properties;
+                   GRES, TRES, Memory, CPUs, Features : String) is
+   begin
+      Init_CPUs (Properties, Integer'Value (CPUs));
+      Init_Features (Properties, Features);
+      Init_Memory (Properties, Gigs'Value (Memory));
+      Init_GRES (Properties, Slurm.Gres.Init (GRES));
+      Init_TRES (Properties, Slurm.Tres.Init (TRES));
+   exception
+      when Constraint_Error =>
+         raise Constraint_Error with "Incorrect parameters for nodegroup";
+      when others =>
+         raise Constraint_Error with "unknown error in nodegroup";
+   end Init;
 
    procedure Put (Position : Slurm.Nodes.Cursor) is
       N : Node;
@@ -279,7 +296,20 @@ package body Nodes is
       HTML.End_Div (Class => "host_list");
 
    end Put_List;
---
+
+   procedure Put_List (Properties : Slurm.Node_Properties.Set_Of_Properties) is
+      function Select_Properties (N : Node) return Boolean;
+      All_Nodes : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
+
+      function Select_Properties (N : Node) return Boolean is
+      begin
+         return Get_Properties (N) = Properties;
+      end Select_Properties;
+
+   begin
+      Put_List (Select_Nodes (All_Nodes, Select_Properties'Access));
+   end Put_List;
+
 --     procedure Put_For_Maintenance (H : Host) is
 --     begin
 --        Ada.Text_IO.Put ("<tr>");

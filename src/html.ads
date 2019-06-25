@@ -104,6 +104,8 @@ package HTML is
    function To_String (Span : Duration) return String;
    function To_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String;
    function To_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String;
+   function To_Web_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String;
+   function To_Web_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String;
    function Get_Action_URL (Action, Params : String) return String;
    function Current_URL return String;
 private

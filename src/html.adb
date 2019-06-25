@@ -26,6 +26,8 @@ package body HTML is
 
    function Format (Item  : Slurm.Gres.Resource) return String;
    function Format (Item  : Slurm.Tres.Resource) return String;
+   function Format_For_Web (Item  : Slurm.Gres.Resource) return String;
+   function Format_For_Web (Item  : Slurm.Tres.Resource) return String;
 
    function Acronym (Short, Long : String) return String is
    begin
@@ -166,15 +168,28 @@ package body HTML is
    function Format (Item  : Slurm.Tres.Resource) return String is
    begin
       return To_String (Item.Name) & "="
-        & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Right);
+        & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
    end Format;
 
    function Format (Item  : Slurm.Gres.Resource) return String is
    begin
-      return Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Right)
+      return Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left)
         & " " & To_String (Item.Category)
         & ":" & To_String (Item.Name);
    end Format;
+
+   function Format_For_Web (Item  : Slurm.Tres.Resource) return String is
+   begin
+      return To_String (Item.Name) & "="
+        & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
+   end Format_For_Web;
+
+   function Format_For_Web (Item  : Slurm.Gres.Resource) return String is
+   begin
+      return To_String (Item.Category)
+        & ":" & To_String (Item.Name)
+        & ":" & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
+   end Format_For_Web;
 
    function Get_Action_URL (Action, Params : String) return String is
    begin
@@ -748,10 +763,22 @@ package body HTML is
      new List_To_String (Lists => Slurm.Tres.Lists,
                          Format => Format);
 
+   function Gres_To_Web_String is
+     new List_To_String (Lists => Slurm.Gres.Lists,
+                         Format => Format_For_Web);
+   function Tres_To_Web_String  is
+     new List_To_String (Lists => Slurm.Tres.Lists,
+                         Format => Format_For_Web);
+
    function To_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String
                        renames Tres_To_String;
    function To_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String
-      renames Gres_To_String;
+                       renames Gres_To_String;
+
+   function To_Web_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String
+                       renames Tres_To_Web_String;
+   function To_Web_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String
+                       renames Gres_To_Web_String;
 
 --     function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
 --                         Mark_As_Link : Boolean := True) return String is

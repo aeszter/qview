@@ -37,9 +37,9 @@ package body Nodegroups is
       else
          Ada.Text_IO.Put ("<tr>");
       end if;
-      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?hosts=partition"
-                     & "&gres=" & HTML.To_String (Get_GRES (G))
-                     & "&tres=" & HTML.To_String (Get_TRES (G))
+      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?nodes=group"
+                     & "&gres=" & HTML.To_Web_String (Get_GRES (G))
+                     & "&tres=" & HTML.To_Web_String (Get_TRES (G))
                      & "&features=" & Get_Features (G)
                      & "&cores=" & Get_CPUs (G)'Img
                      & "&mem=" & To_String (Get_Memory (G))
