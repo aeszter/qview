@@ -112,7 +112,7 @@ package body Viewer is
                                & Utils.Version & """>"
                                & "Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
-         Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
+         Ada.Text_IO.Put_Line ("<li>qview " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>slurmlib " & Slurm.Utils.Version & "</li>");
          Ada.Text_IO.Put ("<li>Slurm API");
          Ada.Integer_Text_IO.Put (Slurm.General.API_Version, Base => 16);
