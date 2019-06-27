@@ -18,7 +18,6 @@ package body Bunches is
       null;
    end Build_List;
 
-
    procedure Put_List is
    begin
       Ada.Text_IO.Put_Line ("<table><tr>");

@@ -7,7 +7,6 @@ with Slurm.General;
 with Utils;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
-with Partitions; use Partitions;
 with Nodes; use Nodes;
 with Reservations;
 with Maintenance;
@@ -15,6 +14,8 @@ with Share_Tree;
 with Diagnostics;
 with Ada.Strings;
 with Ada.Integer_Text_IO;
+with Nodegroups;
+with Slurm.Node_Properties;
 
 package body Viewer is
 
@@ -59,17 +60,14 @@ package body Viewer is
       procedure Put_Diagnostics;
       procedure Put_Footer;
       procedure View_Bunch;
-      procedure View_Detailed_Queues;
       procedure View_Equivalent_Hosts (Host_Name : String);
       procedure View_Global_Jobs;
       procedure View_Job (Job_ID : String);
       procedure View_Job_Overview;
-      --        procedure View_Jobs (Selector : Trusted_String;
-      -- Only_Waiting : Boolean := False);
+      procedure View_Nodegroup;
       procedure View_Jobs_Of_User (User : String);
       procedure View_Jobs_In_Queue (Queue : String);
       procedure View_Maintenance_Report;
-      procedure View_Partition;
       procedure View_Reservations;
       procedure View_Share_Tree;
       procedure View_Waiting_Jobs;
@@ -212,64 +210,6 @@ package body Viewer is
             HTML.End_Div (Class => "job_list");
       end View_Bunch;
 
-      procedure View_Detailed_Queues is
---           SGE_Out        : Parser.Tree;
-      begin
-         HTML.Begin_Div (Class => "partitions");
-         CGI.Put_HTML_Heading (Title => "Supply",
-                               Level => 2);
-
---           SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector);
---
---           Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
---           SGE.Parser.Free;
-
-         --  Detect different partitions
-         Partitions.Build_List;
-
-         --  Output
-         Partitions.Put_Summary;
-         Partitions.Put_List;
-         HTML.End_Div (Class => "partitions");
-      end View_Detailed_Queues;
-
-      --        procedure View_Jobs (Selector : Trusted_String;
-      -- Only_Waiting : Boolean := False) is
---           SGE_Out     : Parser.Tree;
---
---
---        begin
---           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
---                                    Selector => Implicit_Trust ("-l slots -u *"));
---           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
---                                                            Tag_Name => "qquota_rule"));
---           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-urg -pri -ext ") & Selector);
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---           if Only_Waiting then
---              SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
---
---              Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
---              Jobs.Apply_Overlay;
---              SGE.Parser.Free;
---           end if;
---           Jobs.Update_Quota;
---
---           if not HTML.Param_Is ("sort", "") then
---              Jobs.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           end if;
---
---           Jobs.Put_Summary;
---           Jobs.Put_List (Show_Resources => not Only_Waiting);
---
---           --  Table Footer
---           Ada.Text_IO.Put_Line ("</table>");
---           HTML.End_Div (Class => "job_list");
---        end View_Jobs;
-
       procedure View_Equivalent_Hosts (Host_Name : String) is
 --           procedure View_One_Queue (Q : SGE.Queues.Queue);
 --           SGE_Out : Parser.Tree;
@@ -364,20 +304,19 @@ package body Viewer is
          Maintenance.Put_All;
       end View_Maintenance_Report;
 
-      procedure View_Partition is
---           Props : Set_Of_Properties;
+      procedure View_Nodegroup is
+         use Slurm.Node_Properties;
+
+         Props : Set_Of_Properties;
       begin
---           Init (Props  => Props,
---                 Net    => CGI.Value ("net"),
---                 Memory => CGI.Value ("mem") & "G",
---                 Cores  => CGI.Value ("cores"),
---                 Model  => To_CPU (CGI.Value ("model")),
---                 SSD    => CGI.Value ("ssd"),
---                 GPU    => To_GPU (CGI.Value ("gm")));
---           View_Hosts (Props => Props, Slots => Integer'Value (CGI.Value ("slots")));
-         HTML.Put_Paragraph (Label    => "View_Partition",
-                             Contents => "unimplemented");
-      end View_Partition;
+         Nodes.Init (Properties => Props,
+                     GRES       => CGI.Value ("gres"),
+                     TRES       => CGI.Value ("tres"),
+                     CPUs       => CGI.Value ("cores"),
+                     Features   => CGI.Value ("features"),
+                     Memory     => CGI.Value ("mem"));
+         Nodes.Put_List (Props);
+      end View_Nodegroup;
 
       procedure View_Reservations is
       begin
@@ -454,7 +393,11 @@ package body Viewer is
          if not HTML.Param_Is ("categories", "") then
             Set_Params ("categories=" & CGI.Value ("categories"));
             Put_Headers (Title => "Supply & Demand");
-            View_Detailed_Queues;
+            HTML.Begin_Div (Class => "nodegroups");
+            CGI.Put_HTML_Heading (Title => "Supply",
+                   Level => 2);
+            Nodegroups.Put_All;
+            HTML.End_Div (Class => "nodegroups");
             View_Job_Overview;
          elsif not HTML.Param_Is ("search", "") then
             declare ID : Positive;
@@ -504,6 +447,9 @@ package body Viewer is
          elsif HTML.Param_Is ("nodes", "all") then
             Put_Headers (Title => "All Nodes");
             Nodes.Put_All;
+         elsif HTML.Param_Is ("nodes", "group") then
+            Put_Headers (Title => "Nodegroup");
+            View_Nodegroup;
          elsif HTML.Param_Is ("jobs", "waiting") then
             Put_Headers (Title => "Waiting Jobs");
             Set_Params ("jobs=waiting");

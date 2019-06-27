@@ -7,8 +7,11 @@ with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
 with Slurm.Utils;
+use Slurm.Utils;
 with HTML;
 with Utils;
+with Slurm.Node_Properties; use Slurm.Node_Properties;
+with Slurm.Tres;
 
 package body Nodes is
 
@@ -50,6 +53,21 @@ package body Nodes is
       end case;
    end Explain_State;
 
+   procedure Init (Properties : out Slurm.Node_Properties.Set_Of_Properties;
+                   GRES, TRES, Memory, CPUs, Features : String) is
+   begin
+      Init_CPUs (Properties, Integer'Value (CPUs));
+      Init_Features (Properties, Features);
+      Init_Memory (Properties, Gigs'Value (Memory));
+      Init_GRES (Properties, Slurm.Gres.Init (GRES));
+      Init_TRES (Properties, Slurm.Tres.Init (TRES));
+   exception
+      when Constraint_Error =>
+         raise Constraint_Error with "Incorrect parameters for nodegroup";
+      when others =>
+         raise Constraint_Error with "unknown error in nodegroup";
+   end Init;
+
    procedure Put (Position : Slurm.Nodes.Cursor) is
       N : Node;
    begin
@@ -62,21 +80,15 @@ package body Nodes is
       Ada.Text_IO.Put ("<td>");
       Put_State (N);
       Ada.Text_IO.Put_Line ("</td>");
-      HTML.Put_Cell (Data => Get_Name (N),
-                    Link_Param => "node");
+      HTML.Put_Cell (Data => To_String (Get_Name (N)),
+                     Link_Param => "node");
       --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
       Put_GPU_Cell (N);
       --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell ("");
       HTML.Put_Cell (Data => Get_CPUs (N)'Img, Class => "right");
---        begin
---           HTML.Put_Cell (Data => Get_Free_Slots (H)'Img, Class => "right");
---        exception
---           when E : SGE.Utils.Operator_Error =>
---              HTML.Put_Cell (Data => "err", Class => "right", Acronym => Exception_Message (E));
---        end;
-      HTML.Put_Cell ("");
+      HTML.Put_Cell (Data => Get_Free_CPUs (N)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Memory (N), Class => "right");
       HTML.Put_Cell (Data  => Load_Per_Core (N)'Img,
                      Class => "right " & Color_Class (Load_Per_Core (N)));
@@ -130,9 +142,9 @@ package body Nodes is
       begin
          HTML.Begin_Div (Class => "node_jobs");
          HTML.Put_Heading ("Jobs", 3);
-         ada.Text_IO.Put_Line ("<table><tbody>");
+         Ada.Text_IO.Put_Line ("<table><tbody>");
          Iterate_Jobs (N, Put_Jobs'Access);
-         ada.Text_IO.Put_Line ("</tbody></table>");
+         Ada.Text_IO.Put_Line ("</tbody></table>");
          HTML. End_Div (Class => "node_jobs");
       end Put_Jobs;
 
@@ -149,7 +161,8 @@ package body Nodes is
 
       begin
          HTML.Begin_Div (Class => "node_resources");
-         HTML.Put_Heading ("Resources", 3);         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
+         HTML.Put_Heading ("Resources", 3);
+         HTML.Put_Paragraph ("Load per core", Load_Per_Core (N)'Img);
          HTML.Put_Paragraph ("Memory free/total", Get_Free_Memory (N) & "/" & Get_Memory (N));
          HTML.Put_Paragraph ("Features", Get_Features (N));
 
@@ -160,7 +173,7 @@ package body Nodes is
          Iterate_GRES_Used (N, Put_GRES'Access);
 
          HTML.Put_Paragraph ("tmp", Slurm.Utils.To_String (Get_Tmp_Total (N)));
-         HTML.Put_Paragraph ("TRES", Get_TRES (N));
+         HTML.Put_Paragraph ("TRES", HTML.To_String (Get_TRES (N)));
          HTML.Put_Clearer;
          HTML. End_Div (Class => "node_resources");
       exception
@@ -194,7 +207,7 @@ package body Nodes is
       procedure Put_System is
       begin
          HTML.Begin_Div (Class => "node_system");
-         Ada.Text_IO. Put_Line ("<p>" & Get_Name (N) & "</p>");
+         Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
                                & HTML.To_String (Get_Boot_Time (N)) & "</p>");
@@ -243,6 +256,8 @@ package body Nodes is
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Status
       HTML.Put_Cell (Data => ""); -- H.Name
+      HTML.Put_Cell (Data => Integer'Image (Get_CPUs (J) / Get_Node_Number (J)),
+                    Class => "right");
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
@@ -281,7 +296,20 @@ package body Nodes is
       HTML.End_Div (Class => "host_list");
 
    end Put_List;
---
+
+   procedure Put_List (Properties : Slurm.Node_Properties.Set_Of_Properties) is
+      function Select_Properties (N : Node) return Boolean;
+      All_Nodes : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
+
+      function Select_Properties (N : Node) return Boolean is
+      begin
+         return Get_Properties (N) = Properties;
+      end Select_Properties;
+
+   begin
+      Put_List (Select_Nodes (All_Nodes, Select_Properties'Access));
+   end Put_List;
+
 --     procedure Put_For_Maintenance (H : Host) is
 --     begin
 --        Ada.Text_IO.Put ("<tr>");

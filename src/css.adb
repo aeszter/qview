@@ -143,7 +143,7 @@ package body CSS is
       Put_Line ("color: #00f;");
       Close_Block;
 
-      Open_Block ("#job_summary li, #partition_summary li, #sharetree_summary li");
+      Open_Block ("#job_summary li, #nodegroup_summary li, #sharetree_summary li");
       Hide_List;
       Close_Block;
    end Put_Navigation;
@@ -275,7 +275,7 @@ package body CSS is
 
    procedure Put_List is
    begin
-      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .partitions, .bunches, .node_info");
+      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .nodegroups, .bunches, .node_info");
       Put_Line ("position: relative;");
       Put_Line ("border: " & Standard_Border);
       Put_Line (Standard_Background);
@@ -297,7 +297,7 @@ package body CSS is
 
    procedure Put_Table_Padding is
    begin
-      Open_Block (".partitions td, .bunches td");
+      Open_Block (".nodegoups td, .bunches td");
       Put_Line ("padding: 1px 3, .node_slurm, .node_usagepx 1px 5px;");
       Close_Block;
    end Put_Table_Padding;
@@ -400,7 +400,7 @@ package body CSS is
       Put_Line ("position: relative;");
       Close_Block;
 
-      Open_Block (".job_info img, .job_list img, .partitions img, .host_list img, .bunches img, #job_summary img");
+      Open_Block (".job_info img, .job_list img, .nodegroups img, .host_list img, .bunches img, #job_summary img");
       Put_Line ("vertical-align: bottom;");
       Close_Block;
    end Put_Images;

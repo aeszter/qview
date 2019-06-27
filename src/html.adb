@@ -9,11 +9,25 @@ with Ada.Real_Time;
 --  with SGE.Queues;
 --  with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
 --  use SGE.Utils.String_Pairs;
+with Slurm.Node_Properties;
+use Slurm.Node_Properties;
 with Slurm.Utils;
 with Viewer;
 with Utils;
+with Ada.Strings.Fixed;
+with Ada.Containers.Ordered_Sets;
 
 package body HTML is
+
+   generic
+      with package Lists is new Ada.Containers.Ordered_Sets (<>);
+      with function Format (What : Lists.Element_Type) return String;
+   function List_To_String (Source : Lists.Set; Max_Items : Positive := 99) return String;
+
+   function Format (Item  : Slurm.Gres.Resource) return String;
+   function Format (Item  : Slurm.Tres.Resource) return String;
+   function Format_For_Web (Item  : Slurm.Gres.Resource) return String;
+   function Format_For_Web (Item  : Slurm.Tres.Resource) return String;
 
    function Acronym (Short, Long : String) return String is
    begin
@@ -151,6 +165,32 @@ package body HTML is
       end loop;
    end Finalize_Divs;
 
+   function Format (Item  : Slurm.Tres.Resource) return String is
+   begin
+      return To_String (Item.Name) & "="
+        & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
+   end Format;
+
+   function Format (Item  : Slurm.Gres.Resource) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left)
+        & " " & To_String (Item.Category)
+        & ":" & To_String (Item.Name);
+   end Format;
+
+   function Format_For_Web (Item  : Slurm.Tres.Resource) return String is
+   begin
+      return To_String (Item.Name) & "="
+        & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
+   end Format_For_Web;
+
+   function Format_For_Web (Item  : Slurm.Gres.Resource) return String is
+   begin
+      return To_String (Item.Category)
+        & ":" & To_String (Item.Name)
+        & ":" & Ada.Strings.Fixed.Trim (Item.Number'Img, Ada.Strings.Left);
+   end Format_For_Web;
+
    function Get_Action_URL (Action, Params : String) return String is
    begin
       return CGI.My_URL & "priv?act=" & Action & "&" & Params;
@@ -177,6 +217,25 @@ package body HTML is
    begin
       return Data;
    end Img_Tag;
+
+   function List_To_String (Source : Lists.Set; Max_Items : Positive := 99) return String is
+      use Lists;
+      Sublist : Lists.Set := Copy (Source);
+   begin
+      if Length (Source) = 0 then
+         return "";
+      elsif Length (Source) = 1 then
+         return Format (First_Element (Source));
+      else
+         if Max_Items > 1 then
+            Delete_First (Sublist);
+            return Format (First_Element (Source)) & ","
+              & List_To_String (Sublist, Max_Items - 1);
+         else
+            return Format (First_Element (Source)) & ",...";
+         end if;
+      end if;
+   end List_To_String;
 
    function Param_Is (Param : String; Expected : String) return Boolean is
    begin
@@ -395,6 +454,24 @@ package body HTML is
       Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL &
                             "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
    end Put_Link;
+
+   procedure Put_List (List : Slurm.Node_Properties.Name_Set) is
+      use Slurm.Node_Properties.Name_Sets;
+
+      Elem : Name_Sets.Cursor;
+   begin
+      Elem := List.First;
+      Put_List_Head;
+      if Elem = Name_Sets.No_Element then
+         Put_Empty_List;
+      else
+         while Elem /= Name_Sets.No_Element loop
+            Ada.Text_IO.Put_Line ("<li>" & To_String (Name_Sets.Element (Elem)) & "</li>");
+            Next (Elem);
+         end loop;
+      end if;
+      Put_List_Tail;
+   end Put_List;
 
    procedure Put_List (List : String_Sets.Set) is
       use String_Sets;
@@ -678,6 +755,30 @@ package body HTML is
          return Ada.Calendar.Formatting.Image (Seconds);
       end if;
    end To_String;
+
+   function Gres_To_String is
+     new List_To_String (Lists => Slurm.Gres.Lists,
+                         Format => Format);
+   function Tres_To_String  is
+     new List_To_String (Lists => Slurm.Tres.Lists,
+                         Format => Format);
+
+   function Gres_To_Web_String is
+     new List_To_String (Lists => Slurm.Gres.Lists,
+                         Format => Format_For_Web);
+   function Tres_To_Web_String  is
+     new List_To_String (Lists => Slurm.Tres.Lists,
+                         Format => Format_For_Web);
+
+   function To_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String
+                       renames Tres_To_String;
+   function To_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String
+                       renames Gres_To_String;
+
+   function To_Web_String (List : Slurm.Tres.List; Max_Items : Positive := 99) return String
+                       renames Tres_To_Web_String;
+   function To_Web_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String
+                       renames Gres_To_Web_String;
 
 --     function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
 --                         Mark_As_Link : Boolean := True) return String is
