@@ -37,8 +37,6 @@ package body Nodegroups is
    procedure Put (G : Nodegroup) is
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
---        use SGE.Utils.String_Lists;
---        use SGE.Resources;
 
    begin
       if Get_Available_Nodes (G) > 0 then
@@ -87,6 +85,8 @@ package body Nodegroups is
    end Put_All;
 
    procedure Put_List (Source : Slurm.Nodegroups.Summarized_List) is
+      package Str renames Ada.Strings;
+      package Str_F renames Str.Fixed;
    begin
       Ada.Text_IO.Put_Line ("<table>");
       Ada.Text_IO.Put ("<tr>");
@@ -117,16 +117,16 @@ package body Nodegroups is
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Used_Cores) & " (" &
-                                Integer'Image (Used_Nodes) & ")",
+                                Str_F.Trim (Integer'Image (Used_Nodes), Str.Left) & ")",
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Available_Cores) & " (" &
-                                Integer'Image (Available_Nodes) & ")",
+                                Str_F.Trim (Integer'Image (Available_Nodes), Str.Left) & ")",
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Draining_Cores) & " (" &
-                                Integer'Image (Draining_Nodes) & ")",
+                                Str_F.Trim (Integer'Image (Draining_Nodes), Str.Left) & ")",
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Offline_Cores) & " (" &
-                                Integer'Image (Offline_Nodes) & ")",
+                                Str_F.Trim (Integer'Image (Offline_Nodes), Str.Left) & ")",
                        Class   => "right");
       Ada.Text_IO.Put_Line ("</tr><tr>");
       HTML.Put_Cell (Data    => "");
