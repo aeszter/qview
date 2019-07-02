@@ -12,13 +12,26 @@ package body Nodegroups is
    procedure Put_Summary_Item (Item : State);
 
    All_Groups : Slurm.Nodegroups.Summarized_List;
-   Total_Cores : Integer := 0;
+   Total_Cores, Total_Nodes : Integer := 0;
+   Used_Cores, Used_Nodes,
+   Available_Cores, Available_Nodes,
+   Draining_Cores, Draining_Nodes,
+   Offline_Cores, Offline_Nodes : Integer := 0;
 
    procedure Count_Slots (Item : Nodegroup);
 
    procedure Count_Slots (Item : Nodegroup) is
    begin
       Total_Cores := Total_Cores + Get_Total_Cores (Item);
+      Total_Nodes := Total_Nodes + Get_Total_Nodes (Item);
+      Used_Cores := Used_Cores + Get_Used_Cores (Item);
+      Used_Nodes := Used_Nodes + Get_Used_Nodes (Item);
+      Available_Cores := Available_Cores + Get_Available_Cores (Item);
+      Available_Nodes := Available_Nodes + Get_Available_Nodes (Item);
+      Draining_Cores := Draining_Cores + Get_Drained_Cores (Item);
+      Draining_Nodes := Draining_Nodes + Get_Drained_Nodes (Item);
+      Offline_Cores := Offline_Cores + Get_Offline_Cores (Item);
+      Offline_Nodes := Offline_Nodes + Get_Offline_Nodes (Item);
    end Count_Slots;
 
    procedure Put (G : Nodegroup) is
@@ -96,13 +109,27 @@ package body Nodegroups is
       Slurm.Nodegroups.Iterate (Source, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 2);
-      HTML.Put_Cell (Data    => "Total Slots:",
+                     Colspan => 4);
+      HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                        Class   => "right");
-      HTML.Put_Cell (Data    => "",
-                     Colspan => 2);
+      HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
+                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Used_Cores) & " (" &
+                                Integer'Image (Used_Nodes) & ")",
+                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Available_Cores) & " (" &
+                                Integer'Image (Available_Nodes) & ")",
+                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Draining_Cores) & " (" &
+                                Integer'Image (Draining_Nodes) & ")",
+                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Offline_Cores) & " (" &
+                                Integer'Image (Offline_Nodes) & ")",
+                       Class   => "right");
+      Ada.Text_IO.Put_Line ("</tr><tr>");
+      HTML.Put_Cell (Data    => "");
       HTML.Put_Cell (Data    => "Million Core-hours per Year:",
                      Colspan => 4,
                      Class   => "right");
