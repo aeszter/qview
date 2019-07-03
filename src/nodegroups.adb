@@ -38,8 +38,16 @@ package body Nodegroups is
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
 
+      procedure Put_Error (Message : String);
+      procedure Put_Error (Message : String) is
+      begin
+         HTML.Comment (Message);
+      end Put_Error;
+
    begin
-      if Get_Available_Nodes (G) > 0 then
+      if G.Has_Errors then
+         Ada.Text_IO.Put ("<tr class=""program_error"">");
+      elsif Get_Available_Nodes (G) > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
       elsif Get_Available_Cores (G) > 0 then
          Ada.Text_IO.Put ("<tr class=""slots_available"">");
@@ -75,6 +83,9 @@ package body Nodegroups is
                      & " (" & Str_F.Trim (Get_Offline_Nodes (G)'Img, Str.Left) & ")",
                      Class => "right");
       Ada.Text_IO.Put ("</tr>");
+      if G.Has_Errors then
+         G.Iterate_Errors (Put_Error'Access);
+      end if;
    end Put;
 
    procedure Put_All is

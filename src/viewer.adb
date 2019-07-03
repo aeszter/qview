@@ -16,6 +16,7 @@ with Ada.Strings;
 with Ada.Integer_Text_IO;
 with Nodegroups;
 with Slurm.Node_Properties;
+with Slurm.Loggers;
 
 package body Viewer is
 
@@ -474,13 +475,13 @@ package body Viewer is
       else
          Put_Headers (Title => "");
       end if;
---        if SGE.Loggers.Errors_Exist then
---           HTML.Begin_Div (ID => "internal_errors");
---           HTML.Put_Heading (Title => "Internal errors",
---                             Level => 2);
---           SGE.Loggers.Iterate_Errors (Put_Error'Access);
---           HTML.End_Div (ID => "internal_errors");
---        end if;
+      if Slurm.Loggers.Errors_Exist then
+         HTML.Begin_Div (ID => "internal_errors");
+         HTML.Put_Heading (Title => "Internal errors",
+                           Level => 2);
+         Slurm.Loggers.Iterate_Errors (Put_Error'Access);
+         HTML.End_Div (ID => "internal_errors");
+      end if;
       HTML.End_Div (ID => "content");
       Put_Footer;
       HTML.Finalize_Divs (Silent => True);
