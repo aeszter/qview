@@ -212,6 +212,7 @@ package body Viewer is
       end View_Bunch;
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
+         pragma Unreferenced (Host_Name);
 --           procedure View_One_Queue (Q : SGE.Queues.Queue);
 --           SGE_Out : Parser.Tree;
 --           Props   : Set_Of_Properties;
@@ -253,35 +254,11 @@ package body Viewer is
       end View_Job;
 
       procedure View_Job_Overview is
---           SGE_Out     : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "bunches");
          CGI.Put_HTML_Heading (Title => "Demand",
                             Level => 2);
---           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
---                                    Selector => Implicit_Trust ("-l slots -u *"));
---           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
---                                                            Tag_Name => "qquota_rule"));
---           SGE.Parser.Free;
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -r -s p"));
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
---
---           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Apply_Overlay;
---           Jobs.Update_Quota;
-
-         --  Detect different bunches
-         Bunches.Build_List;
-
-         --  Output
-         Bunches.Put_List;
-         Ada.Text_IO.Put_Line ("</table>");
+         Bunches.Put_All;
          HTML.End_Div (Class => "bunches");
       end View_Job_Overview;
 
