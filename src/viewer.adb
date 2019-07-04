@@ -17,6 +17,7 @@ with Ada.Integer_Text_IO;
 with Nodegroups;
 with Slurm.Node_Properties;
 with Slurm.Loggers;
+with Slurm.Bunches;
 
 package body Viewer is
 
@@ -162,53 +163,17 @@ package body Viewer is
       end Put_Headers;
 
       procedure View_Bunch is
---           SGE_Out : Parser.Tree;
-
+         Requirements : Slurm.Bunches.Set_Of_Requirements;
       begin
---           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
---                                    Selector => Implicit_Trust ("-l slots -u *"));
---           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
---                                                            Tag_Name => "qquota_rule"));
---           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-r -s p -u *"));
-
-         Append_Params ("pe=" & CGI.Value ("pe"));
-         Append_Params ("queue=" & CGI.Value ("queue"));
-         Append_Params ("hr=" & CGI.Value ("hr"));
-         Append_Params ("sr=" & CGI.Value ("sr"));
-         Append_Params ("slot_ranges=" & CGI.Value ("slot_ranges"));
-         Append_Params ("slot_number=" & CGI.Value ("slot_number"));
-
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-j *"));
---           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Prune_List (PE            => CGI.Value ("pe"),
---                            Queue         => CGI.Value ("queue"),
---                            Hard_Requests => CGI.Value ("hr"),
---                            Soft_Requests => CGI.Value ("sr"),
---                            Slot_Ranges   => CGI.Value ("slot_ranges"),
---                            Slot_Number   => CGI.Value ("slot_number")
---                           );
---           Jobs.Update_Quota;
---
---           if not HTML.Param_Is ("sort", "") then
---              Jobs.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           end if;
---
---           Jobs.Put_Bunch_List;
-         HTML.Put_Paragraph (Label    => "View_Bunch",
-                             Contents => "unimplemented");
+         Slurm.Bunches.Init (Requirements,
+                       CPUs => Integer'Value (CGI.Value ("cpus")),
+                       Gres => To_String (CGI.Value ("gres")),
+                       TRES => To_String (CGI.Value ("tres")));
+         Jobs.Put_Pending_List (Requirements);
       exception
          when E : others =>
             HTML.Error ("Error while viewing bunch of jobs: "
                         & Exception_Message (E));
-            Ada.Text_IO.Put_Line ("</table>");
-            HTML.End_Div (Class => "job_list");
       end View_Bunch;
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
