@@ -40,7 +40,6 @@ package body Jobs is
 --     end Bunch;
 
    procedure Finish_Row (J : Job) is
-      pragma Unreferenced (J);
       procedure Put_Error (Message : String);
 
       procedure Put_Error (Message : String) is
@@ -50,7 +49,7 @@ package body Jobs is
 
    begin
       Ada.Text_IO.Put_Line ("</tr>");
---        Iterate_Errors (J, Put_Error'Access);
+      Iterate_Errors (J, Put_Error'Access);
    end Finish_Row;
 
    function Name_As_HTML (J : Job) return String is
