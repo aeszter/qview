@@ -1,14 +1,11 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
---  with SGE.Bunches;
+with Slurm.Bunches;
 
 package Bunches is
 
-   procedure Put_List;
+   procedure Put (B : Slurm.Bunches.Bunch);
+   procedure Put_List (Source : Slurm.Bunches.List);
 
-   procedure Build_List; -- Bug #1830
-
-private
-
---     procedure Put (B : SGE.Bunches.Bunch);
+   procedure Put_All;
 
 end Bunches;

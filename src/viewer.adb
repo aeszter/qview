@@ -16,6 +16,8 @@ with Ada.Strings;
 with Ada.Integer_Text_IO;
 with Nodegroups;
 with Slurm.Node_Properties;
+with Slurm.Loggers;
+with Slurm.Bunches;
 
 package body Viewer is
 
@@ -112,7 +114,7 @@ package body Viewer is
                                & Utils.Version & """>"
                                & "Report Problem/Suggest Enhancement</a></li>");
          Put_Diagnostics;
-         Ada.Text_IO.Put_Line ("<li>version " & Utils.Version & "</li>");
+         Ada.Text_IO.Put_Line ("<li>qview " & Utils.Version & "</li>");
          Ada.Text_IO.Put_Line ("<li>slurmlib " & Slurm.Utils.Version & "</li>");
          Ada.Text_IO.Put ("<li>Slurm API");
          Ada.Integer_Text_IO.Put (Slurm.General.API_Version, Base => 16);
@@ -161,56 +163,21 @@ package body Viewer is
       end Put_Headers;
 
       procedure View_Bunch is
---           SGE_Out : Parser.Tree;
-
+         Requirements : Slurm.Bunches.Set_Of_Requirements;
       begin
---           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
---                                    Selector => Implicit_Trust ("-l slots -u *"));
---           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
---                                                            Tag_Name => "qquota_rule"));
---           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-r -s p -u *"));
-
-         Append_Params ("pe=" & CGI.Value ("pe"));
-         Append_Params ("queue=" & CGI.Value ("queue"));
-         Append_Params ("hr=" & CGI.Value ("hr"));
-         Append_Params ("sr=" & CGI.Value ("sr"));
-         Append_Params ("slot_ranges=" & CGI.Value ("slot_ranges"));
-         Append_Params ("slot_number=" & CGI.Value ("slot_number"));
-
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---           SGE_Out := Parser.Setup (Command  => Cmd_Qstat,
---                                    Selector => Implicit_Trust ("-j *"));
---           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Prune_List (PE            => CGI.Value ("pe"),
---                            Queue         => CGI.Value ("queue"),
---                            Hard_Requests => CGI.Value ("hr"),
---                            Soft_Requests => CGI.Value ("sr"),
---                            Slot_Ranges   => CGI.Value ("slot_ranges"),
---                            Slot_Number   => CGI.Value ("slot_number")
---                           );
---           Jobs.Update_Quota;
---
---           if not HTML.Param_Is ("sort", "") then
---              Jobs.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           end if;
---
---           Jobs.Put_Bunch_List;
-         HTML.Put_Paragraph (Label    => "View_Bunch",
-                             Contents => "unimplemented");
+         Slurm.Bunches.Init (Requirements,
+                       CPUs => Integer'Value (CGI.Value ("cpus")),
+                       Gres => To_String (CGI.Value ("gres")),
+                       TRES => To_String (CGI.Value ("tres")));
+         Jobs.Put_Pending_List (Requirements);
       exception
          when E : others =>
             HTML.Error ("Error while viewing bunch of jobs: "
                         & Exception_Message (E));
-            Ada.Text_IO.Put_Line ("</table>");
-            HTML.End_Div (Class => "job_list");
       end View_Bunch;
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
+         pragma Unreferenced (Host_Name);
 --           procedure View_One_Queue (Q : SGE.Queues.Queue);
 --           SGE_Out : Parser.Tree;
 --           Props   : Set_Of_Properties;
@@ -252,35 +219,11 @@ package body Viewer is
       end View_Job;
 
       procedure View_Job_Overview is
---           SGE_Out     : Parser.Tree;
       begin
          HTML.Begin_Div (Class => "bunches");
          CGI.Put_HTML_Heading (Title => "Demand",
                             Level => 2);
---           SGE_Out := Parser.Setup (Command  => Cmd_Qquota,
---                                    Selector => Implicit_Trust ("-l slots -u *"));
---           SGE.Quota.Append_List (Get_Elements_By_Tag_Name (Doc      => SGE_Out,
---                                                            Tag_Name => "qquota_rule"));
---           SGE.Parser.Free;
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -r -s p"));
---
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-j *"));
---
---           Jobs.Create_Overlay (Get_Job_Nodes_From_Qstat_J (SGE_Out));
---           SGE.Parser.Free;
---           Jobs.Apply_Overlay;
---           Jobs.Update_Quota;
-
-         --  Detect different bunches
-         Bunches.Build_List;
-
-         --  Output
-         Bunches.Put_List;
-         Ada.Text_IO.Put_Line ("</table>");
+         Bunches.Put_All;
          HTML.End_Div (Class => "bunches");
       end View_Job_Overview;
 
@@ -474,13 +417,13 @@ package body Viewer is
       else
          Put_Headers (Title => "");
       end if;
---        if SGE.Loggers.Errors_Exist then
---           HTML.Begin_Div (ID => "internal_errors");
---           HTML.Put_Heading (Title => "Internal errors",
---                             Level => 2);
---           SGE.Loggers.Iterate_Errors (Put_Error'Access);
---           HTML.End_Div (ID => "internal_errors");
---        end if;
+      if Slurm.Loggers.Errors_Exist then
+         HTML.Begin_Div (ID => "internal_errors");
+         HTML.Put_Heading (Title => "Internal errors",
+                           Level => 2);
+         Slurm.Loggers.Iterate_Errors (Put_Error'Access);
+         HTML.End_Div (ID => "internal_errors");
+      end if;
       HTML.End_Div (ID => "content");
       Put_Footer;
       HTML.Finalize_Divs (Silent => True);

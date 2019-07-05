@@ -22,6 +22,7 @@ package body Nodes is
    procedure Put (Position : Slurm.Nodes.Cursor);
    procedure Put_GPU_Cell (N : Node);
    procedure Put_State (N : Node);
+   procedure Put_Error (Message : String);
 
    All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
 
@@ -76,16 +77,19 @@ package body Nodes is
       else
          raise Constraint_Error with "no such node";
       end if;
-      Ada.Text_IO.Put ("<tr>");
+      if N.Has_Errors then
+         Ada.Text_IO.Put ("<tr class=""program_error"">");
+         N.Iterate_Errors (Put_Error'Access);
+      else
+         Ada.Text_IO.Put ("<tr>");
+      end if;
       Ada.Text_IO.Put ("<td>");
       Put_State (N);
       Ada.Text_IO.Put_Line ("</td>");
       HTML.Put_Cell (Data => To_String (Get_Name (N)),
                      Link_Param => "node");
-      --        HTML.Put_Cell (Data => Get_Network (H));
       HTML.Put_Cell ("");
       Put_GPU_Cell (N);
-      --        HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell ("");
       HTML.Put_Cell (Data => Get_CPUs (N)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Free_CPUs (N)'Img, Class => "right");
@@ -200,6 +204,10 @@ package body Nodes is
          HTML.Put_Paragraph ("Job started", Get_Start_Time (N));
          HTML.Put_Paragraph ("Weight", Get_Weight (N)'Img);
          HTML.Put_Paragraph ("Version", Get_Version (N));
+         if N.Has_Errors then
+            Ada.Text_IO.Put_Line ("<p>Node has caused internal errors</p>");
+            N.Iterate_Errors (Put_Error'Access);
+         end if;
          HTML.Put_Clearer;
          HTML.End_Div (Class => "node_slurm");
       end Put_Slurm;
@@ -228,6 +236,11 @@ package body Nodes is
       HTML.Put_Clearer;
       HTML. End_Div (Class => "node_info");
    end Put_Details;
+
+   procedure Put_Error (Message : String) is
+   begin
+      HTML.Comment (Message);
+   end Put_Error;
 
    procedure Put_GPU_Cell (N : Node) is
       use Slurm.Gres;

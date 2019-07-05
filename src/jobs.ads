@@ -1,7 +1,5 @@
---  with Parser; use Parser;
---  with SGE.Utils; use SGE.Utils;
 with Slurm.Jobs; use Slurm.Jobs;
---  with SGE.Bunches;
+with Slurm.Bunches;
 
 package Jobs is
 
@@ -11,8 +9,8 @@ package Jobs is
 
    procedure Put_Details (ID : Natural);
 --     procedure Put_Time_List;
---     procedure Put_Bunch_List;
    procedure Put_List (List : Slurm.Jobs.List);
+   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements);
    procedure Put_Global_List;
    procedure Put_Pending_List;
    procedure Put_Running_List;

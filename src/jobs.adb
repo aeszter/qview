@@ -3,7 +3,6 @@ with Ada.Strings.Fixed;
 with Ada.Calendar;   use Ada.Calendar;
 --  with Resources;      use Resources;
 with HTML;
---  with Parser; use Parser;
 --  with SGE.Ranges; use SGE.Ranges;
 --  with Ranges; use Ranges;
 --  with SGE.Resources;
@@ -11,6 +10,7 @@ with HTML;
 --  with SGE.Context;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Utils; use Slurm.Utils;
+with Slurm.Bunches;
 
 package body Jobs is
 
@@ -40,7 +40,6 @@ package body Jobs is
 --     end Bunch;
 
    procedure Finish_Row (J : Job) is
-      pragma Unreferenced (J);
       procedure Put_Error (Message : String);
 
       procedure Put_Error (Message : String) is
@@ -50,7 +49,7 @@ package body Jobs is
 
    begin
       Ada.Text_IO.Put_Line ("</tr>");
---        Iterate_Errors (J, Put_Error'Access);
+      Iterate_Errors (J, Put_Error'Access);
    end Finish_Row;
 
    function Name_As_HTML (J : Job) return String is
@@ -398,7 +397,29 @@ package body Jobs is
       Iterate (List, Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
+   exception
+         when others =>
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "job_list");
+      raise;
    end Put_List;
+
+   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements) is
+      use Slurm.Bunches;
+      function Select_Requirements (J : Job) return Boolean;
+      All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
+
+      function Select_Requirements (J : Job) return Boolean is
+      begin
+         return Is_Pending (J) and then
+           Get_CPUs (J) = Get_CPUs (Requirements) and then
+           Get_Gres (J) = Get_Gres (Requirements) and then
+           Get_TRES_Request (J) = Get_TRES (Requirements);
+      end Select_Requirements;
+
+   begin
+      Put_List (Extract (All_Jobs, Select_Requirements'Access));
+   end Put_Pending_List;
 
    procedure Put_Pending_List is
       use Slurm.Jobs;
