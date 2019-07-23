@@ -125,7 +125,7 @@ package body Nodegroups is
                      Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                        Class   => "right");
-      HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
+      HTML.Put_Cell (Data    => Integer'Image (Total_Nodes),
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Used_Cores) & " (" &
                                 Str_F.Trim (Integer'Image (Used_Nodes), Str.Left) & ")",
