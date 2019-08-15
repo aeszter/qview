@@ -1,9 +1,7 @@
 with Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with HTML;
 with Lightsout;
-with Ada.Strings.Fixed;
 with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
 with SGE.Host_Properties;
@@ -332,7 +330,7 @@ package body Hosts is
       else
          HTML.Put_Cell (Data => Get_Slaves (J)'Img, Class => "right");
       end if;
-      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+      HTML.Put_Cell (Data => Get_Full_ID (J),
                     Link_Param => "job_id");
       HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
       Ada.Text_IO.Put ("</tr>");
