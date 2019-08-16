@@ -11,6 +11,7 @@ with HTML;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Utils; use Slurm.Utils;
 with Slurm.Bunches;
+with Slurm.Priorities;
 
 package body Jobs is
 
@@ -190,7 +191,9 @@ package body Jobs is
 
    procedure Put (Position : Slurm.Jobs.Cursor) is
       use Slurm.Jobs;
+      use Slurm.Priorities;
       J : Job;
+      Prio : Slurm.Priorities.Priority;
    begin
       if Has_Element (Position) then
          J := Element (Position);
@@ -212,6 +215,12 @@ package body Jobs is
       else
          HTML.Put_Cell ("");
       end if;
+      Prio := Get_Priority (Get_ID (J));
+      HTML.Put_Cell (Prio.Total'Img);
+      HTML.Put_Cell (Prio.Age'Img);
+      HTML.Put_Cell (Prio.Fairshare'Img);
+      HTML.Put_Cell (Prio.Job_Size'Img);
+      HTML.Put_Cell (Prio.Partition'Img);
       Finish_Row (J);
    end Put;
 
@@ -224,16 +233,9 @@ package body Jobs is
    end Put_Core_Header;
 
    procedure Put_Core_Line (J : Job) is
---        Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
    begin
---        if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
-         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
-                        Link_Param => "job_id");
---        else
---           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
---                                        & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
---                          Link_Param => "job_id");
---        end if;
+      HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+                     Link_Param => "job_id");
       HTML.Put_Cell (Data => Get_Project (J));
       HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
@@ -305,11 +307,11 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_name");
          Ada.Text_IO.Put ("<p>");
---           HTML.Put_Img (Name => "hand.right",
---                         Text => "unlock job manipulation",
---                         Link => "#",
---                         Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
-         --         HTML.Put_Paragraph ("Name", Get_Name (J));
+--       HTML.Put_Img (Name => "hand.right",
+--                     Text => "unlock job manipulation",
+--                     Link => "#",
+--                     Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
+--       HTML.Put_Paragraph ("Name", Get_Name (J));
 
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          if Has_Comment (J) then
@@ -346,8 +348,15 @@ package body Jobs is
       end Put_Resources;
 
       procedure Put_Usage is
+         Prio : constant Slurm.Priorities.Priority := Slurm.Priorities.Get_Priority (J => J.Get_ID);
       begin
          HTML.Begin_Div (Class => "job_usage");
+         HTML.Put_Heading ("Priority", 3);
+         HTML.Put_Paragraph ("Total", Prio.Total'Img);
+         HTML.Put_Paragraph ("Age", Prio.Age'Img);
+         HTML.Put_Paragraph ("Fairshare", Prio.Fairshare'Img);
+         HTML.Put_Paragraph ("Size", Prio.Job_Size'Img);
+         HTML.Put_Paragraph ("Partition", Prio.Partition'Img);
          Ada.Text_IO.Put_Line (Get_TRES_Allocated (J));
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
@@ -381,9 +390,17 @@ package body Jobs is
    procedure Put_List (List : Slurm.Jobs.List) is
       use Slurm.Jobs;
    begin
+      Slurm.Priorities.Load;
       Put_Summary (List);
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Cell (Data => "",
+                     Tag  => "th",
+                     Colspan => 10);
+      HTML.Put_Cell (Data => "Priority",
+                     Tag  => "th",
+                     Colspan => 5);
+      Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
       HTML.Put_Header_Cell (Data => "Submitted");
       HTML.Put_Header_Cell (Data => "Tasks");
@@ -392,6 +409,11 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Walltime");
       HTML.Put_Header_Cell (Data => "Priority");
       HTML.Put_Header_Cell (Data => "Start");
+      HTML.Put_Header_Cell (Data => "Total");
+      HTML.Put_Header_Cell (Data => "Age");
+      HTML.Put_Header_Cell (Data => "Fairshare");
+      HTML.Put_Header_Cell (Data => "Size");
+      HTML.Put_Header_Cell (Data => "Partition");
 
       Ada.Text_IO.Put ("</tr>");
       Iterate (List, Put'Access);
