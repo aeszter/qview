@@ -272,7 +272,7 @@ package body Maintenance is
          Host_Start : constant Natural := Index (Source => Message, Pattern => "at host") + 8;
          Host_End   : constant Natural := Message'Last + 1;
       begin
-         if Job_Start > 0 and then Host_Start > 0 then
+         if Job_Start > 7 and then Host_Start > 8 then
             Ada.Text_IO.Put_Line ("<li>" & Message (Message'First .. Job_Start - 1));
             HTML.Put_Link (Text       => Message (Job_Start .. Job_End - 1),
                            Link_Param => "job_id");
