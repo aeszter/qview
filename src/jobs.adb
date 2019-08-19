@@ -190,10 +190,28 @@ package body Jobs is
 --
 
    procedure Put (Position : Slurm.Jobs.Cursor) is
+      procedure Put_Nonzero (N : Integer;
+                             Alternative : String := "");
+
       use Slurm.Jobs;
       use Slurm.Priorities;
       J : Job;
       Prio : Slurm.Priorities.Priority;
+
+      procedure Put_Nonzero (N : Integer;
+                             Alternative : String := "") is
+         use Ada.Strings;
+         use Ada.Strings.Fixed;
+      begin
+         if N /= 0 then
+            HTML.Put_Cell (Data  => Trim (N'Img, Left),
+                           Class => "right");
+         else
+            HTML.Put_Cell (Data  => Alternative,
+                           Class => "right");
+         end if;
+      end Put_Nonzero;
+
    begin
       if Has_Element (Position) then
          J := Element (Position);
@@ -208,19 +226,19 @@ package body Jobs is
       Put_State_Cell (J);
       HTML.Put_Cell (Data => Get_Gres (J));
       HTML.Put_Duration_Cell (Walltime (J));
-      HTML.Put_Cell (Data => Get_Priority (J)'Img,
-                     Class => "right");
+--        HTML.Put_Cell (Data => Get_Priority (J)'Img,
+--                       Class => "right");
       if Has_Start_Time (J) then
          HTML.Put_Time_Cell (Get_Start_Time (J));
       else
          HTML.Put_Cell ("");
       end if;
       Prio := Get_Priority (Get_ID (J));
-      HTML.Put_Cell (Prio.Total'Img);
-      HTML.Put_Cell (Prio.Age'Img);
-      HTML.Put_Cell (Prio.Fairshare'Img);
-      HTML.Put_Cell (Prio.Job_Size'Img);
-      HTML.Put_Cell (Prio.Partition'Img);
+      Put_Nonzero (Prio.Total, Get_Priority (J)'Img);
+      Put_Nonzero (Prio.Age);
+      Put_Nonzero (Prio.Fairshare);
+      Put_Nonzero (Prio.Job_Size);
+      Put_Nonzero (Prio.Partition);
       Finish_Row (J);
    end Put;
 
@@ -396,10 +414,12 @@ package body Jobs is
       Ada.Text_IO.Put ("<table><tr>");
       HTML.Put_Cell (Data => "",
                      Tag  => "th",
-                     Colspan => 10);
+                     Colspan => 10,
+                    Class => "delimited");
       HTML.Put_Cell (Data => "Priority",
                      Tag  => "th",
-                     Colspan => 5);
+                     Colspan => 5,
+                    Class => "delimited");
       Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
       HTML.Put_Header_Cell (Data => "Submitted");
@@ -407,7 +427,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "State");
       HTML.Put_Header_Cell (Data => "Res");
       HTML.Put_Header_Cell (Data => "Walltime");
-      HTML.Put_Header_Cell (Data => "Priority");
+--        HTML.Put_Header_Cell (Data => "Priority");
       HTML.Put_Header_Cell (Data => "Start");
       HTML.Put_Header_Cell (Data => "Total");
       HTML.Put_Header_Cell (Data => "Age");
