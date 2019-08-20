@@ -372,19 +372,21 @@ package body HTML is
    procedure Put_Header_Cell
      (Data     : String;
       Acronym  : String  := "";
-      Sortable : Boolean := True)
+      Sortable : Boolean := True;
+      Colspan  : Positive := 1)
    is
       Dir : String := "dec";
    begin
       if not Sortable then
-         Put_Cell (Data => Data, Acronym => Acronym, Tag => "th");
+         Put_Cell (Data => Data, Acronym => Acronym, Tag => "th", Colspan => Colspan);
       elsif Viewer.Params = "" then
          Put_Cell
            (Data       => Data,
             Acronym    => Acronym,
             Link_Param => "sort",
             Tag        => "th",
-            Class      => "sorter");
+            Class      => "sorter",
+            Colspan    => Colspan);
       elsif Param_Is ("sort", Data) then -- Sorted by this queue, Params exist
          if Standard."=" (CGI.Cookie_Value (Data & "sort"), "dec") then
             Dir := "inc";
@@ -397,14 +399,16 @@ package body HTML is
             Acronym    => Acronym,
             Link_Param => Viewer.Params & "&dir=" & Dir & "&sort",
             Tag        => "th",
-            Class      => "sorter_active");
+            Class      => "sorter_active",
+            Colspan    => Colspan);
       else
          Put_Cell
            (Data       => Data,
             Acronym    => Acronym,
             Link_Param => Viewer.Params & "&sort",
             Tag        => "th",
-            Class      => "sorter");
+            Class      => "sorter",
+            Colspan    => Colspan);
       end if;
    end Put_Header_Cell;
 
