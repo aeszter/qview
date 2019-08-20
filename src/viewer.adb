@@ -71,7 +71,6 @@ package body Viewer is
       procedure View_Jobs_In_Queue (Queue : String);
       procedure View_Maintenance_Report;
       procedure View_Reservations;
-      procedure View_Share_Tree;
       procedure View_Waiting_Jobs;
       procedure View_Running_Jobs;
 
@@ -273,31 +272,6 @@ package body Viewer is
          Jobs.Put_Running_List;
       end View_Running_Jobs;
 
-      procedure View_Share_Tree is
---           Plain_Out : SGE.Spread_Sheets.Spread_Sheet;
---           SGE_Out : Parser.Tree;
-
-      begin
---           Plain_Out := Parser.Setup_No_XML (Command => Trust_As_Command ("sge_share_mon"),
--- Selector => Implicit_Trust ("-f user_name,usage,cpu,ltcpu,mem,io,job_count -c1 -x"));
---           Share_Tree.Append_List (Plain_Out);
---
---           SGE_Out := Parser.Setup (Selector => Implicit_Trust ("-u * -s r -r"));
---           Jobs.Append_List (Get_Job_Nodes_From_Qstat_U (SGE_Out));
---           SGE.Parser.Free;
---           Share_Tree.Read_Current_Status;
---           Share_Tree.Read_Tickets;
---
---           if not HTML.Param_Is ("sort", "") then
---              Share_Tree.Sort_By (Field     => CGI.Value ("sort"),
---                            Direction => Sort_Direction);
---           end if;
-
-         Share_Tree.Put_Summary;
-         Share_Tree.Put_List;
-
-      end View_Share_Tree;
-
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
@@ -412,7 +386,8 @@ package body Viewer is
          elsif HTML.Param_Is ("sharetree", "y") then
             Put_Headers (Title => "User List");
             Set_Params ("sharetree=y");
-            View_Share_Tree;
+            Share_Tree.Put_All (Sort_Field => HTML.Param ("sort"),
+                                Sort_Direction => Sort_Direction);
          end if;
       else
          Put_Headers (Title => "");
