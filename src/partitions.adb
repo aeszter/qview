@@ -13,6 +13,7 @@ package body Partitions is
 
    List : SGE.Partitions.Summarized_List;
    Total_Cores, Total_Hosts : Integer := 0;
+   Total_RAM : SGE.Resources.Gigs := 0.0;
    Used_Slots, Used_Hosts,
    Available_Slots, Available_Hosts,
    Disabled_Slots, Disabled_Hosts,
@@ -22,9 +23,11 @@ package body Partitions is
    procedure Count_Slots (Item : Partition);
 
    procedure Count_Slots (Item : Partition) is
+      use SGE.Resources;
    begin
       Total_Cores := Total_Cores + Get_Total_Slots (Item);
       Total_Hosts := Total_Hosts + Get_Total_Hosts (Item);
+      Total_RAM := Total_RAM + Get_Total_Hosts (Item) * Get_Memory (Item);
       Used_Slots := Used_Slots + Get_Used_Slots (Item);
       Used_Hosts := Used_Hosts + Get_Used_Hosts (Item);
       Available_Slots := Available_Slots + Get_Available_Slots (Item);
@@ -38,6 +41,7 @@ package body Partitions is
    end Count_Slots;
 
    procedure Put_List is
+      use SGE.Resources;
    begin
       Ada.Text_IO.Put_Line ("<table>");
       Ada.Text_IO.Put ("<tr>");
@@ -68,9 +72,12 @@ package body Partitions is
       SGE.Partitions.Iterate (List, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 8);
+                     Colspan => 6);
       HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
+      HTML.Put_Cell (Data    => To_String (Total_RAM / 1_024) & "T",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => "");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                      Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Hosts),
