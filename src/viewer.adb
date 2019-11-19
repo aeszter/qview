@@ -56,6 +56,11 @@ package body Viewer is
       My_Params := To_Unbounded_String (Params);
    end Set_Params;
 
+   function Sort_Field return String is
+   begin
+      return To_String (Sort_String);
+   end Sort_Field;
+
    procedure View is
       procedure Put_Error (Message : String);
       procedure Put_Headers (Title : String);
@@ -168,7 +173,9 @@ package body Viewer is
                        CPUs => Integer'Value (CGI.Value ("cpus")),
                        Gres => To_String (CGI.Value ("gres")),
                        TRES => To_String (CGI.Value ("tres")));
-         Jobs.Put_Pending_List (Requirements);
+         Jobs.Put_Pending_List (Requirements,
+                                Sort_By => Sort_Field,
+                                Direction => Sort_Direction);
       exception
          when E : others =>
             HTML.Error ("Error while viewing bunch of jobs: "
@@ -203,7 +210,8 @@ package body Viewer is
       procedure View_Global_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "All Jobs", Level => 2);
-         Jobs.Put_Global_List;
+         Jobs.Put_Global_List (Sort_By   => Sort_Field,
+                               Direction => Sort_Direction);
       end View_Global_Jobs;
 
       procedure View_Job (Job_ID : String) is
@@ -238,7 +246,9 @@ package body Viewer is
       begin
          CGI.Put_HTML_Heading (Title => "Jobs of " & User,
                                Level => 2);
-         Jobs.Put_User_List (User);
+         Jobs.Put_User_List (User,
+                             Sort_By   => Sort_Field,
+                             Direction => Sort_Direction);
       end View_Jobs_Of_User;
 
       procedure View_Maintenance_Report is
@@ -269,13 +279,15 @@ package body Viewer is
       procedure View_Running_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Running Jobs", Level => 2);
-         Jobs.Put_Running_List;
+         Jobs.Put_Running_List (Sort_By   => Sort_Field,
+                               Direction => Sort_Direction);
       end View_Running_Jobs;
 
       procedure View_Waiting_Jobs is
       begin
          CGI.Put_HTML_Heading (Title => "Pending Jobs", Level => 2);
-         Jobs.Put_Pending_List;
+         Jobs.Put_Pending_List (Sort_By => Sort_Field,
+                                Direction => Sort_Direction);
       end View_Waiting_Jobs;
 
    begin
@@ -283,6 +295,7 @@ package body Viewer is
 --        CM.Debug.Initialize (HTML.Comment'Access);
       begin
          if not HTML.Param_Is ("sort", "") then
+            Sort_String := CGI.Value ("sort");
             if HTML.Param_Is ("dir", "") then
                Sort_Direction := CGI.Cookie_Value (String'(CGI.Value ("sort")) & "sort");
             else

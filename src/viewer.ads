@@ -14,4 +14,6 @@ package Viewer is
 private
    My_Params : Unbounded_String;
    Sort_Direction : String := "inc";
+   Sort_String    : Unbounded_String := Null_Unbounded_String;
+   function Sort_Field return String;
 end Viewer;

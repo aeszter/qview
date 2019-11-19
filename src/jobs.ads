@@ -9,13 +9,14 @@ package Jobs is
 
    procedure Put_Details (ID : Natural);
 --     procedure Put_Time_List;
-   procedure Put_List (List : Slurm.Jobs.List);
-   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements);
-   procedure Put_Global_List;
-   procedure Put_Pending_List;
-   procedure Put_Running_List;
-   procedure Put_User_List (User : String);
-   procedure Put_Summary (List : Slurm.Jobs.List);
+   procedure Put_List (Sort_By, Direction : String);
+   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements;
+                               Sort_By, Direction : String);
+   procedure Put_Global_List (Sort_By, Direction : String);
+   procedure Put_Pending_List (Sort_By, Direction : String);
+   procedure Put_Running_List (Sort_By, Direction : String);
+   procedure Put_User_List (User : String; Sort_By, Direction : String);
+   procedure Put_Summary;
 --     procedure Iterate (Process : not null access procedure (J : Job));
 --
 --     procedure Append_List (Nodes : Node_List; Fix_Posix_Prio : Boolean := False);

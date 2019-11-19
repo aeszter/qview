@@ -16,7 +16,7 @@ with Slurm.Priorities;
 package body Jobs is
 
 --     List : SGE.Jobs.List;
-   procedure Put (Position : Slurm.Jobs.Cursor);
+   procedure Put (J : Job);
    procedure Put_Reason (Flag : Slurm.Jobs.state_reasons);
    procedure Put_State (Flag : Slurm.Jobs.states);
    procedure Put_State (J : Job);
@@ -189,13 +189,12 @@ package body Jobs is
 --
 --
 
-   procedure Put (Position : Slurm.Jobs.Cursor) is
+   procedure Put (J : Job) is
       procedure Put_Nonzero (N : Integer;
                              Alternative : String := "");
 
       use Slurm.Jobs;
       use Slurm.Priorities;
-      J : Job;
       Prio : Slurm.Priorities.Priority;
 
       procedure Put_Nonzero (N : Integer;
@@ -213,11 +212,6 @@ package body Jobs is
       end Put_Nonzero;
 
    begin
-      if Has_Element (Position) then
-         J := Element (Position);
-      else
-         raise Constraint_Error with "no such job";
-      end if;
       Start_Row (J);
       Put_Core_Line (J);
       HTML.Put_Time_Cell (Get_Submission_Time (J));
@@ -260,8 +254,7 @@ package body Jobs is
    end Put_Core_Line;
 
    procedure Put_Details (ID : Natural) is
-      The_List : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
-      J        : constant Job := Slurm.Jobs.Get_Job (The_List, ID);
+      J : Job;
 
 --        procedure Put_Actions;
       procedure Put_Files;
@@ -380,6 +373,8 @@ package body Jobs is
       end Put_Usage;
 
    begin
+      Slurm.Jobs.Load_Jobs;
+      J := Slurm.Jobs.Get_Job (ID);
       HTML.Begin_Div (Class => "job_info");
 
       HTML.Begin_Div (Class => "action_and_name");
@@ -400,16 +395,17 @@ package body Jobs is
       HTML.Put_Clearer;
    end Put_Details;
 
-   procedure Put_Global_List is
+   procedure Put_Global_List (Sort_By, Direction : String) is
    begin
-      Put_List (Slurm.Jobs.Load_Jobs);
+      Slurm.Jobs.Load_Jobs;
+      Put_List (Sort_By, Direction);
    end Put_Global_List;
 
-   procedure Put_List (List : Slurm.Jobs.List) is
+   procedure Put_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
    begin
       Slurm.Priorities.Load;
-      Put_Summary (List);
+      Put_Summary;
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
       HTML.Put_Cell (Data => "",
@@ -436,7 +432,10 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Partition");
 
       Ada.Text_IO.Put ("</tr>");
-      Iterate (List, Put'Access);
+      if Sort_By /= "" then
+         Sort (Sort_By, Direction);
+      end if;
+      Iterate (Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
    exception
@@ -446,10 +445,10 @@ package body Jobs is
       raise;
    end Put_List;
 
-   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements) is
+   procedure Put_Pending_List (Requirements       : Slurm.Bunches.Set_Of_Requirements;
+                               Sort_By, Direction : String) is
       use Slurm.Bunches;
       function Select_Requirements (J : Job) return Boolean;
-      All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
 
       function Select_Requirements (J : Job) return Boolean is
       begin
@@ -460,15 +459,17 @@ package body Jobs is
       end Select_Requirements;
 
    begin
-      Put_List (Extract (All_Jobs, Select_Requirements'Access));
+      Slurm.Jobs.Load_Jobs;
+      Pick (Select_Requirements'Access);
+      Put_List (Sort_By, Direction);
    end Put_Pending_List;
 
-   procedure Put_Pending_List is
+   procedure Put_Pending_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
-      Pending_List : List;
    begin
-      Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
-      Put_List (Pending_List);
+      Load_Jobs;
+      Pick (Is_Pending'Access);
+      Put_List (Sort_By, Direction);
    end Put_Pending_List;
 
    procedure Put_Reason (Flag : Slurm.Jobs.state_reasons) is
@@ -478,12 +479,12 @@ package body Jobs is
       Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
    end Put_Reason;
 
-   procedure Put_Running_List is
+   procedure Put_Running_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
-      Running_List : List;
    begin
-      Running_List := Extract (Source => Load_Jobs, Selector => Is_Running'Access);
-      Put_List (Running_List);
+      Load_Jobs;
+      Pick (Is_Running'Access);
+      Put_List (Sort_By, Direction);
    end Put_Running_List;
 
    procedure Put_State (Flag : Slurm.Jobs.states) is
@@ -534,12 +535,11 @@ package body Jobs is
       end if;
    end Put_State_Cell;
 
-   procedure Put_Summary (List : Slurm.Jobs.List) is
+   procedure Put_Summary is
       Job_Summary, Task_Summary : State_Count;
    begin
-      Slurm.Jobs.Get_Summary (Collection => List,
-                            Jobs => Job_Summary,
-                            Tasks => Task_Summary);
+      Slurm.Jobs.Get_Summary (Jobs => Job_Summary,
+                              Tasks => Task_Summary);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Job_Summary'Range loop
@@ -835,9 +835,11 @@ package body Jobs is
 --     end Put_Usage;
 --
 
-   procedure Put_User_List (User : String) is
+   procedure Put_User_List (User : String; Sort_By, Direction : String) is
    begin
-      Put_List (Slurm.Jobs.Load_User (User));
+      Slurm.Jobs.Load_User (User);
+      Put_List (Sort_By,
+                Direction);
    end Put_User_List;
 
    procedure Start_Row (J : Job) is

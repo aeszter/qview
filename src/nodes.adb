@@ -24,8 +24,6 @@ package body Nodes is
    procedure Put_State (N : Node);
    procedure Put_Error (Message : String);
 
-   All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
-
 --
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
 --     begin
@@ -224,7 +222,7 @@ package body Nodes is
       end Put_System;
 
    begin
-      Add_Jobs (All_Jobs, N);
+      Add_Jobs (N);
       HTML.Begin_Div (Class => "node_info");
       HTML.Begin_Div (Class => "node_head_data");
       Put_System;
@@ -264,7 +262,7 @@ package body Nodes is
    end Put_GPU_Cell;
 
    procedure Put_Jobs (ID : Positive) is
-      J : constant Job := Get_Job (All_Jobs, ID);
+      J : constant Job := Get_Job (ID);
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => ""); -- H.Status
@@ -280,7 +278,7 @@ package body Nodes is
    procedure Put_List (List : Slurm.Nodes.List) is
       With_Jobs : Slurm.Nodes.List := List;
    begin
-      Add_Jobs (All_Jobs, With_Jobs);
+      Add_Jobs (With_Jobs);
       HTML.Put_Heading (Title => "Nodes " & HTML.Help_Icon (Topic => "Node List"),
                         Level => 2);
       HTML.Begin_Div (Class => "host_list");
