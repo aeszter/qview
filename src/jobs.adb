@@ -373,7 +373,6 @@ package body Jobs is
       end Put_Usage;
 
    begin
-      Slurm.Jobs.Load_Jobs;
       J := Slurm.Jobs.Get_Job (ID);
       HTML.Begin_Div (Class => "job_info");
 
@@ -397,7 +396,6 @@ package body Jobs is
 
    procedure Put_Global_List (Sort_By, Direction : String) is
    begin
-      Slurm.Jobs.Load_Jobs;
       Put_List (Sort_By, Direction);
    end Put_Global_List;
 
@@ -459,7 +457,6 @@ package body Jobs is
       end Select_Requirements;
 
    begin
-      Slurm.Jobs.Load_Jobs;
       Pick (Select_Requirements'Access);
       Put_List (Sort_By, Direction);
    end Put_Pending_List;
@@ -467,7 +464,6 @@ package body Jobs is
    procedure Put_Pending_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
    begin
-      Load_Jobs;
       Pick (Is_Pending'Access);
       Put_List (Sort_By, Direction);
    end Put_Pending_List;
@@ -482,7 +478,6 @@ package body Jobs is
    procedure Put_Running_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
    begin
-      Load_Jobs;
       Pick (Is_Running'Access);
       Put_List (Sort_By, Direction);
    end Put_Running_List;
