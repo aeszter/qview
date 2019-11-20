@@ -13,6 +13,7 @@ package body Nodegroups is
 
    All_Groups : Slurm.Nodegroups.Summarized_List;
    Total_Cores, Total_Nodes : Integer := 0;
+   Total_RAM : Gigs := 0.0;
    Used_Cores, Used_Nodes,
    Available_Cores, Available_Nodes,
    Draining_Cores, Draining_Nodes,
@@ -24,6 +25,7 @@ package body Nodegroups is
    begin
       Total_Cores := Total_Cores + Get_Total_Cores (Item);
       Total_Nodes := Total_Nodes + Get_Total_Nodes (Item);
+      Total_RAM := Total_RAM + Get_Total_Nodes (Item) * Get_Memory (Item);
       Used_Cores := Used_Cores + Get_Used_Cores (Item);
       Used_Nodes := Used_Nodes + Get_Used_Nodes (Item);
       Available_Cores := Available_Cores + Get_Available_Cores (Item);
@@ -120,9 +122,11 @@ package body Nodegroups is
       Slurm.Nodegroups.Iterate (Source, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 4);
+                     Colspan => 3);
       HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
+      HTML.Put_Cell (Data    => To_String (Total_RAM / 1_024) & "T",
+                       Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Nodes),

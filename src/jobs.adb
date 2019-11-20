@@ -11,11 +11,12 @@ with HTML;
 with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Utils; use Slurm.Utils;
 with Slurm.Bunches;
+with Slurm.Priorities;
 
 package body Jobs is
 
 --     List : SGE.Jobs.List;
-   procedure Put (Position : Slurm.Jobs.Cursor);
+   procedure Put (J : Job);
    procedure Put_Reason (Flag : Slurm.Jobs.state_reasons);
    procedure Put_State (Flag : Slurm.Jobs.states);
    procedure Put_State (J : Job);
@@ -188,15 +189,29 @@ package body Jobs is
 --
 --
 
-   procedure Put (Position : Slurm.Jobs.Cursor) is
+   procedure Put (J : Job) is
+      procedure Put_Nonzero (N : Integer;
+                             Alternative : String := "");
+
       use Slurm.Jobs;
-      J : Job;
+      use Slurm.Priorities;
+      Prio : Slurm.Priorities.Priority;
+
+      procedure Put_Nonzero (N : Integer;
+                             Alternative : String := "") is
+         use Ada.Strings;
+         use Ada.Strings.Fixed;
+      begin
+         if N /= 0 then
+            HTML.Put_Cell (Data  => Trim (N'Img, Left),
+                           Class => "right");
+         else
+            HTML.Put_Cell (Data  => Alternative,
+                           Class => "right");
+         end if;
+      end Put_Nonzero;
+
    begin
-      if Has_Element (Position) then
-         J := Element (Position);
-      else
-         raise Constraint_Error with "no such job";
-      end if;
       Start_Row (J);
       Put_Core_Line (J);
       HTML.Put_Time_Cell (Get_Submission_Time (J));
@@ -205,13 +220,19 @@ package body Jobs is
       Put_State_Cell (J);
       HTML.Put_Cell (Data => Get_Gres (J));
       HTML.Put_Duration_Cell (Walltime (J));
-      HTML.Put_Cell (Data => Get_Priority (J)'Img,
-                     Class => "right");
+--        HTML.Put_Cell (Data => Get_Priority (J)'Img,
+--                       Class => "right");
       if Has_Start_Time (J) then
          HTML.Put_Time_Cell (Get_Start_Time (J));
       else
          HTML.Put_Cell ("");
       end if;
+      Prio := Get_Priority (Get_ID (J));
+      Put_Nonzero (Prio.Total, Get_Priority (J)'Img);
+      Put_Nonzero (Prio.Age);
+      Put_Nonzero (Prio.Fairshare);
+      Put_Nonzero (Prio.Job_Size);
+      Put_Nonzero (Prio.Partition);
       Finish_Row (J);
    end Put;
 
@@ -224,24 +245,16 @@ package body Jobs is
    end Put_Core_Header;
 
    procedure Put_Core_Line (J : Job) is
---        Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
    begin
---        if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
-         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
-                        Link_Param => "job_id");
---        else
---           HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
---                                        & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
---                          Link_Param => "job_id");
---        end if;
+      HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J)'Img, Ada.Strings.Left),
+                     Link_Param => "job_id");
       HTML.Put_Cell (Data => Get_Project (J));
       HTML.Put_Cell (Data => To_String (Get_Owner (J)), Link_Param => "user");
       HTML.Put_Cell (Data => Name_As_HTML (J));
    end Put_Core_Line;
 
    procedure Put_Details (ID : Natural) is
-      The_List : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
-      J        : constant Job := Slurm.Jobs.Get_Job (The_List, ID);
+      J : Job;
 
 --        procedure Put_Actions;
       procedure Put_Files;
@@ -305,11 +318,11 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_name");
          Ada.Text_IO.Put ("<p>");
---           HTML.Put_Img (Name => "hand.right",
---                         Text => "unlock job manipulation",
---                         Link => "#",
---                         Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
-         --         HTML.Put_Paragraph ("Name", Get_Name (J));
+--       HTML.Put_Img (Name => "hand.right",
+--                     Text => "unlock job manipulation",
+--                     Link => "#",
+--                     Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
+--       HTML.Put_Paragraph ("Name", Get_Name (J));
 
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          if Has_Comment (J) then
@@ -346,13 +359,21 @@ package body Jobs is
       end Put_Resources;
 
       procedure Put_Usage is
+         Prio : constant Slurm.Priorities.Priority := Slurm.Priorities.Get_Priority (J => J.Get_ID);
       begin
          HTML.Begin_Div (Class => "job_usage");
+         HTML.Put_Heading ("Priority", 3);
+         HTML.Put_Paragraph ("Total", Prio.Total'Img);
+         HTML.Put_Paragraph ("Age", Prio.Age'Img);
+         HTML.Put_Paragraph ("Fairshare", Prio.Fairshare'Img);
+         HTML.Put_Paragraph ("Size", Prio.Job_Size'Img);
+         HTML.Put_Paragraph ("Partition", Prio.Partition'Img);
          Ada.Text_IO.Put_Line (Get_TRES_Allocated (J));
          HTML.End_Div (Class => "job_usage");
       end Put_Usage;
 
    begin
+      J := Slurm.Jobs.Get_Job (ID);
       HTML.Begin_Div (Class => "job_info");
 
       HTML.Begin_Div (Class => "action_and_name");
@@ -373,28 +394,46 @@ package body Jobs is
       HTML.Put_Clearer;
    end Put_Details;
 
-   procedure Put_Global_List is
+   procedure Put_Global_List (Sort_By, Direction : String) is
    begin
-      Put_List (Slurm.Jobs.Load_Jobs);
+      Put_List (Sort_By, Direction);
    end Put_Global_List;
 
-   procedure Put_List (List : Slurm.Jobs.List) is
+   procedure Put_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
    begin
-      Put_Summary (List);
+      Slurm.Priorities.Load;
+      Put_Summary;
       HTML.Begin_Div (Class => "job_list");
       Ada.Text_IO.Put ("<table><tr>");
+      HTML.Put_Cell (Data => "",
+                     Tag  => "th",
+                     Colspan => 10,
+                    Class => "delimited");
+      HTML.Put_Cell (Data => "Priority",
+                     Tag  => "th",
+                     Colspan => 5,
+                    Class => "delimited");
+      Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
       HTML.Put_Header_Cell (Data => "Submitted");
       HTML.Put_Header_Cell (Data => "Tasks");
       HTML.Put_Header_Cell (Data => "State");
       HTML.Put_Header_Cell (Data => "Res");
       HTML.Put_Header_Cell (Data => "Walltime");
-      HTML.Put_Header_Cell (Data => "Priority");
+--        HTML.Put_Header_Cell (Data => "Priority");
       HTML.Put_Header_Cell (Data => "Start");
+      HTML.Put_Header_Cell (Data => "Total");
+      HTML.Put_Header_Cell (Data => "Age");
+      HTML.Put_Header_Cell (Data => "Fairshare");
+      HTML.Put_Header_Cell (Data => "Size");
+      HTML.Put_Header_Cell (Data => "Partition");
 
       Ada.Text_IO.Put ("</tr>");
-      Iterate (List, Put'Access);
+      if Sort_By /= "" then
+         Sort (Sort_By, Direction);
+      end if;
+      Iterate (Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "job_list");
    exception
@@ -404,10 +443,10 @@ package body Jobs is
       raise;
    end Put_List;
 
-   procedure Put_Pending_List (Requirements : Slurm.Bunches.Set_Of_Requirements) is
+   procedure Put_Pending_List (Requirements       : Slurm.Bunches.Set_Of_Requirements;
+                               Sort_By, Direction : String) is
       use Slurm.Bunches;
       function Select_Requirements (J : Job) return Boolean;
-      All_Jobs : constant Slurm.Jobs.List := Slurm.Jobs.Load_Jobs;
 
       function Select_Requirements (J : Job) return Boolean is
       begin
@@ -418,15 +457,15 @@ package body Jobs is
       end Select_Requirements;
 
    begin
-      Put_List (Extract (All_Jobs, Select_Requirements'Access));
+      Pick (Select_Requirements'Access);
+      Put_List (Sort_By, Direction);
    end Put_Pending_List;
 
-   procedure Put_Pending_List is
+   procedure Put_Pending_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
-      Pending_List : List;
    begin
-      Pending_List := Extract (Source => Load_Jobs, Selector => Is_Pending'Access);
-      Put_List (Pending_List);
+      Pick (Is_Pending'Access);
+      Put_List (Sort_By, Direction);
    end Put_Pending_List;
 
    procedure Put_Reason (Flag : Slurm.Jobs.state_reasons) is
@@ -436,12 +475,11 @@ package body Jobs is
       Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
    end Put_Reason;
 
-   procedure Put_Running_List is
+   procedure Put_Running_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
-      Running_List : List;
    begin
-      Running_List := Extract (Source => Load_Jobs, Selector => Is_Running'Access);
-      Put_List (Running_List);
+      Pick (Is_Running'Access);
+      Put_List (Sort_By, Direction);
    end Put_Running_List;
 
    procedure Put_State (Flag : Slurm.Jobs.states) is
@@ -492,12 +530,11 @@ package body Jobs is
       end if;
    end Put_State_Cell;
 
-   procedure Put_Summary (List : Slurm.Jobs.List) is
+   procedure Put_Summary is
       Job_Summary, Task_Summary : State_Count;
    begin
-      Slurm.Jobs.Get_Summary (Collection => List,
-                            Jobs => Job_Summary,
-                            Tasks => Task_Summary);
+      Slurm.Jobs.Get_Summary (Jobs => Job_Summary,
+                              Tasks => Task_Summary);
       HTML.Begin_Div (ID => "job_summary");
       Ada.Text_IO.Put ("<ul>");
       for State in Job_Summary'Range loop
@@ -793,9 +830,11 @@ package body Jobs is
 --     end Put_Usage;
 --
 
-   procedure Put_User_List (User : String) is
+   procedure Put_User_List (User : String; Sort_By, Direction : String) is
    begin
-      Put_List (Slurm.Jobs.Load_User (User));
+      Slurm.Jobs.Load_User (User);
+      Put_List (Sort_By,
+                Direction);
    end Put_User_List;
 
    procedure Start_Row (J : Job) is

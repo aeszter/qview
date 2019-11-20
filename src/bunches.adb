@@ -5,9 +5,14 @@ with HTML;
 
 package body Bunches is
 
+   procedure Put_Error (Message : String);
+
    procedure Put (B : Slurm.Bunches.Bunch) is
    begin
-      if not Has_Waiting (B) then
+      if B.Has_Errors then
+         Ada.Text_IO.Put ("<tr class=""program_error"">");
+         B.Iterate_Errors (Put_Error'Access);
+      elsif not Has_Waiting (B) then
          Ada.Text_IO.Put ("<tr class=""job-held"">");
       else
          Ada.Text_IO.Put ("<tr>");
@@ -24,6 +29,7 @@ package body Bunches is
       HTML.Put_Cell (Data => Get_Total_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Waiting_Jobs (B)'Img, Class => "right");
       HTML.Put_Cell (Data => Get_Depending_Jobs (B)'Img, Class => "right");
+      HTML.Put_Cell (Data => Get_Other_Jobs (B)'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
@@ -31,6 +37,11 @@ package body Bunches is
    begin
       Put_List (Slurm.Bunches.Load);
    end Put_All;
+
+   procedure Put_Error (Message : String) is
+   begin
+      HTML.Comment (Message);
+   end Put_Error;
 
    procedure Put_List (Source : Slurm.Bunches.List) is
    begin
@@ -43,6 +54,7 @@ package body Bunches is
       HTML.Put_Cell (Data => "Total", Tag => "th");
       HTML.Put_Cell (Data => "Waiting", Tag => "th");
       HTML.Put_Cell (Data => "Dependency", Tag => "th");
+      HTML.Put_Cell (Data => "Others", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
       Iterate (Source, Put'Access);
       Ada.Text_IO.Put_Line ("</table>");
