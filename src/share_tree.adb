@@ -2,9 +2,12 @@ with HTML;
 with Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
+with Ada.Numerics.Generic_Elementary_Functions;
 with Jobs;
 
 package body Share_Tree is
+
+   package Numerics is new ada.Numerics.Generic_Elementary_Functions (Float);
 
    --------------
    -- Put_List --
@@ -15,18 +18,9 @@ package body Share_Tree is
       HTML.Begin_Div (Class => "share_tree");
       Ada.Text_IO.Put ("<table><tr>");
       HTML.Put_Header_Cell (Data => "User");
-      HTML.Put_Header_Cell (Data => "Usage");
-      HTML.Put_Header_Cell (Data => "Current");
+      HTML.Put_Header_Cell (Data => "Current Usage");
+      HTML.Put_Header_Cell (Data => "Effective Slots", Sortable => False);
       HTML.Put_Header_Cell (Data => "Tickets");
-      HTML.Put_Header_Cell (Data => "CPU",
-                            Acronym => "in CPU years");
-      HTML.Put_Header_Cell (Data => "LT CPU");
-      HTML.Put_Header_Cell (Data => "Memory",
-                            Acronym => "in TB years");
-      HTML.Put_Header_Cell (Data => "IO",
-                            Acronym => "in TB");
-      HTML.Put_Header_Cell (Data => "Job count");
-      HTML.Put_Header_Cell (Data => "raw CPU");
       Ada.Text_IO.Put ("</tr>");
 
       List.Iterate (Put'Access);
@@ -141,6 +135,9 @@ package body Share_Tree is
    procedure Put (Item : Share_Lists.Cursor) is
       User : constant User_Node := Share_Lists.Element (Item);
       Current_Usage : Occupation;
+      Equiv_Slots : Float; -- see Bug #2387
+
+      use Numerics;
    begin
       if 1 > 0 then
          Ada.Text_IO.Put ("<tr class=""hot"">");
@@ -151,7 +148,6 @@ package body Share_Tree is
       end if;
 
       HTML.Put_Cell (Data => To_String (User.User_Name), Link_Param => "user");
-      HTML.Put_Cell (Data => Scale_Usage (User.Usage), Class => "right");
       if Occupation_List.Contains (User.User_Name) then
          Current_Usage := Occupation_List.Element (User.User_Name);
          HTML.Put_Cell (Data => Current_Usage.Slots'Img & " (" & Current_Usage.Tasks'Img & ")",
@@ -160,17 +156,15 @@ package body Share_Tree is
          HTML.Put_Cell ("");
       end if;
       if User.Tickets /= 0 then
+         Equiv_Slots := Exp (9.0 - Float (User.Tickets) / 10_000.0);
+         HTML.Put_Cell (Data => Integer'Image (Integer (Equiv_Slots)),
+                        Class => "right");
          HTML.Put_Cell (Data => User.Tickets'Img,
-                       Class => "right");
+                        Class => "right");
       else
          HTML.Put_Cell ("");
+         HTML.Put_Cell ("");
       end if;
-      HTML.Put_Cell (Data    => Scale_CPU (User.CPU), Class => "right");
-      HTML.Put_Cell (Data => Scale_CPU (User.LT_CPU), Class => "right");
-      HTML.Put_Cell (Data    => Scale_Memory (User.Mem), Class => "right");
-      HTML.Put_Cell (Data    => Scale_IO (User.IO), Class => "right");
-      HTML.Put_Cell (Data => User.Job_Count'Img, Class => "right");
-      HTML.Put_Cell (Data => User.CPU'Img, Class => "right");
       Ada.Text_IO.Put ("</tr>");
    end Put;
 
