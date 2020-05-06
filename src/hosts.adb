@@ -13,7 +13,7 @@ package body Hosts is
 --   use Job_Lists;
 --   use Queue_Maps;
 
-   procedure Put_Swap_Cell (H :Host);
+   procedure Put_Swap_Cell (H : Host);
 
    procedure Put_All is
    begin
@@ -143,6 +143,7 @@ package body Hosts is
          use SGE.Resources;
       begin
          HTML.Begin_Div ("host_properties");
+         HTML.Put_Paragraph ("Kernel", Get_Kernel_Release (H));
          HTML.Put_Paragraph ("Load", Get_Load_One (H)'Img & "," & Get_Load (H)'Img);
          HTML.Put_Paragraph ("Slots used", Get_Used_Slots (H)'Img);
          HTML.Put_Paragraph ("Memory", Get_Memory (H));

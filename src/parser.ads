@@ -6,7 +6,7 @@ with SGE.Taint; use SGE.Taint;
 
 package Parser is
 
-   Resource_Selector : constant Trusted_String := Implicit_Trust ("-F h_rt,eth,ib,ibs,ssd,gpu,mem_total,num_proc,cm,gm,q,slots,gpu_mem");
+   Resource_Selector : constant Trusted_String := Implicit_Trust ("-F h_rt,eth,ib,ibs,ssd,gpu,mem_total,num_proc,cm,gm,q,slots,gpu_mem,kernel_version");
 
    subtype Tree is SGE.Parser.Tree;
    subtype Attr is SGE.Parser.Attr;
