@@ -292,6 +292,8 @@ package body Viewer is
       begin
          CGI.Put_HTML_Heading (Title => "Details of " & Name,
                                Level => 2);
+         Ada.Text_IO.Put_Line ("<a href=""" & CGI.My_URL &
+                            "?search=" & Name & """>similar nodes</a>");
          SGE_Out := Parser.Setup (Command  => Cmd_Qhost,
                                   Selector => Parser.Resource_Selector
                                   & Implicit_Trust (",load_short -q -j -h ") & Sanitise (Name));
