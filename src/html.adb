@@ -20,7 +20,7 @@ package body HTML is
 
    function Acronym (Short, Long : String) return String is
    begin
-      return "<acronym title=""" & Long & """>" & Short & "</acronynm>";
+      return "<acronym title=""" & Long & """>" & Short & "</acronym>";
    end Acronym;
 
    procedure Put_Anchor (Tag : String) is
