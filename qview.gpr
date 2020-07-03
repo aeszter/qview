@@ -47,6 +47,10 @@ project Qview is
 
    end Compiler;
 
+   package Documentation is
+      for Documentation_Dir use "/srv/www/gnatdoc/qview";
+   end Documentation;
+
 --     package Linker is
 --          for Default_Switches ("ada") use ("-lslurm");
 --     end Linker;
