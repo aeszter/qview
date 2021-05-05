@@ -18,6 +18,8 @@ package Lightsout is
    function Get_Bug_ID (From : Host_Name) return String;
    function Get_Bug_ID (From : Host_Name) return Natural;
    function To_String (Source : Maintenance) return String;
+   function Has_Reason (From : Host_Name) return Boolean;
+   function Get_Reason (From : Host_Name) return String;
 
    Config_Error : exception;
 
@@ -26,6 +28,7 @@ private
    type Host is record
       Maintain : Maintenance;
       Bug      : Natural := 0;
+      Reason   : Ada.Strings.Unbounded.Unbounded_String;
    end record;
 
    package Lists is new Ada.Containers.Ordered_Maps (Element_Type => Host,

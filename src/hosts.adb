@@ -136,6 +136,9 @@ package body Hosts is
          Ada.Text_IO.Put_Line (HTML.To_String (Get_Name (H), False) & "</p>");
          Ada.Text_IO.Put_Line ("<p>" & Lightsout.Get_Maintenance (Get_Name (H)));
          Ada.Text_IO.Put_Line (Lightsout.Get_Bug (Get_Name (H)) & "</p>");
+         if Lightsout.Has_Reason (Get_Name (H)) then
+            Ada.Text_IO.Put_Line (" " & Lightsout.Get_Reason (Get_Name (H)));
+         end if;
          HTML.End_Div (Class => "host_name");
       end Put_Name;
 
@@ -280,7 +283,8 @@ package body Hosts is
       Put_Swap_Cell (H);
       Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
-      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)) & " "
+                     & Lightsout.Get_Reason (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
       Iterate_Jobs (H, Put_Jobs'Access);
    exception
@@ -302,7 +306,8 @@ package body Hosts is
       Put_Swap_Cell (H);
       Iterate_Queues (H, Put_Queue'Access);
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
-      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
+      HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)) & " "
+                          & Lightsout.Get_Reason (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
       Iterate_Jobs (H, Put_Jobs'Access);
    exception

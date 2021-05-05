@@ -20,11 +20,21 @@ with Ada.Directories;
 with POSIX; use POSIX;
 
 package body Lightsout is
-   procedure Add_Host (Name : String; Mode : String; Bug : Natural);
+   procedure Add_Host (Name : String; Mode : String; Bug : Natural; Reason : String);
    procedure Lock (Path_Name : String);
+   function Checked_Value (Source : Attr) return String;
 
    Lightsout_File : constant String := "/etc/lights-out.xml";
    Lock_File_Name, Lock_Directory : Unbounded_String;
+
+   function Checked_Value (Source : Attr) return String is
+   begin
+      if Source = null then
+         return "";
+      else
+         return Value (Source);
+      end if;
+   end Checked_Value;
 
    procedure Clear is
    begin
@@ -80,6 +90,24 @@ package body Lightsout is
               & "<img src=""/icons/off.png""></acronym>";
       end case;
    end Get_Maintenance;
+
+   function Get_Reason (From : Host_Name) return String is
+   begin
+      if List.Contains (From) then
+         return To_String (List.Element (From).Reason);
+      else
+         return "";
+      end if;
+   end Get_Reason;
+
+   function Has_Reason (From : Host_Name) return Boolean is
+   begin
+      if List.Contains (From) then
+         return Length (List.Element (From).Reason) /= 0;
+      else
+         return False;
+      end if;
+   end Has_Reason;
 
    procedure Lock is
       use GNAT.Lock_Files;
@@ -142,6 +170,7 @@ package body Lightsout is
                Maint_Attr              : Attr;
                Bug_Attr                : Attr;
                Bug_ID                  : Natural;
+               Reason_Attr             : Attr;
             begin
                Group_Nodes := Child_Nodes (One_Node);
                for J in 0 .. Length (Group_Nodes) - 1 loop
@@ -154,6 +183,7 @@ package body Lightsout is
                   elsif Name (Group_Node) = "nodename" then
                      Maint_Attr := Get_Named_Item (Attributes (Group_Node), "maint");
                      Bug_Attr := Get_Named_Item (Attributes (Group_Node), "bug");
+                     Reason_Attr := Get_Named_Item (Attributes (Group_Node), "reason");
                      if Bug_Attr = null then
                         Bug_ID := 0;
                      else
@@ -161,14 +191,19 @@ package body Lightsout is
                      end if;
                      if Maint_Attr = null then
                         Add_Host (Name => Value (First_Child (Group_Node)),
-                                  Mode => "none", Bug => Bug_ID);
+                                  Mode => "none",
+                                  Reason => Checked_Value (Reason_Attr),
+                                  Bug  => Bug_ID);
                      else
                         Add_Host (Name => Value (First_Child (Group_Node)),
-                                  Mode => Value (Maint_Attr), Bug => Bug_ID);
+                                  Mode => Value (Maint_Attr),
+                                  Reason => Checked_Value (Reason_Attr),
+                                  Bug  => Bug_ID);
                      end if;
                   elsif Name (Group_Node) = "twin" then
                      Maint_Attr := Get_Named_Item (Attributes (Group_Node), "maint");
                      Bug_Attr := Get_Named_Item (Attributes (Group_Node), "bug");
+                     Reason_Attr := Get_Named_Item (Attributes (Group_Node), "reason");
                      if Bug_Attr = null then
                         Bug_ID := 0;
                      else
@@ -179,9 +214,9 @@ package body Lightsout is
                         Sub_Node := Item (Twin_Nodes, J);
                         if Name (Sub_Node) = "nodename" then
                            if Maint_Attr = null then
-                              Add_Host (Value (First_Child (Sub_Node)), "none", Bug_ID);
+                              Add_Host (Value (First_Child (Sub_Node)), "none", Bug_ID, Checked_Value (Reason_Attr));
                            else
-                              Add_Host (Value (First_Child (Sub_Node)), Value (Maint_Attr), Bug_ID);
+                              Add_Host (Value (First_Child (Sub_Node)), Value (Maint_Attr), Bug_ID, Checked_Value (Reason_Attr));
                            end if;
                         end if;
                      end loop;
@@ -204,11 +239,13 @@ package body Lightsout is
          raise Config_Error with "Unable to read config file: " & Exception_Message (E);
    end Read;
 
-   procedure Add_Host (Name : String; Mode : String; Bug : Natural) is
+   procedure Add_Host (Name : String; Mode : String; Bug : Natural; Reason : String) is
       use SGE.Host_Properties;
    begin
       List.Insert (Key => To_Host_Name (Name),
-                   New_Item => (Maintain => Maintenance'Value (Mode), Bug => Bug));
+                   New_Item => (Maintain => Maintenance'Value (Mode),
+                                Bug      => Bug,
+                                Reason   => To_Unbounded_String (Reason)));
    end Add_Host;
 
    function To_String (Source : Maintenance) return String is

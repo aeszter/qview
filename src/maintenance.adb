@@ -60,6 +60,7 @@ package body Maintenance is
       Put_Disabled_Queues;
       Put_Unreachable_Queues;
       Put_Offline_Queues;
+      Put_Reasoned_Offline_Queues;
       Put_Multi_Queues;
       Put_No_Queues;
       Put_Old_Config;
@@ -187,15 +188,31 @@ package body Maintenance is
       HTML.Put_Anchor ("offline");
       HTML.Put_Heading  (Title => "Offline queues",
                          Level => 3);
-      HTML.Put_Heading (Title => "Queue_State has both u and d",
+      HTML.Put_Heading (Title => "Queue_State has both u and d, no reason ist given",
                         Level => 4);
       HTML.Put_Heading (Title => "This includes nodes switched off by lightsout",
                         Level => 4);
       Ada.Text_IO.Put_Line ("<table>");
-      Queues.Put_Selected (Unreachable_Disabled'Access);
+      Queues.Put_Selected (Unreachable_Disabled_No_Reason'Access);
       Ada.Text_IO.Put_Line ("</table>");
       HTML.End_Div (Class => "maintenance");
    end Put_Offline_Queues;
+
+   procedure Put_Reasoned_Offline_Queues is
+   begin
+      HTML.Begin_Div (Class => "maintenance");
+      HTML.Put_Anchor ("reason");
+      HTML.Put_Heading  (Title => "Offline with a Reason",
+                         Level => 3);
+      HTML.Put_Heading (Title => "Queue_State has both u and d, a reason is given",
+                        Level => 4);
+      HTML.Put_Heading (Title => "This includes nodes switched off by lightsout",
+                        Level => 4);
+      Ada.Text_IO.Put_Line ("<table>");
+      Queues.Put_Selected (Unreachable_Disabled_Reason'Access);
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "maintenance");
+   end Put_Reasoned_Offline_Queues;
 
    procedure Put_Old_Config is
    begin
@@ -255,6 +272,7 @@ package body Maintenance is
       Put_Link ("Disabled", "disabled");
       Put_Link ("Unreachable", "unreachable");
       Put_Link ("Offline", "offline");
+      Put_Link ("Reason", "reason");
       Put_Link ("Multiple Queues", "multi_queue");
       Put_Link ("No Queue", "no_queue");
       Put_Link ("Old Config", "old");
@@ -367,10 +385,17 @@ package body Maintenance is
       return Has_Unreachable (Q) and then not Has_Disabled (Q);
    end Unreachable_Enabled;
 
-   function Unreachable_Disabled (Q : Queues.Queue) return Boolean is
+   function Unreachable_Disabled_No_Reason (Q : Queues.Queue) return Boolean is
    begin
-      return Has_Unreachable (Q) and then Has_Disabled (Q);
-   end Unreachable_Disabled;
+      return Has_Unreachable (Q) and then Has_Disabled (Q) and then
+        not Lightsout.Has_Reason (Get_Host_Name (Q));
+   end Unreachable_Disabled_No_Reason;
+
+   function Unreachable_Disabled_Reason (Q : Queues.Queue) return Boolean is
+   begin
+      return Has_Unreachable (Q) and then Has_Disabled (Q) and then
+        Lightsout.Has_Reason (Get_Host_Name(Q));
+   end Unreachable_Disabled_Reason;
 
    function Unusual_Type (Q : Queues.Queue) return Boolean is
    begin

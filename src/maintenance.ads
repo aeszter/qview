@@ -15,6 +15,7 @@ private
    procedure Put_Unreachable_Queues;
    procedure Put_Unusual_Queues;
    procedure Put_Offline_Queues;
+   procedure Put_Reasoned_Offline_Queues;
    procedure Put_Multi_Queues;
    procedure Put_No_Queues;
    procedure Put_Old_Config;
@@ -30,6 +31,7 @@ private
    function In_Error_State (Q : Queues.Queue) return Boolean;
    function Reachable_Disabled (Q : Queues.Queue) return Boolean;
    function Unreachable_Enabled (Q : Queues.Queue) return Boolean;
-   function Unreachable_Disabled (Q : Queues.Queue) return Boolean;
+   function Unreachable_Disabled_Reason (Q : Queues.Queue) return Boolean;
+   function Unreachable_Disabled_No_Reason (Q : Queues.Queue) return Boolean;
    function Unusual_Type (Q : Queues.Queue) return Boolean;
 end Maintenance;

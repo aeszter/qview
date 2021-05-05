@@ -60,6 +60,7 @@ package body Queues is
       HTML.Put_Cell (Get_Type (Q));
       HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Host));
       HTML.Put_Cell (Data => Lightsout.Get_Bug (Host), Class => "right");
+      HTML.Put_Cell (Data       => Lightsout.Get_Reason (Host));
       Ada.Text_IO.Put ("</tr>");
    end Put_For_Maintenance;
 
