@@ -22,10 +22,13 @@ package body Nodegroups is
    procedure Count_Slots (Item : Nodegroup);
 
    procedure Count_Slots (Item : Nodegroup) is
+      Memory : constant Gigs := Get_Memory (Item);
    begin
       Total_Cores := Total_Cores + Get_Total_Cores (Item);
       Total_Nodes := Total_Nodes + Get_Total_Nodes (Item);
-      Total_RAM := Total_RAM + Get_Total_Nodes (Item) * Get_Memory (Item);
+      if Memory < Gigs (100_000) then
+         Total_RAM := Total_RAM + Get_Total_Nodes (Item) * Memory;
+      end if;
       Used_Cores := Used_Cores + Get_Used_Cores (Item);
       Used_Nodes := Used_Nodes + Get_Used_Nodes (Item);
       Available_Cores := Available_Cores + Get_Available_Cores (Item);
