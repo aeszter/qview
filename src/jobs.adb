@@ -396,6 +396,7 @@ package body Jobs is
 
    procedure Put_Global_List (Sort_By, Direction : String) is
    begin
+      Load_Jobs;
       Put_List (Sort_By, Direction);
    end Put_Global_List;
 
