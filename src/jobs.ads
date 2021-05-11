@@ -14,6 +14,7 @@ package Jobs is
                                Sort_By, Direction : String);
    procedure Put_Global_List (Sort_By, Direction : String);
    procedure Put_Pending_List (Sort_By, Direction : String);
+   procedure Put_Reserving_List (Sort_By, Direction : String);
    procedure Put_Running_List (Sort_By, Direction : String);
    procedure Put_User_List (User : String; Sort_By, Direction : String);
    procedure Put_Summary;

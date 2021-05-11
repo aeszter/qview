@@ -8,7 +8,6 @@ with Utils;
 with Jobs; use Jobs;
 with Bunches; use Bunches;
 with Nodes; use Nodes;
-with Reservations;
 with Maintenance;
 with Share_Tree;
 with Diagnostics;
@@ -272,8 +271,9 @@ package body Viewer is
 
       procedure View_Reservations is
       begin
-         Reservations.Read;
-         Reservations.Put_All;
+         CGI.Put_HTML_Heading (Title => "Scheduler", Level => 2);
+         Jobs.Put_Reserving_List (Sort_By   => Sort_Field,
+                                  Direction => Sort_Direction);
       end View_Reservations;
 
       procedure View_Running_Jobs is

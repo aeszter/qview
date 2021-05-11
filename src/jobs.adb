@@ -396,6 +396,7 @@ package body Jobs is
 
    procedure Put_Global_List (Sort_By, Direction : String) is
    begin
+      Load_Jobs;
       Put_List (Sort_By, Direction);
    end Put_Global_List;
 
@@ -474,6 +475,21 @@ package body Jobs is
       Put ("<img src=""/icons/" & Flag'Img & ".png"" ");
       Put ("alt=""" & Flag'Img & """ title=""" & Flag'Img & """ />");
    end Put_Reason;
+
+   procedure Put_Reserving_List (Sort_By, Direction : String) is
+      use Slurm.Jobs;
+      function Is_Reserving (J : Job) return Boolean;
+
+      function Is_Reserving (J : Job) return Boolean is
+      begin
+         return Is_Pending (J) and then
+           Has_Start_Time (J);
+      end Is_Reserving;
+
+   begin
+      Pick (Is_Reserving'Access);
+      Put_List (Sort_By, Direction);
+   end Put_Reserving_List;
 
    procedure Put_Running_List (Sort_By, Direction : String) is
       use Slurm.Jobs;
