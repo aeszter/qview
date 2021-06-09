@@ -215,8 +215,7 @@ package body Jobs is
       Start_Row (J);
       Put_Core_Line (J);
       HTML.Put_Time_Cell (Get_Submission_Time (J));
-      HTML.Put_Cell (Data  => Get_Tasks (J)'Img,
-                Class => "right");
+      Put_Nonzero (Get_Tasks (J));
       Put_State_Cell (J);
       HTML.Put_Cell (Data => Get_Gres (J));
       HTML.Put_Duration_Cell (Walltime (J));
