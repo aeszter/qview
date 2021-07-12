@@ -1,6 +1,6 @@
 
 package Utils is
-   Version : String := "develop"; -- Update Bugzilla when you change this
+   Version : String := "v4.7"; -- Update Bugzilla when you change this
 
    User_Error : exception;
 
