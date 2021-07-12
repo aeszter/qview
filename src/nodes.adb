@@ -97,6 +97,7 @@ package body Nodes is
       HTML.Put_Cell (Data  => Mem_Percentage (N)'Img,
                      Class => "right " & Color_Class (Mem_Percentage (N)));
       Iterate_Partitions (N, Put_Partition'Access);
+      HTML.Put_Cell (Get_Reason (N));
 --        HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
 --        HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
@@ -240,6 +241,32 @@ package body Nodes is
       HTML.Comment (Message);
    end Put_Error;
 
+   procedure Put_For_Maintenance (List : Slurm.Nodes.List) is
+   begin
+      HTML.Begin_Div (Class => "host_list");
+      Ada.Text_IO.Put_Line ("<table><tr>");
+      HTML.Put_Header_Cell (Data     => "State");
+      HTML.Put_Header_Cell (Data     => "Name");
+      HTML.Put_Header_Cell (Data     => "Interconnect");
+      HTML.Put_Header_Cell (Data => "GPU");
+      HTML.Put_Cell (Data     => "CPU" & HTML.Help_Icon (Topic => "CPU Families"),
+                    Tag => "th");
+      HTML.Put_Header_Cell (Data     => "Cores");
+      HTML.Put_Header_Cell (Data     => "Free");
+      HTML.Put_Header_Cell (Data     => "RAM");
+      HTML.Put_Header_Cell (Data     => "Load",
+                           Acronym => "per core");
+      HTML.Put_Header_Cell (Data => "Mem",
+                            Acronym => "% used");
+      HTML.Put_Header_Cell (Data     => "Partitions",
+                            Sortable => False);
+      Ada.Text_IO.Put ("</tr>");
+      Iterate (List, Put'Access);
+      --  Table Footer
+      Ada.Text_IO.Put_Line ("</table>");
+      HTML.End_Div (Class => "host_list");
+   end Put_For_Maintenance;
+
    procedure Put_GPU_Cell (N : Node) is
       use Slurm.Gres;
       use Ada.Strings.Unbounded;
@@ -350,6 +377,13 @@ package body Nodes is
       HTML.Put_Cell (Data => Get_Name (P));
 --      HTML.Put_Img_Cell (Image => Get_State (P));
    end Put_Partition;
+
+   procedure Put_Selected (Selector : not null access function (N : Node) return Boolean) is
+      All_Nodes : Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
+   begin
+      Add_Jobs (All_Nodes);
+      Put_For_Maintenance (Select_Nodes (All_Nodes, Selector));
+   end Put_Selected;
 
    procedure Put_State (N : Node) is
       procedure Put (What : String) renames Ada.Text_IO.put;
