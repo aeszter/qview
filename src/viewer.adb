@@ -151,8 +151,6 @@ package body Viewer is
          HTML.Put_Navigation_Link ("Waiting Jobs", "jobs=waiting");
          HTML.Put_Navigation_Link (Data       => "Running Jobs",
                                    Link_Param => "jobs=running");
-         HTML.Put_Navigation_Link (Data       => "Reservations",
-                                   Link_Param => "ar=y");
          HTML.Put_Navigation_Link (Data       => "Scheduler",
                                    Link_Param => "reservation=y");
          HTML.Put_Navigation_Link (Data       => "Maintenance",
