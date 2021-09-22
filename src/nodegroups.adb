@@ -142,7 +142,7 @@ package body Nodegroups is
                      Colspan => 1);
       HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
-      HTML.Put_Cell (Data => Integer'Image (Total_GPUs) & " (" &
+      HTML.Put_Cell (Data => Integer'Image (Total_GPUs) & " GPUs (" &
                        Str_F.Trim (Integer'Image (Offline_GPUs), Str.Left) & " offline)",
                      Class => "right");
       HTML.Put_Cell (Data    => "");
