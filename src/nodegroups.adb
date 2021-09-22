@@ -1,6 +1,8 @@
+with Ada.Containers;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with Slurm.Gres;
 with Slurm.Utils; use Slurm.Utils;
 with Slurm.Nodegroups; use Slurm.Nodegroups;
 
@@ -13,7 +15,8 @@ package body Nodegroups is
 
    All_Groups : Slurm.Nodegroups.Summarized_List;
    Total_Cores, Total_Nodes : Integer := 0;
-   Total_RAM : Gigs := 0.0;
+   Total_RAM                : Gigs := 0.0;
+   Total_GPUs, Offline_GPUs : Integer := 0;
    Used_Cores, Used_Nodes,
    Available_Cores, Available_Nodes,
    Draining_Cores, Draining_Nodes,
@@ -22,10 +25,21 @@ package body Nodegroups is
    procedure Count_Slots (Item : Nodegroup);
 
    procedure Count_Slots (Item : Nodegroup) is
+      use Ada.Containers;
+      use Slurm.Gres.Lists;
+
       Memory : constant Gigs := Get_Memory (Item);
+      The_GRES : Slurm.Gres.Resource;
    begin
       Total_Cores := Total_Cores + Get_Total_Cores (Item);
       Total_Nodes := Total_Nodes + Get_Total_Nodes (Item);
+      if Length (Get_GRES (Item)) > 0 then
+         The_GRES := First_Element (Get_GRES (Item));
+         if The_GRES.Category = "gpu" then
+            Total_GPUs := Total_GPUs + The_GRES.Number * Get_Total_Nodes (Item);
+            Offline_GPUs := Offline_GPUs + The_GRES.Number * Get_Offline_Nodes (Item);
+         end if;
+      end if;
       if Memory < Gigs (100_000) then
          Total_RAM := Total_RAM + Get_Total_Nodes (Item) * Memory;
       end if;
@@ -125,11 +139,15 @@ package body Nodegroups is
       Slurm.Nodegroups.Iterate (Source, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 3);
+                     Colspan => 1);
       HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
+      HTML.Put_Cell (Data => Integer'Image (Total_GPUs) & " GPUs (" &
+                       Str_F.Trim (Integer'Image (Offline_GPUs), Str.Left) & " offline)",
+                     Class => "right");
+      HTML.Put_Cell (Data    => "");
       HTML.Put_Cell (Data    => To_String (Total_RAM / 1_024) & "T",
-                       Class   => "right");
+                     Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Cores),
                        Class   => "right");
       HTML.Put_Cell (Data    => Integer'Image (Total_Nodes),
