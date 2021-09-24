@@ -13,7 +13,8 @@ package body Partitions is
 
    List : SGE.Partitions.Summarized_List;
    Total_Cores, Total_Hosts : Integer := 0;
-   Total_RAM : SGE.Resources.Gigs := 0.0;
+   Total_RAM                : SGE.Resources.Gigs := 0.0;
+   Total_GPUs, Offline_GPUs : Integer := 0;
    Used_Slots, Used_Hosts,
    Available_Slots, Available_Hosts,
    Disabled_Slots, Disabled_Hosts,
@@ -28,6 +29,8 @@ package body Partitions is
       Total_Cores := Total_Cores + Get_Total_Slots (Item);
       Total_Hosts := Total_Hosts + Get_Total_Hosts (Item);
       Total_RAM := Total_RAM + Get_Total_Hosts (Item) * Get_Memory (Item);
+      Total_GPUs := Total_GPUs + Get_Total_Hosts (Item) * Count_GPUs (Item);
+      Offline_GPUs := Offline_GPUs + Get_Offline_Hosts (Item) * Count_GPUs (Item);
       Used_Slots := Used_Slots + Get_Used_Slots (Item);
       Used_Hosts := Used_Hosts + Get_Used_Hosts (Item);
       Available_Slots := Available_Slots + Get_Available_Slots (Item);
@@ -72,9 +75,14 @@ package body Partitions is
       SGE.Partitions.Iterate (List, Count_Slots'Access);
       Ada.Text_IO.Put_Line ("<tr>");
       HTML.Put_Cell (Data    => "",
-                     Colspan => 6);
+                     Colspan => 2);
       HTML.Put_Cell (Data    => "Totals:",
                      Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Total_GPUs) &
+                       " GPUs (" & Integer'Image (Offline_GPUs) & " offline)",
+                     Class   => "right");
+      HTML.Put_Cell (Data    => "",
+                     Colspan => 3);
       HTML.Put_Cell (Data    => To_String (Total_RAM / 1_024) & "T",
                      Class   => "right");
       HTML.Put_Cell (Data    => "");
