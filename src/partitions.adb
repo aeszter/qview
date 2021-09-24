@@ -1,12 +1,12 @@
 with Ada.Text_IO;
 with HTML; use HTML;
 with CGI;
-with Ada.Strings.Fixed;
 with SGE.Partitions; use SGE.Partitions;
 with SGE.Utils;
 with Ada.Exceptions; use Ada.Exceptions;
 with Queues;
 with SGE.Resources;
+with Utils;
 
 package body Partitions is
    procedure Put_Summary_Item (Item : State);
@@ -121,7 +121,6 @@ package body Partitions is
 
    procedure Put (P : Partition) is
       package Str renames Ada.Strings;
-      package Str_F renames Str.Fixed;
       use SGE.Utils.String_Lists;
       use SGE.Resources;
 
@@ -185,7 +184,7 @@ package body Partitions is
          HTML.Put_Cell (Data => Get_Cores (P)'Img, Class => "right");
       else
          HTML.Put_Cell (Data  => Get_Slots (P)'Img & "/" &
-                          Ada.Strings.Fixed.Trim (Get_Cores (P)'Img, Ada.Strings.Left),
+                          Utils.To_String (Get_Cores (P)),
                         Class => "right");
       end if;
       HTML.Put_Cell (Data => Get_Memory (P) & "G", Class => "right");
@@ -193,17 +192,17 @@ package body Partitions is
       HTML.Put_Cell (Data => P.Get_Total_Slots'Img, Class => "right");
       HTML.Put_Cell (Data => P.Get_Total_Hosts'Img, Class => "right");
       HTML.Put_Cell (Data => P.Get_Used_Slots'Img & " ("
-                     & Str_F.Trim (P.Get_Used_Hosts'Img, Str.Left)
+                     & Utils.To_String (P.Get_Used_Hosts)
                      & ")", Class => "right");
       HTML.Put_Cell (Data => P.Get_Reserved_Slots'Img, Class => "right");
       HTML.Put_Cell (Data  => P.Get_Available_Slots'Img & " ("
-                     & Str_F.Trim (P.Get_Available_Hosts'Img, Str.Left) & ")",
+                     & Utils.To_String (P.Get_Available_Hosts) & ")",
                      Class => "right");
       HTML.Put_Cell (Data  => P.Get_Disabled_Slots'Img
-                     & " (" & Str_F.Trim (P.Get_Disabled_Hosts'Img, Str.Left) & ")",
+                     & " (" & Utils.To_String (P.Get_Disabled_Hosts) & ")",
                      Class => "right");
       HTML.Put_Cell (Data  => P.Get_Offline_Slots'Img
-                     & " (" & Str_F.Trim (P.Get_Offline_Hosts'Img, Str.Left) & ")",
+                     & " (" & Utils.To_String (P.Get_Offline_Hosts) & ")",
                      Class => "right");
       HTML.Put_Cell (Data  => P.Get_Suspended_Slots'Img,
                      Class => "right");

@@ -14,7 +14,7 @@ with Ranges; use Ranges;
 with SGE.Resources;
 with SGE.Utils;
 with SGE.Context;
-
+with Utils;
 
 
 package body Jobs is
@@ -55,7 +55,7 @@ package body Jobs is
          Ada.Text_IO.Put ("<li>");
          Ada.Text_IO.Put (Task_Summary (State)'Img);
          if Slot_Summary (State) > 0 then
-            Ada.Text_IO.Put ("(" & Ada.Strings.Fixed.Trim (Slot_Summary (State)'Img, Ada.Strings.Left) & ")");
+            Ada.Text_IO.Put ("(" & Utils.To_String (Slot_Summary (State)) & ")");
          end if;
          Ada.Text_IO.Put (" ");
          Put_State (Flag => State);
@@ -200,8 +200,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Predecessor (ID : Natural) is
-      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
-                                            Side   => Ada.Strings.Left);
+      S : constant String := Utils.To_String (Source => ID);
    begin
       HTML.Put_Link (Label      => "Predecessor",
                      ID         => S,
@@ -213,8 +212,7 @@ package body Jobs is
    ---------------------
 
    procedure Put_Successor (ID : Natural) is
-      S : constant String := Ada.Strings.Fixed.Trim (Source => ID'Img,
-                                            Side   => Ada.Strings.Left);
+      S : constant String := Utils.To_String (Source => ID);
    begin
       HTML.Put_Link (Label      => "Successor",
                      ID         => S,
@@ -624,11 +622,11 @@ package body Jobs is
       Task_IDs : constant SGE.Ranges.Step_Range_List := Get_Task_IDs (J);
    begin
       if Is_Empty (Task_IDs) or else not Is_Collapsed (Task_IDs) then
-         HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left),
+         HTML.Put_Cell (Data       => Utils.To_String (Get_ID (J)),
                         Link_Param => "job_id");
       else
          HTML.Put_Cell (Data       => Ada.Strings.Fixed.Trim (Get_ID (J), Ada.Strings.Left)
-                                      & "-" & Ada.Strings.Fixed.Trim (Min (Task_IDs)'Img, Ada.Strings.Left),
+                                      & "-" & Utils.To_String (Min (Task_IDs)),
                         Link_Param => "job_id");
       end if;
       for Capability in Balancer_Capability'Range loop

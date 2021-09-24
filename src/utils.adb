@@ -3,6 +3,8 @@ with System;
 with POSIX;
 use POSIX;
 
+with Ada.Strings.Fixed;
+
 package body Utils is
 
    function readlink (path : char_ptr; buf : System.Address; bufsize : size_t)
@@ -21,5 +23,10 @@ package body Utils is
       end if;
       Last := Buffer'First + Integer (Result) - 1;
    end Read_Link;
+
+   function To_String (Source : Integer) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (Source'Img, Ada.Strings.Left);
+   end To_String;
 
 end Utils;

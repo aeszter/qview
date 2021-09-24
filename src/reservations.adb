@@ -7,6 +7,7 @@ with Interfaces.C;
 with Ada.Calendar.Conversions;
 with Ada.Strings.Hash;
 with CGI;
+with Utils;
 
 package body Reservations is
    use Queue_Lists;
@@ -299,7 +300,7 @@ package body Reservations is
       end if;
 
       Ada.Text_IO.Put ("<tr class=""" & Line_Class & """>");
-      HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (Res.Job_ID'Img, Ada.Strings.Left),
+      HTML.Put_Cell (Data => Utils.To_String (Res.Job_ID),
                     Link_Param => "job_id");
       if Res.State = starting then
          if Reserving_Jobs.Contains (Res.Job_ID) then

@@ -6,7 +6,6 @@ with DOM.Readers;
 with Sax.Readers; use Sax.Readers;
 with Input_Sources.File; use Input_Sources.File;
 with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Strings.Fixed;
 with Ada.Streams.Stream_IO;
 with DOM.Core.Documents; use DOM.Core.Documents;
 with DOM.Core.Elements;
@@ -55,9 +54,8 @@ package body Lightsout is
 
    function Get_Bug_ID (From : Host_Name) return String is
       use Ada.Strings;
-      use Ada.Strings.Fixed;
    begin
-      return Trim (Integer'Image (Get_Bug_ID (From)), Left);
+      return Utils.To_String (Get_Bug_ID (From));
    end Get_Bug_ID;
 
    function Get_Bug_ID (From : Host_Name) return Natural is
@@ -68,7 +66,6 @@ package body Lightsout is
          return 0;
       end if;
    end Get_Bug_ID;
-
 
    function Get_Maintenance (From : Host_Name) return String is
       Maint_Status : Maintenance := none;
