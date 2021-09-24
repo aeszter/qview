@@ -6,6 +6,7 @@ with Ada.Calendar; use Ada.Calendar;
 with SGE.Utils;
 with SGE.Host_Properties;
 with SGE.Resources;
+with Utils;
 
 package body Hosts is
 
@@ -144,6 +145,7 @@ package body Hosts is
 
       procedure Put_Properties is
          use SGE.Resources;
+         GPU_Count : Integer := Get_GPU_Count (H);
       begin
          HTML.Begin_Div ("host_properties");
          HTML.Put_Paragraph ("Kernel", Get_Kernel_Release (H));
@@ -153,7 +155,11 @@ package body Hosts is
          HTML.Put_Paragraph ("Network", Get_Network (H));
          HTML.Put_Paragraph ("CPU", To_String (Get_Model (H)));
          HTML.Put_Paragraph ("Cores", Get_Cores (H)'Img);
-         HTML.Put_Paragraph ("GPU", To_String (Get_GPU (H)));
+         if GPU_Count > 1 then
+            HTML.Put_Paragraph ("GPU", String'(utils.To_String (GPU_Count) & ' ' & To_String (Get_GPU (H))));
+         else
+            HTML.Put_Paragraph ("GPU", To_String (Get_GPU (H)));
+         end if;
          HTML.End_Div ("host_properties");
       end Put_Properties;
 
@@ -261,11 +267,16 @@ package body Hosts is
 
    procedure Put (H : Host) is
       use SGE.Resources;
+      GPU_Count : Integer := Get_GPU_Count (H);
    begin
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => Get_Name (H));
       HTML.Put_Cell (Data => Get_Network (H));
-      HTML.Put_Cell (Data => To_String (Get_GPU (H)));
+      if GPU_Count > 1 then
+         HTML.Put_Cell (Data => string'(utils.to_string (gpu_count) & ' ' & To_String (Get_GPU (H))));
+      else
+         HTML.Put_Cell (Data => To_String (Get_GPU (H)));
+      end if;
       HTML.Put_Cell (Data => To_String (Get_Model (H)));
       HTML.Put_Cell (Data => Get_Cores (H)'Img, Class => "right");
       begin

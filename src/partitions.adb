@@ -132,11 +132,13 @@ package body Partitions is
       end Put_Error;
 
       GPU_Present : Boolean;
+      GPU_Count   : Integer;
       Config_Error : Boolean := False;
       GPU_Memory   : constant String := P.Get_GPU_Memory;
    begin
       begin
          GPU_Present := Has_GPU (P);
+         GPU_Count := Count_GPUs (P);
       exception
          when SGE.Utils.Operator_Error =>
             Config_Error := True;
@@ -166,9 +168,9 @@ package body Partitions is
 
       HTML.Put_Cell (Data => Get_Network (P));
       Ada.Text_IO.Put ("<td>");
-      if GPU_Present then
+      for I in 1 .. GPU_Count loop
          Ada.Text_IO.Put (HTML.Img_Tag ("GPU"));
-      end if;
+      end loop;
       if Has_SSD (P) then
          Ada.Text_IO.Put (HTML.Img_Tag ("SSD"));
       end if;
