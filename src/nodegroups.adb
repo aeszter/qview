@@ -18,9 +18,8 @@ package body Nodegroups is
    Total_RAM                : Gigs := 0.0;
    Total_GPUs, Offline_GPUs : Integer := 0;
    Used_Cores, Used_Nodes,
-   Available_Cores, Available_Nodes,
-   Draining_Cores, Draining_Nodes,
-   Offline_Cores, Offline_Nodes : Integer := 0;
+   Available_Cores, Available_Nodes, Draining_Nodes,
+   Drained_Nodes, Offline_Nodes : Integer := 0;
 
    procedure Count_Slots (Item : Nodegroup);
 
@@ -47,9 +46,8 @@ package body Nodegroups is
       Used_Nodes := Used_Nodes + Get_Used_Nodes (Item);
       Available_Cores := Available_Cores + Get_Available_Cores (Item);
       Available_Nodes := Available_Nodes + Get_Available_Nodes (Item);
-      Draining_Cores := Draining_Cores + Get_Drained_Cores (Item);
-      Draining_Nodes := Draining_Nodes + Get_Drained_Nodes (Item);
-      Offline_Cores := Offline_Cores + Get_Offline_Cores (Item);
+      Draining_Nodes := Draining_Nodes + Get_Draining_Nodes (Item);
+      Drained_Nodes := Drained_Nodes + Get_Drained_Nodes (Item);
       Offline_Nodes := Offline_Nodes + Get_Offline_Nodes (Item);
    end Count_Slots;
 
@@ -95,11 +93,11 @@ package body Nodegroups is
       HTML.Put_Cell (Data  => Get_Available_Cores (G)'Img & " ("
                      & Str_F.Trim (Get_Available_Nodes (G)'Img, Str.Left) & ")",
                      Class => "right");
-      HTML.Put_Cell (Data  => Get_Drained_Cores (G)'Img
-                     & " (" & Str_F.Trim (Get_Drained_Nodes (G)'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data  => Get_Draining_Nodes (G)'Img,
                      Class => "right");
-      HTML.Put_Cell (Data  => Get_Offline_Cores (G)'Img
-                     & " (" & Str_F.Trim (Get_Offline_Nodes (G)'Img, Str.Left) & ")",
+      HTML.Put_Cell (Data  => Get_Drained_Nodes (G)'Img,
+                     Class => "right");
+      HTML.Put_Cell (Data  => Get_Offline_Nodes (G)'Img,
                      Class => "right");
       Ada.Text_IO.Put ("</tr>");
       if G.Has_Errors then
@@ -133,6 +131,8 @@ package body Nodegroups is
       HTML.Put_Cell (Data => "Available", Tag => "th");
       HTML.Put_Cell (Data => "Draining",
                      Tag  => "th");
+      HTML.Put_Cell (Data => "Drained",
+                     Tag  => "th");
       HTML.Put_Cell ("Offline", Tag => "th");
       Ada.Text_IO.Put_Line ("</tr>");
       Slurm.Nodegroups.Iterate (Source, Put'Access);
@@ -158,11 +158,11 @@ package body Nodegroups is
       HTML.Put_Cell (Data    => Integer'Image (Available_Cores) & " (" &
                                 Str_F.Trim (Integer'Image (Available_Nodes), Str.Left) & ")",
                        Class   => "right");
-      HTML.Put_Cell (Data    => Integer'Image (Draining_Cores) & " (" &
-                                Str_F.Trim (Integer'Image (Draining_Nodes), Str.Left) & ")",
+      HTML.Put_Cell (Data    => Integer'Image (Draining_Nodes),
                        Class   => "right");
-      HTML.Put_Cell (Data    => Integer'Image (Offline_Cores) & " (" &
-                                Str_F.Trim (Integer'Image (Offline_Nodes), Str.Left) & ")",
+      HTML.Put_Cell (Data    => Integer'Image (Drained_Nodes),
+                       Class   => "right");
+      HTML.Put_Cell (Data    => Integer'Image (Offline_Nodes),
                        Class   => "right");
       Ada.Text_IO.Put_Line ("</tr><tr>");
       HTML.Put_Cell (Data    => "");
