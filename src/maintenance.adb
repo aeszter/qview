@@ -8,7 +8,7 @@ with Ada.Strings.Fixed;
 
 with Slurm.Nodes;
 use Slurm.Nodes;
-with Slurm.Node_Properties; use Slurm.Node_Properties;
+with Slurm.Hostlists; use Slurm.Hostlists;
 with Slurm.Utils; use Slurm.Utils;
 with Nodes;
 

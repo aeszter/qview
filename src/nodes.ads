@@ -20,6 +20,6 @@ private
    procedure Put_Partition (P : Slurm.Partitions.Partition);
 
 --     procedure Put (H : SGE.Hosts.Host);
-   procedure Put_Jobs (ID : Positive);
+   procedure Put_Jobs (ID : Positive; N : Node);
 --     procedure Put_For_Maintenance (H : SGE.Hosts.Host);
 end Nodes;

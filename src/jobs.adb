@@ -340,6 +340,7 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_queue");
 
          HTML.Put_Paragraph ("Partition", Get_Partition (J));
+         HTML.Put_Paragraph ("Batch Host", Get_Batch_Host (J));
          HTML.Put_Heading ("Nodes", 3);
          HTML.Put_List (Get_Nodes (J));
          HTML.Put_Paragraph ("CPUs", Get_CPUs (J)'Img);

@@ -9,8 +9,7 @@ with Ada.Real_Time;
 --  with SGE.Queues;
 --  with SGE.Utils; use SGE.Utils.String_Lists; use SGE.Utils.String_Sets;
 --  use SGE.Utils.String_Pairs;
-with Slurm.Node_Properties;
-use Slurm.Node_Properties;
+with Slurm.Hostlists; use Slurm.Hostlists;
 with Slurm.Utils;
 with Viewer;
 with Utils;
@@ -459,8 +458,8 @@ package body HTML is
                             "?" & Link_Param & "=" & Text & """>" & Text & "</a>");
    end Put_Link;
 
-   procedure Put_List (List : Slurm.Node_Properties.Name_Set) is
-      use Slurm.Node_Properties.Name_Sets;
+   procedure Put_List (List : Slurm.Hostlists.Hostlist) is
+      use Slurm.Hostlists.Name_Sets;
 
       Elem : Name_Sets.Cursor;
    begin

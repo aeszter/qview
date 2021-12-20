@@ -11,6 +11,7 @@ use Slurm.Utils;
 with HTML;
 with Utils;
 with Slurm.Node_Properties; use Slurm.Node_Properties;
+with Slurm.Hostlists; use Slurm.Hostlists;
 with Slurm.Tres;
 
 package body Nodes is
@@ -288,7 +289,7 @@ package body Nodes is
       Ada.Text_IO.Put ("</td>");
    end Put_GPU_Cell;
 
-   procedure Put_Jobs (ID : Positive) is
+   procedure Put_Jobs (ID : Positive; N : Node) is
       J : constant Job := Get_Job (ID);
    begin
       Ada.Text_IO.Put ("<tr>");
@@ -299,6 +300,9 @@ package body Nodes is
       HTML.Put_Cell (Data => Ada.Strings.Fixed.Trim (ID'Img, Ada.Strings.Left),
                     Link_Param => "job_id");
       HTML.Put_Duration_Cell (Ada.Calendar.Clock - Get_Start_Time (J));
+      if Get_Batch_Host (J) = N.Get_Name then
+         HTML.Put_Img_Cell ("batch_host");
+      end if;
       Ada.Text_IO.Put ("</tr>");
    end Put_Jobs;
 
