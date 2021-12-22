@@ -169,7 +169,10 @@ package body Viewer is
          Slurm.Bunches.Init (Requirements,
                        CPUs => Integer'Value (CGI.Value ("cpus")),
                        Gres => To_String (CGI.Value ("gres")),
-                       TRES => To_String (CGI.Value ("tres")));
+                             TRES => To_String (CGI.Value ("tres")));
+         Append_Params ("cpus=" & CGI.Value ("cpus"));
+         Append_Params ("gres=" & CGI.Value ("gres"));
+         Append_Params ("tres=" & CGI. Value ("tres"));
          Jobs.Put_Pending_List (Requirements,
                                 Sort_By => Sort_Field,
                                 Direction => Sort_Direction);

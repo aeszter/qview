@@ -2,9 +2,9 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 with Calendar;
 with CGI; use CGI;
-with Slurm.Node_Properties;
 with Slurm.Utils; use Slurm.Utils;
 with Slurm.Gres;
+with Slurm.Hostlists;
 with Slurm.Tres;
 
 package HTML is
@@ -66,7 +66,7 @@ package HTML is
 --
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set);
    procedure Put_List (List : String_Sets.Set);
-   procedure Put_List (List : Slurm.Node_Properties.Name_Set);
+   procedure Put_List (List : Slurm.Hostlists.Hostlist);
 --     procedure Put_List (List : String_Pairs.Map);
    --  output a string list, set, or map as a <ul>; if List is empty, output a proper icon instead
    procedure Put_List_Head;

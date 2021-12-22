@@ -12,6 +12,7 @@ with Slurm.Jobs; use Slurm.Jobs;
 with Slurm.Utils; use Slurm.Utils;
 with Slurm.Bunches;
 with Slurm.Priorities;
+with Slurm.Hostlists;
 
 package body Jobs is
 
@@ -336,10 +337,12 @@ package body Jobs is
       end Put_Name;
 
       procedure Put_Queues is
+         use Slurm.Hostlists;
       begin
          HTML.Begin_Div (Class => "job_queue");
 
          HTML.Put_Paragraph ("Partition", Get_Partition (J));
+         HTML.Put_Paragraph ("Batch Host", To_String (Get_Batch_Host (J)));
          HTML.Put_Heading ("Nodes", 3);
          HTML.Put_List (Get_Nodes (J));
          HTML.Put_Paragraph ("CPUs", Get_CPUs (J)'Img);
@@ -352,8 +355,9 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_resources");
          HTML.Put_Paragraph ("Share", Has_Share (J));
-         Ada.Text_IO.Put_Line (Get_Gres (J));
-         Ada.Text_IO.Put_Line (Get_TRES_Request (J));
+         HTML.Put_Paragraph ("GRES", Get_Gres (J));
+         HTML.Put_Paragraph ("Request", Get_TRES_Request (J));
+         HTML.Put_Paragraph ("per node", Get_TRES_Per_Node (J));
          HTML.End_Div (Class => "job_resources");
       end Put_Resources;
 
