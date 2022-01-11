@@ -456,7 +456,8 @@ package body Jobs is
       begin
          return Is_Pending (J) and then
            Get_CPUs (J) = Get_CPUs (Requirements) and then
-           Get_Gres (J) = Get_Gres (Requirements) and then
+           (Get_Gres (J) = Get_Gres (Requirements) or else
+               Get_TRES_Per_Node (J) = Get_Gres (Requirements)) and then
            Get_TRES_Request (J) = Get_TRES (Requirements);
       end Select_Requirements;
 
