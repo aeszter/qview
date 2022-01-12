@@ -229,6 +229,9 @@ package body Viewer is
          Jobs.Put_User_List (User,
                              Sort_By   => Sort_Field,
                              Direction => Sort_Direction);
+      exception
+         when Constraint_Error =>
+            Ada.Text_IO.Put_Line ("User not found");
       end View_Jobs_Of_User;
 
       procedure View_Maintenance_Report is
