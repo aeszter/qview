@@ -540,12 +540,19 @@ package body Jobs is
                                                    Params => "j="
                                                    & Get_ID (J)'Img) & """>clear error</a>");
       else
-         if Get_State (J) = JOB_PENDING and then
-           Get_State_Reason (J) = WAIT_DEPENDENCY
-         then
-            HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
+         if Get_State (J) = JOB_PENDING then
+            if Get_State_Reason (J) = WAIT_DEPENDENCY
+            then
+               HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
+            elsif Get_State_Reason (J) = WAIT_ARRAY_TASK_LIMIT
+            then
+               HTML.Put_Img_Cell ("WAIT_ARRAY_TASK_LIMIT");
+            else
+               HTML.Put_Img_Cell (Get_State (J));
+            end if;
          else
-            HTML.Put_Img_Cell (Get_State (J));
+               HTML.Put_Img_Cell (Get_State (J));
+
          end if;
       end if;
    end Put_State_Cell;

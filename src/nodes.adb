@@ -13,6 +13,7 @@ with Utils;
 with Slurm.Node_Properties; use Slurm.Node_Properties;
 with Slurm.Hostlists; use Slurm.Hostlists;
 with Slurm.Tres;
+with Ada.Exceptions; use Ada.Exceptions;
 
 package body Nodes is
 
@@ -236,6 +237,27 @@ package body Nodes is
       HTML.Put_Clearer;
       HTML. End_Div (Class => "node_info");
    end Put_Details;
+
+   procedure Put_Equivalent (Name : String) is
+      function Select_Equivalent (Item : Node) return Boolean;
+
+      All_Nodes : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
+      Source_Node : Node;
+      Props       : Set_Of_Properties;
+
+      function Select_Equivalent (Item : Node) return Boolean is
+      begin
+         return Get_Properties (Item) = Props;
+      end Select_Equivalent;
+
+   begin
+      Source_Node := Get_Node (All_Nodes, Name);
+      Props := Get_Properties (Source_Node);
+      Put_List (Select_Nodes (All_Nodes, Select_Equivalent'Access));
+   exception
+      when E : Constraint_Error =>
+         Ada.Text_IO.Put_Line (Exception_Message (E));
+   end Put_Equivalent;
 
    procedure Put_Error (Message : String) is
    begin

@@ -10,6 +10,7 @@ package Nodes is
    procedure Put_List (List : Slurm.Nodes.List);
    procedure Put_For_Maintenance (List : Slurm.Nodes.List);
    procedure Put_List (Properties : Slurm.Node_Properties.Set_Of_Properties);
+   procedure Put_Equivalent (Name : String);
    function Explain_State (S : states) return String;
 
    procedure Init (Properties : out Slurm.Node_Properties.Set_Of_Properties;

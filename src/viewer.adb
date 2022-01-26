@@ -183,28 +183,8 @@ package body Viewer is
       end View_Bunch;
 
       procedure View_Equivalent_Hosts (Host_Name : String) is
-         pragma Unreferenced (Host_Name);
---           procedure View_One_Queue (Q : SGE.Queues.Queue);
---           SGE_Out : Parser.Tree;
---           Props   : Set_Of_Properties;
---
---           procedure View_One_Queue (Q : SGE.Queues.Queue) is
---           begin
---              Props := SGE.Queues.Get_Properties (Q);
---              Set_Runtime (Props   => Props,
---                           Runtime => Null_Unbounded_String); -- not used, see Bug #1495
---              View_Hosts (Props => Props, Slots => SGE.Queues.Get_Slot_Count (Q));
---           end View_One_Queue;
-
       begin
---           SGE_Out := Parser.Setup (Selector => Parser.Resource_Selector
---                                    & Implicit_Trust (" -q *@") & Sanitise (Host_Name));
---           Queues.Append_List (Get_Elements_By_Tag_Name (SGE_Out, "Queue-List"));
---           SGE.Parser.Free;
---
---           Queues.Iterate (Process => View_One_Queue'Access);
-         HTML.Put_Paragraph (Label    => "View_Equivalent_Hosts",
-                             Contents => "unimplemented");
+         Nodes.Put_Equivalent (Host_Name);
       end View_Equivalent_Hosts;
 
       procedure View_Global_Jobs is
@@ -249,6 +229,9 @@ package body Viewer is
          Jobs.Put_User_List (User,
                              Sort_By   => Sort_Field,
                              Direction => Sort_Direction);
+      exception
+         when Constraint_Error =>
+            Ada.Text_IO.Put_Line ("User not found");
       end View_Jobs_Of_User;
 
       procedure View_Maintenance_Report is
