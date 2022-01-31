@@ -143,6 +143,7 @@ package body Partitions is
          when SGE.Utils.Operator_Error =>
             Config_Error := True;
             GPU_Present := False;
+            GPU_Count := 0;
       end;
       if Get_Available_Hosts (P) > 0 then
          Ada.Text_IO.Put ("<tr class=""available"">");
