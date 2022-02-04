@@ -546,12 +546,12 @@ package body Jobs is
                                                    & Get_ID (J)'Img) & """>clear error</a>");
       else
          if Get_State (J) = JOB_PENDING then
-            if Get_State_Reason (J) = WAIT_DEPENDENCY
-            then
+            if Get_State_Reason (J) = WAIT_DEPENDENCY             then
                HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
-            elsif Get_State_Reason (J) = WAIT_ARRAY_TASK_LIMIT
-            then
+            elsif Get_State_Reason (J) = WAIT_ARRAY_TASK_LIMIT             then
                HTML.Put_Img_Cell ("WAIT_ARRAY_TASK_LIMIT");
+            elsif Get_State_Reason (J) = WAIT_ASSOC_GRP_JOB then
+               HTML.Put_Img_Cell ("WAIT_QUOTA");
             else
                HTML.Put_Img_Cell (Get_State (J));
             end if;
@@ -870,14 +870,13 @@ package body Jobs is
    end Put_User_List;
 
    procedure Start_Row (J : Job) is
-      pragma Unreferenced (J);
    begin
       Ada.Text_IO.Put ("<tr");
---        if Has_Error_Log_Entries (J) then
---           Ada.Text_IO.Put (" class=""program_error""");
---        elsif Quota_Inhibited (J) and then not Is_Running (J) then
---           Ada.Text_IO.Put (" class=""job-quota""");
---        end if;
+      if Has_Errors (J) then
+         Ada.Text_IO.Put (" class=""program_error""");
+      elsif Quota_Inhibited (J) then
+         Ada.Text_IO.Put (" class=""job-quota""");
+      end if;
       Ada.Text_IO.Put_Line (">");
    end Start_Row;
 
