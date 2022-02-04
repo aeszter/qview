@@ -197,6 +197,7 @@ package body Jobs is
       use Slurm.Jobs;
       use Slurm.Priorities;
       Prio : Slurm.Priorities.Priority;
+      GRES : constant String := J.Get_Gres;
 
       procedure Put_Nonzero (N : Integer;
                              Alternative : String := "") is
@@ -218,7 +219,11 @@ package body Jobs is
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       Put_Nonzero (Get_Tasks (J));
       Put_State_Cell (J);
-      HTML.Put_Cell (Data => Get_Gres (J));
+      if GRES /= "" then
+         HTML.Put_Cell (Data => Get_Gres (J));
+      else
+         HTML.Put_Cell (Data => Get_TRES_Per_Node (J));
+      end if;
       HTML.Put_Duration_Cell (Walltime (J));
 --        HTML.Put_Cell (Data => Get_Priority (J)'Img,
 --                       Class => "right");
