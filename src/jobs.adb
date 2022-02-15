@@ -197,6 +197,7 @@ package body Jobs is
       use Slurm.Jobs;
       use Slurm.Priorities;
       Prio : Slurm.Priorities.Priority;
+      GRES : constant String := J.Get_Gres;
 
       procedure Put_Nonzero (N : Integer;
                              Alternative : String := "") is
@@ -218,7 +219,11 @@ package body Jobs is
       HTML.Put_Time_Cell (Get_Submission_Time (J));
       Put_Nonzero (Get_Tasks (J));
       Put_State_Cell (J);
-      HTML.Put_Cell (Data => Get_Gres (J));
+      if GRES /= "" then
+         HTML.Put_Cell (Data => Get_Gres (J));
+      else
+         HTML.Put_Cell (Data => Get_TRES_Per_Node (J));
+      end if;
       HTML.Put_Duration_Cell (Walltime (J));
 --        HTML.Put_Cell (Data => Get_Priority (J)'Img,
 --                       Class => "right");
@@ -532,6 +537,7 @@ package body Jobs is
    end Put_State;
 
    procedure Put_State_Cell (J : Job) is
+      use Ada.Strings.Fixed;
    begin
       if Has_Error (J) then
          HTML.Put_Img_Cell (Get_State (J),
@@ -541,12 +547,15 @@ package body Jobs is
                                                    & Get_ID (J)'Img) & """>clear error</a>");
       else
          if Get_State (J) = JOB_PENDING then
-            if Get_State_Reason (J) = WAIT_DEPENDENCY
-            then
+            if Get_State_Reason (J) = WAIT_DEPENDENCY             then
                HTML.Put_Img_Cell ("WAIT_DEPENDENCY");
-            elsif Get_State_Reason (J) = WAIT_ARRAY_TASK_LIMIT
-            then
+            elsif Get_State_Reason (J) = WAIT_ARRAY_TASK_LIMIT             then
                HTML.Put_Img_Cell ("WAIT_ARRAY_TASK_LIMIT");
+            elsif Get_State_Reason (J) = WAIT_ASSOC_GRP_JOB then
+               HTML.Put_Img_Cell ("WAIT_QUOTA");
+            elsif Get_State_Reason (J) /= WAIT_NO_REASON then
+               HTML.Put_Img_Cell (Trim (Get_State_Reason (J)'Img,
+                                  Ada.Strings.Left));
             else
                HTML.Put_Img_Cell (Get_State (J));
             end if;
@@ -865,14 +874,13 @@ package body Jobs is
    end Put_User_List;
 
    procedure Start_Row (J : Job) is
-      pragma Unreferenced (J);
    begin
       Ada.Text_IO.Put ("<tr");
---        if Has_Error_Log_Entries (J) then
---           Ada.Text_IO.Put (" class=""program_error""");
---        elsif Quota_Inhibited (J) and then not Is_Running (J) then
---           Ada.Text_IO.Put (" class=""job-quota""");
---        end if;
+      if Has_Errors (J) then
+         Ada.Text_IO.Put (" class=""program_error""");
+      elsif Quota_Inhibited (J) then
+         Ada.Text_IO.Put (" class=""job-quota""");
+      end if;
       Ada.Text_IO.Put_Line (">");
    end Start_Row;
 
