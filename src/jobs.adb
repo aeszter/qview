@@ -537,6 +537,7 @@ package body Jobs is
    end Put_State;
 
    procedure Put_State_Cell (J : Job) is
+      use Ada.Strings.Fixed;
    begin
       if Has_Error (J) then
          HTML.Put_Img_Cell (Get_State (J),
@@ -552,6 +553,9 @@ package body Jobs is
                HTML.Put_Img_Cell ("WAIT_ARRAY_TASK_LIMIT");
             elsif Get_State_Reason (J) = WAIT_ASSOC_GRP_JOB then
                HTML.Put_Img_Cell ("WAIT_QUOTA");
+            elsif Get_State_Reason (J) /= WAIT_NO_REASON then
+               HTML.Put_Img_Cell (Trim (Get_State_Reason (J)'Img,
+                                  Ada.Strings.Left));
             else
                HTML.Put_Img_Cell (Get_State (J));
             end if;
