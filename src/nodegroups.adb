@@ -81,7 +81,11 @@ package body Nodegroups is
                      & "&mem=" & To_String (Get_Memory (G))
                      & """><img src=""/icons/arrow_right.png"" /></a>");
 
-      HTML.Put_Cell (Data => Get_Features (G));
+      if Has_IB (G) then
+         HTML.Put_Cell ("IB");
+      else
+         HTML.Put_Cell ("");
+      end if;
       HTML.Put_Cell (Data => HTML.To_String (Get_GRES (G), 1));
       HTML.Put_Cell (Data => Get_CPUs (G)'Img, Class => "right");
       HTML.Put_Cell (Data => To_String (Get_Memory (G)) & "G", Class => "right");
