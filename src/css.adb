@@ -3,8 +3,35 @@ with CGI;
 
 package body CSS is
 
-   procedure Put_Anchor;
+   procedure Hide_List;
    procedure Put_Body;
+
+   procedure      Put_Page;
+   procedure    Put_Header;
+   procedure    Put_Footer;
+   procedure     Put_Navigation;
+   procedure     Put_Anchor;
+   procedure     Put_Content;
+   procedure   Put_Cluster_Queues;
+   procedure   Put_Job_Actions;
+   procedure    Put_Job_Name;
+   procedure    Put_Job_Meta;
+   procedure Put_Job_Files;
+   procedure    Put_Job_Queue;
+   procedure     Put_Job_Resources;
+   procedure Put_List;
+   procedure Put_Collapsable;
+   procedure Put_Maintenance;
+   procedure   Put_Table_Padding;
+   procedure     Put_Table_Cells;
+   procedure     Put_Headings;
+   procedure    Put_Job_Lists;
+   procedure    Put_Job_Paragraphs;
+   procedure    Put_Images;
+   procedure   Put_Sorters;
+   procedure   Put_Error;
+   procedure   Put_Clearer;
+   procedure Put_Line (Item : String);
 
    Header_Border       : constant String := "2px solid #444";
    Standard_Border     : constant String := "2px solid #a0a0a0;";
@@ -17,35 +44,11 @@ package body CSS is
    Standard_Background : constant String := "background: #e0e0e0;";
    Box_Background      : constant String := "background: #e8e8e8;";
 
-   procedure Put_Line (Item : String) is
-   begin
-      if Block_Is_Open then
-         Ada.Text_IO.Put ("  ");
-      end if;
-
-      Ada.Text_IO.Put_Line (Item);
-   end Put_Line;
-
-   procedure Open_Block (Name : String) is
-   begin
-      Put_Line ("");
-      Put_Line (Name & " {");
-      Block_Is_Open := True;
-   end Open_Block;
-
    procedure Close_Block is
    begin
       Block_Is_Open := False;
       Put_Line ("}");
    end Close_Block;
-
-   procedure Put_Anchor is
-   begin
-      Open_Block ("a.unmarked");
-      Put_Line ("color: #000;");
-      Put_Line ("text-decoration: none;");
-      Close_Block;
-   end Put_Anchor;
 
    procedure Hide_List is
    begin
@@ -55,6 +58,52 @@ package body CSS is
       Put_Line ("margin: 5px 10px 0 10px;");
       Put_Line ("line-height: 12px;");
    end Hide_List;
+
+   procedure Open_Block (Name : String) is
+   begin
+      Put_Line ("");
+      Put_Line (Name & " {");
+      Block_Is_Open := True;
+   end Open_Block;
+
+   procedure Put is
+   begin
+      CGI.Put_CGI_Header;
+      Put_Body;
+      Put_Page;
+      Put_Header;
+      Put_Footer;
+      Put_Navigation;
+      Put_Anchor;
+      Put_Content;
+      Put_Cluster_Queues;
+      Put_Job_Actions;
+      Put_Job_Name;
+      Put_Job_Meta;
+      Put_Job_Files;
+      Put_Job_Queue;
+      Put_Job_Resources;
+      Put_List;
+      Put_Collapsable;
+      Put_Maintenance;
+      Put_Table_Padding;
+      Put_Table_Cells;
+      Put_Headings;
+      Put_Job_Lists;
+      Put_Job_Paragraphs;
+      Put_Images;
+      Put_Sorters;
+      Put_Error;
+      Put_Clearer;
+   end Put;
+
+   procedure Put_Anchor is
+   begin
+      Open_Block ("a.unmarked");
+      Put_Line ("color: #000;");
+      Put_Line ("text-decoration: none;");
+      Close_Block;
+   end Put_Anchor;
 
    --------------
    -- Put_Body --
@@ -71,29 +120,73 @@ package body CSS is
       Close_Block;
    end Put_Body;
 
-   procedure Put_Page is
+   procedure Put_Clearer is
    begin
-      Open_Block ("#page");
-      Put_Line ("padding: 0 0 20px 0;");
-      Put_Line (Full_Width);
-      Put_Line ("position: relative;");
-      Put_Line ("text-align: left;");
-      Put_Line ("background: #d5d6d7;");
+      Open_Block (".clearer");
+      Put_Line ("display: hidden;");
+      Put_Line ("clear: both;");
       Close_Block;
-   end Put_Page;
+   end Put_Clearer;
 
-   procedure Put_Header is
+   procedure Put_Cluster_Queues is
    begin
-      Open_Block ("#header");
+      Open_Block (".cqueues");
       Put_Line ("position: relative;");
-      Put_Line ("float: center;");
-      Put_Line ("margin: 0;");
-      Put_Line ("padding: 1px 0 0 0;");
-      Put_Line ("height: 9em;");
-      Put_Line (Full_Width);
-      Put_Line ("border-bottom: " & Header_Border & ";");
+      Put_Line ("border: " & Standard_Border);
+      Put_Line (Standard_Background);
+      Put_Line ("padding: 5px;");
+      Put_Line ("width: 30em;");
       Close_Block;
-   end Put_Header;
+   end Put_Cluster_Queues;
+
+   procedure Put_Collapsable is
+   begin
+      Open_Block ("#collapse, #expand");
+      Put_Line ("display: none;");
+      Close_Block;
+
+      Open_Block ("#collapse ~ * .isl, #collapse ~ * .coll");
+      Put_Line ("visibility: collapse;");
+      Close_Block;
+      Open_Block ("#collapse:target ~ * .isl, #collapse:target ~ * .coll");
+      Put_Line ("visibility: visible;");
+      Close_Block;
+      Open_Block ("#axpand:target ~ * .isl, #axpand:target ~ * .coll");
+      Put_Line ("visibility: collapse;");
+      Close_Block;
+      Open_Block ("#collapse ~ * .exp");
+      Put_Line ("visibility: visible");
+      Close_Block;
+      Open_Block ("#collapse:target ~ * .exp");
+      Put_Line ("visibility: collapse");
+      Close_Block;
+      Open_Block ("#expand:target ~ * .exp");
+      Put_Line ("visibility: visible");
+      Close_Block;
+   end Put_Collapsable;
+
+   procedure Put_Content is
+   begin
+      Open_Block ("#content");
+      Put_Line ("font-size: 1.0em;");
+      Put_Line ("float: center;");
+      Put_Line ("position: relative;");
+      Put_Line ("left: 25px;");
+      Put_Line ("top: 20px;");
+      Put_Line ("margin-bottom: 20px;");
+      Put_Line ("padding: 0px;");
+      Put_Line (Content_Width);
+      Close_Block;
+   end Put_Content;
+
+   procedure Put_Error is
+   begin
+      Open_Block (".error");
+      Put_Line ("color :#e00;");
+      Put_Line ("font-weight: bold;");
+      Put_Line ("font-style: italic;");
+      Close_Block;
+   end Put_Error;
 
    procedure  Put_Footer is
    begin
@@ -114,6 +207,212 @@ package body CSS is
       Put_Line ("text-decoration: none;");
       Close_Block;
    end Put_Footer;
+
+   procedure Put_Header is
+   begin
+      Open_Block ("#header");
+      Put_Line ("position: relative;");
+      Put_Line ("float: center;");
+      Put_Line ("margin: 0;");
+      Put_Line ("padding: 1px 0 0 0;");
+      Put_Line ("height: 9em;");
+      Put_Line (Full_Width);
+      Put_Line ("border-bottom: " & Header_Border & ";");
+      Close_Block;
+   end Put_Header;
+
+   procedure Put_Headings is
+   begin
+      Open_Block ("h1");
+      Put_Line ("text-align: center;");
+      Close_Block;
+      Open_Block ("h3");
+      Put_Line ("margin: 5px 5px 8px 5px;");
+      Put_Line ("font-size: 0.9em;");
+      Close_Block;
+      Open_Block ("h4");
+      Put_Line ("font-size: 0.6em;");
+      Put_Line ("font-style: italic;");
+      Put_Line ("color: #888;");
+      Close_Block;
+   end Put_Headings;
+
+   procedure Put_Images is
+   begin
+      Open_Block ("#content img");
+      Put_Line ("border: 0;");
+      Put_Line ("margin: 0;");
+      Put_Line ("padding: 0;");
+      Put_Line ("position: relative;");
+      Close_Block;
+
+      Open_Block (".job_info img, .job_list img, .nodegroups img, "
+               & " .host_list img, .bunches img, #job_summary img");
+      Put_Line ("vertical-align: bottom;");
+      Close_Block;
+   end Put_Images;
+
+   procedure Put_Job_Actions is
+   begin
+      Open_Block ("#job_actions, #host_actions, #unlocker");
+      Put_Line ("width: 16px;");
+      Put_Line (Box_Background);
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
+      Put_Line ("margin: 3px;");
+      Put_Line ("padding: 3px;");
+      Put_Line ("overflow: hidden;");
+      Close_Block;
+
+      Open_Block ("#host_actions");
+      Put_Line ("width: 80px;");
+      Close_Block;
+
+      Open_Block ("#job_actions, #host_actions");
+      Put_Line ("display: none;");
+      Close_Block;
+
+      Open_Block ("#job_actions:target, #host_actions:target");
+      Put_Line ("display: block;");
+      Close_Block;
+
+      Open_Block (".action_and_name, .node_head_data");
+      Put_Line ("display: -webkit-flex;");
+      Put_Line ("display: flex;");
+      Put_Line ("margin-bottom: 10px;");
+      Close_Block;
+   end Put_Job_Actions;
+
+   procedure Put_Job_Files is
+   begin
+      Open_Block (".job_files, .host_res");
+      Put_Line ("clear: both;");
+      Put_Line ("position: relative;");
+      Put_Line ("bottom: 0;");
+      Put_Line (Widest_Box_Width);
+      Put_Line (Box_Background);
+      Put_Line ("margin: 3px;");
+      Put_Line ("padding: 3px;");
+      Close_Block;
+   end Put_Job_Files;
+
+   procedure Put_Job_Lists is
+   begin
+      Open_Block (".job_info ul, .ar_info ul");
+      Put_Line ("margin-top: 0;");
+      Put_Line ("padding-left: 15px;");
+      Put_Line ("list-style-type: none;");
+      Put_Line ("list-style-image: none;");
+      Put_Line ("font-size: 0.85em;");
+      Close_Block;
+   end Put_Job_Lists;
+
+   procedure Put_Job_Meta is
+   begin
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs, "
+               & ".node_slurm, .node_usage, .node_resources, .node_jobs");
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
+      Put_Line (Box_Background);
+      Put_Line ("margin: 3px;");
+      Close_Block;
+      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .node_slurm, "
+               & ".node_usage, .node_resource, .node_jobs");
+      Put_Line (Small_Box_Width);
+      Close_Block;
+      Open_Block (".host_jobs");
+      Put_Line ("width : 16em;");
+      Close_Block;
+   end Put_Job_Meta;
+
+   procedure Put_Job_Name is
+   begin
+      Open_Block (".job_name, .ar_name, .host_name, .node_system");
+      Put_Line ("font-weight: bold;");
+      Put_Line ("width: 63em;");
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
+      Put_Line (Box_Background);
+      Put_Line ("margin: 3px;");
+      Put_Line ("overflow: hidden;");
+      Close_Block;
+   end Put_Job_Name;
+
+   procedure Put_Job_Paragraphs is
+   begin
+      Open_Block (".job_info p, .ar_info p, .host_info p, .node_info p");
+      Put_Line ("margin: 5px;");
+      Put_Line ("height: 1.2em;");
+      Put_Line ("font-size: 0.85em;");
+      Put_Line ("padding: 0;");
+      Put_Line ("line-height: 1em;");
+      Close_Block;
+
+      Open_Block (".job_name p, .ar_name p, .node_system p");
+      Put_Line ("margin: 10px;");
+--  /*line-height: 10px;*/
+      Close_Block;
+
+      Open_Block ("p.message");
+      Put_Line ("font-weight: normal;");
+      Put_Line ("font-style: italic;");
+      Close_Block;
+   end Put_Job_Paragraphs;
+
+   procedure Put_Job_Queue is
+   begin
+      Open_Block (".job_queue, .ar_queue, .host_queues, .node_hardware");
+      Put_Line (Small_Box_Width);
+      Put_Line ("position: relative;");
+      Put_Line ("float: left;");
+      Put_Line ("background: #e8e8e8;");
+      Put_Line ("margin: 3px;");
+      Close_Block;
+   end Put_Job_Queue;
+
+   procedure Put_Job_Resources is
+   begin
+      Open_Block (".job_resources, .ar_resources, .job_context");
+      Put_Line ("position: relative;");
+      Put_Line ("width: 17em;");
+      Put_Line (Box_Background);
+      Put_Line ("margin: 3px;");
+      Close_Block;
+      Open_Block (".res_and_context");
+      Put_Line ("float: left;");
+      Close_Block;
+   end Put_Job_Resources;
+
+   procedure Put_Line (Item : String) is
+   begin
+      if Block_Is_Open then
+         Ada.Text_IO.Put ("  ");
+      end if;
+
+      Ada.Text_IO.Put_Line (Item);
+   end Put_Line;
+
+   procedure Put_List is
+   begin
+      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, "
+                     & ".nodegroups, .bunches, .node_info");
+      Put_Line ("position: relative;");
+      Put_Line ("border: " & Standard_Border);
+      Put_Line (Standard_Background);
+      Put_Line ("padding: 5px;");
+      Put_Line ("margin: 10px 0 10px 0;");
+      Close_Block;
+   end Put_List;
+
+   procedure Put_Maintenance is
+   begin
+      Open_Block (".maintenance");
+      Put_Line ("border: " & Standard_Border);
+      Put_Line (Standard_Background);
+      Put_Line ("padding: 5px;");
+      Put_Line ("margin: 10px 0 10px 0;");
+      Close_Block;
+   end Put_Maintenance;
 
    procedure Put_Navigation is
    begin
@@ -148,161 +447,38 @@ package body CSS is
       Close_Block;
    end Put_Navigation;
 
-
-   procedure Put_Content is
+   procedure Put_Page is
    begin
-      Open_Block ("#content");
-      Put_Line ("font-size: 1.0em;");
-      Put_Line ("float: center;");
+      Open_Block ("#page");
+      Put_Line ("padding: 0 0 20px 0;");
+      Put_Line (Full_Width);
       Put_Line ("position: relative;");
-      Put_Line ("left: 25px;");
-      Put_Line ("top: 20px;");
-      Put_Line ("margin-bottom: 20px;");
-      Put_Line ("padding: 0px;");
-      Put_Line (Content_Width);
+      Put_Line ("text-align: left;");
+      Put_Line ("background: #d5d6d7;");
       Close_Block;
-   end Put_Content;
+   end Put_Page;
 
-   procedure Put_Cluster_Queues is
+   procedure Put_Sorters is
    begin
-      Open_Block (".cqueues");
-      Put_Line ("position: relative;");
-      Put_Line ("border: " & Standard_Border);
-      Put_Line (Standard_Background);
-      Put_Line ("padding: 5px;");
-      Put_Line ("width: 30em;");
+      Open_Block (".sorter a:visited, .sorter a");
+      Put_Line ("text-decoration: none;");
+      Put_Line ("line-height: 1.6em;");
+      Put_Line ("color: #555;");
       Close_Block;
-   end Put_Cluster_Queues;
-
-   procedure Put_Job_Actions is
-   begin
-      Open_Block ("#job_actions, #host_actions, #unlocker");
-      Put_Line ("width: 16px;");
-      Put_Line (Box_Background);
-      Put_Line ("position: relative;");
-      Put_Line ("float: left;");
-      Put_Line ("margin: 3px;");
-      Put_Line ("padding: 3px;");
-      Put_Line ("overflow: hidden;");
+      Open_Block (".sorter a:hover");
+      Put_Line ("text-decoration: none;");
+      Put_Line ("color: #00f;");
       Close_Block;
 
-      Open_Block ("#host_actions");
-      Put_Line ("width: 80px;");
+      Open_Block (".sorter_active a, .sorter_active a:visited");
+      Put_Line ("text-decoration: none;");
+      Put_Line ("color: #d11;");
       Close_Block;
-
-      Open_Block ("#job_actions, #host_actions");
-      Put_Line ("display: none;");
-      Close_Block;
-
-      Open_Block ("#job_actions:target, #host_actions:target");
-      Put_Line ("display: block;");
-      Close_Block;
-
-      Open_Block (".action_and_name, .node_head_data");
-      Put_Line ("display: -webkit-flex;");
-      Put_Line ("display: flex;");
-      Put_Line ("margin-bottom: 10px;");
-      Close_Block;
-   end Put_Job_Actions;
-
-   procedure Put_Job_Name is
-   begin
-      Open_Block (".job_name, .ar_name, .host_name, .node_system");
-      Put_Line ("font-weight: bold;");
-      Put_Line ("width: 63em;");
-      Put_Line ("position: relative;");
-      Put_Line ("float: left;");
-      Put_Line (Box_Background);
-      Put_Line ("margin: 3px;");
-      Put_Line ("overflow: hidden;");
-      Close_Block;
-   end Put_Job_Name;
-
-   procedure Put_Job_Meta is
-   begin
-      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .host_jobs, "
-               &".node_slurm, .node_usage, .node_resources, .node_jobs");
-      Put_Line ("position: relative;");
-      Put_Line ("float: left;");
-      Put_Line (Box_Background);
-      Put_Line ("margin: 3px;");
-      Close_Block;
-      Open_Block (".job_meta, .ar_meta, .job_usage, .host_properties, .node_slurm, "
-               & ".node_usage, .node_resource, .node_jobs");
-      Put_Line (Small_Box_Width);
-      Close_Block;
-      Open_Block (".host_jobs");
-      Put_Line ("width : 16em;");
-      Close_Block;
-   end Put_Job_Meta;
-
-   procedure Put_Job_Files is
-   begin
-      Open_Block (".job_files, .host_res");
-      Put_Line ("clear: both;");
-      Put_Line ("position: relative;");
-      Put_Line ("bottom: 0;");
-      Put_Line (Widest_Box_Width);
-      Put_Line (Box_Background);
-      Put_Line ("margin: 3px;");
-      Put_Line ("padding: 3px;");
-      Close_Block;
-   end Put_Job_Files;
-
-   procedure Put_Job_Queue is
-   begin
-      Open_Block (".job_queue, .ar_queue, .host_queues, .node_hardware");
-      Put_Line (Small_Box_Width);
-      Put_Line ("position: relative;");
-      Put_Line ("float: left;");
-      Put_Line ("background: #e8e8e8;");
-      Put_Line ("margin: 3px;");
-      Close_Block;
-   end Put_Job_Queue;
-
-   procedure Put_Job_Resources is
-   begin
-      Open_Block (".job_resources, .ar_resources, .job_context");
-      Put_Line ("position: relative;");
-      Put_Line ("width: 17em;");
-      Put_Line (Box_Background);
-      Put_Line ("margin: 3px;");
-      Close_Block;
-      Open_Block (".res_and_context");
-      Put_Line ("float: left;");
-      Close_Block;
-   end Put_Job_Resources;
-
-   procedure Put_List is
-   begin
-      Open_Block (".job_info, .ar_info, .host_info, .job_list, .ar_list, .nodegroups, .bunches, .node_info");
-      Put_Line ("position: relative;");
-      Put_Line ("border: " & Standard_Border);
-      Put_Line (Standard_Background);
-      Put_Line ("padding: 5px;");
-      Put_Line ("margin: 10px 0 10px 0;");
-      Close_Block;
-   end Put_List;
-
-   procedure Put_Maintenance is
-   begin
-      Open_Block (".maintenance");
-      Put_Line ("border: " & Standard_Border);
-      Put_Line (Standard_Background);
-      Put_Line ("padding: 5px;");
-      Put_Line ("margin: 10px 0 10px 0;");
-      Close_Block;
-   end Put_Maintenance;
-
-
-   procedure Put_Table_Padding is
-   begin
-      Open_Block (".nodegoups td, .bunches td");
-      Put_Line ("padding: 1px 3, .node_slurm, .node_usagepx 1px 5px;");
-      Close_Block;
-   end Put_Table_Padding;
+   end Put_Sorters;
 
    procedure Put_Table_Cells is
+      procedure Put_Background (Name : String; Colour : String);
+
       procedure Put_Background (Name : String; Colour : String) is
       begin
          Open_Block (Name);
@@ -343,135 +519,11 @@ package body CSS is
       Put_Background (".pct_hot, .load_extreme", "#d00");
    end Put_Table_Cells;
 
-   procedure Put_Headings is
+   procedure Put_Table_Padding is
    begin
-      Open_Block ("h1");
-      Put_Line ("text-align: center;");
+      Open_Block (".nodegoups td, .bunches td");
+      Put_Line ("padding: 1px 3, .node_slurm, .node_usagepx 1px 5px;");
       Close_Block;
-      Open_Block ("h3");
-      Put_Line ("margin: 5px 5px 8px 5px;");
-      Put_Line ("font-size: 0.9em;");
-      Close_Block;
-      Open_Block ("h4");
-      Put_Line ("font-size: 0.6em;");
-      Put_Line ("font-style: italic;");
-      Put_Line ("color: #888;");
-      Close_Block;
-   end Put_Headings;
-
-   procedure Put_Job_Lists is
-   begin
-      Open_Block (".job_info ul, .ar_info ul");
-      Put_Line ("margin-top: 0;");
-      Put_Line ("padding-left: 15px;");
-      Put_Line ("list-style-type: none;");
-      Put_Line ("list-style-image: none;");
-      Put_Line ("font-size: 0.85em;");
-      Close_Block;
-   end Put_Job_Lists;
-
-   procedure Put_Job_Paragraphs is
-   begin
-      Open_Block (".job_info p, .ar_info p, .host_info p, .node_info p");
-      Put_Line ("margin: 5px;");
-      Put_Line ("height: 1.2em;");
-      Put_Line ("font-size: 0.85em;");
-      Put_Line ("padding: 0;");
-      Put_Line ("line-height: 1em;");
-      Close_Block;
-
-      Open_Block (".job_name p, .ar_name p, .node_system p");
-      Put_Line ("margin: 10px;");
---  /*line-height: 10px;*/
-      Close_Block;
-
-      Open_Block ("p.message");
-      Put_Line ("font-weight: normal;");
-      Put_Line ("font-style: italic;");
-      Close_Block;
-   end Put_Job_Paragraphs;
-
-   procedure Put_Images is
-   begin
-      Open_Block ("#content img");
-      Put_Line ("border: 0;");
-      Put_Line ("margin: 0;");
-      Put_Line ("padding: 0;");
-      Put_Line ("position: relative;");
-      Close_Block;
-
-      Open_Block (".job_info img, .job_list img, .nodegroups img, .host_list img, .bunches img, #job_summary img");
-      Put_Line ("vertical-align: bottom;");
-      Close_Block;
-   end Put_Images;
-
-   procedure Put_Sorters is
-   begin
-      Open_Block (".sorter a:visited, .sorter a");
-      Put_Line ("text-decoration: none;");
-      Put_Line ("line-height: 1.6em;");
-      Put_Line ("color: #555;");
-      Close_Block;
-      Open_Block (".sorter a:hover");
-      Put_Line ("text-decoration: none;");
-      Put_Line ("color: #00f;");
-      Close_Block;
-
-      Open_Block (".sorter_active a, .sorter_active a:visited");
-      Put_Line ("text-decoration: none;");
-      Put_Line ("color: #d11;");
-      Close_Block;
-   end Put_Sorters;
-
-   procedure Put_Error is
-   begin
-      Open_Block (".error");
-      Put_Line ("color :#e00;");
-      Put_Line ("font-weight: bold;");
-      Put_Line ("font-style: italic;");
-      Close_Block;
-   end Put_Error;
-
-   procedure Put_Clearer is
-   begin
-      Open_Block (".clearer");
-      Put_Line ("display: hidden;");
-      Put_Line ("clear: both;");
-      Close_Block;
-   end Put_Clearer;
-
-   ---------
-   -- Put --
-   ---------
-
-   procedure Put is
-   begin
-      CGI.Put_CGI_Header;
-      Put_Body;
-      Put_Page;
-      Put_Header;
-      Put_Footer;
-      Put_Navigation;
-      Put_Anchor;
-      Put_Content;
-      Put_Cluster_Queues;
-      Put_Job_Actions;
-      Put_Job_Name;
-      Put_Job_Meta;
-      Put_Job_Files;
-      Put_Job_Queue;
-      Put_Job_Resources;
-      Put_List;
-      Put_Maintenance;
-      Put_Table_Padding;
-      Put_Table_Cells;
-      Put_Headings;
-      Put_Job_Lists;
-      Put_Job_Paragraphs;
-      Put_Images;
-      Put_Sorters;
-      Put_Error;
-      Put_Clearer;
-   end Put;
+   end Put_Table_Padding;
 
 end CSS;

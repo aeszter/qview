@@ -30,6 +30,9 @@ package body Nodegroups is
       Memory : constant Gigs := Get_Memory (Item);
       The_GRES : Slurm.Gres.Resource;
    begin
+      if Item.Is_Meta_Group then
+         return;
+      end if;
       Total_Cores := Total_Cores + Get_Total_Cores (Item);
       Total_Nodes := Total_Nodes + Get_Total_Nodes (Item);
       if Length (Get_GRES (Item)) > 0 then
@@ -61,30 +64,51 @@ package body Nodegroups is
          HTML.Comment (Message);
       end Put_Error;
 
-   begin
-      if G.Has_Errors then
-         Ada.Text_IO.Put ("<tr class=""program_error"">");
-      elsif Get_Available_Nodes (G) > 0 then
-         Ada.Text_IO.Put ("<tr class=""available"">");
-      elsif Get_Available_Cores (G) > 0 then
-         Ada.Text_IO.Put ("<tr class=""slots_available"">");
-      elsif Get_Offline_Cores (G) = Get_Total_Cores (G) then
-         Ada.Text_IO.Put ("<tr class=""offline"">");
-      else
-         Ada.Text_IO.Put ("<tr>");
-      end if;
-      HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?nodes=group"
-                     & "&gres=" & HTML.To_Web_String (Get_GRES (G))
-                     & "&tres=" & HTML.To_Web_String (Get_TRES (G))
-                     & "&features=" & Get_Features (G)
-                     & "&cores=" & Get_CPUs (G)'Img
-                     & "&mem=" & To_String (Get_Memory (G))
-                     & """><img src=""/icons/arrow_right.png"" /></a>");
+      Extra_Class : Unbounded_String := Null_Unbounded_String;
 
-      if Has_IB (G) then
-         HTML.Put_Cell ("IB");
+   begin
+      if G.Has_IB and then not G.Is_Meta_Group then
+         Extra_Class := To_Unbounded_String (" isl");
+      end if;
+      if G.Has_Errors then
+         Ada.Text_IO.Put ("<tr class=""program_error" & To_String (Extra_Class)
+                          & """>");
+      elsif Get_Available_Nodes (G) > 0 then
+         Ada.Text_IO.Put ("<tr class=""available" & To_String (Extra_Class)
+                          & """>");
+      elsif Get_Available_Cores (G) > 0 then
+         Ada.Text_IO.Put ("<tr class=""slots_available" & To_String (Extra_Class)
+                          & """>");
+      elsif Get_Offline_Cores (G) = Get_Total_Cores (G) then
+         Ada.Text_IO.Put ("<tr class=""offline" & To_String (Extra_Class)
+                          & """>");
+      elsif Extra_Class = "" then
+         Ada.Text_IO.Put ("<tr>");
       else
-         HTML.Put_Cell ("");
+         Ada.Text_IO.Put ("<tr class=""" & To_String (Extra_Class) & """>");
+      end if;
+      if Is_Meta_Group (G) then
+         HTML.Put_Cell (Data => "<a href=""#collapse"">"
+                        & "<img class=""exp"" src=""/icons/arrow_right.png"" /></a>"
+                        & "<a href=""#expand"">"
+                        & "<img class=""coll"" src=""/icons/arrow_left.png"" /></a>");
+      else
+         HTML.Put_Cell (Data => "<a href=""" & CGI.My_URL & "?nodes=group"
+                        & "&gres=" & HTML.To_Web_String (Get_GRES (G))
+                        & "&tres=" & HTML.To_Web_String (Get_TRES (G))
+                        & "&features=" & Get_Features (G)
+                        & "&cores=" & Get_CPUs (G)'Img
+                        & "&mem=" & To_String (Get_Memory (G))
+                        & """><img src=""/icons/arrow_right.png"" /></a>");
+      end if;
+      if Is_Meta_Group (G) then
+         if Has_IB (G) then
+            HTML.Put_Cell ("IB");
+         else
+            HTML.Put_Cell ("");
+         end if;
+      else
+         HTML.Put_Cell (Get_Features (G));
       end if;
       HTML.Put_Cell (Data => HTML.To_String (Get_GRES (G), 1));
       HTML.Put_Cell (Data => Get_CPUs (G)'Img, Class => "right");
@@ -120,6 +144,10 @@ package body Nodegroups is
       package Str renames Ada.Strings;
       package Str_F renames Str.Fixed;
    begin
+      HTML.Begin_Div (ID => "collapse");
+      HTML.End_Div;
+      HTML.Begin_Div (ID => "expand");
+      HTML.End_Div;
       Ada.Text_IO.Put_Line ("<table>");
       Ada.Text_IO.Put ("<tr>");
       HTML.Put_Cell (Data => "<acronym title=""click on arrow to view node list"">"
