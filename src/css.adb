@@ -71,6 +71,32 @@ package body CSS is
       Close_Block;
    end Put_Body;
 
+   procedure Put_Collapsable is
+   begin
+      Open_Block ("#collapse, #expand");
+      Put_Line ("display: none;");
+      Close_Block;
+
+      Open_Block ("#collapse ~ * .isl, #collapse ~ * .coll");
+      Put_Line ("visibility: collapse;");
+      Close_Block;
+      Open_Block ("#collapse:target ~ * .isl, #collapse:target ~ * .coll");
+      Put_Line ("visibility: visible;");
+      Close_Block;
+      Open_Block ("#axpand:target ~ * .isl, #axpand:target ~ * .coll");
+      Put_Line ("visibility: collapse;");
+      Close_Block;
+      Open_Block ("#collapse ~ * .exp");
+      Put_Line ("visibility: visible");
+      Close_Block;
+      Open_Block ("#collapse:target ~ * .exp");
+      Put_Line ("visibility: collapse");
+      Close_Block;
+      Open_Block ("#expand:target ~ * .exp");
+      Put_Line ("visibility: visible");
+      Close_Block;
+   end Put_Collapsable;
+
    procedure Put_Page is
    begin
       Open_Block ("#page");
@@ -462,6 +488,7 @@ package body CSS is
       Put_Job_Queue;
       Put_Job_Resources;
       Put_List;
+      Put_Collapsable;
       Put_Maintenance;
       Put_Table_Padding;
       Put_Table_Cells;
