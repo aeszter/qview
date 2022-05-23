@@ -47,11 +47,24 @@ package body Actions is
    procedure Assert_No_Root is
       use POSIX.Process_Identification;
    begin
-      if Get_Real_User_ID = Value ("0") then
+      if Get_Effective_User_ID = Value ("0") then
          raise Program_Error with "This program should not be run as root "
            & "unless ""act"" is given";
       end if;
    end Assert_No_Root;
+
+   procedure Drop_Privileges is
+      use POSIX;
+      use POSIX.Process_Environment;
+      use POSIX.Process_Identification;
+      use POSIX.User_Database;
+      Real_ID :  constant User_ID := Get_Real_User_ID;
+      Effective_ID :  constant User_ID := Get_Effective_User_ID;
+   begin
+      if Effective_ID /= Real_ID then
+         Set_User_ID (Real_ID);
+      end if;
+   end Drop_Privileges;
 
    procedure Drop_Privileges (To : String) is
       use POSIX;

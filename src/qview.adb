@@ -9,6 +9,7 @@ with Opensearch;
 procedure Qview is
 begin
    if HTML.Param_Is ("act", "") then
+      Actions.Drop_Privileges;
       Actions.Assert_No_Root;
    end if;
    if HTML.Param_Is ("css", "y") then
