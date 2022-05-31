@@ -135,7 +135,18 @@ package body Nodes is
          if  Get_State (N) /= NODE_STATE_DOWN then
             HTML.Put_Img (Name => "down",
                           Text => "Mark node down, killing jobs",
-                          Link => HTML.Get_Action_URL (Action => "dw",
+                          Link => HTML.Get_Action_URL
+                            (Action => "dw",
+                             Params => "n=" & To_String (Get_Name (N))
+                                       & "&why=qview"));
+         end if;
+         if Is_Draining (N) or else
+           Get_State (N) = NODE_STATE_DOWN or else
+           Is_Failing (N)
+         then
+            HTML.Put_Img (Name => "resume",
+                          Text => "Resume node",
+                          Link => HTML.Get_Action_URL (Action => "rs",
                                                        Params => "n=" & To_String (Get_Name (N))));
          end if;
 
@@ -147,8 +158,10 @@ package body Nodes is
          else
             HTML.Put_Img (Name => "drain",
                           Text => "Drain node",
-                          Link => HTML.Get_Action_URL (Action => "dr",
-                                                       Params => "n=" & To_String (Get_Name (N))));
+                          Link => HTML.Get_Action_URL
+                            (Action => "dr",
+                             Params => "n=" & To_String (Get_Name (N))
+                                       & "&why=qview"));
          end if;
          HTML.End_Div (ID => "node_actions");
       end Put_Actions;

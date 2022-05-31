@@ -9,6 +9,7 @@ with Slurm.Admin;
 with Slurm.Errors;
 with HTML;
 with Viewer;
+with Slurm.Utils;
 
 package body Actions is
 
@@ -110,6 +111,22 @@ package body Actions is
          Put_Result;
       elsif What = "r" then
          Slurm.Admin.Release_Job (ID => Integer'Value (HTML.Param ("j")));
+         Put_Result;
+      elsif What = "dw" then
+         Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
+                                Reason => HTML.Param ("why"),
+                                uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+         Put_Result;
+      elsif What = "dr" then
+         Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
+                                 Reason => HTML.Param ("why"),
+                                 UID => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+         Put_Result;
+      elsif What = "ud" then
+         Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
+         Put_Result;
+      elsif What = "rs" then
+         Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
          Put_Result;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
