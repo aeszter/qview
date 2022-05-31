@@ -119,6 +119,7 @@ package body Nodes is
    end Put_All;
 
    procedure Put_Details (Name : String) is
+      procedure Put_Actions;
       procedure Put_Hardware;
       procedure Put_Jobs;
       procedure Put_Resources;
@@ -127,6 +128,30 @@ package body Nodes is
 
       The_List : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
       N        : Node := Slurm.Nodes.Get_Node (The_List, Name);
+
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "node_actions");
+         if  Get_State (N) /= NODE_STATE_DOWN then
+            HTML.Put_Img (Name => "down",
+                          Text => "Mark node down, killing jobs",
+                          Link => HTML.Get_Action_URL (Action => "dw",
+                                                       Params => "n=" & To_String (Get_Name (N))));
+         end if;
+
+         if Is_Draining (N) then
+            HTML.Put_Img (Name => "undrain",
+                          Text => "Undrain node",
+                          Link => HTML.Get_Action_URL (Action => "ud",
+                                                       Params => "n=" & To_String (Get_Name (N))));
+         else
+            HTML.Put_Img (Name => "drain",
+                          Text => "Drain node",
+                          Link => HTML.Get_Action_URL (Action => "dr",
+                                                       Params => "n=" & To_String (Get_Name (N))));
+         end if;
+         HTML.End_Div (ID => "node_actions");
+      end Put_Actions;
 
       procedure Put_Hardware is
       begin
@@ -215,6 +240,12 @@ package body Nodes is
 
       procedure Put_System is
       begin
+         Ada.Text_IO.Put ("<p>");
+         HTML.Put_Img (Name => "hand.right",
+                       Text => "unlock node manipulation",
+                       Link => "#",
+                       Extra_Args => "onclick=""document.getElementById("
+                               & "'node_actions').style.display = 'block' """);
          HTML.Begin_Div (Class => "node_system");
          Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
@@ -227,9 +258,13 @@ package body Nodes is
    begin
       Add_Jobs (N);
       HTML.Begin_Div (Class => "node_info");
+      HTML.Begin_Div (Class => "action_and_name");
+      Put_Actions;
       HTML.Begin_Div (Class => "node_head_data");
       Put_System;
       HTML.End_Div (Class => "node_head_data");
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
       Put_Hardware;
       Put_Slurm;
       Put_Resources;

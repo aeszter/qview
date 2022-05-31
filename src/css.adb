@@ -254,7 +254,7 @@ package body CSS is
 
    procedure Put_Job_Actions is
    begin
-      Open_Block ("#job_actions, #host_actions, #unlocker");
+      Open_Block ("#job_actions, #node_actions, #unlocker");
       Put_Line ("width: 16px;");
       Put_Line (Box_Background);
       Put_Line ("position: relative;");
@@ -268,11 +268,11 @@ package body CSS is
       Put_Line ("width: 80px;");
       Close_Block;
 
-      Open_Block ("#job_actions, #host_actions");
+      Open_Block ("#job_actions, #node_actions");
       Put_Line ("display: none;");
       Close_Block;
 
-      Open_Block ("#job_actions:target, #host_actions:target");
+      Open_Block ("#job_actions:target, #node_actions:target");
       Put_Line ("display: block;");
       Close_Block;
 
@@ -280,6 +280,10 @@ package body CSS is
       Put_Line ("display: -webkit-flex;");
       Put_Line ("display: flex;");
       Put_Line ("margin-bottom: 10px;");
+      Close_Block;
+
+      Open_Block ("#job_actions a img, #node_actions a img");
+      Put_Line ("margin-bottom: 16px;");
       Close_Block;
    end Put_Job_Actions;
 
