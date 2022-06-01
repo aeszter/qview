@@ -90,7 +90,9 @@ package body Actions is
       procedure Put_Result (Message : String);
       procedure Invoke_Action (Key, Value : Unbounded_String);
 
-      Referrer : constant String := CGI.Get_Environment ("HTTP_REFERER");
+      Referrer : constant String := HTML.Strip_Parameter
+                  (Source => CGI.Get_Environment ("HTTP_REFERER"),
+                   Key    => "msg");
       User : constant String := CGI.Get_Environment ("REMOTE_USER");
 
       procedure Invoke_Action (Key, Value : Unbounded_String) is
@@ -117,9 +119,12 @@ package body Actions is
       end Invoke_Action;
 
       procedure Put_Result (Message : String) is
+         Encoded_Message : constant String := To_String (URL_Encode (
+                                          To_Unbounded_String (Message)));
       begin
          if Referrer /= "" then
-            CGI.Put_CGI_Header ("Location: " & Referrer & "&msg=" & Message);
+            CGI.Put_CGI_Header ("Location: " & Referrer
+                                & "&msg=" & Encoded_Message);
          else
             Viewer.Put_Result (Message);
          end if;

@@ -83,6 +83,7 @@ package HTML is
    function Param (Name : String; Index : in Positive := 1;
                Required : in Boolean := False) return String renames CGI.Value;
    function Param_Is (Param : String; Expected : String) return Boolean;
+   function Strip_Parameter (Source, Key : String) return String;
    procedure Begin_Div (Class : String := ""; ID : String := "");
    procedure End_Div (Class : String := ""; ID : String := "");
    procedure Finalize_Divs (Silent : Boolean := False);
