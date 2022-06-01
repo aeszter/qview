@@ -438,11 +438,11 @@ package body HTML is
       Put_Cell (Data => Img_Tag (Image) & Extra_Text);
    end Put_Img_Cell;
 
-   procedure Put_Img_Form (Name, Text, Action, Value : String) is
+   procedure Put_Img_Form (Name, Text, Action : String) is
    begin
       Put ("<input type=""image"" name=""" & Action
            & """ src=""/icons/" & Name & ".png"" alt=""" & Text
-           & """ value=""" & Value & """ />");
+           & """ />");
    end Put_Img_Form;
 
    procedure Put_Link (Label : String; ID : String; Link_Param : String) is

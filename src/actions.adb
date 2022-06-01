@@ -88,8 +88,33 @@ package body Actions is
 
    procedure Invoke (What : String) is
       procedure Put_Result;
+      procedure Invoke_Action (Key, Value : Unbounded_String);
+
       Referrer : constant String := CGI.Get_Environment ("HTTP_REFERER");
       User : constant String := CGI.Get_Environment ("REMOTE_USER");
+
+      procedure Invoke_Action (Key, Value : Unbounded_String) is
+      pragma Unreferenced (Value);
+      begin
+         if Key = "dw.x" then
+            Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
+                                Reason => HTML.Param ("why"),
+                                uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+            Put_Result;
+         elsif Key = "dr.x" then
+            Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
+                                  Reason => HTML.Param ("why"),
+                                    UID    => Slurm.Utils.To_UID (
+                                      CGI.Get_Environment ("REMOTE_USER")));
+            Put_Result;
+         elsif Key = "ud.x" then
+            Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
+            Put_Result;
+         elsif Key = "rs.x" then
+            Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
+            Put_Result;
+         end if;
+      end Invoke_Action;
 
       procedure Put_Result is
       begin
@@ -99,6 +124,8 @@ package body Actions is
             Viewer.Put_Result ("OK");
          end if;
       end Put_Result;
+
+      procedure Iterate_Form is new Iterate_CGI (Evaluate => Invoke_Action);
 
    begin
       if User = "" then
@@ -128,6 +155,8 @@ package body Actions is
       elsif What = "rs" then
          Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
          Put_Result;
+      elsif What = "form" then
+         Iterate_Form;
       else
          Viewer.Put_Error ("Unknown action """ & What & """");
       end if;

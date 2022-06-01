@@ -28,7 +28,7 @@ package HTML is
 
    procedure Put_Img_Cell (Image : String; Extra_Text : String := "");
    procedure Put_Img (Name, Text, Link : String; Extra_Args : String := "");
-   procedure Put_Img_Form (Name, Text, Action, Value : String);
+   procedure Put_Img_Form (Name, Text, Action : String);
 
    function Img_Tag (Image : String) return String;
 

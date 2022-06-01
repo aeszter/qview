@@ -8,7 +8,7 @@ with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
 with Slurm.Utils;
 use Slurm.Utils;
-with HTML;
+with HTML; use HTML;
 with Utils;
 with Slurm.Node_Properties; use Slurm.Node_Properties;
 with Slurm.Hostlists; use Slurm.Hostlists;
@@ -132,37 +132,37 @@ package body Nodes is
       procedure Put_Actions is
       begin
          HTML.Begin_Div (ID => "node_actions");
+         Begin_Form;
+         Put_Hidden_Form (Name => "act",
+                          Value => "form");
+         Put_Hidden_Form (Name => "n",
+                          Value => To_String (Get_Name (N)));
          if  Get_State (N) /= NODE_STATE_DOWN then
-            HTML.Put_Img (Name => "down",
+            HTML.Put_Img_Form (Name => "down",
                           Text => "Mark node down, killing jobs",
-                          Link => HTML.Get_Action_URL
-                            (Action => "dw",
-                             Params => "n=" & To_String (Get_Name (N))
-                                       & "&why=qview"));
+                          Action => "dw");
          end if;
          if Is_Draining (N) or else
            Get_State (N) = NODE_STATE_DOWN or else
            Is_Failing (N)
          then
-            HTML.Put_Img (Name => "resume",
+            HTML.Put_Img_Form (Name => "resume",
                           Text => "Resume node",
-                          Link => HTML.Get_Action_URL (Action => "rs",
-                                                       Params => "n=" & To_String (Get_Name (N))));
+                          Action => "rs");
          end if;
 
          if Is_Draining (N) then
-            HTML.Put_Img (Name => "undrain",
+            HTML.Put_Img_Form (Name => "undrain",
                           Text => "Undrain node",
-                          Link => HTML.Get_Action_URL (Action => "ud",
-                                                       Params => "n=" & To_String (Get_Name (N))));
+                          Action => "ud");
          else
-            HTML.Put_Img (Name => "drain",
+            HTML.Put_Img_Form (Name => "drain",
                           Text => "Drain node",
-                          Link => HTML.Get_Action_URL
-                            (Action => "dr",
-                             Params => "n=" & To_String (Get_Name (N))
-                                       & "&why=qview"));
+                          Action => "dr");
          end if;
+         Put_Edit_Box (Name    => "why",
+                       Default => "Reason");
+         End_Form;
          HTML.End_Div (ID => "node_actions");
       end Put_Actions;
 
