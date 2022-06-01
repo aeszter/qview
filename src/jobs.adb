@@ -261,7 +261,7 @@ package body Jobs is
    procedure Put_Details (ID : Natural) is
       J : Job;
 
---        procedure Put_Actions;
+      procedure Put_Actions;
       procedure Put_Files;
       procedure Put_Meta;
       procedure Put_Name;
@@ -269,15 +269,23 @@ package body Jobs is
       procedure Put_Resources;
       procedure Put_Usage;
 
---        procedure Put_Actions is
---        begin
---           HTML.Begin_Div (ID => "job_actions");
---           HTML.Put_Img (Name => "kill",
---                         Text => "Kill job",
---                         Link => HTML.Get_Action_URL (Action => "k",
---                                                      Params => "j=" & Get_ID (J)));
---           HTML.End_Div (ID => "job_actions");
---        end Put_Actions;
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "job_actions");
+         HTML.Put_Img (Name => "kill",
+                       Text => "Kill job",
+                       Link => HTML.Get_Action_URL (Action => "k",
+                                                    Params => "j=" & Get_ID (J)'Img));
+         if Get_State_Reason (J) = WAIT_HELD or else
+           Get_State_Reason (J) = WAIT_HELD_USER
+         then
+            HTML.Put_Img (Name => "release",
+                          Text => "Release job",
+                          Link => HTML.Get_Action_URL (Action => "r",
+                                                       Params => "j=" & Get_ID (J)'Img));
+         end if;
+         HTML.End_Div (ID => "job_actions");
+      end Put_Actions;
 
       procedure Put_Files is
       begin
@@ -320,15 +328,10 @@ package body Jobs is
       end Put_Meta;
 
       procedure Put_Name is
+         Message : constant String := HTML.Param ("msg");
       begin
          HTML.Begin_Div (Class => "job_name");
          Ada.Text_IO.Put ("<p>");
---       HTML.Put_Img (Name => "hand.right",
---                     Text => "unlock job manipulation",
---                     Link => "#",
---                     Extra_Args => "onclick=""document.getElementById('job_actions').style.display = 'block' """);
---       HTML.Put_Paragraph ("Name", Get_Name (J));
-
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          if Has_Comment (J) then
             Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
@@ -337,6 +340,9 @@ package body Jobs is
          if Has_Admin_Comment (J) then
             Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
                                   & Get_Admin_Comment (J) & "</p>");
+         end if;
+         if Message /= "" then
+            Ada.Text_IO.Put_Line ("<p class=""cgi_message"">" & Message & "</p>");
          end if;
          HTML.End_Div (Class => "job_name");
       end Put_Name;
@@ -385,7 +391,7 @@ package body Jobs is
       HTML.Begin_Div (Class => "job_info");
 
       HTML.Begin_Div (Class => "action_and_name");
---      Put_Actions;
+      Put_Actions;
       Put_Name;
       HTML.Put_Clearer;
       HTML.End_Div (Class => "action_and_name");

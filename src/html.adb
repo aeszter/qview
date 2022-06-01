@@ -15,6 +15,7 @@ with Viewer;
 with Utils;
 with Ada.Strings.Fixed;
 with Ada.Containers.Ordered_Sets;
+with Ada.Strings.Maps;
 
 package body HTML is
 
@@ -438,11 +439,11 @@ package body HTML is
       Put_Cell (Data => Img_Tag (Image) & Extra_Text);
    end Put_Img_Cell;
 
-   procedure Put_Img_Form (Name, Text, Action, Value : String) is
+   procedure Put_Img_Form (Name, Text, Action : String) is
    begin
       Put ("<input type=""image"" name=""" & Action
            & """ src=""/icons/" & Name & ".png"" alt=""" & Text
-           & """ value=""" & Value & """ />");
+           & """ title=""" & Text & """ />");
    end Put_Img_Form;
 
    procedure Put_Link (Label : String; ID : String; Link_Param : String) is
@@ -692,6 +693,36 @@ package body HTML is
    begin
       Put_Cell (To_String (Time));
    end Put_Time_Cell;
+
+   function Strip_Parameter (Source, Key : String) return String is
+      use Ada.Strings.Fixed;
+      use Ada.Strings.Maps;
+
+      Buffer : Unbounded_String;
+      I      : Natural;
+      E      : Natural := Source'First;
+   begin
+      I := Index (Source  => Source,
+                  Pattern => Key);
+      if I = 0 then
+         return Source;
+      end if;
+      while I > 0 loop
+         if Source (I - 1) = '&' then
+            I := I - 1;
+         end if;
+         Append (Buffer, Source (E ..  I - 1));
+         E := Index (Source => Source (I + 1 .. Source'Last),
+                     Set    => To_Set ('&'));
+         if E = 0 then
+            E := Source'Last;
+         end if;
+         I := Index (Source  => Source (E + 1 .. Source'Last),
+                     Pattern => Key);
+      end loop;
+      Append (Buffer, Source (E + 1 .. Source'Last));
+      return To_String (Buffer);
+   end Strip_Parameter;
 
    function To_String (Time : Calendar.Time) return String is
             Year, This_Year   : Ada.Calendar.Year_Number;

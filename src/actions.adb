@@ -1,25 +1,19 @@
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Exceptions; use Ada.Exceptions;
+with POSIX.Process_Environment;
+with POSIX.Process_Identification;
+with POSIX.User_Database;
+with POSIX;
+with CGI; use CGI;
+with Slurm.Admin;
+with Slurm.Errors;
 with HTML;
 with Viewer;
-with CGI;
-use CGI;
---  with SGE.Actions;
---  with Lightsout;
---  with CM.Power; use CM.Power;
-with Ada.Strings.Fixed;
-with GNAT.Lock_Files;
---  with CM.Taint;
---  with CM.Debug;
---  with SGE.Utils; use SGE.Utils;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Strings.Maps;
+with Slurm.Utils;
 
 package body Actions is
 
-   procedure Invoke (What : String) is
-   begin
-      raise Permission_Error with "unimplemented";
-   end Invoke;
+   procedure Drop_Privileges (To : String);
 
 --     procedure Change_Maintenance (Node, Bug : String; To : Lightsout.Maintenance);
 --     procedure Force_Kill;
@@ -44,110 +38,142 @@ package body Actions is
 --        Lightsout.Unlock;
 --     end Change_Maintenance;
 --
---     procedure Force_Kill is
---        Job_List : Unbounded_String := Null_Unbounded_String;
---     begin
---        if not User_Is_Manager (CGI.Get_Environment ("REMOTE_USER")) then
---           raise Permission_Error with "you must be registered as a manager";
---        end if;
---        for Index in 1 .. Key_Count ("j") loop
---           Append (Job_List, To_String (Value ("j", Index)) & ",");
---        end loop;
---        if Key_Count ("j") = 0 then
---           raise Constraint_Error;
---        else
---           Trim (Job_List,
---                 Left  => Ada.Strings.Maps.Null_Set,
---                 Right => Ada.Strings.Maps.To_Set (','));
---        end if;
---        SGE.Actions.Force_Kill (To_String (Job_List));
---     end Force_Kill;
---
---     procedure Silence (Message : String) is
---     begin
---        null; -- no facility yet. Cannot print to http since headers have
---        --  not been sent, but maybe use a file in the future?
---     end Silence;
---
---
---     ------------
---     -- Invoke --
---     ------------
---
---     procedure Invoke (What : String) is
---        procedure Put_Result;
---        Referrer : constant String := CGI.Get_Environment ("HTTP_REFERER");
---
---        procedure Put_Result is
---        begin
---           if Referrer /= "" then
---              CGI.Put_CGI_Header ("Location: " & Referrer);
---           else
---              Viewer.Put_Result ("OK");
---           end if;
---        end Put_Result;
---
---     begin
---        CM.Debug.Initialize (Silence'Access);
---        if What = "cj" then
---           SGE.Actions.Clear_Error (The_Job => Integer'Value (HTML.Param ("j")));
---           Put_Result;
---        elsif What = "cq" then
---           SGE.Actions.Clear_Error (The_Node => HTML.Param ("q"));
---           Put_Result;
---        elsif What = "k" then
---           SGE.Actions.Kill_Job (The_Job => Integer'Value (HTML.Param ("j")));
---           Put_Result;
---        elsif What = "forcekill" then
---           Force_Kill;
---           Put_Result;
---        elsif What = "eq" then
---           SGE.Actions.Enable (The_Node => HTML.Param ("q"), Use_Sudo => True);
---           Put_Result;
---        elsif What = "clear_maint" then
---           Change_Maintenance (Node => HTML.Param ("h"),
---                               To   => Lightsout.none,
---                               Bug  => HTML.Param ("bug"));
---           Put_Result;
---        elsif What = "maint_ignore" then
---           Change_Maintenance (Node => HTML.Param ("h"),
---                               To   => Lightsout.ignore,
---                               Bug  => HTML.Param ("bug"));
---           Put_Result;
---        elsif What = "maint_disable" then
---           Change_Maintenance (Node => HTML.Param ("h"),
---                               To   => Lightsout.disable,
---                               Bug  => HTML.Param ("bug"));
---           Put_Result;
---        elsif  What = "maint_poweroff" then
---           Change_Maintenance (Node => HTML.Param ("h"),
---                               To   => Lightsout.off,
---                               Bug  => HTML.Param ("bug"));
---           Put_Result;
---        elsif What = "poweron" then
---           Poweron (What => CM.Taint.Sanitise (HTML.Param ("h")),
---                    Sudo_User => CM.Taint.Implicit_Trust (CGI.Get_Environment ("REMOTE_USER")));
---           --  the call to Implicit_Trust means we have to run in a controlled environment
---           --  (i.e. a web server). Calling Sanitise instead does not help since the main danger
---           --  does not lie in weird strings, but in faked, non-authenticated user names.
---           --  There is no way to check this inside the code, we have to trust
---           --  our environment.
---           Put_Result;
---        else
---           Viewer.Put_Error ("Unknown action """ & What & """");
---        end if;
---     exception
---        when E : Permission_Error =>
---           Viewer.Put_Error ("Insufficient permissions: " & Exception_Message (E));
---        when Constraint_Error =>
---           Viewer.Put_Error ("Internal error: " & HTML.Param ("j") & " is no valid job");
---        when E : SGE.Actions.Subcommand_Error =>
---           Viewer.Put_Error ("Backend error: " & Exception_Message (E));
---        when GNAT.Lock_Files.Lock_Error =>
---           Viewer.Put_Error ("Could not lock lightsout file. "
---                               & "Reload page to try again.");
---        when E : others =>
---           Viewer.Put_Error ("Unexpected error: " & Exception_Message (E));
---     end Invoke;
+
+--      procedure Silence (Message : String) is
+--      begin
+--         null; -- no facility yet. Cannot print to http since headers have
+--         not been sent, but maybe use a file in the future?
+--      end Silence;
+
+   procedure Assert_No_Root is
+      use POSIX.Process_Identification;
+   begin
+      if Get_Effective_User_ID = Value ("0") then
+         raise Program_Error with "This program should not be run as root "
+           & "unless ""act"" is given";
+      end if;
+   end Assert_No_Root;
+
+   procedure Drop_Privileges is
+      use POSIX;
+      use POSIX.Process_Environment;
+      use POSIX.Process_Identification;
+      use POSIX.User_Database;
+      Real_ID :  constant User_ID := Get_Real_User_ID;
+      Effective_ID :  constant User_ID := Get_Effective_User_ID;
+   begin
+      if Effective_ID /= Real_ID then
+         Set_User_ID (Real_ID);
+      end if;
+   end Drop_Privileges;
+
+   procedure Drop_Privileges (To : String) is
+      use POSIX;
+      use POSIX.Process_Environment;
+      use POSIX.Process_Identification;
+      use POSIX.User_Database;
+
+      User : User_Database_Item;
+   begin
+      User := Get_User_Database_Item (To_POSIX_String (To));
+
+      Set_Group_ID (Group_ID_Of (User));
+      Set_User_ID (User_ID_Of (User));
+      Change_Working_Directory (Initial_Directory_Of (User));
+   exception
+      when E : POSIX_Error =>
+         raise Permission_Error with "Unable to drop privileges: "
+           & Exception_Message (E);
+   end Drop_Privileges;
+
+   procedure Invoke (What : String) is
+      procedure Put_Result (Message : String);
+      procedure Invoke_Action (Key, Value : Unbounded_String);
+
+      Referrer : constant String := HTML.Strip_Parameter
+                  (Source => CGI.Get_Environment ("HTTP_REFERER"),
+                   Key    => "msg");
+      User : constant String := CGI.Get_Environment ("REMOTE_USER");
+
+      procedure Invoke_Action (Key, Value : Unbounded_String) is
+      pragma Unreferenced (Value);
+      begin
+         if Key = "dw.x" then
+            Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
+                                Reason => HTML.Param ("why"),
+                                uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+            Put_Result ("node marked down, jobs will be requeued");
+         elsif Key = "dr.x" then
+            Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
+                                  Reason => HTML.Param ("why"),
+                                    UID    => Slurm.Utils.To_UID (
+                                      CGI.Get_Environment ("REMOTE_USER")));
+            Put_Result ("node draining");
+         elsif Key = "ud.x" then
+            Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
+            Put_Result ("node undrained");
+         elsif Key = "rs.x" then
+            Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
+            Put_Result ("node resumed");
+         end if;
+      end Invoke_Action;
+
+      procedure Put_Result (Message : String) is
+         Encoded_Message : constant String := To_String (URL_Encode (
+                                          To_Unbounded_String (Message)));
+      begin
+         if Referrer /= "" then
+            CGI.Put_CGI_Header ("Location: " & Referrer
+                                & "&msg=" & Encoded_Message);
+         else
+            Viewer.Put_Result (Message);
+         end if;
+      end Put_Result;
+
+      procedure Iterate_Form is new Iterate_CGI (Evaluate => Invoke_Action);
+
+   begin
+      if User = "" then
+         raise Permission_Error with "Could not determine user authentication";
+      else
+         Drop_Privileges (To => User);
+      end if;
+      if What = "k" then
+         Slurm.Admin.Kill_Job (ID => Integer'Value (HTML.Param ("j")));
+         Put_Result ("job killed");
+      elsif What = "r" then
+         Slurm.Admin.Release_Job (ID => Integer'Value (HTML.Param ("j")));
+         Put_Result ("job released");
+      elsif What = "dw" then
+         Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
+                                Reason => HTML.Param ("why"),
+                                uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+         Put_Result ("node marked down, jobs will be requeued");
+      elsif What = "dr" then
+         Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
+                                 Reason => HTML.Param ("why"),
+                                 UID => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
+         Put_Result ("node draining");
+      elsif What = "ud" then
+         Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
+         Put_Result ("node undrained");
+      elsif What = "rs" then
+         Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
+         Put_Result ("node resumed");
+      elsif What = "form" then
+         Iterate_Form;
+      else
+         Viewer.Put_Error ("Unknown action """ & What & """");
+      end if;
+   exception
+      when E : Permission_Error =>
+         Put_Result ("Insufficient permissions: " & Exception_Message (E));
+      when Constraint_Error =>
+         Put_Result ("Internal error: " & HTML.Param ("j") & " is no valid job");
+      when E : Slurm.Errors.Slurm_Error =>
+         Put_Result ("Slurm error: " & Exception_Message (E));
+      when E : others =>
+         Put_Result ("Unexpected error: " & Exception_Message (E));
+   end Invoke;
 
 end Actions;
