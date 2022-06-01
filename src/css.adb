@@ -354,9 +354,12 @@ package body CSS is
 --  /*line-height: 10px;*/
       Close_Block;
 
-      Open_Block ("p.message");
+      Open_Block ("p.message, p.cgi_message");
       Put_Line ("font-weight: normal;");
       Put_Line ("font-style: italic;");
+      Close_Block;
+      Open_Block ("p.cgi_message");
+      Put_Line ("color: green;");
       Close_Block;
    end Put_Job_Paragraphs;
 

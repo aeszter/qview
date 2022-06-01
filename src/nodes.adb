@@ -252,12 +252,16 @@ package body Nodes is
       end Put_Slurm;
 
       procedure Put_System is
+         Message : constant String := HTML.Param ("msg");
       begin
          HTML.Begin_Div (Class => "node_system");
          Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
                                & HTML.To_String (Get_Boot_Time (N)) & "</p>");
+         if Message /= "" then
+            Ada.Text_IO.Put_Line ("<p class=""cgi_message"">" & Message & "</p>");
+         end if;
          HTML.Put_Clearer;
          HTML. End_Div (Class => "node_system");
       end Put_System;

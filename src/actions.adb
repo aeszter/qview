@@ -87,7 +87,7 @@ package body Actions is
    end Drop_Privileges;
 
    procedure Invoke (What : String) is
-      procedure Put_Result;
+      procedure Put_Result (Message : String);
       procedure Invoke_Action (Key, Value : Unbounded_String);
 
       Referrer : constant String := CGI.Get_Environment ("HTTP_REFERER");
@@ -100,28 +100,28 @@ package body Actions is
             Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
                                 Reason => HTML.Param ("why"),
                                 uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
-            Put_Result;
+            Put_Result ("node marked down, jobs will be requeued");
          elsif Key = "dr.x" then
             Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
                                   Reason => HTML.Param ("why"),
                                     UID    => Slurm.Utils.To_UID (
                                       CGI.Get_Environment ("REMOTE_USER")));
-            Put_Result;
+            Put_Result ("node draining");
          elsif Key = "ud.x" then
             Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
-            Put_Result;
+            Put_Result ("node undrained");
          elsif Key = "rs.x" then
             Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
-            Put_Result;
+            Put_Result ("node resumed");
          end if;
       end Invoke_Action;
 
-      procedure Put_Result is
+      procedure Put_Result (Message : String) is
       begin
          if Referrer /= "" then
-            CGI.Put_CGI_Header ("Location: " & Referrer);
+            CGI.Put_CGI_Header ("Location: " & Referrer & "&msg=" & Message);
          else
-            Viewer.Put_Result ("OK");
+            Viewer.Put_Result (Message);
          end if;
       end Put_Result;
 
@@ -135,26 +135,26 @@ package body Actions is
       end if;
       if What = "k" then
          Slurm.Admin.Kill_Job (ID => Integer'Value (HTML.Param ("j")));
-         Put_Result;
+         Put_Result ("job killed");
       elsif What = "r" then
          Slurm.Admin.Release_Job (ID => Integer'Value (HTML.Param ("j")));
-         Put_Result;
+         Put_Result ("job released");
       elsif What = "dw" then
          Slurm.Admin.Down_Node (Name => HTML.Param ("n"),
                                 Reason => HTML.Param ("why"),
                                 uid => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
-         Put_Result;
+         Put_Result ("node marked down, jobs will be requeued");
       elsif What = "dr" then
          Slurm.Admin.Drain_Node (Name => HTML.Param ("n"),
                                  Reason => HTML.Param ("why"),
                                  UID => Slurm.Utils.To_UID (CGI.Get_Environment ("REMOTE_USER")));
-         Put_Result;
+         Put_Result ("node draining");
       elsif What = "ud" then
          Slurm.Admin.Undrain_Node (Name => HTML.Param ("n"));
-         Put_Result;
+         Put_Result ("node undrained");
       elsif What = "rs" then
          Slurm.Admin.Resume_Node (Name => HTML.Param ("n"));
-         Put_Result;
+         Put_Result ("node resumed");
       elsif What = "form" then
          Iterate_Form;
       else
@@ -162,13 +162,13 @@ package body Actions is
       end if;
    exception
       when E : Permission_Error =>
-         Viewer.Put_Error ("Insufficient permissions: " & Exception_Message (E));
+         Put_Result ("Insufficient permissions: " & Exception_Message (E));
       when Constraint_Error =>
-         Viewer.Put_Error ("Internal error: " & HTML.Param ("j") & " is no valid job");
+         Put_Result ("Internal error: " & HTML.Param ("j") & " is no valid job");
       when E : Slurm.Errors.Slurm_Error =>
-         Viewer.Put_Error ("Slurm error: " & Exception_Message (E));
+         Put_Result ("Slurm error: " & Exception_Message (E));
       when E : others =>
-         Viewer.Put_Error ("Unexpected error: " & Exception_Message (E));
+         Put_Result ("Unexpected error: " & Exception_Message (E));
    end Invoke;
 
 end Actions;

@@ -328,6 +328,7 @@ package body Jobs is
       end Put_Meta;
 
       procedure Put_Name is
+         Message : constant String := HTML.Param ("msg");
       begin
          HTML.Begin_Div (Class => "job_name");
          Ada.Text_IO.Put ("<p>");
@@ -339,6 +340,9 @@ package body Jobs is
          if Has_Admin_Comment (J) then
             Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "
                                   & Get_Admin_Comment (J) & "</p>");
+         end if;
+         if Message /= "" then
+            Ada.Text_IO.Put_Line ("<p class=""cgi_message"">" & Message & "</p>");
          end if;
          HTML.End_Div (Class => "job_name");
       end Put_Name;
