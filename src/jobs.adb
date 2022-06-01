@@ -331,12 +331,6 @@ package body Jobs is
       begin
          HTML.Begin_Div (Class => "job_name");
          Ada.Text_IO.Put ("<p>");
-         HTML.Put_Img (Name => "hand.right",
-                       Text => "unlock job manipulation",
-                       Link => "#",
-                       Extra_Args => "onclick=""document.getElementById("
-                               & "'job_actions').style.display = 'block' """);
-
          Ada.Text_IO.Put_Line ("Name: " & Get_Name (J) & "</p>");
          if Has_Comment (J) then
             Ada.Text_IO.Put_Line ("<p class=""message"">Comment: "

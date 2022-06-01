@@ -253,12 +253,6 @@ package body Nodes is
 
       procedure Put_System is
       begin
-         Ada.Text_IO.Put ("<p>");
-         HTML.Put_Img (Name => "hand.right",
-                       Text => "unlock node manipulation",
-                       Link => "#",
-                       Extra_Args => "onclick=""document.getElementById("
-                               & "'node_actions').style.display = 'block' """);
          HTML.Begin_Div (Class => "node_system");
          Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");

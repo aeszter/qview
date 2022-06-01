@@ -442,7 +442,7 @@ package body HTML is
    begin
       Put ("<input type=""image"" name=""" & Action
            & """ src=""/icons/" & Name & ".png"" alt=""" & Text
-           & """ />");
+           & """ title=""" & Text & """ />");
    end Put_Img_Form;
 
    procedure Put_Link (Label : String; ID : String; Link_Param : String) is

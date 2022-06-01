@@ -264,15 +264,11 @@ package body CSS is
       Put_Line ("overflow: hidden;");
       Close_Block;
 
-      Open_Block ("#host_actions");
-      Put_Line ("width: 80px;");
+      Open_Block ("#node_actions");
+      Put_Line ("width: 90px;");
       Close_Block;
 
       Open_Block ("#job_actions, #node_actions");
-      Put_Line ("display: none;");
-      Close_Block;
-
-      Open_Block ("#job_actions:target, #node_actions:target");
       Put_Line ("display: block;");
       Close_Block;
 
@@ -282,8 +278,9 @@ package body CSS is
       Put_Line ("margin-bottom: 10px;");
       Close_Block;
 
-      Open_Block ("#job_actions a img, #node_actions a img");
+      Open_Block ("#job_actions a img, #node_actions form input");
       Put_Line ("margin-bottom: 16px;");
+      Put_Line ("margin-right: 10px;");
       Close_Block;
    end Put_Job_Actions;
 
