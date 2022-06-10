@@ -8,7 +8,7 @@ with Slurm.Partitions; use Slurm.Partitions;
 with Slurm.Gres;
 with Slurm.Utils;
 use Slurm.Utils;
-with HTML;
+with HTML; use HTML;
 with Utils;
 with Slurm.Node_Properties; use Slurm.Node_Properties;
 with Slurm.Hostlists; use Slurm.Hostlists;
@@ -119,6 +119,7 @@ package body Nodes is
    end Put_All;
 
    procedure Put_Details (Name : String) is
+      procedure Put_Actions;
       procedure Put_Hardware;
       procedure Put_Jobs;
       procedure Put_Resources;
@@ -127,6 +128,43 @@ package body Nodes is
 
       The_List : constant Slurm.Nodes.List := Slurm.Nodes.Load_Nodes;
       N        : Node := Slurm.Nodes.Get_Node (The_List, Name);
+
+      procedure Put_Actions is
+      begin
+         HTML.Begin_Div (ID => "node_actions");
+         Begin_Form;
+         Put_Hidden_Form (Name => "act",
+                          Value => "form");
+         Put_Hidden_Form (Name => "n",
+                          Value => To_String (Get_Name (N)));
+         if  Get_State (N) /= NODE_STATE_DOWN then
+            HTML.Put_Img_Form (Name => "down",
+                          Text => "Mark node down, killing jobs",
+                          Action => "dw");
+         end if;
+         if Is_Draining (N) or else
+           Get_State (N) = NODE_STATE_DOWN or else
+           Is_Failing (N)
+         then
+            HTML.Put_Img_Form (Name => "resume",
+                          Text => "Resume node",
+                          Action => "rs");
+         end if;
+
+         if Is_Draining (N) then
+            HTML.Put_Img_Form (Name => "undrain",
+                          Text => "Undrain node",
+                          Action => "ud");
+         else
+            HTML.Put_Img_Form (Name => "drain",
+                          Text => "Drain node",
+                          Action => "dr");
+         end if;
+         Put_Edit_Box (Name    => "why",
+                       Default => "Reason");
+         End_Form;
+         HTML.End_Div (ID => "node_actions");
+      end Put_Actions;
 
       procedure Put_Hardware is
       begin
@@ -214,12 +252,16 @@ package body Nodes is
       end Put_Slurm;
 
       procedure Put_System is
+         Message : constant String := HTML.Param ("msg");
       begin
          HTML.Begin_Div (Class => "node_system");
          Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
          Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
                                & HTML.To_String (Get_Boot_Time (N)) & "</p>");
+         if Message /= "" then
+            Ada.Text_IO.Put_Line ("<p class=""cgi_message"">" & Message & "</p>");
+         end if;
          HTML.Put_Clearer;
          HTML. End_Div (Class => "node_system");
       end Put_System;
@@ -227,9 +269,13 @@ package body Nodes is
    begin
       Add_Jobs (N);
       HTML.Begin_Div (Class => "node_info");
+      HTML.Begin_Div (Class => "action_and_name");
+      Put_Actions;
       HTML.Begin_Div (Class => "node_head_data");
       Put_System;
       HTML.End_Div (Class => "node_head_data");
+      HTML.Put_Clearer;
+      HTML.End_Div (Class => "action_and_name");
       Put_Hardware;
       Put_Slurm;
       Put_Resources;
