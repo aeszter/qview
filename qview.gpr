@@ -47,9 +47,13 @@ project Qview is
 
    end Compiler;
 
-   package Linker is
-      for Default_Switches ("ada") use ("-lslurm");
-   end Linker;
+   package Binder is
+     for Switches ("Ada") use ("-static");
+   end Binder;
+
+--   package Linker is
+--      for Default_Switches ("ada") use ("-L../slurmlib/lib/lib64 -lslurm");
+--   end Linker;
 
 end Qview;
 
