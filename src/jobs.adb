@@ -388,6 +388,9 @@ package body Jobs is
 
    begin
       J := Slurm.Jobs.Get_Job (ID);
+      HTML.Put_Paragraph (Label    => "Last Backfill",
+                          Contents => Slurm.Jobs.Get_Backfill,
+                          Class    => "message");
       HTML.Begin_Div (Class => "job_info");
 
       HTML.Begin_Div (Class => "action_and_name");
@@ -578,6 +581,9 @@ package body Jobs is
       Slurm.Jobs.Get_Summary (Jobs => Job_Summary,
                               Tasks => Task_Summary);
       HTML.Begin_Div (ID => "job_summary");
+      HTML.Put_Paragraph (Label    => "Last Backfill",
+                          Contents => Slurm.Jobs.Get_Backfill,
+                          Class => "message");
       Ada.Text_IO.Put ("<ul>");
       for State in Job_Summary'Range loop
          Ada.Text_IO.Put ("<li>");
