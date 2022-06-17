@@ -543,25 +543,30 @@ package body HTML is
            " title=""qview search"" />");
    end Put_Opensearch;
 
-   procedure Put_Paragraph (Label : String; Contents : String) is
+   procedure Put_Paragraph (Label : String; Contents : String; Class : String := "") is
+      Full_Label : constant String := (if Label = "" then "" else Label & ": ");
    begin
-      Ada.Text_IO.Put_Line ("<p>" & Label & ": " & Contents & "</p>");
+      if Class = "" then
+         Ada.Text_IO.Put_Line ("<p>" & Full_Label & Contents & "</p>");
+      else
+         Ada.Text_IO.Put_Line ("<p class=""" & Class & """>" & Full_Label & Contents & "</p>");
+      end if;
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : String; Contents : Calendar.Time) is
+   procedure Put_Paragraph (Label : String; Contents : Calendar.Time; Class : String := "") is
    begin
-      Put_Paragraph (Label => Label, Contents => To_String (Contents));
+      Put_Paragraph (Label => Label, Contents => To_String (Contents), Class => Class);
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : String; Contents : Duration) is
+   procedure Put_Paragraph (Label : String; Contents : Duration; Class : String := "") is
    begin
       Put_Paragraph (Label    => Label,
-                     Contents => To_String (Contents));
+                     Contents => To_String (Contents), Class => Class);
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : String; Contents : Unbounded_String) is
+   procedure Put_Paragraph (Label : String; Contents : Unbounded_String; Class : String := "") is
    begin
-      Put_Paragraph (Label, To_String (Contents));
+      Put_Paragraph (Label, To_String (Contents), Class => Class);
    end Put_Paragraph;
 
    --------------
@@ -594,15 +599,20 @@ package body HTML is
 
    procedure Put_Paragraph
      (Label    : Unbounded_String;
-      Contents : Unbounded_String)
+      Contents : Unbounded_String;
+      Class    : String := "")
    is
    begin
-      Put_Paragraph (To_String (Label), To_String (Contents));
+      Put_Paragraph (To_String (Label), To_String (Contents), Class);
    end Put_Paragraph;
 
-   procedure Put_Paragraph (Label : String; Contents : Boolean) is
+   procedure Put_Paragraph (Label : String; Contents : Boolean; Class : String := "") is
    begin
-      Ada.Text_IO.Put ("<p>" & Label);
+      if Class = "" then
+         Ada.Text_IO.Put ("<p>" & Label);
+      else
+         Ada.Text_IO.Put ("<p class=""" & Class & """>" & Label);
+      end if;
       Put (Contents);
       Ada.Text_IO.Put_Line ("</p>");
    end Put_Paragraph;
