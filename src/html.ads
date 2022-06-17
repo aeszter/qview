@@ -51,12 +51,14 @@ package HTML is
    procedure Put_Navigation_Link (Data : String; Link_Param : String);
    --  navigation section
 
-   procedure Put_Paragraph (Label : String; Contents : String);
-   procedure Put_Paragraph (Label : String; Contents : Calendar.Time);
-   procedure Put_Paragraph (Label : String; Contents : Duration);
-   procedure Put_Paragraph (Label : String; Contents : Boolean);
-   procedure Put_Paragraph (Label : String; Contents : Unbounded_String);
-   procedure Put_Paragraph (Label : Unbounded_String; Contents : Unbounded_String);
+   procedure Put_Paragraph (Label : String; Contents : String; Class : String := "");
+   procedure Put_Paragraph (Label : String; Contents : Calendar.Time; Class : String := "");
+   procedure Put_Paragraph (Label : String; Contents : Duration; Class : String := "");
+   procedure Put_Paragraph (Label : String; Contents : Boolean; Class : String := "");
+   procedure Put_Paragraph (Label : String; Contents : Unbounded_String; Class : String := "");
+   procedure Put_Paragraph (Label    : Unbounded_String;
+                            Contents : Unbounded_String;
+                            Class    : String := "");
    procedure Put_Link (Label : String; ID : String; Link_Param : String);
    procedure Put_Link (Text, Link_Param : String);
    procedure Comment (Data : String);

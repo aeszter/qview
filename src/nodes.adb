@@ -255,12 +255,19 @@ package body Nodes is
          Message : constant String := HTML.Param ("msg");
       begin
          HTML.Begin_Div (Class => "node_system");
-         Ada.Text_IO. Put_Line ("<p>" & To_String (Get_Name (N)) & "</p>");
-         Ada.Text_IO.Put_Line ("<p class=""message"">" & Get_OS (N) & "</p>");
-         Ada.Text_IO.Put_Line ("<p class=""message"">Booted: "
-                               & HTML.To_String (Get_Boot_Time (N)) & "</p>");
+         HTML.Put_Paragraph (Label => "", Contents => To_String (Get_Name (N)));
+         HTML.Put_Paragraph (Label => "", Contents => Get_OS (N), Class => "message");
+         HTML.Put_Paragraph (Label    => "Comment",
+                             Contents => Get_Comment (N),
+                             Class    => "message");
+         HTML.Put_Paragraph (Label    => "Booted",
+                             Contents => HTML.To_String (Get_Boot_Time (N)),
+                             Class    => "message");
+         HTML.Put_Paragraph (Label    => "Last busy",
+                             Contents => HTML.To_String (Get_Last_Busy (N)),
+                             Class    => "message");
          if Message /= "" then
-            Ada.Text_IO.Put_Line ("<p class=""cgi_message"">" & Message & "</p>");
+            HTML.Put_Paragraph (Label => "", Contents => Message, Class => "cgi_message");
          end if;
          HTML.Put_Clearer;
          HTML. End_Div (Class => "node_system");
