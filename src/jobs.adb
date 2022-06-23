@@ -238,6 +238,7 @@ package body Jobs is
       Put_Nonzero (Prio.Fairshare);
       Put_Nonzero (Prio.Job_Size);
       Put_Nonzero (Prio.Partition);
+      HTML.Put_Cell (Get_QOS (J));
       Finish_Row (J);
    end Put;
 
@@ -305,6 +306,7 @@ package body Jobs is
          HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", To_String (Get_Group (J)));
          HTML.Put_Paragraph ("Project", Get_Project (J));
+         HTML.Put_Paragraph ("QOS", Get_QOS (J));
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => Get_Submission_Time (J));
          HTML.Put_Paragraph (Label    => "Starts",
@@ -430,7 +432,7 @@ package body Jobs is
                     Class => "delimited");
       HTML.Put_Cell (Data => "Priority",
                      Tag  => "th",
-                     Colspan => 5,
+                     Colspan => 6,
                     Class => "delimited");
       Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
@@ -446,6 +448,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Fairshare");
       HTML.Put_Header_Cell (Data => "Size");
       HTML.Put_Header_Cell (Data => "Partition");
+      HTML.Put_Header_Cell (Data => "QOS");
 
       Ada.Text_IO.Put ("</tr>");
       if Sort_By /= "" then
