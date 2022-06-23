@@ -305,6 +305,7 @@ package body Jobs is
          HTML.Put_Paragraph ("ID", Get_ID (J)'Img);
          HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", To_String (Get_Group (J)));
+         HTML.Put_Paragraph ("Account", Get_Account (J));
          HTML.Put_Paragraph ("Project", Get_Project (J));
          HTML.Put_Paragraph ("QOS", Get_QOS (J));
          HTML.Put_Paragraph (Label    => "Submitted",
