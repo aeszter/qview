@@ -227,6 +227,24 @@ package body Nodes is
 
       procedure Put_Slurm is
          use Slurm.Utils;
+         function Format_Reason (N : Node) return String;
+
+         function Format_Reason (N : Node) return String is
+            use Ada.Strings.Unbounded;
+
+            ID : Unbounded_String;
+            Reason : constant String := Get_Reason (N);
+         begin
+            if Reason (Reason'First .. Reason'First + 4) = "Bug #" then
+               ID := To_Unbounded_String (Reason (Reason'First + 5 .. Reason'Last));
+            elsif Reason (Reason'First .. Reason'First + 3) = "Bug#" then
+               ID := To_Unbounded_String (Reason (Reason'First + 4 .. Reason'Last));
+            else
+               return Reason;
+            end if;
+            return HTML.Bug_Ref (To_String (ID));
+         end Format_Reason;
+
       begin
          HTML.Begin_Div (Class => "node_slurm");
          HTML.Put_Heading ("Slurm", 3);
@@ -235,7 +253,7 @@ package body Nodes is
          Ada.Text_IO.Put ("<p>State: ");
          Put_State (N);
          if Get_Reason (N) /= "" then
-            HTML.Put_Paragraph ("Reason", Get_Reason (N));
+            HTML.Put_Paragraph ("Reason", Format_Reason (N));
             HTML.Put_Paragraph ("by", To_String (Get_Reason_User (N)));
             HTML.Put_Paragraph ("since", Get_Reason_Time (N));
          end if;

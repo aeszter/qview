@@ -70,6 +70,14 @@ package body HTML is
          pragma Compile_Time_Warning (True, "hardcoded config");
    end Bug_Ref;
 
+   function Bug_Ref (Bug_ID : String) return String is
+   begin
+      return "<a href=""" & CGI.Get_Environment ("BUGZILLA_URL")
+               --  http://ram/bugzilla
+               & "/show_bug.cgi?id="
+               & Bug_ID & """>Bug #" & Bug_ID & "</a>";
+   end Bug_Ref;
+
    procedure Comment (Data : String) is
    begin
       Ada.Text_IO.Put_Line ("<!-- " & Data & " -->");
@@ -470,8 +478,13 @@ package body HTML is
          Put_Empty_List;
       else
          while Elem /= Name_Sets.No_Element loop
-            Ada.Text_IO.Put_Line ("<li>" & To_String (Name_Sets.Element (Elem)) & "</li>");
-            Next (Elem);
+            declare
+               Name : constant String := To_String (Name_Sets.Element (Elem));
+            begin
+               Ada.Text_IO.Put_Line ("<li<a href=""" & CGI.My_URL &
+                                       "?node=""" & Name & """>" & Name & "</a></li>");
+               Next (Elem);
+            end;
          end loop;
       end if;
       Put_List_Tail;
@@ -567,6 +580,14 @@ package body HTML is
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String; Class : String := "") is
    begin
       Put_Paragraph (Label, To_String (Contents), Class => Class);
+   end Put_Paragraph;
+
+   procedure Put_Paragraph (Label : String; Contents : Slurm.Hostlists.Node_Name;
+                            Class : String := "") is
+      Node_Name : constant String := To_String (Contents);
+   begin
+      Put_Paragraph (Label, "<a href=""" & CGI.My_URL & "?node="
+                     & Node_Name & """>" & Node_Name & "</a>", Class);
    end Put_Paragraph;
 
    --------------
