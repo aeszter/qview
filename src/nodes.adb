@@ -25,6 +25,7 @@ package body Nodes is
    procedure Put_GPU_Cell (N : Node);
    procedure Put_State (N : Node);
    procedure Put_Error (Message : String);
+   function Format_Reason (N : Node) return String;
 
 --
 --     procedure Put_Selected (Selector : not null access function (H : Host) return Boolean) is
@@ -53,6 +54,22 @@ package body Nodes is
             return "unknown";
       end case;
    end Explain_State;
+
+   function Format_Reason (N : Node) return String is
+      use Ada.Strings.Unbounded;
+
+      ID : Unbounded_String;
+      Reason : constant String := Get_Reason (N);
+   begin
+      if Reason (Reason'First .. Reason'First + 4) = "Bug #" then
+         ID := To_Unbounded_String (Reason (Reason'First + 5 .. Reason'Last));
+      elsif Reason (Reason'First .. Reason'First + 3) = "Bug#" then
+         ID := To_Unbounded_String (Reason (Reason'First + 4 .. Reason'Last));
+      else
+         return Reason;
+      end if;
+      return HTML.Bug_Ref (To_String (ID));
+   end Format_Reason;
 
    procedure Init (Properties : out Slurm.Node_Properties.Set_Of_Properties;
                    GRES, TRES, Memory, CPUs, Features : String) is
@@ -99,7 +116,7 @@ package body Nodes is
       HTML.Put_Cell (Data  => Mem_Percentage (N)'Img,
                      Class => "right " & Color_Class (Mem_Percentage (N)));
       Iterate_Partitions (N, Put_Partition'Access);
-      HTML.Put_Cell (Get_Reason (N));
+      HTML.Put_Cell (Format_Reason (N));
 --        HTML.Put_Cell (Data => Lightsout.Get_Maintenance (Get_Name (H)));
 --        HTML.Put_Cell (Data => Lightsout.Get_Bug (Get_Name (H)), Class => "right");
       Ada.Text_IO.Put ("</tr>");
@@ -227,24 +244,6 @@ package body Nodes is
 
       procedure Put_Slurm is
          use Slurm.Utils;
-         function Format_Reason (N : Node) return String;
-
-         function Format_Reason (N : Node) return String is
-            use Ada.Strings.Unbounded;
-
-            ID : Unbounded_String;
-            Reason : constant String := Get_Reason (N);
-         begin
-            if Reason (Reason'First .. Reason'First + 4) = "Bug #" then
-               ID := To_Unbounded_String (Reason (Reason'First + 5 .. Reason'Last));
-            elsif Reason (Reason'First .. Reason'First + 3) = "Bug#" then
-               ID := To_Unbounded_String (Reason (Reason'First + 4 .. Reason'Last));
-            else
-               return Reason;
-            end if;
-            return HTML.Bug_Ref (To_String (ID));
-         end Format_Reason;
-
       begin
          HTML.Begin_Div (Class => "node_slurm");
          HTML.Put_Heading ("Slurm", 3);
