@@ -264,6 +264,7 @@ package body Jobs is
 
       procedure Put_Actions;
       procedure Put_Files;
+      procedure Put_Internal_Error (Message : String);
       procedure Put_Meta;
       procedure Put_Name;
       procedure Put_Queues;
@@ -296,8 +297,15 @@ package body Jobs is
          HTML.Put_Paragraph ("StdIn", Get_Std_In (J));
          HTML.Put_Paragraph ("StdOut", Get_Std_Out (J));
          HTML.Put_Paragraph ("StdErr", Get_Std_Err (J));
+         Iterate_Errors (Object => J,
+                         Process => Put_Internal_Error'Access);
          HTML.End_Div (Class => "job_files");
       end Put_Files;
+
+      procedure Put_Internal_Error (Message : String) is
+      begin
+         HTML.Error ("Internal Error: " & Message);
+      end Put_Internal_Error;
 
       procedure Put_Meta is
       begin
