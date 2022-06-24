@@ -10,35 +10,13 @@ with POSIX.Process_Times; use POSIX.Process_Times;
 
 package body Diagnostics is
 
-   type Seconds is delta 0.1 digits 5;
+   type Seconds is delta 0.1 digits 6;
 
-   ----------------
-   -- To_Seconds --
-   ----------------
-
-   function To_Seconds (T : Tick_Count) return Seconds is
-   begin
-      return Seconds (T) / Seconds (Ticks_Per_Second);
-   end To_Seconds;
-
-
-   procedure Put_Time is
-      Times : Process_Times;
-      Self  : Seconds;
-      Children : Seconds;
-   begin
-      Times := Get_Process_Times;
-      Self := To_Seconds (User_CPU_Time_Of (Times) + System_CPU_Time_Of (Times));
-      Children := To_Seconds (Descendants_User_CPU_Time_Of (Times)
-                              + Descendants_System_CPU_Time_Of (Times));
-      if Children > 0.0 then
-         Put_Line (Self'Img & "s self " & Children'Img & "s children");
-      else
-         Put_Line (Self'Img & "s");
-      end if;
-   end Put_Time;
+   function To_Seconds (T : Tick_Count) return Seconds;
 
    procedure Put_Date is
+      procedure Put_With_Zero (N : Natural);
+
       procedure Put_With_Zero (N : Natural) is
       begin
          if N < 10 then
@@ -55,7 +33,6 @@ package body Diagnostics is
       Minute  : Ada.Calendar.Formatting.Minute_Number;
       Second  : Ada.Calendar.Formatting.Second_Number;
       Sub_Second : Ada.Calendar.Formatting.Second_Duration;
-
 
    begin
       Ada.Calendar.Formatting.Split (Now,
@@ -100,5 +77,29 @@ package body Diagnostics is
       end loop;
       Close (Status_File);
    end Put_Memory;
+
+   procedure Put_Time is
+      Times : Process_Times;
+      Self  : Seconds;
+      Children : Seconds;
+   begin
+      Times := Get_Process_Times;
+      Self := To_Seconds (User_CPU_Time_Of (Times) + System_CPU_Time_Of (Times));
+      Children := To_Seconds (Descendants_User_CPU_Time_Of (Times)
+                              + Descendants_System_CPU_Time_Of (Times));
+      if Children > 0.0 then
+         Put_Line (Self'Img & "s self " & Children'Img & "s children");
+      else
+         Put_Line (Self'Img & "s");
+      end if;
+   end Put_Time;
+
+   function To_Seconds (T : Tick_Count) return Seconds is
+   begin
+      return Seconds (T) / Seconds (Ticks_Per_Second);
+   exception
+      when Constraint_Error =>
+         return Seconds (0);
+   end To_Seconds;
 
 end Diagnostics;
