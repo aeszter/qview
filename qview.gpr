@@ -51,6 +51,11 @@ project Qview is
      for Switches ("Ada") use ("-static");
    end Binder;
 
+   package Documentation is
+      for Documentation_Dir use "/srv/www/gnatdoc/qview4";
+   end Documentation;
+
+
 --   package Linker is
 --      for Default_Switches ("ada") use ("-L../slurmlib/lib/lib64 -lslurm");
 --   end Linker;

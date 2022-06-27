@@ -56,6 +56,8 @@ package HTML is
    procedure Put_Paragraph (Label : String; Contents : Duration; Class : String := "");
    procedure Put_Paragraph (Label : String; Contents : Boolean; Class : String := "");
    procedure Put_Paragraph (Label : String; Contents : Unbounded_String; Class : String := "");
+   procedure Put_Paragraph (Label : String; Contents : Slurm.Hostlists.Node_Name;
+                            Class : String := "");
    procedure Put_Paragraph (Label    : Unbounded_String;
                             Contents : Unbounded_String;
                             Class    : String := "");
@@ -64,6 +66,7 @@ package HTML is
    procedure Comment (Data : String);
    procedure Comment (Data : Unbounded_String);
    procedure Bug_Ref (Bug_ID : Positive; Info : String);
+   function Bug_Ref (Bug_ID : String) return String;
    procedure Put (Data : Boolean);
 --
 --     procedure Put_Queue_List (List, Marks : String_Sets.Set);
@@ -104,6 +107,7 @@ package HTML is
 
 --     function To_String (Host_Name    : SGE.Host_Properties.Host_Name;
 --                         Mark_As_Link : Boolean := True) return String;
+
    function To_String (Time : Calendar.Time) return String;
    function To_String (Span : Duration) return String;
    function To_String (List : Slurm.Gres.List; Max_Items : Positive := 99) return String;

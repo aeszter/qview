@@ -238,6 +238,7 @@ package body Jobs is
       Put_Nonzero (Prio.Fairshare);
       Put_Nonzero (Prio.Job_Size);
       Put_Nonzero (Prio.Partition);
+      HTML.Put_Cell (Get_QOS (J));
       Finish_Row (J);
    end Put;
 
@@ -263,6 +264,7 @@ package body Jobs is
 
       procedure Put_Actions;
       procedure Put_Files;
+      procedure Put_Internal_Error (Message : String);
       procedure Put_Meta;
       procedure Put_Name;
       procedure Put_Queues;
@@ -295,8 +297,15 @@ package body Jobs is
          HTML.Put_Paragraph ("StdIn", Get_Std_In (J));
          HTML.Put_Paragraph ("StdOut", Get_Std_Out (J));
          HTML.Put_Paragraph ("StdErr", Get_Std_Err (J));
+         Iterate_Errors (Object => J,
+                         Process => Put_Internal_Error'Access);
          HTML.End_Div (Class => "job_files");
       end Put_Files;
+
+      procedure Put_Internal_Error (Message : String) is
+      begin
+         HTML.Error ("Internal Error: " & Message);
+      end Put_Internal_Error;
 
       procedure Put_Meta is
       begin
@@ -304,7 +313,9 @@ package body Jobs is
          HTML.Put_Paragraph ("ID", Get_ID (J)'Img);
          HTML.Put_Paragraph ("Owner",  To_String (Get_Owner (J)));
          HTML.Put_Paragraph ("Group", To_String (Get_Group (J)));
+         HTML.Put_Paragraph ("Account", Get_Account (J));
          HTML.Put_Paragraph ("Project", Get_Project (J));
+         HTML.Put_Paragraph ("QOS", Get_QOS (J));
          HTML.Put_Paragraph (Label    => "Submitted",
                              Contents => Get_Submission_Time (J));
          HTML.Put_Paragraph (Label    => "Starts",
@@ -353,7 +364,7 @@ package body Jobs is
          HTML.Begin_Div (Class => "job_queue");
 
          HTML.Put_Paragraph ("Partition", Get_Partition (J));
-         HTML.Put_Paragraph ("Batch Host", To_String (Get_Batch_Host (J)));
+         HTML.Put_Paragraph ("Batch Host", Get_Batch_Host (J));
          HTML.Put_Heading ("Nodes", 3);
          HTML.Put_List (Get_Nodes (J));
          HTML.Put_Paragraph ("CPUs", Get_CPUs (J)'Img);
@@ -430,7 +441,7 @@ package body Jobs is
                     Class => "delimited");
       HTML.Put_Cell (Data => "Priority",
                      Tag  => "th",
-                     Colspan => 5,
+                     Colspan => 6,
                     Class => "delimited");
       Ada.Text_IO.Put ("</tr><tr>");
       Put_Core_Header;
@@ -446,6 +457,7 @@ package body Jobs is
       HTML.Put_Header_Cell (Data => "Fairshare");
       HTML.Put_Header_Cell (Data => "Size");
       HTML.Put_Header_Cell (Data => "Partition");
+      HTML.Put_Header_Cell (Data => "QOS");
 
       Ada.Text_IO.Put ("</tr>");
       if Sort_By /= "" then
